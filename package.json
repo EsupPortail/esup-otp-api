@@ -1,0 +1,11 @@
+{
+    "name": "esup-otp",
+    "version": "0.0.1",
+    "description": "One time passwords manager for ESUP",
+    "author": "Alex Bouskine <abouskine@gmail.com>",
+    "dependencies": {
+        "mongoose": "4.4.0",
+        "restify": "4.0.3"
+    },
+    "bin": "./run.js"
+}

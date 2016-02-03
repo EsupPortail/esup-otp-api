@@ -1,0 +1,8 @@
+{
+	"port": 3000,
+	"connector":"mongoose",
+	"mongodb":{
+		"address":"localhost",
+		"collection":"test-otp"
+	}
+}
