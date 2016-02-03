@@ -10,5 +10,5 @@ fs.readdirSync(properties_path).forEach(function(file) {
 })
 
 for(properties_file in properties){
-	module.exports[properties_file] = properties[properties_file];	
+	exports[properties_file] = properties[properties_file];	
 }

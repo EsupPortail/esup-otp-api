@@ -9,12 +9,11 @@ fs.readdirSync(schemas_path).forEach(function(file) {
         schemas[file.split('.')[0]] = require(schemas_path + '/' + file)
     }
 })
-
-module.exports = {
-    initialize: function(mongoose_instance, callback) {
-        for (schema in schemas) {
-            schemas[schema].initiate(mongoose_instance);
-        }
-        if (typeof(callback) === "function") callback();
-    },
+module.exports.schemas = schemas;
+exports.initialize = function(mongoose_instance, callback) {
+    for (schema in schemas) {
+        exports.schemas[schema].initiate(mongoose_instance);
+    }
+    if (typeof(callback) === "function") callback();
 }
+

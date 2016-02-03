@@ -1,5 +1,6 @@
 var restify = require('restify');
 var properties = require(process.cwd() + '/properties/properties');
+var validator = require(process.cwd() + '/services/validator');
 
 var server = restify.createServer({
     name: 'esup-otp',
@@ -26,11 +27,8 @@ switch (properties.esup.connector) {
         console.log("Unkown connector");
         break;
 }
-//soucis asynchrone, changer architecture
-// server.post({
-// 	path: "/create"
-// },
-// controllers.mongoose.user.create);
+
+server.post("/insert_user", validator.create_user,controller.schemas.user.create);
 
 var launch_server = function() {
     var port = properties.esup.port || 3000;
@@ -44,4 +42,4 @@ var launch_server = function() {
 }
 
 
-module.exports.server = server;
+exports.server = server;
