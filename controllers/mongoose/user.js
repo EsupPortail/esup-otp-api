@@ -57,3 +57,12 @@ exports.get = function(req, res, next) {
         });
     }
 };
+
+/**
+ * Drop Users
+ */
+exports.drop = function(req, res, next) {
+    UserModel.remove({}, function(err) {
+        console.log('users removed')
+    });
+};

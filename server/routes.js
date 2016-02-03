@@ -15,7 +15,7 @@ var connector = require(properties.esup.connector);
 
 switch (properties.esup.connector) {
     case "mongoose":
-        connector.connect('mongodb://' + properties.esup.mongodb.address + '/' + properties.esup.mongodb.collection, function(error) {
+        connector.connect('mongodb://' + properties.esup.mongodb.address + '/' + properties.esup.mongodb.db, function(error) {
             if (error) {
                 console.log(error);
             } else {

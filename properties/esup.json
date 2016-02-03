@@ -3,6 +3,6 @@
 	"connector":"mongoose",
 	"mongodb":{
 		"address":"localhost",
-		"collection":"test-otp"
+		"db":"test-otp"
 	}
 }
