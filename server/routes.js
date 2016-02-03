@@ -28,10 +28,11 @@ switch (properties.esup.connector) {
         break;
 }
 
-server.post("/user", validator.create_user,controller.schemas.user.create);
-server.get("/user/:lastname", controller.schemas.user.get);
+server.post("/user", validator.create_user, controller.schemas.user.create);
+server.get("/user/:uid", controller.schemas.user.get);
 server.get("/users/drop", controller.schemas.user.drop);
-server.put("/user/otp", controller.schemas.user.otp);
+server.put("/user/otp", validator.set_otp, controller.schemas.user.otp);
+server.get("/user/:uid/otp/:otp", validator.verify, controller.schemas.user.verify);
 
 var launch_server = function() {
     var port = properties.esup.port || 3000;

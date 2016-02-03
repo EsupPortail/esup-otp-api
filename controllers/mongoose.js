@@ -16,4 +16,3 @@ exports.initialize = function(mongoose_instance, callback) {
     }
     if (typeof(callback) === "function") callback();
 }
-

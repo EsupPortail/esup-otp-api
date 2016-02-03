@@ -1,8 +1,8 @@
 {
-	"port": 3000,
-	"connector":"mongoose",
-	"mongodb":{
-		"address":"localhost",
-		"db":"test-otp"
-	}
+    "port": 3000,
+    "connector": "mongoose",
+    "mongodb": {
+        "address": "localhost",
+        "db": "test-otp"
+    }
 }
