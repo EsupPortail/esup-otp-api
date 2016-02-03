@@ -1,7 +1,7 @@
 {
-    "name": "esup-otp",
+    "name": "esup-otp-api",
     "version": "0.0.1",
-    "description": "One time passwords manager for ESUP",
+    "description": "One time passwords api for ESUP",
     "author": "Alex Bouskine <abouskine@gmail.com>",
     "dependencies": {
         "mongoose": "4.4.0",
