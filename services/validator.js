@@ -4,7 +4,6 @@ function check_post_parameters(req) {
     if (req.params.firstname == undefined || req.params.lastname == undefined || req.params.password == undefined) {
         return false
     } else {
-    	console.log('ok ?');
         return true;
     }
 }

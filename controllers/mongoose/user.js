@@ -6,7 +6,8 @@ exports.initiate = function(mongoose) {
     var UserSchema = new Schema({
         firstname: String,
         lastname: String,
-        password: String
+        password: String,
+        otp: String,
     });
 
     mongoose.model('User', UserSchema, 'User');
@@ -52,17 +53,44 @@ exports.get = function(req, res, next) {
     } else {
         UserModel.find({
             'lastname': req.params.lastname
-        }).exec(function(arr, data) {
+        }).exec(function(err, data) {
             res.send(data);
         });
     }
 };
 
 /**
+ * Retourne la réponse de la base de donnée suite à l'assoction de l'otp à l'utilisateur.
+ *
+ * @param req requete HTTP contenant le nom la personne recherchee
+ * @param res reponse HTTP
+ * @param next permet d'appeler le prochain gestionnaire (handler)
+ */
+exports.otp = function(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+    UserModel.update({
+        'lastname': req.params.lastname,
+        'firstname': req.params.firstname
+    }, {
+        $set: {
+            otp: req.params.otp
+        }
+    }, function(err, raw) {
+        if (err) return handleError(err);
+        res.send(raw);
+    })
+
+};
+
+
+/**
  * Drop Users
  */
 exports.drop = function(req, res, next) {
-    UserModel.remove({}, function(err) {
-        console.log('users removed')
+    UserModel.remove({}, function(err, data) {
+        if(err)console.log(err);
+        console.log('users removed');
+        res.send(data);
     });
 };
