@@ -13,6 +13,13 @@ exports.initiate = function(mongoose) {
     UserModel = mongoose.model('User');
 }
 
+/**
+ * Ajoute une personne et retourne la personne ajoutee.
+ *
+ * @param req requete HTTP contenant le nom et prenom de la personne a creer
+ * @param res reponse HTTP
+ * @param next permet d'appeler le prochain gestionnaire (handler)
+ */
 exports.create = function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
@@ -25,3 +32,28 @@ exports.create = function(req, res, next) {
         res.send(req.body);
     });
 }
+
+/**
+ * Retourne un tableau contenant l'ensemble des personnes dont le nom
+ * correspond au nom specifie. Si aucun nom est donne alors toutes les
+ * personnes sont retournees.
+ *
+ * @param req requete HTTP contenant le nom la personne recherchee
+ * @param res reponse HTTP
+ * @param next permet d'appeler le prochain gestionnaire (handler)
+ */
+exports.get = function(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+    if (req.params.lastname == '') {
+        UserModel.find({}).exec(function(arr, data) {
+            res.send(data);
+        });
+    } else {
+        UserModel.find({
+            'lastname': req.params.lastname
+        }).exec(function(arr, data) {
+            res.send(data);
+        });
+    }
+};

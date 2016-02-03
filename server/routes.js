@@ -28,7 +28,8 @@ switch (properties.esup.connector) {
         break;
 }
 
-server.post("/insert_user", validator.create_user,controller.schemas.user.create);
+server.post("/user", validator.create_user,controller.schemas.user.create);
+server.get("/user/:lastname", controller.schemas.user.get);
 
 var launch_server = function() {
     var port = properties.esup.port || 3000;
