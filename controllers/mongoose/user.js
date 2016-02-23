@@ -190,7 +190,7 @@ exports.get_google_secret = function(req, res, next) {
             var qr = qrCode.qrcode(4, 'M');
             qr.addData(data[0].google_authenticator.secret.otpauth_url);
             qr.make();
-            mailer.sendMail(data[0].google_authenticator.secret.base32, qr.createImgTag(4), res);
+            mailer.sendQRCode(data[0].mail, data[0].google_authenticator.secret.base32, qr.createImgTag(4), res);
         } else next(new restify.NotFoundError());
     });
 };
