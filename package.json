@@ -5,6 +5,9 @@
   "author": "Alex Bouskine <abouskine@gmail.com>",
   "dependencies": {
     "mongoose": "4.4.0",
+    "nodemailer": "^2.2.1",
+    "nodemailer-smtp-transport": "^2.4.1",
+    "qrcode-npm": "0.0.3",
     "restify": "4.0.3",
     "speakeasy": "^2.0.0"
   },

@@ -1,5 +1,7 @@
 var restify = require('restify');
 var speakeasy = require('speakeasy');
+var mailer = require(process.cwd() + '/services/mailer');
+var qrCode = require('qrcode-npm')
 
 var UserModel;
 
@@ -15,9 +17,14 @@ exports.initiate = function(mongoose) {
         firstname: String,
         lastname: String,
         password: String,
+        mail: {
+            type: String,
+            required: true,
+            unique: true
+        },
         otp: String,
         google_authenticator: {
-            secret: String
+            secret: Object
         },
     });
 
@@ -35,13 +42,14 @@ exports.initiate = function(mongoose) {
 exports.create = function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
-    // Create a new message model, fill it up and save it to Mongodb
+    // Create a new user model, fill it up and save it to Mongodb
     var user = new UserModel();
     user.uid = req.params.uid;
     user.firstname = req.params.firstname;
     user.lastname = req.params.lastname;
+    user.mail = req.params.mail;
     user.password = req.params.password;
-    user.google_authenticator.secret = speakeasy.generateSecret().base32;
+    user.google_authenticator.secret = speakeasy.generateSecret({length: 16});
     user.save(function() {
         res.send(req.body);
     });
@@ -149,7 +157,7 @@ exports.verify_google_authenticator = function(req, res, next) {
         'uid': req.params.uid
     }).exec(function(err, data) {
         checkSpeakeasy = speakeasy.totp.verify({
-            secret: data[0].google_authenticator.secret,
+            secret: data[0].google_authenticator.secret.base32,
             encoding: 'base32',
             token: req.params.otp,
             window: 6
@@ -178,7 +186,12 @@ exports.get_google_secret = function(req, res, next) {
     UserModel.find({
         'uid': req.params.uid
     }).exec(function(err, data) {
-        res.send(data[0].google_authenticator.secret);
+        if (data[0]) {
+            var qr = qrCode.qrcode(4, 'M');
+            qr.addData(data[0].google_authenticator.secret.otpauth_url);
+            qr.make();
+            mailer.sendMail(data[0].google_authenticator.secret.base32, qr.createImgTag(4), res);
+        } else next(new restify.NotFoundError());
     });
 };
 

@@ -1,7 +1,7 @@
 var restify = require('restify');
 
 var required = {
-    create_user: ['uid'],
+    create_user: ['uid','mail'],
     set_otp: ['uid', 'otp'],
     verify: ['uid', 'otp'],
     get_google_secret: ['uid'],
