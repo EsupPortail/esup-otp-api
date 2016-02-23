@@ -1,11 +1,12 @@
 {
-    "name": "esup-otp-api",
-    "version": "0.0.1",
-    "description": "One time passwords api for ESUP",
-    "author": "Alex Bouskine <abouskine@gmail.com>",
-    "dependencies": {
-        "mongoose": "4.4.0",
-        "restify": "4.0.3"
-    },
-    "bin": "./run.js"
+  "name": "esup-otp-api",
+  "version": "0.0.1",
+  "description": "One time passwords api for ESUP",
+  "author": "Alex Bouskine <abouskine@gmail.com>",
+  "dependencies": {
+    "mongoose": "4.4.0",
+    "restify": "4.0.3",
+    "speakeasy": "^2.0.0"
+  },
+  "bin": "./run.js"
 }
