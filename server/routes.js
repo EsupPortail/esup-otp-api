@@ -28,14 +28,22 @@ switch (properties.esup.connector) {
         break;
 }
 
-server.post("/user", validator.create_user, controller.schemas.user.create);
-server.get("/user/:uid", controller.schemas.user.get);
-server.get("/users/drop", controller.schemas.user.drop);
-server.put("/user/otp", validator.set_otp, controller.schemas.user.otp);
-server.get("/user/:uid/otp/:otp", validator.verify, controller.schemas.user.verify);
-server.get("/user/:uid/google_authenticator/:otp", validator.verify, controller.schemas.user.verify_google_authenticator);
-server.get("/user/:uid/google_authenticator/secret/new", validator.new_secret, controller.schemas.user.new_secret);
+server.get("/send_code/google_authenticator/mail/:uid", validator.send_code, controller.schemas.user.send_google_authenticator_mail);
+server.get("/send_code/google_authenticator/sms/:uid", validator.send_code, controller.schemas.user.send_google_authenticator_sms);
+server.get("/send_code/google_authenticator/app/:uid", validator.send_code, controller.schemas.user.send_google_authenticator_app);
+
+// server.get("/verify_code/simple_otp/:uid/:otp", validator.verify, controller.schemas.user.verify);
+server.get("/verify_code/google_authenticator/:uid/:otp", validator.verify_code, controller.schemas.user.verify_google_authenticator);
+
+server.get("/regenerate_secret/google_authenticator/:uid", validator.new_secret, controller.schemas.user.new_secret);
+
 server.get("/user/:uid/google_authenticator", validator.get_google_secret, controller.schemas.user.get_google_secret);
+
+// routes DEV uniquement
+server.post("/user", validator.create_user, controller.schemas.user.create);
+// server.get("/user/:uid", controller.schemas.user.get);
+server.get("/users/drop", controller.schemas.user.drop);
+// server.put("/user/otp", validator.set_otp, controller.schemas.user.otp);
 
 var launch_server = function() {
     var port = properties.esup.port || 3000;

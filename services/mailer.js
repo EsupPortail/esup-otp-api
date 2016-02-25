@@ -30,3 +30,17 @@ exports.sendQRCode = function(mail, message, img, res) {
         }
     });
 }
+
+exports.send_code = function(mail, message, res) {
+    mailOptions.text = message;
+    mailOptions.to= mail;
+    mailOptions.subject= "Code";
+    // send mail with defined transport object
+    transporter.sendMail(mailOptions, function(error, response) {
+        if (error) {
+            res.send(error);
+        } else {
+            res.send("Message sent.");
+        }
+    });
+}

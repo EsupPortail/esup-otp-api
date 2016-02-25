@@ -14,14 +14,7 @@ exports.initiate = function(mongoose) {
             required: true,
             unique: true
         },
-        firstname: String,
-        lastname: String,
-        password: String,
-        mail: {
-            type: String,
-            required: true,
-            unique: true
-        },
+        transport: String,
         otp: String,
         google_authenticator: {
             secret: Object
@@ -45,10 +38,6 @@ exports.create = function(req, res, next) {
     // Create a new user model, fill it up and save it to Mongodb
     var user = new UserModel();
     user.uid = req.params.uid;
-    user.firstname = req.params.firstname;
-    user.lastname = req.params.lastname;
-    user.mail = req.params.mail;
-    user.password = req.params.password;
     user.google_authenticator.secret = speakeasy.generateSecret({ length: 16 });
     user.save(function() {
         res.send(req.body);
@@ -78,6 +67,85 @@ exports.get = function(req, res, next) {
             res.send(data);
         });
     }
+};
+
+//mail a changer
+exports.send_google_authenticator_mail = function(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+
+    UserModel.find({
+        'uid': req.params.uid
+    }).exec(function(err, data) {
+        if (data[0]) {
+            data[0].transport = "mail";
+            data[0].save(function() {
+                mailer.send_code('abouskine@gmail.com', speakeasy.totp({
+                    secret: data[0].google_authenticator.secret.base32,
+                    encoding: 'base32'
+                }), res);
+            });
+        } else {
+            var user = new UserModel();
+            user.uid = req.params.uid;
+            user.google_authenticator.secret = speakeasy.generateSecret({ length: 16 });
+            user.transport = "mail";
+            user.save(function() {
+                mailer.send_code('abouskine@gmail.com', speakeasy.totp({
+                    secret: user.google_authenticator.secret.base32,
+                    encoding: 'base32'
+                }), res);
+            });
+        }
+    });
+};
+
+exports.send_google_authenticator_sms = function(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+
+    UserModel.find({
+        'uid': req.params.uid
+    }).exec(function(err, data) {
+        if (data[0]) {
+            data[0].transport = "sms";
+            data[0].save(function() {
+                //send sms
+            });
+        } else {
+            var user = new UserModel();
+            user.uid = req.params.uid;
+            user.google_authenticator.secret = speakeasy.generateSecret({ length: 16 });
+            user.transport = "sms";
+            user.save(function() {
+                //send sms
+            });
+        }
+    });
+};
+
+exports.send_google_authenticator_app = function(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+
+    UserModel.find({
+        'uid': req.params.uid
+    }).exec(function(err, data) {
+        if (data[0]) {
+            data[0].transport = "app";
+            data[0].save(function() {
+                res.send('code generated');
+            });
+        } else {
+            var user = new UserModel();
+            user.uid = req.params.uid;
+            user.google_authenticator.secret = speakeasy.generateSecret({ length: 16 });
+            user.transport = "app";
+            user.save(function() {
+                res.send('code generated');
+            });
+        }
+    });
 };
 
 /**
