@@ -1,6 +1,7 @@
 var restify = require('restify');
 var speakeasy = require('speakeasy');
 var mailer = require(process.cwd() + '/services/mailer');
+var sms = require(process.cwd() + '/services/sms');
 var qrCode = require('qrcode-npm')
 
 var UserModel;
@@ -100,6 +101,7 @@ exports.send_google_authenticator_mail = function(req, res, next) {
     });
 };
 
+//tel a changer
 exports.send_google_authenticator_sms = function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
@@ -110,7 +112,10 @@ exports.send_google_authenticator_sms = function(req, res, next) {
         if (data[0]) {
             data[0].transport = "sms";
             data[0].save(function() {
-                //send sms
+                sms.send_code('0601010101', speakeasy.totp({
+                    secret: data[0].google_authenticator.secret.base32,
+                    encoding: 'base32'
+                }),res);
             });
         } else {
             var user = new UserModel();
@@ -118,7 +123,10 @@ exports.send_google_authenticator_sms = function(req, res, next) {
             user.google_authenticator.secret = speakeasy.generateSecret({ length: 16 });
             user.transport = "sms";
             user.save(function() {
-                //send sms
+                sms.send_code('0601010101', speakeasy.totp({
+                    secret: user.google_authenticator.secret.base32,
+                    encoding: 'base32'
+                }),res);
             });
         }
     });
