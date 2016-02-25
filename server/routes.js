@@ -37,13 +37,13 @@ server.get("/verify_code/google_authenticator/:uid/:otp", validator.verify_code,
 
 server.get("/regenerate_secret/google_authenticator/:uid", validator.new_secret, controller.schemas.user.new_secret);
 
-server.get("/user/:uid/google_authenticator", validator.get_google_secret, controller.schemas.user.get_google_secret);
-
 // routes DEV uniquement
-server.post("/user", validator.create_user, controller.schemas.user.create);
+
+// server.post("/user", validator.create_user, controller.schemas.user.create);
 // server.get("/user/:uid", controller.schemas.user.get);
 server.get("/users/drop", controller.schemas.user.drop);
 // server.put("/user/otp", validator.set_otp, controller.schemas.user.otp);
+// server.get("/user/:uid/google_authenticator", validator.get_google_secret, controller.schemas.user.get_google_secret);
 
 var launch_server = function() {
     var port = properties.esup.port || 3000;

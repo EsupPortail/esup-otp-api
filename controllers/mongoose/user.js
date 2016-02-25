@@ -115,7 +115,7 @@ exports.send_google_authenticator_sms = function(req, res, next) {
                 sms.send_code('0601010101', speakeasy.totp({
                     secret: data[0].google_authenticator.secret.base32,
                     encoding: 'base32'
-                }),res);
+                }), res);
             });
         } else {
             var user = new UserModel();
@@ -126,7 +126,7 @@ exports.send_google_authenticator_sms = function(req, res, next) {
                 sms.send_code('0601010101', speakeasy.totp({
                     secret: user.google_authenticator.secret.base32,
                     encoding: 'base32'
-                }),res);
+                }), res);
             });
         }
     });
@@ -257,11 +257,26 @@ exports.verify_google_authenticator = function(req, res, next) {
     UserModel.find({
         'uid': req.params.uid
     }).exec(function(err, data) {
+        var transport_window = 0;
+        switch (data[0].transport) {
+            case 'sms':
+                transport_window = 6;
+                break;
+            case 'mail':
+                transport_window = 15;
+                break;
+            case 'app':
+                transport_window = 2;
+                break;
+            default:
+                transport_window = 2;
+                break;
+        }
         checkSpeakeasy = speakeasy.totp.verify({
             secret: data[0].google_authenticator.secret.base32,
             encoding: 'base32',
             token: req.params.otp,
-            window: 6
+            window: transport_window
         });
         if (checkSpeakeasy) {
             res.send({
