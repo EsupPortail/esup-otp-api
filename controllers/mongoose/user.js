@@ -49,7 +49,7 @@ exports.create = function(req, res, next) {
     user.lastname = req.params.lastname;
     user.mail = req.params.mail;
     user.password = req.params.password;
-    user.google_authenticator.secret = speakeasy.generateSecret({length: 16});
+    user.google_authenticator.secret = speakeasy.generateSecret({ length: 16 });
     user.save(function() {
         res.send(req.body);
     });
@@ -78,6 +78,31 @@ exports.get = function(req, res, next) {
             res.send(data);
         });
     }
+};
+
+/**
+ * Retourne la réponse de la base de donnée suite à l'association d'un nouveau secret à l'utilisateur.
+ *
+ * @param req requete HTTP contenant le nom la personne recherchee
+ * @param res reponse HTTP
+ * @param next permet d'appeler le prochain gestionnaire (handler)
+ */
+exports.new_secret = function(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+    UserModel.update({
+        'uid': req.params.uid
+    }, {
+        $set: {
+            google_authenticator: {
+                secret: speakeasy.generateSecret({ length: 16 })
+            }
+        }
+    }, function(err, raw) {
+        if (err) return handleError(err);
+        res.send(raw);
+    })
+
 };
 
 /**

@@ -4,6 +4,7 @@ var required = {
     create_user: ['uid','mail'],
     set_otp: ['uid', 'otp'],
     verify: ['uid', 'otp'],
+    new_secret: ['uid'],
     get_google_secret: ['uid'],
 }
 
@@ -42,6 +43,14 @@ exports.set_otp = function(req, res, next) {
 
 exports.verify = function(req, res, next) {
     if (check_parameters(req, required.verify)) {
+        return next();
+    } else {
+        return next(new restify.InvalidArgumentError());
+    }
+}
+
+exports.new_secret = function(req, res, next) {
+    if (check_parameters(req, required.new_secret)) {
         return next();
     } else {
         return next(new restify.InvalidArgumentError());
