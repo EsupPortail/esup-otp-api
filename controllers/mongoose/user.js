@@ -113,7 +113,7 @@ exports.send_google_authenticator_sms = function(req, res, next) {
         if (data[0]) {
             data[0].transport = "sms";
             data[0].save(function() {
-                sms.send_code('0601010101', speakeasy.totp({
+                sms.send_code('0652328590', speakeasy.totp({
                     secret: data[0].google_authenticator.secret.base32,
                     encoding: 'base32'
                 }), res);
@@ -124,7 +124,7 @@ exports.send_google_authenticator_sms = function(req, res, next) {
             user.google_authenticator.secret = speakeasy.generateSecret({ length: 16 });
             user.transport = "sms";
             user.save(function() {
-                sms.send_code('0601010101', speakeasy.totp({
+                sms.send_code('0652328590', speakeasy.totp({
                     secret: user.google_authenticator.secret.base32,
                     encoding: 'base32'
                 }), res);

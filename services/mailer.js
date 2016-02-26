@@ -1,19 +1,20 @@
+var properties = require(process.cwd() + '/properties/properties');
 var nodemailer = require("nodemailer");
 var smtpTransport = require('nodemailer-smtp-transport');
 
 // create reusable transport method (opens pool of SMTP connections)
 var options = {
-    service: 'gmail',
+    service: properties.esup.mailer.service,
     auth: {
-        user: 'esup.otp@gmail.com',
-        pass: 'esup1234'
+        user: properties.esup.mailer.address,
+        pass: properties.esup.mailer.password
     }
 };
 
 var transporter = nodemailer.createTransport(smtpTransport(options))
     // setup e-mail data with unicode symbols
 var mailOptions = {
-    from: "Esup otp api <esup.otp@gmail.com>", // sender address
+    from: "Esup otp api <"+properties.esup.mailer.address+">", // sender address
 }
 
 exports.sendQRCode = function(mail, message, img, res) {

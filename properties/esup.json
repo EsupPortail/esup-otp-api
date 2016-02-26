@@ -7,13 +7,27 @@
     },
     "userDb": "ldap",
     "ldap": {
-        "address": "localhost",
-        "admin": "admin",
-        "password": "changeit"
+        "uri": "ldap://192.168.56.101",
+        "baseDn": "dc=univ-lr,dc=fr",
+        "adminDn": "cn=admin,dc=univ-lr,dc=fr",
+        "password": "changeit",
+        "transport": {
+            "mail": "mail",
+            "sms": "mobile"
+        }
     },
     "google_authenticator": {
         "sms_window": 6,
         "mail_window": 15,
         "app_window": 2
+    },
+    "mailer": {
+    	"service":"gmail",
+    	"address":"esup.otp@gmail.com",
+    	"password":"esup1234"
+    },
+    "sms": {
+    	"username":"esup-otp-api",
+    	"password":"chat auto air"
     }
 }

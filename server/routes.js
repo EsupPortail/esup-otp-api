@@ -14,17 +14,16 @@ var userDb_controller = require(process.cwd() + '/controllers/' + properties.esu
 switch (properties.esup.userDb) {
     case "ldap":
         var LDAP = require('ldap-client');
-
         var ldap = new LDAP({
-            uri: 'ldap://192.168.56.101', // string
-            base: 'dc=univ-lr,dc=fr', // default base for all future searches
+            uri: properties.esup.ldap.uri, // string
+            base: properties.esup.ldap.baseDn, // default base for all future searches
             scope: LDAP.SUBTREE, // default scope for all future searches    
         }, function(err) {
             if (err) console.log(err);
             else { // bind
                 ldap.bind({
-                    binddn: 'cn=admin,dc=univ-lr,dc=fr',
-                    password: 'changeit'
+                    binddn: properties.esup.ldap.adminDn,
+                    password: properties.esup.ldap.password
                 }, function(err) {
                     if (err) console.log(err);
                     else {
@@ -57,6 +56,8 @@ switch (properties.esup.connector) {
         console.log("Unkown connector");
         break;
 }
+
+server.get("/get_available_transport/:uid", validator.get_available_transport, userDb_controller.get_available_transport);
 
 server.get("/send_code/google_authenticator/mail/:uid", validator.send_code, connector_controller.schemas.user.send_google_authenticator_mail);
 server.get("/send_code/google_authenticator/sms/:uid", validator.send_code, connector_controller.schemas.user.send_google_authenticator_sms);

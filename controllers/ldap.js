@@ -1,3 +1,4 @@
+var properties = require(process.cwd() + '/properties/properties');
 var ldap;
 
 exports.initialize = function(bind, callback) {
@@ -6,18 +7,17 @@ exports.initialize = function(bind, callback) {
 }
 
 
-exports.searchJohn = function() {
+exports.get_available_transport = function(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
     ldap.search({
-        attrs: 'uid mobile mail',
-        filter: 'uid=john'
-
+        attrs: properties.esup.ldap.transport.mail+' '+properties.esup.ldap.transport.sms,
+        filter: 'uid='+req.params.uid
     }, function(err, data) {
-        if (err)
-            console.log("search error: " + err);
-        // console.log(JSON.stringify(data, null, 2));
-        console.log("uid: " + data[0].uid);
-        console.log("mobile: " + data[0].mobile);
-        console.log("mail: " + data[0].mail);
-        ldap.close();
+        if (err)console.log("search error: " + err);
+        var result= {};
+        if(data[0][properties.esup.ldap.transport.sms])result[properties.esup.ldap.transport.sms]=data[0][properties.esup.ldap.transport.sms][0];
+        if(data[0][properties.esup.ldap.transport.mail])result[properties.esup.ldap.transport.mail]=data[0][properties.esup.ldap.transport.mail][0];
+        res.send(result);
     });
 }
