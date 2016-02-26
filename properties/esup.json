@@ -4,5 +4,16 @@
     "mongodb": {
         "address": "localhost",
         "db": "test-otp"
+    },
+    "userDb": "ldap",
+    "ldap": {
+        "address": "localhost",
+        "admin": "admin",
+        "password": "changeit"
+    },
+    "google_authenticator": {
+        "sms_window": 6,
+        "mail_window": 15,
+        "app_window": 2
     }
 }

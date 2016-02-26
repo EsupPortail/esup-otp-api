@@ -32,6 +32,7 @@ exports.sendQRCode = function(mail, message, img, res) {
 }
 
 exports.send_code = function(mail, message, res) {
+	console.log("Message sent to "+mail+" with the message: "+message);
     mailOptions.text = message;
     mailOptions.to= mail;
     mailOptions.subject= "Code";

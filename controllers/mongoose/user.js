@@ -1,3 +1,4 @@
+var properties = require(process.cwd() + '/properties/properties');
 var restify = require('restify');
 var speakeasy = require('speakeasy');
 var mailer = require(process.cwd() + '/services/mailer');
@@ -163,7 +164,7 @@ exports.send_google_authenticator_app = function(req, res, next) {
  * @param res reponse HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
-exports.new_secret = function(req, res, next) {
+exports.regenerate_secret = function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
     UserModel.update({
@@ -260,16 +261,16 @@ exports.verify_google_authenticator = function(req, res, next) {
         var transport_window = 0;
         switch (data[0].transport) {
             case 'sms':
-                transport_window = 6;
+                transport_window = properties.esup.google_authenticator.sms_window;
                 break;
             case 'mail':
-                transport_window = 15;
+                transport_window = properties.esup.google_authenticator.mail_window;
                 break;
             case 'app':
-                transport_window = 2;
+                transport_window = properties.esup.google_authenticator.app_window;
                 break;
             default:
-                transport_window = 2;
+                transport_window = properties.esup.google_authenticator.app_window;
                 break;
         }
         checkSpeakeasy = speakeasy.totp.verify({
