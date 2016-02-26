@@ -179,7 +179,6 @@ exports.regenerate_secret = function(req, res, next) {
         if (err) return handleError(err);
         res.send(raw);
     })
-
 };
 
 /**

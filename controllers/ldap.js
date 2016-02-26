@@ -11,13 +11,24 @@ exports.get_available_transport = function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
     ldap.search({
-        attrs: properties.esup.ldap.transport.mail+' '+properties.esup.ldap.transport.sms,
-        filter: 'uid='+req.params.uid
+        attrs: properties.esup.ldap.transport.mail + ' ' + properties.esup.ldap.transport.sms,
+        filter: 'uid=' + req.params.uid
     }, function(err, data) {
-        if (err)console.log("search error: " + err);
-        var result= {};
-        if(data[0][properties.esup.ldap.transport.sms])result[properties.esup.ldap.transport.sms]=data[0][properties.esup.ldap.transport.sms][0];
-        if(data[0][properties.esup.ldap.transport.mail])result[properties.esup.ldap.transport.mail]=data[0][properties.esup.ldap.transport.mail][0];
+        if (err) console.log("search error: " + err);
+        var result = {};
+        if (data[0][properties.esup.ldap.transport.sms]) {
+            var tel = "******" + data[0][properties.esup.ldap.transport.sms][0].substr(data[0][properties.esup.ldap.transport.sms][0].length - 4, 4);
+            result[properties.esup.ldap.transport.sms] = tel;
+        };
+        if (data[0][properties.esup.ldap.transport.mail]) { 
+        	var size = data[0][properties.esup.ldap.transport.mail][0].length-10;
+        	var email = data[0][properties.esup.ldap.transport.mail][0].substr(0,4);
+        	for(var i=0;i<size;i++){
+        		email+='*';
+        	}
+        	email+=data[0][properties.esup.ldap.transport.mail][0].substr(data[0][properties.esup.ldap.transport.mail][0].length - 6,6)
+        	result[properties.esup.ldap.transport.mail] = email; 
+        };
         res.send(result);
     });
 }
