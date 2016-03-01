@@ -3,13 +3,13 @@
     "connector": "mongoose",
     "mongodb": {
         "address": "localhost",
-        "db": "test-otp"
+        "db": "test"
     },
     "userDb": "ldap",
     "ldap": {
-        "uri": "ldap://192.168.56.101",
-        "baseDn": "dc=univ-lr,dc=fr",
-        "adminDn": "cn=admin,dc=univ-lr,dc=fr",
+        "uri": "ldap://X.X.X.X",
+        "baseDn": "dc=fr",
+        "adminDn": "cn=admin,dc=fr",
         "password": "changeit",
         "transport": {
             "mail": "mail",
@@ -22,12 +22,13 @@
         "app_window": 2
     },
     "mailer": {
-    	"service":"gmail",
-    	"address":"esup.otp@gmail.com",
-    	"password":"esup1234"
+    	"service":"xmail",
+    	"address":"xxxxxxx@xmail.com",
+    	"password":"xxxxxxxx"
     },
     "sms": {
-    	"username":"esup-otp-api",
-    	"password":"chat auto air"
+        "url": "https://username:password@sms.univ.fr/esup-smsuapi/?action=SendSms&phoneNumber=$phoneNumber$&message=$message$"
+    },
+    "dev": {
     }
 }

@@ -32,3 +32,23 @@ exports.get_available_transport = function(req, res, next) {
         res.send(result);
     });
 }
+
+exports.send_sms = function(uid, callback) {
+    ldap.search({
+        attrs: properties.esup.ldap.transport.sms,
+        filter: 'uid=' + uid
+    }, function(err, data) {
+        if (err) console.log("search error: " + err);
+        if (typeof(callback) === "function") callback(data[0][properties.esup.ldap.transport.sms][0]);
+    });
+}
+
+exports.send_mail = function(uid, callback) {
+    ldap.search({
+        attrs: properties.esup.ldap.transport.mail,
+        filter: 'uid=' + uid
+    }, function(err, data) {
+        if (err) console.log("search error: " + err);
+        if (typeof(callback) === "function") callback(data[0][properties.esup.ldap.transport.mail][0]);
+    });
+}

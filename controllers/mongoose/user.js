@@ -4,7 +4,7 @@ var speakeasy = require('speakeasy');
 var mailer = require(process.cwd() + '/services/mailer');
 var sms = require(process.cwd() + '/services/sms');
 var qrCode = require('qrcode-npm')
-
+var userDb_controller = require(process.cwd() + '/controllers/' + properties.esup.userDb);
 var UserModel;
 
 exports.initiate = function(mongoose) {
@@ -82,10 +82,12 @@ exports.send_google_authenticator_mail = function(req, res, next) {
         if (data[0]) {
             data[0].transport = "mail";
             data[0].save(function() {
-                mailer.send_code('abouskine@gmail.com', speakeasy.totp({
-                    secret: data[0].google_authenticator.secret.base32,
-                    encoding: 'base32'
-                }), res);
+                userDb_controller.send_mail(req.params.uid, function(mail) {
+                    mailer.send_code(mail, speakeasy.totp({
+                        secret: data[0].google_authenticator.secret.base32,
+                        encoding: 'base32'
+                    }), res);
+                });
             });
         } else {
             var user = new UserModel();
@@ -93,10 +95,12 @@ exports.send_google_authenticator_mail = function(req, res, next) {
             user.google_authenticator.secret = speakeasy.generateSecret({ length: 16 });
             user.transport = "mail";
             user.save(function() {
-                mailer.send_code('abouskine@gmail.com', speakeasy.totp({
-                    secret: user.google_authenticator.secret.base32,
-                    encoding: 'base32'
-                }), res);
+                userDb_controller.send_mail(req.params.uid, function(mail) {
+                    mailer.send_code(mail, speakeasy.totp({
+                        secret: user.google_authenticator.secret.base32,
+                        encoding: 'base32'
+                    }), res);
+                });
             });
         }
     });
@@ -113,10 +117,12 @@ exports.send_google_authenticator_sms = function(req, res, next) {
         if (data[0]) {
             data[0].transport = "sms";
             data[0].save(function() {
-                sms.send_code('0652328590', speakeasy.totp({
-                    secret: data[0].google_authenticator.secret.base32,
-                    encoding: 'base32'
-                }), res);
+                userDb_controller.send_sms(req.params.uid, function(num) {
+                    sms.send_code(num, speakeasy.totp({
+                        secret: data[0].google_authenticator.secret.base32,
+                        encoding: 'base32'
+                    }), res);
+                });
             });
         } else {
             var user = new UserModel();
@@ -124,10 +130,12 @@ exports.send_google_authenticator_sms = function(req, res, next) {
             user.google_authenticator.secret = speakeasy.generateSecret({ length: 16 });
             user.transport = "sms";
             user.save(function() {
-                sms.send_code('0652328590', speakeasy.totp({
-                    secret: user.google_authenticator.secret.base32,
-                    encoding: 'base32'
-                }), res);
+                userDb_controller.send_sms(req.params.uid, function(num) {
+                    sms.send_code(num, speakeasy.totp({
+                        secret: user.google_authenticator.secret.base32,
+                        encoding: 'base32'
+                    }), res);
+                });
             });
         }
     });
@@ -136,7 +144,6 @@ exports.send_google_authenticator_sms = function(req, res, next) {
 exports.send_google_authenticator_app = function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
-
     UserModel.find({
         'uid': req.params.uid
     }).exec(function(err, data) {
