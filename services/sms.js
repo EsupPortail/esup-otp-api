@@ -19,7 +19,5 @@ function urlBroker(num, message) {
     var url = properties.esup.sms.url.split("$");
     url[url.indexOf('phoneNumber')]=num;
     url[url.indexOf('message')]=message;
-    var resUrl='';
-    for(i in url){resUrl+=url[i];}
-    return resUrl;
+    return url.join("");
 }
