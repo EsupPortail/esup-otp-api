@@ -16,6 +16,12 @@
             "sms": "mobile"
         }
     },
+    "simple_generator": {
+        "sms_validity": 15,
+        "mail_validity": 30,
+        "code_type": "string",
+        "code_length": 6
+    },
     "google_authenticator": {
         "sms_window": 6,
         "mail_window": 15,

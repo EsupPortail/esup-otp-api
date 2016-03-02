@@ -188,7 +188,17 @@ exports.send_simple_generator_mail = function(req, res, next) {
         'uid': req.params.uid
     }).exec(function(err, data) {
         var new_otp = {};
-        new_otp.code = simple_generator.generate_string_code();
+        switch(properties.esup.simple_generator.code_type){
+            case "string":
+            new_otp.code = simple_generator.generate_string_code();
+            break;
+            case "digit":
+            new_otp.code = simple_generator.generate_digit_code();
+            break;
+            default:
+            new_otp.code = simple_generator.generate_string_code();
+            break;
+        }
         new_otp.date_generation = new Date();
         if (data[0]) {
             data[0].simple_generator = new_otp;
@@ -228,7 +238,17 @@ exports.send_simple_generator_sms = function(req, res, next) {
         'uid': req.params.uid
     }).exec(function(err, data) {
         var new_otp = {};
-        new_otp.code = simple_generator.generate_string_code();
+        switch(properties.esup.simple_generator.code_type){
+            case "string":
+            new_otp.code = simple_generator.generate_string_code();
+            break;
+            case "digit":
+            new_otp.code = simple_generator.generate_digit_code();
+            break;
+            default:
+            new_otp.code = simple_generator.generate_string_code();
+            break;
+        }
         new_otp.date_generation = new Date();
         if (data[0]) {
             data[0].simple_generator = new_otp;
