@@ -4,12 +4,12 @@
   "description": "One time passwords api for ESUP",
   "author": "Alex Bouskine <abouskine@gmail.com>",
   "dependencies": {
-    "http_request": "^0.1.2",
     "ldap-client": "^3.1.0",
     "mongoose": "4.4.0",
     "nodemailer": "^2.2.1",
     "nodemailer-smtp-transport": "^2.4.1",
     "qrcode-npm": "0.0.3",
+    "request": "^2.69.0",
     "restify": "4.0.3",
     "speakeasy": "^2.0.0"
   },

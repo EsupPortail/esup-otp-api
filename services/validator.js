@@ -7,7 +7,7 @@ var required = {
     verify_code: ['uid', 'otp'],
     send_code: ['uid'],
     regenerate_secret: ['uid'],
-    get_google_secret: ['uid'],
+    get_google_authenticator_secret: ['uid'],
 }
 
 function validate(req, required) {
@@ -75,8 +75,8 @@ exports.regenerate_secret = function(req, res, next) {
     }
 }
 
-exports.get_google_secret = function(req, res, next) {
-    if (check_parameters(req, required.get_google_secret)) {
+exports.get_google_authenticator_secret = function(req, res, next) {
+    if (check_parameters(req, required.get_google_authenticator_secret)) {
         return next();
     } else {
         return next(new restify.InvalidArgumentError());

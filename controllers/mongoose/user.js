@@ -3,8 +3,11 @@ var restify = require('restify');
 var speakeasy = require('speakeasy');
 var mailer = require(process.cwd() + '/services/mailer');
 var sms = require(process.cwd() + '/services/sms');
+var simple_generator = require(process.cwd() + '/services/simple-generator');
 var qrCode = require('qrcode-npm')
 var userDb_controller = require(process.cwd() + '/controllers/' + properties.esup.userDb);
+
+
 var UserModel;
 
 exports.initiate = function(mongoose) {
@@ -17,7 +20,10 @@ exports.initiate = function(mongoose) {
             unique: true
         },
         transport: String,
-        otp: String,
+        simple_generator: {
+            code: String,
+            date_generation: Date
+        },
         google_authenticator: {
             secret: Object
         },
@@ -28,50 +34,13 @@ exports.initiate = function(mongoose) {
 }
 
 /**
- * Ajoute une personne et retourne la personne ajoutee.
- *
- * @param req requete HTTP contenant le nom et prenom de la personne a creer
- * @param res reponse HTTP
- * @param next permet d'appeler le prochain gestionnaire (handler)
- */
-exports.create = function(req, res, next) {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
-    // Create a new user model, fill it up and save it to Mongodb
-    var user = new UserModel();
-    user.uid = req.params.uid;
-    user.google_authenticator.secret = speakeasy.generateSecret({ length: 16 });
-    user.save(function() {
-        res.send(req.body);
-    });
-}
-
-/**
- * Retourne un tableau contenant l'ensemble des personnes dont le nom
- * correspond au nom specifie. Si aucun nom est donne alors toutes les
- * personnes sont retournees.
+ * Associe "mail" au transport de l'utilisateur et un code google authenaticator
+ * Retourne la réponse du service mail
  *
  * @param req requete HTTP contenant le nom la personne recherchee
  * @param res reponse HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
-exports.get = function(req, res, next) {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
-    if (req.params.uid == '') {
-        UserModel.find({}).exec(function(arr, data) {
-            res.send(data);
-        });
-    } else {
-        UserModel.find({
-            'uid': req.params.uid
-        }).exec(function(err, data) {
-            res.send(data);
-        });
-    }
-};
-
-//mail a changer
 exports.send_google_authenticator_mail = function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
@@ -106,7 +75,14 @@ exports.send_google_authenticator_mail = function(req, res, next) {
     });
 };
 
-//tel a changer
+/**
+ * Associe "sms" au transport de l'utilisateur et un code google authenaticator
+ * Retourne la réponse du service sms
+ *
+ * @param req requete HTTP contenant le nom la personne recherchee
+ * @param res reponse HTTP
+ * @param next permet d'appeler le prochain gestionnaire (handler)
+ */
 exports.send_google_authenticator_sms = function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
@@ -141,6 +117,14 @@ exports.send_google_authenticator_sms = function(req, res, next) {
     });
 };
 
+/**
+ * Associe "app" au transport de l'utilisateur
+ * Retourne le message "code generated"
+ *
+ * @param req requete HTTP contenant le nom la personne recherchee
+ * @param res reponse HTTP
+ * @param next permet d'appeler le prochain gestionnaire (handler)
+ */
 exports.send_google_authenticator_app = function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
@@ -189,30 +173,88 @@ exports.regenerate_secret = function(req, res, next) {
 };
 
 /**
- * Retourne la réponse de la base de donnée suite à l'association d'un otp à l'utilisateur.
+ * Associe "mail" au transport de l'utilisateur et un code simple generator
+ * Retourne la réponse du service mail
  *
  * @param req requete HTTP contenant le nom la personne recherchee
  * @param res reponse HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
-exports.otp = function(req, res, next) {
+exports.send_simple_generator_mail = function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
-    UserModel.update({
-        'uid': req.params.uid
-    }, {
-        $set: {
-            otp: req.params.otp
-        }
-    }, function(err, raw) {
-        if (err) return handleError(err);
-        res.send(raw);
-    })
 
+    UserModel.find({
+        'uid': req.params.uid
+    }).exec(function(err, data) {
+        var new_otp = {};
+        new_otp.code = simple_generator.generate_string_code();
+        new_otp.date_generation = new Date();
+        if (data[0]) {
+            data[0].simple_generator = new_otp;
+            data[0].transport = "mail";
+            data[0].save(function() {
+                userDb_controller.send_mail(req.params.uid, function(mail) {
+                    mailer.send_code(mail, new_otp.code, res);
+                });
+            });
+        } else {
+            var user = new UserModel();
+            user.uid = req.params.uid;
+            user.simple_generator = new_otp;
+            user.transport = "mail";
+            user.save(function() {
+                userDb_controller.send_mail(req.params.uid, function(mail) {
+                    mailer.send_code(mail, new_otp.code, res);
+                });
+            });
+        }
+    });
 };
 
 /**
- * Vérifie si l'otp fourni correspond à celui stocké en base de données
+ * Associe "sms" au transport de l'utilisateur et un code simple generator
+ * Retourne la réponse du service sms
+ *
+ * @param req requete HTTP contenant le nom la personne recherchee
+ * @param res reponse HTTP
+ * @param next permet d'appeler le prochain gestionnaire (handler)
+ */
+exports.send_simple_generator_sms = function(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+
+    UserModel.find({
+        'uid': req.params.uid
+    }).exec(function(err, data) {
+        var new_otp = {};
+        new_otp.code = simple_generator.generate_string_code();
+        new_otp.date_generation = new Date();
+        if (data[0]) {
+            data[0].simple_generator = new_otp;
+            data[0].transport = "sms";
+            data[0].save(function() {
+                userDb_controller.send_sms(req.params.uid, function(num) {
+                    sms.send_code(num, new_otp.code, res);
+                });
+            });
+        } else {
+            var user = new UserModel();
+            user.uid = req.params.uid;
+            user.simple_generator = new_otp;
+            user.transport = "sms";
+            user.save(function() {
+                userDb_controller.send_sms(req.params.uid, function(num) {
+                    sms.send_code(num, new_otp.code, res);
+                });
+            });
+        }
+    });
+};
+
+
+/**
+ * Vérifie si le code fourni correspond à celui stocké en base de données
  * si oui: on retourne un réponse positive et on supprime l'otp de la base de donnée
  * sinon: on renvoie une erreur 401 InvalidCredentialsError
  *
@@ -220,32 +262,52 @@ exports.otp = function(req, res, next) {
  * @param res reponse HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
-exports.verify = function(req, res, next) {
+exports.verify_simple_generator = function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
 
     UserModel.find({
         'uid': req.params.uid
     }).exec(function(err, data) {
-        if (data[0].otp == req.params.otp) {
-            UserModel.update({
-                'uid': req.params.uid
-            }, {
-                $set: {
-                    otp: ''
-                }
-            }, function(err, data) {
-                if (err) return handleError(err);
-                res.send({
-                    "code": "Ok",
-                    "message": "Valid credentials"
+        if (data[0].simple_generator.code == req.params.otp) {
+            var validity_time = 0;
+            switch (data[0].transport) {
+                case 'sms':
+                    validity_time = properties.esup.simple_generator.sms_validity * 60 * 1000;
+                    break;
+                case 'mail':
+                    validity_time = properties.esup.simple_generator.mail_validity * 60 * 1000;
+                    break;
+                default:
+                    validity_time = properties.esup.simple_generator.sms_validity * 60 * 1000;
+                    break;
+            }
+            generation_time = data[0].simple_generator.date_generation.getTime();
+            validity_time += generation_time;
+            if (Date.now() < validity_time) {
+                UserModel.update({
+                    'uid': req.params.uid
+                }, {
+                    $set: {
+                        simple_generator: {}
+                    }
+                }, function(err, data) {
+                    if (err) return handleError(err);
+                    res.send({
+                        "code": "Ok",
+                        "message": "Valid credentials"
+                    });
                 });
-            })
+            } else {
+                next(new restify.InvalidCredentialsError());
+            }
         } else {
             next(new restify.InvalidCredentialsError());
         }
     });
 };
+
+
 
 
 /**
@@ -303,7 +365,7 @@ exports.verify_google_authenticator = function(req, res, next) {
  * @param res reponse HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
-exports.get_google_secret = function(req, res, next) {
+exports.get_google_authenticator_secret = function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
     UserModel.find({
