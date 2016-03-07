@@ -319,10 +319,16 @@ exports.verify_simple_generator = function(req, res, next) {
                     });
                 });
             } else {
-                next(new restify.InvalidCredentialsError());
+                res.send({
+                "code": "Error",
+                "message": "Invalid credentials"
+            });
             }
         } else {
-            next(new restify.InvalidCredentialsError());
+            res.send({
+                "code": "Error",
+                "message": "Invalid credentials"
+            });
         }
     });
 };
@@ -346,37 +352,51 @@ exports.verify_google_authenticator = function(req, res, next) {
     UserModel.find({
         'uid': req.params.uid
     }).exec(function(err, data) {
-        var transport_window = 0;
-        switch (data[0].transport) {
-            case 'sms':
-                transport_window = properties.esup.google_authenticator.sms_window;
-                break;
-            case 'mail':
-                transport_window = properties.esup.google_authenticator.mail_window;
-                break;
-            case 'app':
-                transport_window = properties.esup.google_authenticator.app_window;
-                break;
-            default:
-                transport_window = properties.esup.google_authenticator.app_window;
-                break;
-        }
-        checkSpeakeasy = speakeasy.totp.verify({
-            secret: data[0].google_authenticator.secret.base32,
-            encoding: 'base32',
-            token: req.params.otp,
-            window: transport_window
+        if (err) res.send({
+            "code": "Error",
+            "message": err
         });
-        if (checkSpeakeasy) {
-            res.send({
-                "code": "Ok",
-                "message": "Valid credentials"
+        else if (data[0] == undefined) res.send({
+            "code": "Error",
+            "message": "User not found"
+        });
+        else {
+            var transport_window = 0;
+            switch (data[0].transport) {
+                case 'sms':
+                    transport_window = properties.esup.google_authenticator.sms_window;
+                    break;
+                case 'mail':
+                    transport_window = properties.esup.google_authenticator.mail_window;
+                    break;
+                case 'app':
+                    transport_window = properties.esup.google_authenticator.app_window;
+                    break;
+                default:
+                    transport_window = properties.esup.google_authenticator.app_window;
+                    break;
+            }
+            checkSpeakeasy = speakeasy.totp.verify({
+                secret: data[0].google_authenticator.secret.base32,
+                encoding: 'base32',
+                token: req.params.otp,
+                window: transport_window
             });
-        } else {
-            next(new restify.InvalidCredentialsError());
+            if (checkSpeakeasy) {
+                res.send({
+                    "code": "Ok",
+                    "message": "Valid credentials"
+                });
+            } else {
+                res.send({
+                    "code": "Error",
+                    "message": "Invalid credentials"
+                });
+            }
         }
     });
 };
+
 
 /**
  * Renvoie le secret de l'utilisateur afin qu'il puisse l'entrer dans son appli smartphone
@@ -396,7 +416,10 @@ exports.get_google_authenticator_secret = function(req, res, next) {
             qr.addData(data[0].google_authenticator.secret.otpauth_url);
             qr.make();
             mailer.sendQRCode(data[0].mail, data[0].google_authenticator.secret.base32, qr.createImgTag(4), res);
-        } else next(new restify.NotFoundError());
+        } else res.send({
+                "code": "Error",
+                "message": "Resource not Found"
+            });
     });
 };
 
