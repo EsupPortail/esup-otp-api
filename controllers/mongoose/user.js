@@ -19,6 +19,7 @@ exports.initiate = function(mongoose) {
             required: true,
             unique: true
         },
+        generator: String,
         transport: String,
         simple_generator: {
             code: String,
@@ -50,6 +51,7 @@ exports.send_google_authenticator_mail = function(req, res, next) {
     }).exec(function(err, data) {
         if (data[0]) {
             data[0].transport = "mail";
+            data[0].generator = "google_authenticator";
             data[0].save(function() {
                 userDb_controller.send_mail(req.params.uid, function(mail) {
                     mailer.send_code(mail, speakeasy.totp({
@@ -63,6 +65,7 @@ exports.send_google_authenticator_mail = function(req, res, next) {
             user.uid = req.params.uid;
             user.google_authenticator.secret = speakeasy.generateSecret({ length: 16 });
             user.transport = "mail";
+            user.generator = "google_authenticator";
             user.save(function() {
                 userDb_controller.send_mail(req.params.uid, function(mail) {
                     mailer.send_code(mail, speakeasy.totp({
@@ -92,6 +95,7 @@ exports.send_google_authenticator_sms = function(req, res, next) {
     }).exec(function(err, data) {
         if (data[0]) {
             data[0].transport = "sms";
+            data[0].generator = "google_authenticator";
             data[0].save(function() {
                 userDb_controller.send_sms(req.params.uid, function(num) {
                     sms.send_code(num, speakeasy.totp({
@@ -105,6 +109,7 @@ exports.send_google_authenticator_sms = function(req, res, next) {
             user.uid = req.params.uid;
             user.google_authenticator.secret = speakeasy.generateSecret({ length: 16 });
             user.transport = "sms";
+            user.generator = "google_authenticator";
             user.save(function() {
                 userDb_controller.send_sms(req.params.uid, function(num) {
                     sms.send_code(num, speakeasy.totp({
@@ -133,6 +138,7 @@ exports.send_google_authenticator_app = function(req, res, next) {
     }).exec(function(err, data) {
         if (data[0]) {
             data[0].transport = "app";
+            data[0].generator = "google_authenticator";
             data[0].save(function() {
                 res.send('code generated');
             });
@@ -141,6 +147,7 @@ exports.send_google_authenticator_app = function(req, res, next) {
             user.uid = req.params.uid;
             user.google_authenticator.secret = speakeasy.generateSecret({ length: 16 });
             user.transport = "app";
+            user.generator = "google_authenticator";
             user.save(function() {
                 res.send('code generated');
             });
@@ -203,6 +210,7 @@ exports.send_simple_generator_mail = function(req, res, next) {
         if (data[0]) {
             data[0].simple_generator = new_otp;
             data[0].transport = "mail";
+            data[0].generator = "simple_generator";
             data[0].save(function() {
                 userDb_controller.send_mail(req.params.uid, function(mail) {
                     mailer.send_code(mail, new_otp.code, res);
@@ -213,6 +221,7 @@ exports.send_simple_generator_mail = function(req, res, next) {
             user.uid = req.params.uid;
             user.simple_generator = new_otp;
             user.transport = "mail";
+            user.generator = "simple_generator";
             user.save(function() {
                 userDb_controller.send_mail(req.params.uid, function(mail) {
                     mailer.send_code(mail, new_otp.code, res);
@@ -253,6 +262,7 @@ exports.send_simple_generator_sms = function(req, res, next) {
         if (data[0]) {
             data[0].simple_generator = new_otp;
             data[0].transport = "sms";
+            data[0].generator = "simple_generator";
             data[0].save(function() {
                 userDb_controller.send_sms(req.params.uid, function(num) {
                     sms.send_code(num, new_otp.code, res);
@@ -263,6 +273,7 @@ exports.send_simple_generator_sms = function(req, res, next) {
             user.uid = req.params.uid;
             user.simple_generator = new_otp;
             user.transport = "sms";
+            user.generator = "simple_generator";
             user.save(function() {
                 userDb_controller.send_sms(req.params.uid, function(num) {
                     sms.send_code(num, new_otp.code, res);
@@ -271,7 +282,6 @@ exports.send_simple_generator_sms = function(req, res, next) {
         }
     });
 };
-
 
 /**
  * Vérifie si le code fourni correspond à celui stocké en base de données
@@ -282,7 +292,35 @@ exports.send_simple_generator_sms = function(req, res, next) {
  * @param res reponse HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
-exports.verify_simple_generator = function(req, res, next) {
+exports.verify_code = function(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+
+    UserModel.find({
+        'uid': req.params.uid
+    }).exec(function(err, data) {
+            switch (data[0].generator) {
+                case 'simple_generator':
+                    verify_simple_generator(req, res, next);
+                    break;
+                case 'google_authenticator':
+                default:
+                    verify_google_authenticator(req, res, next);
+                    break;
+            }
+    });
+};
+
+/**
+ * Vérifie si le code fourni correspond à celui stocké en base de données
+ * si oui: on retourne un réponse positive et on supprime l'otp de la base de donnée
+ * sinon: on renvoie une erreur 401 InvalidCredentialsError
+ *
+ * @param req requete HTTP contenant le nom la personne recherchee
+ * @param res reponse HTTP
+ * @param next permet d'appeler le prochain gestionnaire (handler)
+ */
+function verify_simple_generator(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
 
@@ -345,7 +383,7 @@ exports.verify_simple_generator = function(req, res, next) {
  * @param res reponse HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
-exports.verify_google_authenticator = function(req, res, next) {
+function verify_google_authenticator(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
     var checkSpeakeasy = false;

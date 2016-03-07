@@ -63,16 +63,13 @@ server.get("/get_available_transport/:uid", validator.get_available_transport, u
 server.get("/send_code/google_authenticator/mail/:uid", validator.send_code, connector_controller.schemas.user.send_google_authenticator_mail);
 server.get("/send_code/google_authenticator/sms/:uid", validator.send_code, connector_controller.schemas.user.send_google_authenticator_sms);
 server.get("/send_code/google_authenticator/app/:uid", validator.send_code, connector_controller.schemas.user.send_google_authenticator_app);
-
-server.get("/verify_code/google_authenticator/:uid/:otp", validator.verify_code, connector_controller.schemas.user.verify_google_authenticator);
-
 server.get("/regenerate_secret/google_authenticator/:uid", validator.regenerate_secret, connector_controller.schemas.user.regenerate_secret);
 
 // Simple generator
 server.get("/send_code/simple_generator/mail/:uid", validator.send_code, connector_controller.schemas.user.send_simple_generator_mail);
 server.get("/send_code/simple_generator/sms/:uid", validator.send_code, connector_controller.schemas.user.send_simple_generator_sms);
 
-server.get("/verify_code/simple_generator/:uid/:otp", validator.verify_code, connector_controller.schemas.user.verify_simple_generator);
+server.get("/verify_code/:uid/:otp", validator.verify_code, connector_controller.schemas.user.verify_code);
 
 // routes DEV uniquement
 
