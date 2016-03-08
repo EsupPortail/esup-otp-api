@@ -15,6 +15,10 @@ exports.get_available_transport = function(req, res, next) {
         filter: 'uid=' + req.params.uid
     }, function(err, data) {
         if (err) console.log("search error: " + err);
+        if(!data[0])res.send({
+                "code": "Error",
+                "message": "User not found"
+            });
         var result = {};
         if (data[0][properties.esup.ldap.transport.sms]) {
             var tel = "******" + data[0][properties.esup.ldap.transport.sms][0].substr(data[0][properties.esup.ldap.transport.sms][0].length - 4, 4);
@@ -33,22 +37,34 @@ exports.get_available_transport = function(req, res, next) {
     });
 }
 
-exports.send_sms = function(uid, callback) {
+exports.send_sms = function(uid, callback, res) {
     ldap.search({
         attrs: properties.esup.ldap.transport.sms,
         filter: 'uid=' + uid
     }, function(err, data) {
         if (err) console.log("search error: " + err);
-        if (typeof(callback) === "function") callback(data[0][properties.esup.ldap.transport.sms][0]);
+        if (data[0]) {
+            if (typeof(callback) === "function" && data[0][properties.esup.ldap.transport.sms]) callback(data[0][properties.esup.ldap.transport.sms][0]);
+        }else res.send({
+                "code": "Error",
+                "message": "User not found"
+        });
     });
 }
 
-exports.send_mail = function(uid, callback) {
+
+exports.send_mail = function(uid, callback, res) {
     ldap.search({
         attrs: properties.esup.ldap.transport.mail,
         filter: 'uid=' + uid
     }, function(err, data) {
         if (err) console.log("search error: " + err);
-        if (typeof(callback) === "function") callback(data[0][properties.esup.ldap.transport.mail][0]);
+        if (data[0]) {
+            if (typeof(callback) === "function" && data[0][properties.esup.ldap.transport.mail]) callback(data[0][properties.esup.ldap.transport.mail][0]);
+        }else res.send({
+                "code": "Error",
+                "message": "User not found"
+            });
     });
 }
+

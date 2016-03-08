@@ -8,7 +8,8 @@ var options = {
     auth: {
         user: properties.esup.mailer.address,
         pass: properties.esup.mailer.password
-    }
+    },
+    proxy : properties.esup.proxyUrl
 };
 
 var transporter = nodemailer.createTransport(smtpTransport(options))

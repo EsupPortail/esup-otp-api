@@ -59,7 +59,7 @@ exports.send_google_authenticator_mail = function(req, res, next) {
                         secret: data[0].google_authenticator.secret.base32,
                         encoding: 'base32'
                     }), res);
-                });
+                }, res);
             });
         } else {
             var user = new UserModel();
@@ -73,7 +73,7 @@ exports.send_google_authenticator_mail = function(req, res, next) {
                         secret: user.google_authenticator.secret.base32,
                         encoding: 'base32'
                     }), res);
-                });
+                }, res);
             });
         }
     });
@@ -104,7 +104,7 @@ exports.send_google_authenticator_sms = function(req, res, next) {
                         secret: data[0].google_authenticator.secret.base32,
                         encoding: 'base32'
                     }), res);
-                });
+                }, res);
             });
         } else {
             var user = new UserModel();
@@ -118,7 +118,7 @@ exports.send_google_authenticator_sms = function(req, res, next) {
                         secret: user.google_authenticator.secret.base32,
                         encoding: 'base32'
                     }), res);
-                });
+                }, res);
             });
         }
     });
@@ -219,7 +219,7 @@ exports.send_simple_generator_mail = function(req, res, next) {
             data[0].save(function() {
                 userDb_controller.send_mail(req.params.uid, function(mail) {
                     mailer.send_code(mail, new_otp.code, res);
-                });
+                }, res);
             });
         } else {
             var user = new UserModel();
@@ -230,7 +230,7 @@ exports.send_simple_generator_mail = function(req, res, next) {
             user.save(function() {
                 userDb_controller.send_mail(req.params.uid, function(mail) {
                     mailer.send_code(mail, new_otp.code, res);
-                });
+                }, res);
             });
         }
     });
@@ -273,7 +273,7 @@ exports.send_simple_generator_sms = function(req, res, next) {
             data[0].save(function() {
                 userDb_controller.send_sms(req.params.uid, function(num) {
                     sms.send_code(num, new_otp.code, res);
-                });
+                }, res);
             });
         } else {
             var user = new UserModel();
@@ -284,7 +284,7 @@ exports.send_simple_generator_sms = function(req, res, next) {
             user.save(function() {
                 userDb_controller.send_sms(req.params.uid, function(num) {
                     sms.send_code(num, new_otp.code, res);
-                });
+                }, res);
             });
         }
     });
