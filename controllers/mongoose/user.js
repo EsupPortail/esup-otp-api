@@ -133,7 +133,7 @@ exports.send_google_authenticator_sms = function(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.send_google_authenticator_app = function(req, res, next) {
-    console.log("send_google_authenticator_app :"+ req.params.uid);
+    console.log("send_google_authenticator_app :" + req.params.uid);
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
     UserModel.find({
@@ -143,7 +143,10 @@ exports.send_google_authenticator_app = function(req, res, next) {
             data[0].transport = "app";
             data[0].generator = "google_authenticator";
             data[0].save(function() {
-                res.send('code generated');
+                res.send({
+                    "code": "Ok",
+                    "message": "Check your smartphone's app"
+                });
             });
         } else {
             var user = new UserModel();
@@ -152,11 +155,15 @@ exports.send_google_authenticator_app = function(req, res, next) {
             user.transport = "app";
             user.generator = "google_authenticator";
             user.save(function() {
-                res.send('code generated');
+                res.send({
+                    "code": "Ok",
+                    "message": "Check your smartphone's app"
+                });
             });
         }
     });
 };
+
 
 /**
  * Retourne la réponse de la base de donnée suite à l'association d'un nouveau secret à l'utilisateur.

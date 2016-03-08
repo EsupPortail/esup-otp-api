@@ -9,14 +9,22 @@ exports.send_code = function(num, message, res) {
     console.log(url);
     console.log("Message will be sent to " + tel + ", with the message: " + message);
     request({
-        'url':url,
+        'url': url,
         'proxy': proxyUrl
     }, function(error, response, body) {
         if (!error && response.statusCode == 200) {
-            res.send(body);
-        }
+            res.send({
+                "code": "Ok",
+                "message": body
+            });
+        } else res.send({
+            "code": "Error",
+            "message": error
+        });
     });
 }
+
+
 
 function urlBroker(num, message) {
     var url = properties.esup.sms.url.split("$");
