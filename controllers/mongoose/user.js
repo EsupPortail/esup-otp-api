@@ -43,6 +43,7 @@ exports.initiate = function(mongoose) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.send_google_authenticator_mail = function(req, res, next) {
+    console.log("send_google_authenticator_mail :"+ req.params.uid);
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
 
@@ -87,6 +88,7 @@ exports.send_google_authenticator_mail = function(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.send_google_authenticator_sms = function(req, res, next) {
+    console.log("send_google_authenticator_sms :"+ req.params.uid);
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
 
@@ -131,6 +133,7 @@ exports.send_google_authenticator_sms = function(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.send_google_authenticator_app = function(req, res, next) {
+    console.log("send_google_authenticator_app :"+ req.params.uid);
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
     UserModel.find({
@@ -188,6 +191,8 @@ exports.regenerate_secret = function(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.send_simple_generator_mail = function(req, res, next) {
+    console.log("send_simple_generator_mail :"+ req.params.uid);
+
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
 
@@ -240,6 +245,8 @@ exports.send_simple_generator_mail = function(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.send_simple_generator_sms = function(req, res, next) {
+    console.log("send_simple_generator_sms :"+ req.params.uid);
+
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
 
