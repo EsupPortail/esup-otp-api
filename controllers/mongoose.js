@@ -14,5 +14,6 @@ exports.initialize = function(mongoose_instance, callback) {
     for (schema in schemas) {
         exports.schemas[schema].initiate(mongoose_instance);
     }
+    console.log("mongoose controller initialized");
     if (typeof(callback) === "function") callback();
 }

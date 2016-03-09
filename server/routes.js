@@ -3,27 +3,14 @@ var properties = require(process.cwd() + '/properties/properties');
 var validator = require(process.cwd() + '/services/validator');
 var fs = require('fs');
 
-var https_options = {
-    name: 'esup-otp',
-    version: '0.0.1',
-    key: fs.readFileSync(process.cwd() + '/certs/HTTPS.key'),
-    certificate: fs.readFileSync(process.cwd() + '/certs/HTTPS.cert')
-};
-
 var server = restify.createServer({
     name: 'esup-otp',
     version: '0.0.1'
 });
 
-var https_server = restify.createServer(https_options);
-
 server.use(restify.acceptParser(server.acceptable));
 server.use(restify.queryParser());
 server.use(restify.bodyParser());
-
-https_server.use(restify.acceptParser(server.acceptable));
-https_server.use(restify.queryParser());
-https_server.use(restify.bodyParser());
 
 var userDb_controller = require(process.cwd() + '/controllers/' + properties.esup.userDb);
 switch (properties.esup.userDb) {
@@ -92,26 +79,6 @@ server.get("/verify_code/:uid/:otp", validator.verify_code, connector_controller
 server.get("/users/drop", connector_controller.schemas.user.drop);
 // server.get("/user/:uid/google_authenticator", validator.get_google_authenticator_secret, connector_controller.schemas.user.get_google_authenticator_secret);
 
-// ------------  HTTPS -----------
-https_server.get("/get_available_transport/:uid", validator.get_available_transport, userDb_controller.get_available_transport);
-
-// Google Authenticator
-https_server.get("/send_code/google_authenticator/mail/:uid", validator.send_code, connector_controller.schemas.user.send_google_authenticator_mail);
-https_server.get("/send_code/google_authenticator/sms/:uid", validator.send_code, connector_controller.schemas.user.send_google_authenticator_sms);
-https_server.get("/send_code/google_authenticator/app/:uid", validator.send_code, connector_controller.schemas.user.send_google_authenticator_app);
-https_server.get("/regenerate_secret/google_authenticator/:uid", validator.regenerate_secret, connector_controller.schemas.user.regenerate_secret);
-
-// Simple generator
-https_server.get("/send_code/simple_generator/mail/:uid", validator.send_code, connector_controller.schemas.user.send_simple_generator_mail);
-https_server.get("/send_code/simple_generator/sms/:uid", validator.send_code, connector_controller.schemas.user.send_simple_generator_sms);
-
-https_server.get("/verify_code/:uid/:otp", validator.verify_code, connector_controller.schemas.user.verify_code);
-
-// routes DEV uniquement
-
-https_server.get("/users/drop", connector_controller.schemas.user.drop);
-// https_server.get("/user/:uid/google_authenticator", validator.get_google_authenticator_secret, connector_controller.schemas.user.get_google_authenticator_secret);
-
 var launch_server = function() {
     var port = properties.esup.port || 3000;
     server.listen(port, function(err) {
@@ -119,15 +86,6 @@ var launch_server = function() {
             console.error(err)
         else {
             console.log('App is ready at : ' + properties.esup.port || 3000);
-        }
-    });
-
-    port = properties.esup.https_port || 3443;
-    https_server.listen(port, function(err) {
-        if (err)
-            console.error(err)
-        else {
-            console.log('Https app is ready at : ' + properties.esup.https_port || 3443);
         }
     });
 }
