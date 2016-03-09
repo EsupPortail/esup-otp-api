@@ -68,3 +68,18 @@ exports.send_mail = function(uid, callback, res) {
     });
 }
 
+exports.send_app = function(uid, callback, res) {
+    ldap.search({
+        attrs: 'uid',
+        filter: 'uid=' + uid
+    }, function(err, data) {
+        if (err) console.log("search error: " + err);
+        if (data[0]) {
+            if (typeof(callback) === "function") callback();
+        }else res.send({
+                "code": "Error",
+                "message": "User not found"
+            });
+    });
+}
+

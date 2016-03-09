@@ -143,10 +143,12 @@ exports.send_google_authenticator_app = function(req, res, next) {
             data[0].transport = "app";
             data[0].generator = "google_authenticator";
             data[0].save(function() {
-                res.send({
-                    "code": "Ok",
-                    "message": "Check your smartphone's app"
-                });
+                userDb_controller.send_app(req.params.uid, function() {
+                    res.send({
+                        "code": "Ok",
+                        "message": "Check your smartphone's app"
+                    });
+                }, res);
             });
         } else {
             var user = new UserModel();
@@ -155,10 +157,12 @@ exports.send_google_authenticator_app = function(req, res, next) {
             user.transport = "app";
             user.generator = "google_authenticator";
             user.save(function() {
-                res.send({
-                    "code": "Ok",
-                    "message": "Check your smartphone's app"
-                });
+                userDb_controller.send_app(req.params.uid, function() {
+                    res.send({
+                        "code": "Ok",
+                        "message": "Check your smartphone's app"
+                    });
+                }, res);
             });
         }
     });

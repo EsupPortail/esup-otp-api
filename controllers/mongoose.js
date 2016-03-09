@@ -1,5 +1,5 @@
 var properties = require(process.cwd() + '/properties/properties');
-var fs = fs = require('fs');
+var fs = require('fs');
 
 var schemas = {},
     schemas_path = process.cwd() + '/controllers/mongoose';
