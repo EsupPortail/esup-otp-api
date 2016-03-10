@@ -59,8 +59,8 @@ switch (properties.esup.connector) {
         break;
 }
 
-// No Https routes, in the future will redirect to https routes
-server.get("/get_available_transport/:uid", validator.get_available_transport, userDb_controller.get_available_transport);
+server.get("/get_available_methods/", get_available_methods);
+server.get("/get_available_transports/:uid", validator.get_available_transports, userDb_controller.get_available_transports);
 
 // Google Authenticator
 server.get("/send_code/google_authenticator/mail/:uid", validator.send_code, connector_controller.schemas.user.send_google_authenticator_mail);
@@ -89,6 +89,23 @@ var launch_server = function() {
         }
     });
 }
+
+function get_available_methods(req, res, next) {
+    var response = [];
+    for (method in properties.esup.methods_list) {
+        var method_name = properties.esup.methods_list[method];
+        console.log(method_name +' : '+properties.esup[method_name]);
+        if (properties.esup[method_name].transports) {
+            var m = {
+                "method": method_name,
+                "transports": properties.esup[method_name].transports
+            }
+            response.push(m);
+        }
+    }
+    res.send(response);
+}
+
 
 
 exports.server = server;

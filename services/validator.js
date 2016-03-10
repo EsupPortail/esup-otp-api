@@ -3,7 +3,7 @@ var restify = require('restify');
 var required = {
     create_user: ['uid'],
     set_otp: ['uid', 'otp'],
-    get_available_transport: ['uid'],
+    get_available_transports: ['uid'],
     verify_code: ['uid', 'otp'],
     send_code: ['uid'],
     regenerate_secret: ['uid'],
@@ -43,8 +43,8 @@ exports.set_otp = function(req, res, next) {
     }
 }
 
-exports.get_available_transport = function(req, res, next) {
-    if (check_parameters(req, required.get_available_transport)) {
+exports.get_available_transports = function(req, res, next) {
+    if (check_parameters(req, required.get_available_transports)) {
         return next();
     } else {
         return next(new restify.InvalidArgumentError());
