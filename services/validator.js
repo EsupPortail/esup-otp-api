@@ -8,6 +8,7 @@ var required = {
     send_code: ['uid'],
     regenerate_secret: ['uid'],
     get_google_authenticator_secret: ['uid'],
+    get_available_methods: [],
 }
 
 function validate(req, required) {
@@ -45,6 +46,14 @@ exports.set_otp = function(req, res, next) {
 
 exports.get_available_transports = function(req, res, next) {
     if (check_parameters(req, required.get_available_transports)) {
+        return next();
+    } else {
+        return next(new restify.InvalidArgumentError());
+    }
+}
+
+exports.get_available_methods = function(req, res, next) {
+    if (check_parameters(req, required.get_available_methods)) {
         return next();
     } else {
         return next(new restify.InvalidArgumentError());
