@@ -2,6 +2,7 @@ var restify = require('restify');
 var properties = require(process.cwd() + '/properties/properties');
 var validator = require(process.cwd() + '/services/validator');
 var fs = require('fs');
+var api = require(process.cwd() + '/controllers/api');
 
 var server = restify.createServer({
     name: 'esup-otp',
@@ -59,7 +60,7 @@ switch (properties.esup.connector) {
         break;
 }
 
-server.get("/get_available_methods/", get_available_methods);
+server.get("/get_available_methods/", api.get_available_methods);
 server.get("/get_available_transports/:uid", validator.get_available_transports, userDb_controller.get_available_transports);
 
 // Google Authenticator
@@ -89,28 +90,5 @@ var launch_server = function() {
         }
     });
 }
-
-function get_available_methods(req, res, next) {
-    var response = {
-        "code" : "Error",
-        "message" : "No method found"
-    };
-    response.methods_list = [];
-    for (method in properties.esup.methods_list) {
-        var method_name = properties.esup.methods_list[method];
-        if (properties.esup[method_name].transports) {
-            var m = {
-                "method": method_name,
-                "transports": properties.esup[method_name].transports
-            }
-            response.methods_list.push(m);
-            response.code = "Ok";
-            response.message = "Method(s) found";
-        }
-    }
-    res.send(response);
-}
-
-
 
 exports.server = server;
