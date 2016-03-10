@@ -91,16 +91,21 @@ var launch_server = function() {
 }
 
 function get_available_methods(req, res, next) {
-    var response = [];
+    var response = {
+        "code" : "Error",
+        "message" : "No method found"
+    };
+    response.methods_list = [];
     for (method in properties.esup.methods_list) {
         var method_name = properties.esup.methods_list[method];
-        console.log(method_name +' : '+properties.esup[method_name]);
         if (properties.esup[method_name].transports) {
             var m = {
                 "method": method_name,
                 "transports": properties.esup[method_name].transports
             }
-            response.push(m);
+            response.methods_list.push(m);
+            response.code = "Ok";
+            response.message = "Method(s) found";
         }
     }
     res.send(response);
