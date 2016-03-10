@@ -25,7 +25,7 @@ exports.get_available_transports = function(req, res, next) {
         var result = {};
         if (data[0][properties.esup.ldap.transport.sms]) {
             var tel = "******" + data[0][properties.esup.ldap.transport.sms][0].substr(data[0][properties.esup.ldap.transport.sms][0].length - 4, 4);
-            result[properties.esup.ldap.transport.sms] = tel;
+            result.sms = tel;
         };
         if (data[0][properties.esup.ldap.transport.mail]) { 
         	var size = data[0][properties.esup.ldap.transport.mail][0].length-10;
@@ -34,7 +34,7 @@ exports.get_available_transports = function(req, res, next) {
         		email+='*';
         	}
         	email+=data[0][properties.esup.ldap.transport.mail][0].substr(data[0][properties.esup.ldap.transport.mail][0].length - 6,6)
-        	result[properties.esup.ldap.transport.mail] = email; 
+        	result.mail = email; 
         };
         response.code = "Ok";
         response.message = "Transports List found";
