@@ -8,17 +8,20 @@ exports.initialize = function(bind, callback) {
 
 
 exports.get_available_transports = function(req, res, next) {
+    console.log("get_available_transports");
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
+
+    var response = {
+        "code" : "Error",
+        "message" : "User not found"
+    };
     ldap.search({
         attrs: properties.esup.ldap.transport.mail + ' ' + properties.esup.ldap.transport.sms,
         filter: 'uid=' + req.params.uid
     }, function(err, data) {
         if (err) console.log("search error: " + err);
-        if(!data[0])res.send({
-                "code": "Error",
-                "message": "User not found"
-            });
+        if(!data[0])res.send(response);
         var result = {};
         if (data[0][properties.esup.ldap.transport.sms]) {
             var tel = "******" + data[0][properties.esup.ldap.transport.sms][0].substr(data[0][properties.esup.ldap.transport.sms][0].length - 4, 4);
@@ -33,7 +36,10 @@ exports.get_available_transports = function(req, res, next) {
         	email+=data[0][properties.esup.ldap.transport.mail][0].substr(data[0][properties.esup.ldap.transport.mail][0].length - 6,6)
         	result[properties.esup.ldap.transport.mail] = email; 
         };
-        res.send(result);
+        response.code = "Ok";
+        response.message = "Transports List found";
+        response.transports_list = result;
+        res.send(response);
     });
 }
 
