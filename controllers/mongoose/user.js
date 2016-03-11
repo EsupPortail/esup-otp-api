@@ -19,14 +19,14 @@ exports.initiate = function(mongoose) {
             required: true,
             unique: true
         },
-        generator: String,
-        transport: String,
         simple_generator: {
             code: String,
-            date_generation: Date
+            date_generation: Date,
+            validity_time: Number
         },
         google_authenticator: {
-            secret: Object
+            secret: Object,
+            window : Number
         },
     });
 
@@ -51,8 +51,7 @@ exports.send_google_authenticator_mail = function(req, res, next) {
         'uid': req.params.uid
     }).exec(function(err, data) {
         if (data[0]) {
-            data[0].transport = "mail";
-            data[0].generator = "google_authenticator";
+            data[0].google_authenticator.window = properties.esup.google_authenticator.mail_window;
             data[0].save(function() {
                 userDb_controller.send_mail(req.params.uid, function(mail) {
                     mailer.send_code(mail, speakeasy.totp({
@@ -65,8 +64,7 @@ exports.send_google_authenticator_mail = function(req, res, next) {
             var user = new UserModel();
             user.uid = req.params.uid;
             user.google_authenticator.secret = speakeasy.generateSecret({ length: 16 });
-            user.transport = "mail";
-            user.generator = "google_authenticator";
+            user.google_authenticator.window = properties.esup.google_authenticator.mail_window;
             user.save(function() {
                 userDb_controller.send_mail(req.params.uid, function(mail) {
                     mailer.send_code(mail, speakeasy.totp({
@@ -96,8 +94,7 @@ exports.send_google_authenticator_sms = function(req, res, next) {
         'uid': req.params.uid
     }).exec(function(err, data) {
         if (data[0]) {
-            data[0].transport = "sms";
-            data[0].generator = "google_authenticator";
+            data[0].google_authenticator.window = properties.esup.google_authenticator.sms_window;
             data[0].save(function() {
                 userDb_controller.send_sms(req.params.uid, function(num) {
                     sms.send_code(num, speakeasy.totp({
@@ -112,6 +109,7 @@ exports.send_google_authenticator_sms = function(req, res, next) {
             user.google_authenticator.secret = speakeasy.generateSecret({ length: 16 });
             user.transport = "sms";
             user.generator = "google_authenticator";
+            user.google_authenticator.window = properties.esup.google_authenticator.mail_window;
             user.save(function() {
                 userDb_controller.send_sms(req.params.uid, function(num) {
                     sms.send_code(num, speakeasy.totp({
@@ -140,8 +138,6 @@ exports.send_google_authenticator_app = function(req, res, next) {
         'uid': req.params.uid
     }).exec(function(err, data) {
         if (data[0]) {
-            data[0].transport = "app";
-            data[0].generator = "google_authenticator";
             data[0].save(function() {
                 userDb_controller.send_app(req.params.uid, function() {
                     res.send({
@@ -154,8 +150,6 @@ exports.send_google_authenticator_app = function(req, res, next) {
             var user = new UserModel();
             user.uid = req.params.uid;
             user.google_authenticator.secret = speakeasy.generateSecret({ length: 16 });
-            user.transport = "app";
-            user.generator = "google_authenticator";
             user.save(function() {
                 userDb_controller.send_app(req.params.uid, function() {
                     res.send({
@@ -222,11 +216,11 @@ exports.send_simple_generator_mail = function(req, res, next) {
             new_otp.code = simple_generator.generate_string_code();
             break;
         }
-        new_otp.date_generation = new Date();
+        validity_time = properties.esup.simple_generator.mail_validity * 60 * 1000;
+        validity_time += new Date().getTime();
+        new_otp.validity_time = validity_time;
         if (data[0]) {
             data[0].simple_generator = new_otp;
-            data[0].transport = "mail";
-            data[0].generator = "simple_generator";
             data[0].save(function() {
                 userDb_controller.send_mail(req.params.uid, function(mail) {
                     mailer.send_code(mail, new_otp.code, res);
@@ -236,8 +230,6 @@ exports.send_simple_generator_mail = function(req, res, next) {
             var user = new UserModel();
             user.uid = req.params.uid;
             user.simple_generator = new_otp;
-            user.transport = "mail";
-            user.generator = "simple_generator";
             user.save(function() {
                 userDb_controller.send_mail(req.params.uid, function(mail) {
                     mailer.send_code(mail, new_otp.code, res);
@@ -276,11 +268,11 @@ exports.send_simple_generator_sms = function(req, res, next) {
             new_otp.code = simple_generator.generate_string_code();
             break;
         }
-        new_otp.date_generation = new Date();
+        validity_time = properties.esup.simple_generator.sms_validity * 60 * 1000;
+        validity_time += new Date().getTime();
+        new_otp.validity_time = validity_time;
         if (data[0]) {
             data[0].simple_generator = new_otp;
-            data[0].transport = "sms";
-            data[0].generator = "simple_generator";
             data[0].save(function() {
                 userDb_controller.send_sms(req.params.uid, function(num) {
                     sms.send_code(num, new_otp.code, res);
@@ -290,8 +282,6 @@ exports.send_simple_generator_sms = function(req, res, next) {
             var user = new UserModel();
             user.uid = req.params.uid;
             user.simple_generator = new_otp;
-            user.transport = "sms";
-            user.generator = "simple_generator";
             user.save(function() {
                 userDb_controller.send_sms(req.params.uid, function(num) {
                     sms.send_code(num, new_otp.code, res);
@@ -317,15 +307,14 @@ exports.verify_code = function(req, res, next) {
     UserModel.find({
         'uid': req.params.uid
     }).exec(function(err, data) {
-            switch (data[0].generator) {
-                case 'simple_generator':
-                    verify_simple_generator(req, res, next);
-                    break;
-                case 'google_authenticator':
-                default:
-                    verify_google_authenticator(req, res, next);
-                    break;
-            }
+        verify_simple_generator(req, res, function(req, res){
+            verify_google_authenticator(req, res, function(){
+                res.send({
+                    "code": "Error",
+                    "message": "Invalid credentials"
+                });
+            });
+        });
     });
 };
 
@@ -346,21 +335,7 @@ function verify_simple_generator(req, res, next) {
         'uid': req.params.uid
     }).exec(function(err, data) {
         if (data[0].simple_generator.code == req.params.otp) {
-            var validity_time = 0;
-            switch (data[0].transport) {
-                case 'sms':
-                    validity_time = properties.esup.simple_generator.sms_validity * 60 * 1000;
-                    break;
-                case 'mail':
-                    validity_time = properties.esup.simple_generator.mail_validity * 60 * 1000;
-                    break;
-                default:
-                    validity_time = properties.esup.simple_generator.sms_validity * 60 * 1000;
-                    break;
-            }
-            generation_time = data[0].simple_generator.date_generation.getTime();
-            validity_time += generation_time;
-            if (Date.now() < validity_time) {
+            if (Date.now() < data[0].simple_generator.validity_time) {
                 UserModel.update({
                     'uid': req.params.uid
                 }, {
@@ -368,26 +343,24 @@ function verify_simple_generator(req, res, next) {
                         simple_generator: {}
                     }
                 }, function(err, data) {
-                    if (err) return handleError(err);
+                    if (err) {
+                        console.log(err)
+                        next(req, res);
+                    }
                     res.send({
                         "code": "Ok",
                         "message": "Valid credentials"
                     });
                 });
             } else {
-                res.send({
-                "code": "Error",
-                "message": "Invalid credentials"
-            });
+                next(req, res);
             }
         } else {
-            res.send({
-                "code": "Error",
-                "message": "Invalid credentials"
-            });
+            next(req, res);
         }
     });
 };
+
 
 
 
@@ -408,50 +381,37 @@ function verify_google_authenticator(req, res, next) {
     UserModel.find({
         'uid': req.params.uid
     }).exec(function(err, data) {
-        if (err) res.send({
-            "code": "Error",
-            "message": err
-        });
+        if (err){
+            console.log(err);
+            next(req, res);
+        }
         else if (data[0] == undefined) res.send({
             "code": "Error",
             "message": "User not found"
         });
         else {
             var transport_window = 0;
-            switch (data[0].transport) {
-                case 'sms':
-                    transport_window = properties.esup.google_authenticator.sms_window;
-                    break;
-                case 'mail':
-                    transport_window = properties.esup.google_authenticator.mail_window;
-                    break;
-                case 'app':
-                    transport_window = properties.esup.google_authenticator.app_window;
-                    break;
-                default:
-                    transport_window = properties.esup.google_authenticator.app_window;
-                    break;
-            }
             checkSpeakeasy = speakeasy.totp.verify({
                 secret: data[0].google_authenticator.secret.base32,
                 encoding: 'base32',
                 token: req.params.otp,
-                window: transport_window
+                window: data[0].google_authenticator.window
             });
             if (checkSpeakeasy) {
-                res.send({
-                    "code": "Ok",
-                    "message": "Valid credentials"
+                data[0].google_authenticator.window = properties.esup.google_authenticator.default_window;
+                data[0].save(function() {
+                    res.send({
+                        "code": "Ok",
+                        "message": "Valid credentials"
+                    });
                 });
             } else {
-                res.send({
-                    "code": "Error",
-                    "message": "Invalid credentials"
-                });
+                next(req, res);
             }
         }
     });
 };
+
 
 
 /**
