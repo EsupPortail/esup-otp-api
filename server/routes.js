@@ -63,15 +63,18 @@ switch (properties.esup.connector) {
 server.get("/get_available_methods/", api.get_available_methods);
 server.get("/get_available_transports/:uid", validator.get_available_transports, userDb_controller.get_available_transports);
 
-// Google Authenticator
-server.get("/send_code/google_authenticator/mail/:uid", validator.send_code, connector_controller.schemas.user.send_google_authenticator_mail);
-server.get("/send_code/google_authenticator/sms/:uid", validator.send_code, connector_controller.schemas.user.send_google_authenticator_sms);
-server.get("/send_code/google_authenticator/app/:uid", validator.send_code, connector_controller.schemas.user.send_google_authenticator_app);
-server.get("/regenerate_secret/google_authenticator/:uid", validator.regenerate_secret, connector_controller.schemas.user.regenerate_secret);
+if(properties.esup.methods.google_authenticator){
+    // Google Authenticator
+    server.get("/send_code/google_authenticator/mail/:uid", validator.send_code, connector_controller.schemas.user.send_google_authenticator_mail);
+    server.get("/send_code/google_authenticator/sms/:uid", validator.send_code, connector_controller.schemas.user.send_google_authenticator_sms);
+    server.get("/regenerate_secret/google_authenticator/:uid", validator.regenerate_secret, connector_controller.schemas.user.regenerate_secret);
+}
 
-// Simple generator
-server.get("/send_code/simple_generator/mail/:uid", validator.send_code, connector_controller.schemas.user.send_simple_generator_mail);
-server.get("/send_code/simple_generator/sms/:uid", validator.send_code, connector_controller.schemas.user.send_simple_generator_sms);
+if(properties.esup.methods.simple_generator){
+    // Simple generator
+    server.get("/send_code/simple_generator/mail/:uid", validator.send_code, connector_controller.schemas.user.send_simple_generator_mail);
+    server.get("/send_code/simple_generator/sms/:uid", validator.send_code, connector_controller.schemas.user.send_simple_generator_sms);
+}
 
 server.get("/verify_code/:uid/:otp", validator.verify_code, connector_controller.schemas.user.verify_code);
 

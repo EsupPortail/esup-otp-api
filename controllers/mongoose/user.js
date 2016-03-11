@@ -51,7 +51,7 @@ exports.send_google_authenticator_mail = function(req, res, next) {
         'uid': req.params.uid
     }).exec(function(err, data) {
         if (data[0]) {
-            data[0].google_authenticator.window = properties.esup.google_authenticator.mail_window;
+            data[0].google_authenticator.window = properties.esup.methods.google_authenticator.mail_window;
             data[0].save(function() {
                 userDb_controller.send_mail(req.params.uid, function(mail) {
                     mailer.send_code(mail, speakeasy.totp({
@@ -64,7 +64,7 @@ exports.send_google_authenticator_mail = function(req, res, next) {
             var user = new UserModel();
             user.uid = req.params.uid;
             user.google_authenticator.secret = speakeasy.generateSecret({ length: 16 });
-            user.google_authenticator.window = properties.esup.google_authenticator.mail_window;
+            user.google_authenticator.window = properties.esup.methods.google_authenticator.mail_window;
             user.save(function() {
                 userDb_controller.send_mail(req.params.uid, function(mail) {
                     mailer.send_code(mail, speakeasy.totp({
@@ -94,7 +94,7 @@ exports.send_google_authenticator_sms = function(req, res, next) {
         'uid': req.params.uid
     }).exec(function(err, data) {
         if (data[0]) {
-            data[0].google_authenticator.window = properties.esup.google_authenticator.sms_window;
+            data[0].google_authenticator.window = properties.esup.methods.google_authenticator.sms_window;
             data[0].save(function() {
                 userDb_controller.send_sms(req.params.uid, function(num) {
                     sms.send_code(num, speakeasy.totp({
@@ -107,9 +107,7 @@ exports.send_google_authenticator_sms = function(req, res, next) {
             var user = new UserModel();
             user.uid = req.params.uid;
             user.google_authenticator.secret = speakeasy.generateSecret({ length: 16 });
-            user.transport = "sms";
-            user.generator = "google_authenticator";
-            user.google_authenticator.window = properties.esup.google_authenticator.mail_window;
+            user.google_authenticator.window = properties.esup.methods.google_authenticator.sms_window;
             user.save(function() {
                 userDb_controller.send_sms(req.params.uid, function(num) {
                     sms.send_code(num, speakeasy.totp({
@@ -121,47 +119,6 @@ exports.send_google_authenticator_sms = function(req, res, next) {
         }
     });
 };
-
-/**
- * Associe "app" au transport de l'utilisateur
- * Retourne le message "code generated"
- *
- * @param req requete HTTP contenant le nom la personne recherchee
- * @param res reponse HTTP
- * @param next permet d'appeler le prochain gestionnaire (handler)
- */
-exports.send_google_authenticator_app = function(req, res, next) {
-    console.log("send_google_authenticator_app :" + req.params.uid);
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
-    UserModel.find({
-        'uid': req.params.uid
-    }).exec(function(err, data) {
-        if (data[0]) {
-            data[0].save(function() {
-                userDb_controller.send_app(req.params.uid, function() {
-                    res.send({
-                        "code": "Ok",
-                        "message": "Check your smartphone's app"
-                    });
-                }, res);
-            });
-        } else {
-            var user = new UserModel();
-            user.uid = req.params.uid;
-            user.google_authenticator.secret = speakeasy.generateSecret({ length: 16 });
-            user.save(function() {
-                userDb_controller.send_app(req.params.uid, function() {
-                    res.send({
-                        "code": "Ok",
-                        "message": "Check your smartphone's app"
-                    });
-                }, res);
-            });
-        }
-    });
-};
-
 
 /**
  * Retourne la réponse de la base de donnée suite à l'association d'un nouveau secret à l'utilisateur.
@@ -205,7 +162,7 @@ exports.send_simple_generator_mail = function(req, res, next) {
         'uid': req.params.uid
     }).exec(function(err, data) {
         var new_otp = {};
-        switch(properties.esup.simple_generator.code_type){
+        switch(properties.esup.methods.simple_generator.code_type){
             case "string":
             new_otp.code = simple_generator.generate_string_code();
             break;
@@ -216,7 +173,7 @@ exports.send_simple_generator_mail = function(req, res, next) {
             new_otp.code = simple_generator.generate_string_code();
             break;
         }
-        validity_time = properties.esup.simple_generator.mail_validity * 60 * 1000;
+        validity_time = properties.esup.methods.simple_generator.mail_validity * 60 * 1000;
         validity_time += new Date().getTime();
         new_otp.validity_time = validity_time;
         if (data[0]) {
@@ -257,7 +214,7 @@ exports.send_simple_generator_sms = function(req, res, next) {
         'uid': req.params.uid
     }).exec(function(err, data) {
         var new_otp = {};
-        switch(properties.esup.simple_generator.code_type){
+        switch(properties.esup.methods.simple_generator.code_type){
             case "string":
             new_otp.code = simple_generator.generate_string_code();
             break;
@@ -268,7 +225,7 @@ exports.send_simple_generator_sms = function(req, res, next) {
             new_otp.code = simple_generator.generate_string_code();
             break;
         }
-        validity_time = properties.esup.simple_generator.sms_validity * 60 * 1000;
+        validity_time = properties.esup.methods.simple_generator.sms_validity * 60 * 1000;
         validity_time += new Date().getTime();
         new_otp.validity_time = validity_time;
         if (data[0]) {
@@ -398,7 +355,7 @@ function verify_google_authenticator(req, res, next) {
                 window: data[0].google_authenticator.window
             });
             if (checkSpeakeasy) {
-                data[0].google_authenticator.window = properties.esup.google_authenticator.default_window;
+                data[0].google_authenticator.window = properties.esup.methods.google_authenticator.default_window;
                 data[0].save(function() {
                     res.send({
                         "code": "Ok",

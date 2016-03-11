@@ -17,21 +17,24 @@
             "sms": "mobile"
         }
     },
-    "simple_generator": {
-        "sms_validity": 15,
-        "mail_validity": 30,
-        "code_type": "string",
-        "code_length": 6
-    },
-    "google_authenticator": {
-        "sms_window": 6,
-        "mail_window": 15,
-        "app_window": 2
-    },
+    "methods": {
+        "google_authenticator": {
+            "sms_window": 6,
+            "mail_window": 15,
+            "app_window": 2,
+            "default_window": 2
+        },
+        "simple_generator": {
+            "sms_validity": 15,
+            "mail_validity": 30,
+            "code_type": "string",
+            "code_length": 6
+        }    
+    },  
     "mailer": {
-    	"service":"xmail",
-    	"address":"xxxxxxx@xmail.com",
-    	"password":"xxxxxxxx"
+        "service":"xmail",
+        "address":"xxxxxxx@xmail.com",
+        "password":"xxxxxxxx"
     },
     "sms": {
         "url": "https://username:password@sms.univ.fr/esup-smsuapi/?action=SendSms&phoneNumber=$phoneNumber$&message=$message$"
