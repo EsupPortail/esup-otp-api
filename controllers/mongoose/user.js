@@ -28,7 +28,7 @@ exports.initiate = function(mongoose) {
         },
         google_authenticator: {
             secret: Object,
-            window : Number
+            window: Number
         },
     });
 
@@ -45,7 +45,7 @@ exports.initiate = function(mongoose) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.send_google_authenticator_mail = function(req, res, next) {
-    console.log("send_google_authenticator_mail :"+ req.params.uid);
+    console.log("send_google_authenticator_mail :" + req.params.uid);
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
 
@@ -88,7 +88,7 @@ exports.send_google_authenticator_mail = function(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.send_google_authenticator_sms = function(req, res, next) {
-    console.log("send_google_authenticator_sms :"+ req.params.uid);
+    console.log("send_google_authenticator_sms :" + req.params.uid);
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
 
@@ -157,17 +157,17 @@ exports.generate_bypass_codes = function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
     var codes = new Array();
-    for(var it = 0; it < properties.esup.methods.bypass.codes_number; it++){
-        switch(properties.esup.methods.simple_generator.code_type){
+    for (var it = 0; it < properties.esup.methods.bypass.codes_number; it++) {
+        switch (properties.esup.methods.simple_generator.code_type) {
             case "string":
-            codes.push(simple_generator.generate_string_code(properties.esup.methods.bypass.code_length));
-            break;
+                codes.push(simple_generator.generate_string_code(properties.esup.methods.bypass.code_length));
+                break;
             case "digit":
-            codes.push(simple_generator.generate_digit_code(properties.esup.methods.bypass.code_length));
-            break;
+                codes.push(simple_generator.generate_digit_code(properties.esup.methods.bypass.code_length));
+                break;
             default:
-            codes.push(simple_generator.generate_string_code(properties.esup.methods.bypass.code_length));
-            break;
+                codes.push(simple_generator.generate_string_code(properties.esup.methods.bypass.code_length));
+                break;
         }
     }
     UserModel.update({
@@ -193,7 +193,7 @@ exports.generate_bypass_codes = function(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.send_simple_generator_mail = function(req, res, next) {
-    console.log("send_simple_generator_mail :"+ req.params.uid);
+    console.log("send_simple_generator_mail :" + req.params.uid);
 
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
@@ -202,16 +202,16 @@ exports.send_simple_generator_mail = function(req, res, next) {
         'uid': req.params.uid
     }).exec(function(err, data) {
         var new_otp = {};
-        switch(properties.esup.methods.simple_generator.code_type){
+        switch (properties.esup.methods.simple_generator.code_type) {
             case "string":
-            new_otp.code = simple_generator.generate_string_code(properties.esup.methods.simple_generator.code_length);
-            break;
+                new_otp.code = simple_generator.generate_string_code(properties.esup.methods.simple_generator.code_length);
+                break;
             case "digit":
-            new_otp.code = simple_generator.generate_digit_code(properties.esup.methods.simple_generator.code_length);
-            break;
+                new_otp.code = simple_generator.generate_digit_code(properties.esup.methods.simple_generator.code_length);
+                break;
             default:
-            new_otp.code = simple_generator.generate_string_code(properties.esup.methods.simple_generator.code_length);
-            break;
+                new_otp.code = simple_generator.generate_string_code(properties.esup.methods.simple_generator.code_length);
+                break;
         }
         validity_time = properties.esup.methods.simple_generator.mail_validity * 60 * 1000;
         validity_time += new Date().getTime();
@@ -245,7 +245,7 @@ exports.send_simple_generator_mail = function(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.send_simple_generator_sms = function(req, res, next) {
-    console.log("send_simple_generator_sms :"+ req.params.uid);
+    console.log("send_simple_generator_sms :" + req.params.uid);
 
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
@@ -254,16 +254,16 @@ exports.send_simple_generator_sms = function(req, res, next) {
         'uid': req.params.uid
     }).exec(function(err, data) {
         var new_otp = {};
-        switch(properties.esup.methods.simple_generator.code_type){
+        switch (properties.esup.methods.simple_generator.code_type) {
             case "string":
-            new_otp.code = simple_generator.generate_string_code(properties.esup.methods.simple_generator.code_length);
-            break;
+                new_otp.code = simple_generator.generate_string_code(properties.esup.methods.simple_generator.code_length);
+                break;
             case "digit":
-            new_otp.code = simple_generator.generate_digit_code(properties.esup.methods.simple_generator.code_length);
-            break;
+                new_otp.code = simple_generator.generate_digit_code(properties.esup.methods.simple_generator.code_length);
+                break;
             default:
-            new_otp.code = simple_generator.generate_string_code(properties.esup.methods.simple_generator.code_length);
-            break;
+                new_otp.code = simple_generator.generate_string_code(properties.esup.methods.simple_generator.code_length);
+                break;
         }
         validity_time = properties.esup.methods.simple_generator.sms_validity * 60 * 1000;
         validity_time += new Date().getTime();
@@ -304,11 +304,13 @@ exports.verify_code = function(req, res, next) {
     UserModel.find({
         'uid': req.params.uid
     }).exec(function(err, data) {
-        verify_simple_generator(req, res, function(req, res){
-            verify_google_authenticator(req, res, function(){
-                res.send({
-                    "code": "Error",
-                    "message": properties.messages.error.invalid_credentials
+        verify_simple_generator(req, res, function(req, res) {
+            verify_google_authenticator(req, res, function() {
+                verify_bypass(req, res, function() {
+                    res.send({
+                        "code": "Error",
+                        "message": properties.messages.error.invalid_credentials
+                    });
                 });
             });
         });
@@ -359,7 +361,58 @@ function verify_simple_generator(req, res, next) {
 };
 
 
+/**
+ * Vérifie si le code fourni correspond à celui stocké en base de données
+ * si oui: on retourne un réponse positive et on supprime l'otp de la base de donnée
+ * sinon: on renvoie une erreur 401 InvalidCredentialsError
+ *
+ * @param req requete HTTP contenant le nom la personne recherchee
+ * @param res reponse HTTP
+ * @param next permet d'appeler le prochain gestionnaire (handler)
+ */
+function verify_bypass(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
 
+    UserModel.find({
+        'uid': req.params.uid
+    }).exec(function(err, data) {
+        if (data[0].bypass.codes) {
+            var checkOtp = false;
+            var codes = data[0].bypass.codes;
+            for (code in codes) {
+                if (data[0].bypass.codes[code] == req.params.otp) {
+                    checkOtp = true;
+                    codes.splice(code, 1);
+                }
+            }
+            if (checkOtp) {
+                UserModel.update({
+                    'uid': req.params.uid
+                }, {
+                    $set: {
+                        bypass: {
+                            codes: codes
+                        }
+                    }
+                }, function(err, data) {
+                    if (err) {
+                        console.log(err)
+                        next(req, res);
+                    }
+                    res.send({
+                        "code": "Ok",
+                        "message": properties.messages.success.valid_credentials
+                    });
+                });
+            } else {
+                next(req, res);
+            }
+        } else {
+            next(req, res);
+        }
+    });
+};
 
 
 /**
@@ -378,11 +431,10 @@ function verify_google_authenticator(req, res, next) {
     UserModel.find({
         'uid': req.params.uid
     }).exec(function(err, data) {
-        if (err){
+        if (err) {
             console.log(err);
             next(req, res);
-        }
-        else if (data[0] == undefined) res.send({
+        } else if (data[0] == undefined) res.send({
             "code": "Error",
             "message": properties.messages.error.user_not_found
         });
@@ -430,9 +482,9 @@ exports.get_google_authenticator_secret = function(req, res, next) {
             qr.make();
             mailer.sendQRCode(data[0].mail, data[0].google_authenticator.secret.base32, qr.createImgTag(4), res);
         } else res.send({
-                "code": "Error",
-                "message": properties.messages.error.user_not_found
-            });
+            "code": "Error",
+            "message": properties.messages.error.user_not_found
+        });
     });
 };
 
