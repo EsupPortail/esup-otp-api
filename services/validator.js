@@ -6,7 +6,8 @@ var required = {
     get_available_transports: ['uid'],
     verify_code: ['uid', 'otp'],
     send_code: ['uid'],
-    regenerate_secret: ['uid'],
+    generate_google_authenticator_secret: ['uid'],
+    generate_bypass_codes: ['uid'],
     get_google_authenticator_secret: ['uid'],
     get_available_methods: [],
 }
@@ -76,8 +77,16 @@ exports.verify_code = function(req, res, next) {
     }
 }
 
-exports.regenerate_secret = function(req, res, next) {
-    if (check_parameters(req, required.regenerate_secret)) {
+exports.generate_google_authenticator_secret = function(req, res, next) {
+    if (check_parameters(req, required.generate_google_authenticator_secret)) {
+        return next();
+    } else {
+        return next(new restify.InvalidArgumentError());
+    }
+}
+
+exports.generate_bypass_codes = function(req, res, next) {
+    if (check_parameters(req, required.generate_bypass_codes)) {
         return next();
     } else {
         return next(new restify.InvalidArgumentError());

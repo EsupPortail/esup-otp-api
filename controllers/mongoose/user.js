@@ -23,6 +23,9 @@ exports.initiate = function(mongoose) {
             code: String,
             validity_time: Number
         },
+        bypass: {
+            codes: Array
+        },
         google_authenticator: {
             secret: Object,
             window : Number
@@ -126,7 +129,7 @@ exports.send_google_authenticator_sms = function(req, res, next) {
  * @param res reponse HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
-exports.regenerate_secret = function(req, res, next) {
+exports.generate_google_authenticator_secret = function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
     UserModel.update({
@@ -135,6 +138,44 @@ exports.regenerate_secret = function(req, res, next) {
         $set: {
             google_authenticator: {
                 secret: speakeasy.generateSecret({ length: 16 })
+            }
+        }
+    }, function(err, raw) {
+        if (err) return handleError(err);
+        res.send(raw);
+    })
+};
+
+/**
+ * Retourne la réponse de la base de donnée suite à la génération de nouveau bypass codes
+ *
+ * @param req requete HTTP contenant le nom la personne recherchee
+ * @param res reponse HTTP
+ * @param next permet d'appeler le prochain gestionnaire (handler)
+ */
+exports.generate_bypass_codes = function(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+    var codes = new Array();
+    for(var it = 0; it < properties.esup.methods.bypass.codes_number; it++){
+        switch(properties.esup.methods.simple_generator.code_type){
+            case "string":
+            codes.push(simple_generator.generate_string_code(properties.esup.methods.bypass.code_length));
+            break;
+            case "digit":
+            codes.push(simple_generator.generate_digit_code(properties.esup.methods.bypass.code_length));
+            break;
+            default:
+            codes.push(simple_generator.generate_string_code(properties.esup.methods.bypass.code_length));
+            break;
+        }
+    }
+    UserModel.update({
+        'uid': req.params.uid
+    }, {
+        $set: {
+            bypass: {
+                codes: codes
             }
         }
     }, function(err, raw) {
@@ -163,13 +204,13 @@ exports.send_simple_generator_mail = function(req, res, next) {
         var new_otp = {};
         switch(properties.esup.methods.simple_generator.code_type){
             case "string":
-            new_otp.code = simple_generator.generate_string_code();
+            new_otp.code = simple_generator.generate_string_code(properties.esup.methods.simple_generator.code_length);
             break;
             case "digit":
-            new_otp.code = simple_generator.generate_digit_code();
+            new_otp.code = simple_generator.generate_digit_code(properties.esup.methods.simple_generator.code_length);
             break;
             default:
-            new_otp.code = simple_generator.generate_string_code();
+            new_otp.code = simple_generator.generate_string_code(properties.esup.methods.simple_generator.code_length);
             break;
         }
         validity_time = properties.esup.methods.simple_generator.mail_validity * 60 * 1000;
@@ -215,13 +256,13 @@ exports.send_simple_generator_sms = function(req, res, next) {
         var new_otp = {};
         switch(properties.esup.methods.simple_generator.code_type){
             case "string":
-            new_otp.code = simple_generator.generate_string_code();
+            new_otp.code = simple_generator.generate_string_code(properties.esup.methods.simple_generator.code_length);
             break;
             case "digit":
-            new_otp.code = simple_generator.generate_digit_code();
+            new_otp.code = simple_generator.generate_digit_code(properties.esup.methods.simple_generator.code_length);
             break;
             default:
-            new_otp.code = simple_generator.generate_string_code();
+            new_otp.code = simple_generator.generate_string_code(properties.esup.methods.simple_generator.code_length);
             break;
         }
         validity_time = properties.esup.methods.simple_generator.sms_validity * 60 * 1000;
