@@ -1,0 +1,10 @@
+{
+    "success": {
+        "valid_credentials": "Valid credentials",
+        "transports_found": "Transports list found"
+    },
+    "error": {
+        "invalid_credentials": "Invalid credentials",
+        "user_not_found": "User not found"
+    }
+}

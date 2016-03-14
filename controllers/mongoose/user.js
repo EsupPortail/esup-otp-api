@@ -21,7 +21,6 @@ exports.initiate = function(mongoose) {
         },
         simple_generator: {
             code: String,
-            date_generation: Date,
             validity_time: Number
         },
         google_authenticator: {
@@ -268,7 +267,7 @@ exports.verify_code = function(req, res, next) {
             verify_google_authenticator(req, res, function(){
                 res.send({
                     "code": "Error",
-                    "message": "Invalid credentials"
+                    "message": properties.messages.error.invalid_credentials
                 });
             });
         });
@@ -306,7 +305,7 @@ function verify_simple_generator(req, res, next) {
                     }
                     res.send({
                         "code": "Ok",
-                        "message": "Valid credentials"
+                        "message": properties.messages.success.valid_credentials
                     });
                 });
             } else {
@@ -344,7 +343,7 @@ function verify_google_authenticator(req, res, next) {
         }
         else if (data[0] == undefined) res.send({
             "code": "Error",
-            "message": "User not found"
+            "message": properties.messages.error.user_not_found
         });
         else {
             var transport_window = 0;
@@ -359,7 +358,7 @@ function verify_google_authenticator(req, res, next) {
                 data[0].save(function() {
                     res.send({
                         "code": "Ok",
-                        "message": "Valid credentials"
+                        "message": properties.messages.success.valid_credentials
                     });
                 });
             } else {
@@ -391,7 +390,7 @@ exports.get_google_authenticator_secret = function(req, res, next) {
             mailer.sendQRCode(data[0].mail, data[0].google_authenticator.secret.base32, qr.createImgTag(4), res);
         } else res.send({
                 "code": "Error",
-                "message": "Resource not Found"
+                "message": properties.messages.error.user_not_found
             });
     });
 };

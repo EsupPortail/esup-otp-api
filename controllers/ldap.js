@@ -14,7 +14,7 @@ exports.get_available_transports = function(req, res, next) {
 
     var response = {
         "code": "Error",
-        "message": "User not found"
+        "message": properties.messages.error.user_not_found
     };
     ldap.search({
         attrs: properties.esup.ldap.transport.mail + ' ' + properties.esup.ldap.transport.sms,
@@ -37,7 +37,7 @@ exports.get_available_transports = function(req, res, next) {
                 result.mail = email;
             };
             response.code = "Ok";
-            response.message = "Transports List found";
+            response.message = properties.messages.success.transports_found;
             response.transports_list = result;
             res.send(response);
         } else res.send(response);
@@ -55,7 +55,7 @@ exports.send_sms = function(uid, callback, res) {
             if (typeof(callback) === "function" && data[0][properties.esup.ldap.transport.sms]) callback(data[0][properties.esup.ldap.transport.sms][0]);
         }else res.send({
                 "code": "Error",
-                "message": "User not found"
+                "message": properties.messages.error.user_not_found
         });
     });
 }
@@ -71,7 +71,7 @@ exports.send_mail = function(uid, callback, res) {
             if (typeof(callback) === "function" && data[0][properties.esup.ldap.transport.mail]) callback(data[0][properties.esup.ldap.transport.mail][0]);
         }else res.send({
                 "code": "Error",
-                "message": "User not found"
+                "message": properties.messages.error.user_not_found
             });
     });
 }
@@ -86,7 +86,7 @@ exports.send_app = function(uid, callback, res) {
             if (typeof(callback) === "function") callback();
         }else res.send({
                 "code": "Error",
-                "message": "User not found"
+                "message": properties.message.error.user_not_found
         });
     });
 }
