@@ -17,6 +17,12 @@
             "sms": "mobile"
         }
     },
+    "mysql":{
+        "host": "X.X.X.X",
+        "user": "xxxxxxxx",
+        "password": "xxxxxxx",
+        "database": "xxxxxx"
+    },
     "methods": {
         "google_authenticator": {
             "login_view": true,

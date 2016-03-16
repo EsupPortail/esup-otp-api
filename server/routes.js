@@ -14,37 +14,9 @@ server.use(restify.queryParser());
 server.use(restify.bodyParser());
 
 var userDb_controller = require(process.cwd() + '/controllers/' + properties.esup.userDb);
-switch (properties.esup.userDb) {
-    case "ldap":
-        var LDAP = require('ldap-client');
-        var ldap = new LDAP({
-            uri: properties.esup.ldap.uri, // string
-            base: properties.esup.ldap.baseDn, // default base for all future searches
-            scope: LDAP.SUBTREE, // default scope for all future searches    
-        }, function(err) {
-            if (err) console.log(err);
-            else { // bind
-                ldap.bind({
-                    binddn: properties.esup.ldap.adminDn,
-                    password: properties.esup.ldap.password
-                }, function(err) {
-                    if (err) console.log(err);
-                    else {
-                        userDb_controller.initialize(ldap, function() {
-                            console.log("ldap controller initialized");
-                        });
-                    }
-                });
-            }
-        });
-        break;
-    case 'mysql':
-        userDb_controller.initialize();
-        break;
-    default:
-        console.log("Unkown userDb");
-        break;
-}
+if (properties.esup.userDb) {
+    userDb_controller.initialize();
+} else console.log("Unkown userDb");
 
 // var mysql = require(process.cwd() + '/controllers/mysql');
 // mysql.initialize();

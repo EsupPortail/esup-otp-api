@@ -2,8 +2,26 @@ var properties = require(process.cwd() + '/properties/properties');
 var ldap;
 
 exports.initialize = function(bind, callback) {
-    ldap = bind;
-    if (typeof(callback) === "function") callback();
+    var LDAP = require('ldap-client');
+    ldap = new LDAP({
+        uri: properties.esup.ldap.uri, // string
+        base: properties.esup.ldap.baseDn, // default base for all future searches
+        scope: LDAP.SUBTREE, // default scope for all future searches    
+    }, function(err) {
+        if (err) console.log(err);
+        else {
+            ldap.bind({
+                binddn: properties.esup.ldap.adminDn,
+                password: properties.esup.ldap.password
+            }, function(err) {
+                if (err) console.log(err);
+                else {
+                    console.log("ldap controller initialized");
+                    if (typeof(callback) === "function") callback();
+                }
+            });
+        }
+    });
 }
 
 
@@ -53,9 +71,9 @@ exports.send_sms = function(uid, callback, res) {
         if (err) console.log("search error: " + err);
         if (data[0]) {
             if (typeof(callback) === "function" && data[0][properties.esup.ldap.transport.sms]) callback(data[0][properties.esup.ldap.transport.sms][0]);
-        }else res.send({
-                "code": "Error",
-                "message": properties.messages.error.user_not_found
+        } else res.send({
+            "code": "Error",
+            "message": properties.messages.error.user_not_found
         });
     });
 }
@@ -69,10 +87,10 @@ exports.send_mail = function(uid, callback, res) {
         if (err) console.log("search error: " + err);
         if (data[0]) {
             if (typeof(callback) === "function" && data[0][properties.esup.ldap.transport.mail]) callback(data[0][properties.esup.ldap.transport.mail][0]);
-        }else res.send({
-                "code": "Error",
-                "message": properties.messages.error.user_not_found
-            });
+        } else res.send({
+            "code": "Error",
+            "message": properties.messages.error.user_not_found
+        });
     });
 }
 
@@ -84,10 +102,9 @@ exports.send_app = function(uid, callback, res) {
         if (err) console.log("search error: " + err);
         if (data[0]) {
             if (typeof(callback) === "function") callback();
-        }else res.send({
-                "code": "Error",
-                "message": properties.messages.error.user_not_found
+        } else res.send({
+            "code": "Error",
+            "message": properties.messages.error.user_not_found
         });
     });
 }
-
