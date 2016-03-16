@@ -7,7 +7,7 @@ esup-otp-api is restful api using NodeJS for generate, send and verify one-time 
 
 ### Tech
 
-esup-otp-api uses a number open NodeJS modules:
+esup-otp-api uses a number of open NodeJS modules:
 
     "ldap-client": "^3.1.0",
     "mongoose": "4.4.0",
@@ -21,8 +21,8 @@ esup-otp-api uses a number open NodeJS modules:
 ### Installation
 - git clone https://github.com/Hakall/esup-otp-api.git
 - npm install
-- change the fields values in esup.sample to your installation
-- rename esup.sample to esup.json
+- change the fields values in esup.sample.json to your installation
+- rename esup.sample.json to esup.json
 - node run
 
 esup-otp-api runs in http, if you want a secure mode you will need a reverse proxy.
