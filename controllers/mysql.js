@@ -2,10 +2,10 @@ var properties = require(process.cwd() + '/properties/properties');
 var mysql      = require('mysql');
 
 var connection = mysql.createConnection({
-  host     : 'localhost',
-  user     : 'me',
-  password : 'secret',
-  database : 'my_db'
+  host     : '192.168.56.101',
+  user     : 'admin',
+  password : 'changeit',
+  database : 'test_otp'
 });
  
 connection.connect();
