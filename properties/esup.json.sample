@@ -48,7 +48,7 @@
         "url": "https://username:password@sms.univ.fr/esup-smsuapi/?action=SendSms&phoneNumber=$phoneNumber$&message=$message$"
     },
     "dev": {
-        "sms": undefined,
-        "mail": undefined
+        "sms": false,
+        "mail": false
     }
 }
