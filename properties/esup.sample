@@ -19,18 +19,26 @@
     },
     "methods": {
         "google_authenticator": {
+            "login_view": true,
             "sms_window": 6,
             "mail_window": 15,
             "app_window": 2,
             "default_window": 2
         },
         "simple_generator": {
+            "login_view": false,
             "sms_validity": 15,
             "mail_validity": 30,
             "code_type": "string",
             "code_length": 6
-        }    
-    },  
+        },
+        "bypass": {
+            "login_view": false,
+            "codes_number": 10,
+            "code_type": "string",
+            "code_length": 6
+        }        
+    }, 
     "mailer": {
         "service":"xmail",
         "address":"xxxxxxx@xmail.com",
@@ -40,5 +48,7 @@
         "url": "https://username:password@sms.univ.fr/esup-smsuapi/?action=SendSms&phoneNumber=$phoneNumber$&message=$message$"
     },
     "dev": {
+        "sms": undefined,
+        "mail": undefined
     }
 }
