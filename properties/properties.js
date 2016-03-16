@@ -4,7 +4,9 @@ var properties = {},
     properties_path = process.cwd() + '/properties';
 
 fs.readdirSync(properties_path).forEach(function(file) {
-    if (file.indexOf('.json') != -1) {
+    var strFile = file.split('.');
+    if (strFile[strFile.length - 1] == 'json') {
+    	console.log(strFile);
         properties[file.split('.')[0]] = JSON.parse(fs.readFileSync(properties_path + '/' + file));
     }
 })
