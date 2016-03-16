@@ -86,7 +86,7 @@ exports.send_app = function(uid, callback, res) {
             if (typeof(callback) === "function") callback();
         }else res.send({
                 "code": "Error",
-                "message": properties.message.error.user_not_found
+                "message": properties.messages.error.user_not_found
         });
     });
 }

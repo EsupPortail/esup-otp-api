@@ -38,10 +38,17 @@ switch (properties.esup.userDb) {
             }
         });
         break;
+    case 'mysql':
+        userDb_controller.initialize();
+        break;
     default:
         console.log("Unkown userDb");
         break;
 }
+
+// var mysql = require(process.cwd() + '/controllers/mysql');
+// mysql.initialize();
+// server.get("/mysql/get_user/:uid", validator.get_available_transports, mysql.get_available_transports);
 
 var connector_controller = require(process.cwd() + '/controllers/' + properties.esup.connector);
 switch (properties.esup.connector) {
@@ -64,20 +71,20 @@ server.get("/get_available_methods/", api.get_available_methods);
 server.get("/get_available_transports/:uid", validator.get_available_transports, userDb_controller.get_available_transports);
 
 // Google Authenticator
-if(properties.esup.methods.google_authenticator){
+if (properties.esup.methods.google_authenticator) {
     server.get("/send_code/google_authenticator/mail/:uid", validator.send_code, connector_controller.send_google_authenticator_mail);
     server.get("/send_code/google_authenticator/sms/:uid", validator.send_code, connector_controller.send_google_authenticator_sms);
     server.get("/generate/google_authenticator/:uid", validator.generate_google_authenticator_secret, connector_controller.generate_google_authenticator_secret);
 }
 
 // Simple generator
-if(properties.esup.methods.simple_generator){
+if (properties.esup.methods.simple_generator) {
     server.get("/send_code/simple_generator/mail/:uid", validator.send_code, connector_controller.send_simple_generator_mail);
     server.get("/send_code/simple_generator/sms/:uid", validator.send_code, connector_controller.send_simple_generator_sms);
 }
 
 // Bypass
-if(properties.esup.methods.bypass){
+if (properties.esup.methods.bypass) {
     server.get("/generate/bypass/:uid", validator.generate_bypass_codes, connector_controller.generate_bypass_codes);
 }
 
