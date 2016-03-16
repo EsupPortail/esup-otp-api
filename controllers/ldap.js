@@ -1,4 +1,5 @@
 var properties = require(process.cwd() + '/properties/properties');
+var utils = require(process.cwd() + '/services/utils');
 var ldap;
 
 exports.initialize = function(bind, callback) {
@@ -42,17 +43,10 @@ exports.get_available_transports = function(req, res, next) {
         if (data[0]) {
             var result = {};
             if (data[0][properties.esup.ldap.transport.sms]) {
-                var tel = "******" + data[0][properties.esup.ldap.transport.sms][0].substr(data[0][properties.esup.ldap.transport.sms][0].length - 4, 4);
-                result.sms = tel;
+                result.sms = utils.cover_string(data[0][properties.esup.ldap.transport.sms][0], 2,2);
             };
             if (data[0][properties.esup.ldap.transport.mail]) {
-                var size = data[0][properties.esup.ldap.transport.mail][0].length - 10;
-                var email = data[0][properties.esup.ldap.transport.mail][0].substr(0, 4);
-                for (var i = 0; i < size; i++) {
-                    email += '*';
-                }
-                email += data[0][properties.esup.ldap.transport.mail][0].substr(data[0][properties.esup.ldap.transport.mail][0].length - 6, 6)
-                result.mail = email;
+                result.mail = utils.cover_string(data[0][properties.esup.ldap.transport.mail][0], 4, 5);
             };
             response.code = "Ok";
             response.message = properties.messages.success.transports_found;
