@@ -65,28 +65,28 @@ server.get("/get_available_transports/:uid", validator.get_available_transports,
 
 // Google Authenticator
 if(properties.esup.methods.google_authenticator){
-    server.get("/send_code/google_authenticator/mail/:uid", validator.send_code, connector_controller.schemas.user.send_google_authenticator_mail);
-    server.get("/send_code/google_authenticator/sms/:uid", validator.send_code, connector_controller.schemas.user.send_google_authenticator_sms);
-    server.get("/generate/google_authenticator/:uid", validator.generate_google_authenticator_secret, connector_controller.schemas.user.generate_google_authenticator_secret);
+    server.get("/send_code/google_authenticator/mail/:uid", validator.send_code, connector_controller.send_google_authenticator_mail);
+    server.get("/send_code/google_authenticator/sms/:uid", validator.send_code, connector_controller.send_google_authenticator_sms);
+    server.get("/generate/google_authenticator/:uid", validator.generate_google_authenticator_secret, connector_controller.generate_google_authenticator_secret);
 }
 
 // Simple generator
 if(properties.esup.methods.simple_generator){
-    server.get("/send_code/simple_generator/mail/:uid", validator.send_code, connector_controller.schemas.user.send_simple_generator_mail);
-    server.get("/send_code/simple_generator/sms/:uid", validator.send_code, connector_controller.schemas.user.send_simple_generator_sms);
+    server.get("/send_code/simple_generator/mail/:uid", validator.send_code, connector_controller.send_simple_generator_mail);
+    server.get("/send_code/simple_generator/sms/:uid", validator.send_code, connector_controller.send_simple_generator_sms);
 }
 
 // Bypass
 if(properties.esup.methods.bypass){
-    server.get("/generate/bypass/:uid", validator.generate_bypass_codes, connector_controller.schemas.user.generate_bypass_codes);
+    server.get("/generate/bypass/:uid", validator.generate_bypass_codes, connector_controller.generate_bypass_codes);
 }
 
-server.get("/verify_code/:uid/:otp", validator.verify_code, connector_controller.schemas.user.verify_code);
+server.get("/verify_code/:uid/:otp", validator.verify_code, connector_controller.verify_code);
 
 // routes DEV uniquement
 
-server.get("/users/drop", connector_controller.schemas.user.drop);
-// server.get("/user/:uid/google_authenticator", validator.get_google_authenticator_secret, connector_controller.schemas.user.get_google_authenticator_secret);
+server.get("/users/drop", connector_controller.drop);
+// server.get("/user/:uid/google_authenticator", validator.get_google_authenticator_secret, connector_controller.get_google_authenticator_secret);
 
 var launch_server = function() {
     var port = properties.esup.port || 3000;
