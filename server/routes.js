@@ -44,10 +44,11 @@ server.get("/get_available_transports/:uid", validator.get_available_transports,
 server.get("/send_code/:method/:transport/:uid", validator.send_code, connector_controller.send_code);
 server.get("/deactivate/:method/:uid", validator.toggle_method, connector_controller.deactivate_method);
 server.get("/activate/:method/:uid", validator.toggle_method, connector_controller.activate_method);
+server.get("/generate/:method/:uid", validator.generate, connector_controller.generate);
 
 // Google Authenticator
 if (properties.esup.methods.google_authenticator) {
-    server.get("/generate/google_authenticator/:uid", validator.generate_google_authenticator_secret, connector_controller.generate_google_authenticator_secret);
+    // server.get("/generate/google_authenticator/:uid", validator.generate_google_authenticator_secret, connector_controller.generate_google_authenticator_secret);
 }
 
 // Simple generator
@@ -56,7 +57,7 @@ if (properties.esup.methods.simple_generator) {
 
 // Bypass
 if (properties.esup.methods.bypass) {
-    server.get("/generate/bypass/:uid", validator.generate_bypass_codes, connector_controller.generate_bypass_codes);
+    // server.get("/generate/bypass/:uid", validator.generate_bypass_codes, connector_controller.generate_bypass_codes);
 }
 
 server.get("/verify_code/:uid/:otp", validator.verify_code, connector_controller.verify_code);

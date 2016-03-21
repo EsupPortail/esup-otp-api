@@ -168,69 +168,6 @@ function send_code_google_authenticator(req, res, next) {
     });
 };
 
-
-/**
- * Retourne la réponse de la base de donnée suite à l'association d'un nouveau secret à l'utilisateur.
- *
- * @param req requete HTTP contenant le nom la personne recherchee
- * @param res reponse HTTP
- * @param next permet d'appeler le prochain gestionnaire (handler)
- */
-exports.generate_google_authenticator_secret = function(req, res, next) {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
-    UserModel.update({
-        'uid': req.params.uid
-    }, {
-        $set: {
-            google_authenticator: {
-                secret: speakeasy.generateSecret({ length: 16 })
-            }
-        }
-    }, function(err, raw) {
-        if (err) return handleError(err);
-        res.send(raw);
-    })
-};
-
-/**
- * Retourne la réponse de la base de donnée suite à la génération de nouveau bypass codes
- *
- * @param req requete HTTP contenant le nom la personne recherchee
- * @param res reponse HTTP
- * @param next permet d'appeler le prochain gestionnaire (handler)
- */
-exports.generate_bypass_codes = function(req, res, next) {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
-    var codes = new Array();
-    for (var it = 0; it < properties.esup.methods.bypass.codes_number; it++) {
-        switch (properties.esup.methods.simple_generator.code_type) {
-            case "string":
-                codes.push(simple_generator.generate_string_code(properties.esup.methods.bypass.code_length));
-                break;
-            case "digit":
-                codes.push(simple_generator.generate_digit_code(properties.esup.methods.bypass.code_length));
-                break;
-            default:
-                codes.push(simple_generator.generate_string_code(properties.esup.methods.bypass.code_length));
-                break;
-        }
-    }
-    UserModel.update({
-        'uid': req.params.uid
-    }, {
-        $set: {
-            bypass: {
-                codes: codes
-            }
-        }
-    }, function(err, raw) {
-        if (err) return handleError(err);
-        res.send(raw);
-    })
-};
-
 /**
  * Envoie le code via le transport == req.params.transport
  * Retourne la réponse du service mail
@@ -498,6 +435,100 @@ function verify_google_authenticator(req, res, next) {
     });
 };
 
+/**
+ * Génére un nouvel attribut d'auth (secret key ou matrice)
+ *
+ * @param req requete HTTP contenant le nom la personne recherchee
+ * @param res reponse HTTP
+ * @param next permet d'appeler le prochain gestionnaire (handler)
+ */
+exports.generate = function(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+
+    switch (req.params.method) {
+        case 'google_authenticator':
+            generate_google_authenticator(req, res, next);
+            break;
+        case 'simple_generator':
+            res.send({
+                "code": "Error",
+                "message": properties.messages.error.unvailable_method_operation
+            });
+            break;
+        case 'bypass':
+            generate_bypass(req, res, next);
+            break;
+        default:
+            res.send({
+                "code": "Error",
+                "message": properties.messages.error.method_not_found
+            });
+            break;
+    }
+};
+
+/**
+ * Retourne la réponse de la base de donnée suite à l'association d'un nouveau secret à l'utilisateur.
+ *
+ * @param req requete HTTP contenant le nom la personne recherchee
+ * @param res reponse HTTP
+ * @param next permet d'appeler le prochain gestionnaire (handler)
+ */
+function generate_google_authenticator(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+    UserModel.update({
+        'uid': req.params.uid
+    }, {
+        $set: {
+            google_authenticator: {
+                secret: speakeasy.generateSecret({ length: 16 })
+            }
+        }
+    }, function(err, raw) {
+        if (err) return handleError(err);
+        res.send(raw);
+    })
+};
+
+/**
+ * Retourne la réponse de la base de donnée suite à la génération de nouveau bypass codes
+ *
+ * @param req requete HTTP contenant le nom la personne recherchee
+ * @param res reponse HTTP
+ * @param next permet d'appeler le prochain gestionnaire (handler)
+ */
+function generate_bypass(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+    var codes = new Array();
+    for (var it = 0; it < properties.esup.methods.bypass.codes_number; it++) {
+        switch (properties.esup.methods.simple_generator.code_type) {
+            case "string":
+                codes.push(simple_generator.generate_string_code(properties.esup.methods.bypass.code_length));
+                break;
+            case "digit":
+                codes.push(simple_generator.generate_digit_code(properties.esup.methods.bypass.code_length));
+                break;
+            default:
+                codes.push(simple_generator.generate_string_code(properties.esup.methods.bypass.code_length));
+                break;
+        }
+    }
+    UserModel.update({
+        'uid': req.params.uid
+    }, {
+        $set: {
+            bypass: {
+                codes: codes
+            }
+        }
+    }, function(err, raw) {
+        if (err) return handleError(err);
+        res.send(raw);
+    })
+};
 
 
 /**
