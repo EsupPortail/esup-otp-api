@@ -557,6 +557,36 @@ exports.get_google_authenticator_secret = function(req, res, next) {
 };
 
 /**
+ * Renvoie les méthodes activées de l'utilisateur
+ *
+ * @param req requete HTTP contenant le nom la personne recherchee
+ * @param res reponse HTTP
+ * @param next permet d'appeler le prochain gestionnaire (handler)
+ */
+exports.get_activate_methods = function(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+    var response = {
+        "code": "Error",
+        "message": properties.messages.error.user_not_found
+    };
+    UserModel.find({
+        'uid': req.params.uid
+    }).exec(function(err, data) {
+        if (data[0]) {
+            var result = {};
+            result.google_authenticator = data[0].google_authenticator.active;
+            result.simple_generator = data[0].simple_generator.active;
+            result.bypass = data[0].bypass.active;
+            response.code = "Ok";
+            response.message = properties.messages.success.methods_found;
+            response.methods = result;
+            res.send(response);
+        } else res.send(response);
+    });
+};
+
+/**
  * Active la méthode l'utilisateur ayant l'uid req.params.uid
  *
  * @param req requete HTTP contenant le nom la personne recherchee

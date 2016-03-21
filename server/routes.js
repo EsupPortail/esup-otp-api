@@ -38,32 +38,19 @@ switch (properties.esup.connector) {
         console.log("Unkown connector");
         break;
 }
-
-server.get("/get_available_methods/", api.get_available_methods);
 server.get("/get_available_transports/:uid", validator.get_available_transports, userDb_controller.get_available_transports);
+
+server.get("/get_activate_methods/:uid", validator.get_activate_methods, connector_controller.get_activate_methods);
 server.get("/send_code/:method/:transport/:uid", validator.send_code, connector_controller.send_code);
 server.get("/deactivate/:method/:uid", validator.toggle_method, connector_controller.deactivate_method);
 server.get("/activate/:method/:uid", validator.toggle_method, connector_controller.activate_method);
 server.get("/generate/:method/:uid", validator.generate, connector_controller.generate);
-
-// Google Authenticator
-if (properties.esup.methods.google_authenticator) {
-    // server.get("/generate/google_authenticator/:uid", validator.generate_google_authenticator_secret, connector_controller.generate_google_authenticator_secret);
-}
-
-// Simple generator
-if (properties.esup.methods.simple_generator) {
-}
-
-// Bypass
-if (properties.esup.methods.bypass) {
-    // server.get("/generate/bypass/:uid", validator.generate_bypass_codes, connector_controller.generate_bypass_codes);
-}
-
 server.get("/verify_code/:uid/:otp", validator.verify_code, connector_controller.verify_code);
 
-// routes DEV uniquement
 
+// routes DEV/ADMIN uniquement
+
+server.get("/get_methods/", api.get_methods);
 server.get("/users/drop", connector_controller.drop);
 // server.get("/user/:uid/google_authenticator", validator.get_google_authenticator_secret, connector_controller.get_google_authenticator_secret);
 

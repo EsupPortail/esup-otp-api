@@ -1,7 +1,8 @@
 {
     "success": {
         "valid_credentials": "Valid credentials",
-        "transports_found": "Transports list found"
+        "transports_found": "Transports list found",
+        "methods_found": "Methods found"
     },
     "error": {
         "invalid_credentials": "Invalid credentials",

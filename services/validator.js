@@ -9,7 +9,7 @@ var required = {
     generate: ['uid', 'method'],
     get_google_authenticator_secret: ['uid'],
     toggle_method: ['uid', 'method'],
-    get_available_methods: [],
+    get_activate_methods: ['uid'],
 }
 
 function validate(req, required) {
@@ -53,16 +53,16 @@ exports.get_available_transports = function(req, res, next) {
     }
 }
 
-exports.toggle_method = function(req, res, next) {
-    if (check_parameters(req, required.toggle_method)) {
+exports.get_activate_methods = function(req, res, next) {
+    if (check_parameters(req, required.get_activate_methods)) {
         return next();
     } else {
         return next(new restify.InvalidArgumentError());
     }
 }
 
-exports.get_available_methods = function(req, res, next) {
-    if (check_parameters(req, required.get_available_methods)) {
+exports.toggle_method = function(req, res, next) {
+    if (check_parameters(req, required.toggle_method)) {
         return next();
     } else {
         return next(new restify.InvalidArgumentError());

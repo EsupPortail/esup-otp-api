@@ -1,6 +1,6 @@
 var properties = require(process.cwd() + '/properties/properties');
 
-exports.get_available_methods = function(req, res, next) {
+exports.get_methods = function(req, res, next) {
     console.log("get_available_methods_v2");
 
     res.header("Access-Control-Allow-Origin", "*");
