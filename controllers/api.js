@@ -12,7 +12,7 @@ exports.get_available_methods = function(req, res, next) {
     };
     response.methods = [];
     for (method in properties.esup.methods) {
-        if (properties.esup.methods[method].login_view) {
+        if (properties.esup.methods[method]) {
             response.methods.push(method);
             response.code = "Ok";
             response.message = "Method(s) found";

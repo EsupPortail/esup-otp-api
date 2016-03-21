@@ -64,6 +64,8 @@ server.get("/verify_code/:uid/:otp", validator.verify_code, connector_controller
 
 // routes DEV uniquement
 
+server.get("/deactivate/:method/:uid", validator.toggle_method, connector_controller.deactivate_method);
+server.get("/activate/:method/:uid", validator.toggle_method, connector_controller.activate_method);
 server.get("/users/drop", connector_controller.drop);
 // server.get("/user/:uid/google_authenticator", validator.get_google_authenticator_secret, connector_controller.get_google_authenticator_secret);
 

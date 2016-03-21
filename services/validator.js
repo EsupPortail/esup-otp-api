@@ -9,6 +9,7 @@ var required = {
     generate_google_authenticator_secret: ['uid'],
     generate_bypass_codes: ['uid'],
     get_google_authenticator_secret: ['uid'],
+    toggle_method: ['uid', 'method'],
     get_available_methods: [],
 }
 
@@ -47,6 +48,14 @@ exports.set_otp = function(req, res, next) {
 
 exports.get_available_transports = function(req, res, next) {
     if (check_parameters(req, required.get_available_transports)) {
+        return next();
+    } else {
+        return next(new restify.InvalidArgumentError());
+    }
+}
+
+exports.toggle_method = function(req, res, next) {
+    if (check_parameters(req, required.toggle_method)) {
         return next();
     } else {
         return next(new restify.InvalidArgumentError());

@@ -27,14 +27,26 @@ function initiatilize_user_model(mongoose) {
         },
         simple_generator: {
             code: String,
-            validity_time: Number
+            validity_time: Number,
+            active: {
+                type: Boolean,
+                default: false
+            }
         },
         bypass: {
-            codes: Array
+            codes: Array,
+            active: {
+                type: Boolean,
+                default: false
+            }
         },
         google_authenticator: {
             secret: Object,
-            window: Number
+            window: Number,
+            active: {
+                type: Boolean,
+                default: false
+            }
         },
     });
 
@@ -339,24 +351,28 @@ function verify_simple_generator(req, res, next) {
     UserModel.find({
         'uid': req.params.uid
     }).exec(function(err, data) {
-        if (data[0].simple_generator.code == req.params.otp) {
-            if (Date.now() < data[0].simple_generator.validity_time) {
-                UserModel.update({
-                    'uid': req.params.uid
-                }, {
-                    $set: {
-                        simple_generator: {}
-                    }
-                }, function(err, data) {
-                    if (err) {
-                        console.log(err)
-                        next(req, res);
-                    }
-                    res.send({
-                        "code": "Ok",
-                        "message": properties.messages.success.valid_credentials
+        if (data[0].simple_generator.active) {
+            if (data[0].simple_generator.code == req.params.otp) {
+                if (Date.now() < data[0].simple_generator.validity_time) {
+                    UserModel.update({
+                        'uid': req.params.uid
+                    }, {
+                        $set: {
+                            simple_generator: {}
+                        }
+                    }, function(err, data) {
+                        if (err) {
+                            console.log(err)
+                            next(req, res);
+                        }
+                        res.send({
+                            "code": "Ok",
+                            "message": properties.messages.success.valid_credentials
+                        });
                     });
-                });
+                } else {
+                    next(req, res);
+                }
             } else {
                 next(req, res);
             }
@@ -383,34 +399,38 @@ function verify_bypass(req, res, next) {
     UserModel.find({
         'uid': req.params.uid
     }).exec(function(err, data) {
-        if (data[0].bypass.codes) {
-            var checkOtp = false;
-            var codes = data[0].bypass.codes;
-            for (code in codes) {
-                if (data[0].bypass.codes[code] == req.params.otp) {
-                    checkOtp = true;
-                    codes.splice(code, 1);
+        if (data[0].bypass.active) {
+            if (data[0].bypass.codes) {
+                var checkOtp = false;
+                var codes = data[0].bypass.codes;
+                for (code in codes) {
+                    if (data[0].bypass.codes[code] == req.params.otp) {
+                        checkOtp = true;
+                        codes.splice(code, 1);
+                    }
                 }
-            }
-            if (checkOtp) {
-                UserModel.update({
-                    'uid': req.params.uid
-                }, {
-                    $set: {
-                        bypass: {
-                            codes: codes
+                if (checkOtp) {
+                    UserModel.update({
+                        'uid': req.params.uid
+                    }, {
+                        $set: {
+                            bypass: {
+                                codes: codes
+                            }
                         }
-                    }
-                }, function(err, data) {
-                    if (err) {
-                        console.log(err)
-                        next(req, res);
-                    }
-                    res.send({
-                        "code": "Ok",
-                        "message": properties.messages.success.valid_credentials
+                    }, function(err, data) {
+                        if (err) {
+                            console.log(err)
+                            next(req, res);
+                        }
+                        res.send({
+                            "code": "Ok",
+                            "message": properties.messages.success.valid_credentials
+                        });
                     });
-                });
+                } else {
+                    next(req, res);
+                }
             } else {
                 next(req, res);
             }
@@ -445,21 +465,25 @@ function verify_google_authenticator(req, res, next) {
             "message": properties.messages.error.user_not_found
         });
         else {
-            var transport_window = 0;
-            checkSpeakeasy = speakeasy.totp.verify({
-                secret: data[0].google_authenticator.secret.base32,
-                encoding: 'base32',
-                token: req.params.otp,
-                window: data[0].google_authenticator.window
-            });
-            if (checkSpeakeasy) {
-                data[0].google_authenticator.window = properties.esup.methods.google_authenticator.default_window;
-                data[0].save(function() {
-                    res.send({
-                        "code": "Ok",
-                        "message": properties.messages.success.valid_credentials
-                    });
+            if (data[0].google_authenticator.active) {
+                var transport_window = 0;
+                checkSpeakeasy = speakeasy.totp.verify({
+                    secret: data[0].google_authenticator.secret.base32,
+                    encoding: 'base32',
+                    token: req.params.otp,
+                    window: data[0].google_authenticator.window
                 });
+                if (checkSpeakeasy) {
+                    data[0].google_authenticator.window = properties.esup.methods.google_authenticator.default_window;
+                    data[0].save(function() {
+                        res.send({
+                            "code": "Ok",
+                            "message": properties.messages.success.valid_credentials
+                        });
+                    });
+                } else {
+                    next(req, res);
+                }
             } else {
                 next(req, res);
             }
@@ -494,6 +518,234 @@ exports.get_google_authenticator_secret = function(req, res, next) {
     });
 };
 
+/**
+ * Active la méthode l'utilisateur ayant l'uid req.params.uid
+ *
+ * @param req requete HTTP contenant le nom la personne recherchee
+ * @param res reponse HTTP
+ * @param next permet d'appeler le prochain gestionnaire (handler)
+ */
+exports.activate_method = function(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+
+    switch (req.params.method) {
+        case 'google_authenticator':
+            activate_google_authenticator(req, res, next);
+            break;
+        case 'simple_generator':
+            activate_simple_generator(req, res, next);
+            break;
+        case 'bypass':
+            activate_bypass(req, res, next);
+            break;
+        default:
+            res.send({
+                "code": "Error",
+                "message": properties.messages.error.method_not_found
+            });
+            break;
+    }
+};
+
+/**
+ * Active la méthode google auth pour l'utilisateur ayant l'uid req.params.uid
+ *
+ * @param req requete HTTP contenant le nom la personne recherchee
+ * @param res reponse HTTP
+ * @param next permet d'appeler le prochain gestionnaire (handler)
+ */
+function activate_google_authenticator(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+
+    UserModel.find({
+        'uid': req.params.uid
+    }).exec(function(err, data) {
+        if (data[0]) {
+            data[0].google_authenticator.active = true;
+            data[0].save(function() {
+                res.send({
+                    "code": "Ok",
+                    "message": ""
+                });
+            });
+        } else {
+            next(req, res);
+        }
+    });
+};
+
+/**
+ * Active la méthode simple_generator pour l'utilisateur ayant l'uid req.params.uid
+ *
+ * @param req requete HTTP contenant le nom la personne recherchee
+ * @param res reponse HTTP
+ * @param next permet d'appeler le prochain gestionnaire (handler)
+ */
+function activate_simple_generator(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+
+    UserModel.find({
+        'uid': req.params.uid
+    }).exec(function(err, data) {
+        if (data[0]) {
+            data[0].simple_generator.active = true;
+            data[0].save(function() {
+                res.send({
+                    "code": "Ok",
+                    "message": ""
+                });
+            });
+        } else {
+            next(req, res);
+        }
+    });
+};
+
+/**
+ * Active la méthode bypass pour l'utilisateur ayant l'uid req.params.uid
+ *
+ * @param req requete HTTP contenant le nom la personne recherchee
+ * @param res reponse HTTP
+ * @param next permet d'appeler le prochain gestionnaire (handler)
+ */
+function activate_bypass(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+
+    UserModel.find({
+        'uid': req.params.uid
+    }).exec(function(err, data) {
+        if (data[0]) {
+            data[0].bypass.active = true;
+            data[0].save(function() {
+                res.send({
+                    "code": "Ok",
+                    "message": ""
+                });
+            });
+        } else {
+            next(req, res);
+        }
+    });
+};
+
+
+/**
+ * Désctive la méthode l'utilisateur ayant l'uid req.params.uid
+ *
+ * @param req requete HTTP contenant le nom la personne recherchee
+ * @param res reponse HTTP
+ * @param next permet d'appeler le prochain gestionnaire (handler)
+ */
+exports.deactivate_method = function(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+
+    switch (req.params.method) {
+        case 'google_authenticator':
+            deactivate_google_authenticator(req, res, next);
+            break;
+        case 'simple_generator':
+            deactivate_simple_generator(req, res, next);
+            break;
+        case 'bypass':
+            deactivate_bypass(req, res, next);
+            break;
+        default:
+            res.send({
+                "code": "Error",
+                "message": properties.messages.error.method_not_found
+            });
+            break;
+    }
+};
+
+/**
+ * Désactive la méthode google auth pour l'utilisateur ayant l'uid req.params.uid
+ *
+ * @param req requete HTTP contenant le nom la personne recherchee
+ * @param res reponse HTTP
+ * @param next permet d'appeler le prochain gestionnaire (handler)
+ */
+function deactivate_google_authenticator(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+
+    UserModel.find({
+        'uid': req.params.uid
+    }).exec(function(err, data) {
+        if (data[0]) {
+            data[0].google_authenticator.active = false;
+            data[0].save(function() {
+                res.send({
+                    "code": "Ok",
+                    "message": ""
+                });
+            });
+        } else {
+            next(req, res);
+        }
+    });
+};
+
+/**
+ * Désactive la méthode simple_generator pour l'utilisateur ayant l'uid req.params.uid
+ *
+ * @param req requete HTTP contenant le nom la personne recherchee
+ * @param res reponse HTTP
+ * @param next permet d'appeler le prochain gestionnaire (handler)
+ */
+function deactivate_simple_generator(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+
+    UserModel.find({
+        'uid': req.params.uid
+    }).exec(function(err, data) {
+        if (data[0]) {
+            data[0].simple_generator.active = false;
+            data[0].save(function() {
+                res.send({
+                    "code": "Ok",
+                    "message": ""
+                });
+            });
+        } else {
+            next(req, res);
+        }
+    });
+};
+
+/**
+ * Désactive la méthode bypass pour l'utilisateur ayant l'uid req.params.uid
+ *
+ * @param req requete HTTP contenant le nom la personne recherchee
+ * @param res reponse HTTP
+ * @param next permet d'appeler le prochain gestionnaire (handler)
+ */
+function deactivate_bypass(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+
+    UserModel.find({
+        'uid': req.params.uid
+    }).exec(function(err, data) {
+        if (data[0]) {
+            data[0].bypass.active = false;
+            data[0].save(function() {
+                res.send({
+                    "code": "Ok",
+                    "message": ""
+                });
+            });
+        } else {
+            next(req, res);
+        }
+    });
+};
 
 /**
  * Drop Users

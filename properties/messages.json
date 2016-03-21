@@ -5,6 +5,7 @@
     },
     "error": {
         "invalid_credentials": "Invalid credentials",
-        "user_not_found": "User not found"
+        "user_not_found": "User not found",
+        "method_not_found": "Method not found"
     }
 }
