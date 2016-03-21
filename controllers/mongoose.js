@@ -133,36 +133,9 @@ function send_code_google_authenticator(req, res, next) {
                 }
             });
         } else {
-            var user = new UserModel();
-            user.uid = req.params.uid;
-            user.google_authenticator.secret = speakeasy.generateSecret({ length: 16 });
-            user.google_authenticator.window = properties.esup.methods.google_authenticator.mail_window;
-            user.save(function() {
-                switch (req.params.transport) {
-                    case 'mail':
-                        userDb_controller.send_mail(req.params.uid, function(mail) {
-                            mailer.send_code(mail, speakeasy.totp({
-                                secret: user.google_authenticator.secret.base32,
-                                encoding: 'base32'
-                            }), res);
-                        }, res);
-                        break;
-                    case 'sms':
-                        userDb_controller.send_sms(req.params.uid, function(num) {
-                            sms.send_code(num, speakeasy.totp({
-                                secret: user.google_authenticator.secret.base32,
-                                encoding: 'base32'
-                            }), res);
-                        }, res);
-                        break;
-                    default:
-                        res.send({
-                            code: 'Error',
-                            message: properties.messages.error.unvailable_method_transport
-                        });
-                        break;
-                }
-
+            res.send({
+                "code": "Error",
+                "message": properties.messages.error.user_not_found
             });
         }
     });
@@ -223,28 +196,9 @@ function send_code_simple_generator(req, res, next) {
                 }
             });
         } else {
-            var user = new UserModel();
-            user.uid = req.params.uid;
-            user.simple_generator = new_otp;
-            user.save(function() {
-                switch (req.params.transport) {
-                    case 'mail':
-                        userDb_controller.send_mail(req.params.uid, function(mail) {
-                            mailer.send_code(mail, new_otp.code, res);
-                        }, res);
-                        break;
-                    case 'sms':
-                        userDb_controller.send_sms(req.params.uid, function(num) {
-                            sms.send_code(num, new_otp.code, res);
-                        }, res);
-                        break;
-                    default:
-                        res.send({
-                            code: 'Error',
-                            message: properties.messages.error.unvailable_method_transport
-                        });
-                        break;
-                }
+            res.send({
+                "code": "Error",
+                "message": properties.messages.error.user_not_found
             });
         }
     });
