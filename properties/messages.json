@@ -6,6 +6,8 @@
     "error": {
         "invalid_credentials": "Invalid credentials",
         "user_not_found": "User not found",
-        "method_not_found": "Method not found"
+        "method_not_found": "Method not found",
+        "unvailable_method_operation": "Unvailable method operation",
+        "unvailable_method_transport": "Unvailable method transport"
     }
 }

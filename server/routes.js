@@ -41,18 +41,17 @@ switch (properties.esup.connector) {
 
 server.get("/get_available_methods/", api.get_available_methods);
 server.get("/get_available_transports/:uid", validator.get_available_transports, userDb_controller.get_available_transports);
+server.get("/send_code/:method/:transport/:uid", validator.send_code, connector_controller.send_code);
+server.get("/deactivate/:method/:uid", validator.toggle_method, connector_controller.deactivate_method);
+server.get("/activate/:method/:uid", validator.toggle_method, connector_controller.activate_method);
 
 // Google Authenticator
 if (properties.esup.methods.google_authenticator) {
-    server.get("/send_code/google_authenticator/mail/:uid", validator.send_code, connector_controller.send_google_authenticator_mail);
-    server.get("/send_code/google_authenticator/sms/:uid", validator.send_code, connector_controller.send_google_authenticator_sms);
     server.get("/generate/google_authenticator/:uid", validator.generate_google_authenticator_secret, connector_controller.generate_google_authenticator_secret);
 }
 
 // Simple generator
 if (properties.esup.methods.simple_generator) {
-    server.get("/send_code/simple_generator/mail/:uid", validator.send_code, connector_controller.send_simple_generator_mail);
-    server.get("/send_code/simple_generator/sms/:uid", validator.send_code, connector_controller.send_simple_generator_sms);
 }
 
 // Bypass
@@ -64,8 +63,6 @@ server.get("/verify_code/:uid/:otp", validator.verify_code, connector_controller
 
 // routes DEV uniquement
 
-server.get("/deactivate/:method/:uid", validator.toggle_method, connector_controller.deactivate_method);
-server.get("/activate/:method/:uid", validator.toggle_method, connector_controller.activate_method);
 server.get("/users/drop", connector_controller.drop);
 // server.get("/user/:uid/google_authenticator", validator.get_google_authenticator_secret, connector_controller.get_google_authenticator_secret);
 

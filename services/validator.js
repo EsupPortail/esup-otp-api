@@ -5,7 +5,7 @@ var required = {
     set_otp: ['uid', 'otp'],
     get_available_transports: ['uid'],
     verify_code: ['uid', 'otp'],
-    send_code: ['uid'],
+    send_code: ['uid', 'method', 'transport'],
     generate_google_authenticator_secret: ['uid'],
     generate_bypass_codes: ['uid'],
     get_google_authenticator_secret: ['uid'],

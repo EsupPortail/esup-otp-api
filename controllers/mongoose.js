@@ -54,15 +54,49 @@ function initiatilize_user_model(mongoose) {
     UserModel = mongoose.model('User');
 }
 
+
 /**
- * Associe "mail" au transport de l'utilisateur et un code google authenaticator
+ * Envoie un code à l'utilisateur avec l'uid == req.params.uid et via la method == req.params.method
+ *
+ * @param req requete HTTP contenant le nom la personne recherchee
+ * @param res reponse HTTP
+ * @param next permet d'appeler le prochain gestionnaire (handler)
+ */
+exports.send_code = function(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+
+    switch (req.params.method) {
+        case 'google_authenticator':
+            send_code_google_authenticator(req, res, next);
+            break;
+        case 'simple_generator':
+            send_code_simple_generator(req, res, next);
+            break;
+        case 'bypass':
+            res.send({
+                "code": "Error",
+                "message": properties.messages.error.unvailable_method_operation
+            });
+            break;
+        default:
+            res.send({
+                "code": "Error",
+                "message": properties.messages.error.method_not_found
+            });
+            break;
+    }
+};
+
+/**
+ * Envoie le code via le transport == req.params.transport
  * Retourne la réponse du service mail
  *
  * @param req requete HTTP contenant le nom la personne recherchee
  * @param res reponse HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
-exports.send_google_authenticator_mail = function(req, res, next) {
+function send_code_google_authenticator(req, res, next) {
     console.log("send_google_authenticator_mail :" + req.params.uid);
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
@@ -73,12 +107,30 @@ exports.send_google_authenticator_mail = function(req, res, next) {
         if (data[0]) {
             data[0].google_authenticator.window = properties.esup.methods.google_authenticator.mail_window;
             data[0].save(function() {
-                userDb_controller.send_mail(req.params.uid, function(mail) {
-                    mailer.send_code(mail, speakeasy.totp({
-                        secret: data[0].google_authenticator.secret.base32,
-                        encoding: 'base32'
-                    }), res);
-                }, res);
+                switch (req.params.transport) {
+                    case 'mail':
+                        userDb_controller.send_mail(req.params.uid, function(mail) {
+                            mailer.send_code(mail, speakeasy.totp({
+                                secret: data[0].google_authenticator.secret.base32,
+                                encoding: 'base32'
+                            }), res);
+                        }, res);
+                        break;
+                    case 'sms':
+                        userDb_controller.send_sms(req.params.uid, function(num) {
+                            sms.send_code(num, speakeasy.totp({
+                                secret: data[0].google_authenticator.secret.base32,
+                                encoding: 'base32'
+                            }), res);
+                        }, res);
+                        break;
+                    default:
+                        res.send({
+                            code: 'Error',
+                            message: properties.messages.error.unvailable_method_transport
+                        });
+                        break;
+                }
             });
         } else {
             var user = new UserModel();
@@ -86,59 +138,36 @@ exports.send_google_authenticator_mail = function(req, res, next) {
             user.google_authenticator.secret = speakeasy.generateSecret({ length: 16 });
             user.google_authenticator.window = properties.esup.methods.google_authenticator.mail_window;
             user.save(function() {
-                userDb_controller.send_mail(req.params.uid, function(mail) {
-                    mailer.send_code(mail, speakeasy.totp({
-                        secret: user.google_authenticator.secret.base32,
-                        encoding: 'base32'
-                    }), res);
-                }, res);
+                switch (req.params.transport) {
+                    case 'mail':
+                        userDb_controller.send_mail(req.params.uid, function(mail) {
+                            mailer.send_code(mail, speakeasy.totp({
+                                secret: user.google_authenticator.secret.base32,
+                                encoding: 'base32'
+                            }), res);
+                        }, res);
+                        break;
+                    case 'sms':
+                        userDb_controller.send_sms(req.params.uid, function(num) {
+                            sms.send_code(num, speakeasy.totp({
+                                secret: user.google_authenticator.secret.base32,
+                                encoding: 'base32'
+                            }), res);
+                        }, res);
+                        break;
+                    default:
+                        res.send({
+                            code: 'Error',
+                            message: properties.messages.error.unvailable_method_transport
+                        });
+                        break;
+                }
+
             });
         }
     });
 };
 
-/**
- * Associe "sms" au transport de l'utilisateur et un code google authenaticator
- * Retourne la réponse du service sms
- *
- * @param req requete HTTP contenant le nom la personne recherchee
- * @param res reponse HTTP
- * @param next permet d'appeler le prochain gestionnaire (handler)
- */
-exports.send_google_authenticator_sms = function(req, res, next) {
-    console.log("send_google_authenticator_sms :" + req.params.uid);
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
-
-    UserModel.find({
-        'uid': req.params.uid
-    }).exec(function(err, data) {
-        if (data[0]) {
-            data[0].google_authenticator.window = properties.esup.methods.google_authenticator.sms_window;
-            data[0].save(function() {
-                userDb_controller.send_sms(req.params.uid, function(num) {
-                    sms.send_code(num, speakeasy.totp({
-                        secret: data[0].google_authenticator.secret.base32,
-                        encoding: 'base32'
-                    }), res);
-                }, res);
-            });
-        } else {
-            var user = new UserModel();
-            user.uid = req.params.uid;
-            user.google_authenticator.secret = speakeasy.generateSecret({ length: 16 });
-            user.google_authenticator.window = properties.esup.methods.google_authenticator.sms_window;
-            user.save(function() {
-                userDb_controller.send_sms(req.params.uid, function(num) {
-                    sms.send_code(num, speakeasy.totp({
-                        secret: user.google_authenticator.secret.base32,
-                        encoding: 'base32'
-                    }), res);
-                }, res);
-            });
-        }
-    });
-};
 
 /**
  * Retourne la réponse de la base de donnée suite à l'association d'un nouveau secret à l'utilisateur.
@@ -203,14 +232,14 @@ exports.generate_bypass_codes = function(req, res, next) {
 };
 
 /**
- * Associe "mail" au transport de l'utilisateur et un code simple generator
+ * Envoie le code via le transport == req.params.transport
  * Retourne la réponse du service mail
  *
  * @param req requete HTTP contenant le nom la personne recherchee
  * @param res reponse HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
-exports.send_simple_generator_mail = function(req, res, next) {
+function send_code_simple_generator(req, res, next) {
     console.log("send_simple_generator_mail :" + req.params.uid);
 
     res.header("Access-Control-Allow-Origin", "*");
@@ -237,70 +266,48 @@ exports.send_simple_generator_mail = function(req, res, next) {
         if (data[0]) {
             data[0].simple_generator = new_otp;
             data[0].save(function() {
-                userDb_controller.send_mail(req.params.uid, function(mail) {
-                    mailer.send_code(mail, new_otp.code, res);
-                }, res);
+                switch (req.params.transport) {
+                    case 'mail':
+                        userDb_controller.send_mail(req.params.uid, function(mail) {
+                            mailer.send_code(mail, new_otp.code, res);
+                        }, res);
+                        break;
+                    case 'sms':
+                        userDb_controller.send_sms(req.params.uid, function(num) {
+                            sms.send_code(num, new_otp.code, res);
+                        }, res);
+                        break;
+                    default:
+                        res.send({
+                            code: 'Error',
+                            message: properties.messages.error.unvailable_method_transport
+                        });
+                        break;
+                }
             });
         } else {
             var user = new UserModel();
             user.uid = req.params.uid;
             user.simple_generator = new_otp;
             user.save(function() {
-                userDb_controller.send_mail(req.params.uid, function(mail) {
-                    mailer.send_code(mail, new_otp.code, res);
-                }, res);
-            });
-        }
-    });
-};
-
-/**
- * Associe "sms" au transport de l'utilisateur et un code simple generator
- * Retourne la réponse du service sms
- *
- * @param req requete HTTP contenant le nom la personne recherchee
- * @param res reponse HTTP
- * @param next permet d'appeler le prochain gestionnaire (handler)
- */
-exports.send_simple_generator_sms = function(req, res, next) {
-    console.log("send_simple_generator_sms :" + req.params.uid);
-
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
-
-    UserModel.find({
-        'uid': req.params.uid
-    }).exec(function(err, data) {
-        var new_otp = {};
-        switch (properties.esup.methods.simple_generator.code_type) {
-            case "string":
-                new_otp.code = simple_generator.generate_string_code(properties.esup.methods.simple_generator.code_length);
-                break;
-            case "digit":
-                new_otp.code = simple_generator.generate_digit_code(properties.esup.methods.simple_generator.code_length);
-                break;
-            default:
-                new_otp.code = simple_generator.generate_string_code(properties.esup.methods.simple_generator.code_length);
-                break;
-        }
-        validity_time = properties.esup.methods.simple_generator.sms_validity * 60 * 1000;
-        validity_time += new Date().getTime();
-        new_otp.validity_time = validity_time;
-        if (data[0]) {
-            data[0].simple_generator = new_otp;
-            data[0].save(function() {
-                userDb_controller.send_sms(req.params.uid, function(num) {
-                    sms.send_code(num, new_otp.code, res);
-                }, res);
-            });
-        } else {
-            var user = new UserModel();
-            user.uid = req.params.uid;
-            user.simple_generator = new_otp;
-            user.save(function() {
-                userDb_controller.send_sms(req.params.uid, function(num) {
-                    sms.send_code(num, new_otp.code, res);
-                }, res);
+                switch (req.params.transport) {
+                    case 'mail':
+                        userDb_controller.send_mail(req.params.uid, function(mail) {
+                            mailer.send_code(mail, new_otp.code, res);
+                        }, res);
+                        break;
+                    case 'sms':
+                        userDb_controller.send_sms(req.params.uid, function(num) {
+                            sms.send_code(num, new_otp.code, res);
+                        }, res);
+                        break;
+                    default:
+                        res.send({
+                            code: 'Error',
+                            message: properties.messages.error.unvailable_method_transport
+                        });
+                        break;
+                }
             });
         }
     });
