@@ -31,6 +31,16 @@ function initiatilize_user_model(mongoose) {
             active: {
                 type: Boolean,
                 default: false
+            },
+            transport: {
+                sms: {
+                    type: Boolean,
+                    default: false
+                },
+                mail: {
+                    type: Boolean,
+                    default: false
+                },
             }
         },
         bypass: {
@@ -38,6 +48,16 @@ function initiatilize_user_model(mongoose) {
             active: {
                 type: Boolean,
                 default: false
+            },
+            transport: {
+                sms: {
+                    type: Boolean,
+                    default: false
+                },
+                mail: {
+                    type: Boolean,
+                    default: false
+                },
             }
         },
         google_authenticator: {
@@ -46,6 +66,16 @@ function initiatilize_user_model(mongoose) {
             active: {
                 type: Boolean,
                 default: false
+            },
+            transport: {
+                sms: {
+                    type: Boolean,
+                    default: false
+                },
+                mail: {
+                    type: Boolean,
+                    default: false
+                },
             }
         },
     });
@@ -769,6 +799,39 @@ function deactivate_bypass(req, res, next) {
     });
 };
 
+
+/**
+ * Active le transport == req.params.transport de la method == req.params.method pour l'utilisateur avec l'uid == req.params.uid
+ *
+ * @param req requete HTTP contenant le nom la personne recherchee
+ * @param res reponse HTTP
+ * @param next permet d'appeler le prochain gestionnaire (handler)
+ */
+exports.activate_transport = function(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+
+    switch (req.params.method) {
+        case 'google_authenticator':
+            activate_transport_code_google_authenticator(req, res, next);
+            break;
+        case 'simple_generator':
+            activate_transport_code_simple_generator(req, res, next);
+            break;
+        case 'bypass':
+            res.send({
+                "code": "Error",
+                "message": properties.messages.error.unvailable_method_operation
+            });
+            break;
+        default:
+            res.send({
+                "code": "Error",
+                "message": properties.messages.error.method_not_found
+            });
+            break;
+    }
+};
 /**
  * Drop Users
  */

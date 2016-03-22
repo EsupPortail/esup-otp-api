@@ -2,7 +2,7 @@ var restify = require('restify');
 var properties = require(process.cwd() + '/properties/properties');
 var validator = require(process.cwd() + '/services/validator');
 var fs = require('fs');
-var api = require(process.cwd() + '/controllers/api');
+var utils = require(process.cwd() + '/services/utils');
 
 var server = restify.createServer({
     name: 'esup-otp',
@@ -22,37 +22,37 @@ if (properties.esup.userDb) {
 // mysql.initialize();
 // server.get("/mysql/get_user/:uid", validator.get_available_transports, mysql.get_available_transports);
 
-var connector_controller = require(process.cwd() + '/controllers/' + properties.esup.connector);
-switch (properties.esup.connector) {
-    case "mongoose":
-        var connector = require(properties.esup.connector);
-        connector.connect('mongodb://' + properties.esup.mongodb.address + '/' + properties.esup.mongodb.db, function(error) {
+var apiDB_controller = require(process.cwd() + '/controllers/' + properties.esup.apiDB);
+switch (properties.esup.apiDB) {
+    case "mongodb":
+        var apiDB = require(properties.esup.mongodb.module);
+        apiDB.connect('mongodb://' + properties.esup.mongodb.address + '/' + properties.esup.mongodb.db, function(error) {
             if (error) {
                 console.log(error);
             } else {
-                connector_controller.initialize(connector, launch_server);
+                apiDB_controller.initialize(apiDB, launch_server);
             }
         });
         break;
     default:
-        console.log("Unkown connector");
+        console.log("Unkown apiDB");
         break;
 }
 server.get("/get_available_transports/:uid", validator.get_available_transports, userDb_controller.get_available_transports);
 
-server.get("/get_activate_methods/:uid", validator.get_activate_methods, connector_controller.get_activate_methods);
-server.get("/send_code/:method/:transport/:uid", validator.send_code, connector_controller.send_code);
-server.get("/deactivate/:method/:uid", validator.toggle_method, connector_controller.deactivate_method);
-server.get("/activate/:method/:uid", validator.toggle_method, connector_controller.activate_method);
-server.get("/generate/:method/:uid", validator.generate, connector_controller.generate);
-server.get("/verify_code/:uid/:otp", validator.verify_code, connector_controller.verify_code);
+server.get("/get_activate_methods/:uid", validator.get_activate_methods, apiDB_controller.get_activate_methods);
+server.get("/send_code/:method/:transport/:uid", validator.send_code, apiDB_controller.send_code);
+server.get("/deactivate/:method/:uid", validator.toggle_method, apiDB_controller.deactivate_method);
+server.get("/activate/:method/:uid", validator.toggle_method, apiDB_controller.activate_method);
+server.get("/generate/:method/:uid", validator.generate, apiDB_controller.generate);
+server.get("/verify_code/:uid/:otp", validator.verify_code, apiDB_controller.verify_code);
 
 
 // routes DEV/ADMIN uniquement
 
-server.get("/get_methods/", api.get_methods);
-server.get("/users/drop", connector_controller.drop);
-// server.get("/user/:uid/google_authenticator", validator.get_google_authenticator_secret, connector_controller.get_google_authenticator_secret);
+server.get("/get_methods/", utils.get_methods);
+server.get("/users/drop", apiDB_controller.drop);
+// server.get("/user/:uid/google_authenticator", validator.get_google_authenticator_secret, apiDB_controller.get_google_authenticator_secret);
 
 var launch_server = function() {
     var port = properties.esup.port || 3000;
