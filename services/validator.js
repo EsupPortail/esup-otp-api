@@ -10,6 +10,7 @@ var required = {
     get_google_authenticator_secret: ['uid'],
     toggle_method: ['uid', 'method'],
     get_activate_methods: ['uid'],
+    toggle_method_admin: ['method'],
 }
 
 function validate(req, required) {
@@ -63,6 +64,14 @@ exports.get_activate_methods = function(req, res, next) {
 
 exports.toggle_method = function(req, res, next) {
     if (check_parameters(req, required.toggle_method)) {
+        return next();
+    } else {
+        return next(new restify.InvalidArgumentError());
+    }
+}
+
+exports.toggle_method_admin = function(req, res, next) {
+    if (check_parameters(req, required.toggle_method_admin)) {
         return next();
     } else {
         return next(new restify.InvalidArgumentError());

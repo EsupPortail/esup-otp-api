@@ -29,6 +29,8 @@ if (properties.esup.apiDB) {
     apiDB_controller.initialize(launch_server);
 }else console.log("Unknown apiDb");
 
+server.get("/get_methods/", utils.get_methods);
+
 server.get("/get_available_transports/:uid", validator.get_available_transports, userDb_controller.get_available_transports);
 
 server.get("/get_activate_methods/:uid", validator.get_activate_methods, apiDB_controller.get_activate_methods);
@@ -40,9 +42,9 @@ server.get("/verify_code/:uid/:otp", validator.verify_code, apiDB_controller.ver
 
 
 // routes DEV/ADMIN uniquement
-
-server.get("/get_methods/", utils.get_methods);
-server.get("/users/drop", apiDB_controller.drop);
+server.get("admin/deactivate/:method", validator.toggle_method_admin, apiDB_controller.deactivate_method_admin);
+server.get("admin/activate/:method", validator.toggle_method_admin, apiDB_controller.activate_method_admin);
+server.get("admin/users/drop", apiDB_controller.drop);
 // server.get("/user/:uid/google_authenticator", validator.get_google_authenticator_secret, apiDB_controller.get_google_authenticator_secret);
 
 function launch_server() {

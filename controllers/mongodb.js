@@ -466,18 +466,23 @@ exports.generate = function(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 function generate_google_authenticator(req, res, next) {
-    UserModel.update({
-        'uid': req.params.uid
-    }, {
-        $set: {
-            google_authenticator: {
-                secret: speakeasy.generateSecret({ length: 16 })
+    if (properties.esup.methods.google_authenticator.activate) {
+        UserModel.update({
+            'uid': req.params.uid
+        }, {
+            $set: {
+                google_authenticator: {
+                    secret: speakeasy.generateSecret({ length: 16 })
+                }
             }
-        }
-    }, function(err, raw) {
-        if (err) return handleError(err);
-        res.send(raw);
-    })
+        }, function(err, raw) {
+            if (err) return handleError(err);
+            res.send(raw);
+        })
+    } else res.send({
+        code: 'Error',
+        message: properties.messages.error.method_not_found
+    });
 };
 
 /**
@@ -488,32 +493,37 @@ function generate_google_authenticator(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 function generate_bypass(req, res, next) {
-    var codes = new Array();
-    for (var it = 0; it < properties.esup.methods.bypass.codes_number; it++) {
-        switch (properties.esup.methods.simple_generator.code_type) {
-            case "string":
-                codes.push(simple_generator.generate_string_code(properties.esup.methods.bypass.code_length));
-                break;
-            case "digit":
-                codes.push(simple_generator.generate_digit_code(properties.esup.methods.bypass.code_length));
-                break;
-            default:
-                codes.push(simple_generator.generate_string_code(properties.esup.methods.bypass.code_length));
-                break;
-        }
-    }
-    UserModel.update({
-        'uid': req.params.uid
-    }, {
-        $set: {
-            bypass: {
-                codes: codes
+    if (properties.esup.methods.bypass.activate) {
+        var codes = new Array();
+        for (var it = 0; it < properties.esup.methods.bypass.codes_number; it++) {
+            switch (properties.esup.methods.simple_generator.code_type) {
+                case "string":
+                    codes.push(simple_generator.generate_string_code(properties.esup.methods.bypass.code_length));
+                    break;
+                case "digit":
+                    codes.push(simple_generator.generate_digit_code(properties.esup.methods.bypass.code_length));
+                    break;
+                default:
+                    codes.push(simple_generator.generate_string_code(properties.esup.methods.bypass.code_length));
+                    break;
             }
         }
-    }, function(err, raw) {
-        if (err) return handleError(err);
-        res.send(raw);
-    })
+        UserModel.update({
+            'uid': req.params.uid
+        }, {
+            $set: {
+                bypass: {
+                    codes: codes
+                }
+            }
+        }, function(err, raw) {
+            if (err) return handleError(err);
+            res.send(raw);
+        })
+    } else res.send({
+        code: 'Error',
+        message: properties.messages.error.method_not_found
+    });
 };
 
 
@@ -783,6 +793,51 @@ function deactivate_bypass(req, res, next) {
     });
 };
 
+/**
+ * Active la méthode
+ *
+ * @param req requete HTTP contenant le nom la personne recherchee
+ * @param res reponse HTTP
+ * @param next permet d'appeler le prochain gestionnaire (handler)
+ */
+exports.activate_method_admin = function(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+    console.log("ADMIN activate_method " + req.params.method);
+    if (properties.esup.methods[req.params.method]) {
+        properties.esup.methods[req.params.method].activate = true;
+        res.send({
+            code: 'Ok',
+            message: ''
+        });
+    } else res.send({
+        "code": "Error",
+        "message": properties.messages.error.method_not_found
+    });
+};
+
+/**
+ * Désctive la méthode
+ *
+ * @param req requete HTTP contenant le nom la personne recherchee
+ * @param res reponse HTTP
+ * @param next permet d'appeler le prochain gestionnaire (handler)
+ */
+exports.deactivate_method_admin = function(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+    console.log("ADMIN deactivate_method " + req.params.method);
+    if (properties.esup.methods[req.params.method]) {
+        properties.esup.methods[req.params.method].activate = false;
+        res.send({
+            code: 'Ok',
+            message: ''
+        });
+    } else res.send({
+        "code": "Error",
+        "message": properties.messages.error.method_not_found
+    });
+};
 
 /**
  * Active le transport == req.params.transport de la method == req.params.method pour l'utilisateur avec l'uid == req.params.uid
