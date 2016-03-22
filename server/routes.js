@@ -27,7 +27,7 @@ var apiDB_controller;
 if (properties.esup.apiDB) {
     apiDB_controller = require(process.cwd() + '/controllers/' + properties.esup.apiDB);
     apiDB_controller.initialize(launch_server);
-}
+}else console.log("Unknown apiDb");
 
 server.get("/get_available_transports/:uid", validator.get_available_transports, userDb_controller.get_available_transports);
 

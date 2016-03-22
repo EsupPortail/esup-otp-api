@@ -139,7 +139,7 @@ function send_code_google_authenticator(req, res, next) {
         'uid': req.params.uid
     }).exec(function(err, data) {
         if (data[0]) {
-            if (data[0].google_authenticator.active) {
+            if (data[0].google_authenticator.active && properties.esup.methods.google_authenticator.activate) {
                 data[0].google_authenticator.window = properties.esup.methods.google_authenticator.mail_window;
                 data[0].save(function() {
                     switch (req.params.transport) {
@@ -196,7 +196,7 @@ function send_code_simple_generator(req, res, next) {
         'uid': req.params.uid
     }).exec(function(err, data) {
         if (data[0]) {
-            if (data[0].simple_generator.active) {
+            if (data[0].simple_generator.active && properties.esup.methods.simple_generator.activate) {
                 var new_otp = {};
                 switch (properties.esup.methods.simple_generator.code_type) {
                     case "string":
@@ -290,7 +290,7 @@ function verify_simple_generator(req, res, next) {
     UserModel.find({
         'uid': req.params.uid
     }).exec(function(err, data) {
-        if (data[0].simple_generator.active) {
+        if (data[0].simple_generator.active && properties.esup.methods.simple_generator.activate) {
             if (data[0].simple_generator.code == req.params.otp) {
                 if (Date.now() < data[0].simple_generator.validity_time) {
                     UserModel.update({
@@ -335,7 +335,7 @@ function verify_bypass(req, res, next) {
     UserModel.find({
         'uid': req.params.uid
     }).exec(function(err, data) {
-        if (data[0].bypass.active) {
+        if (data[0].bypass.active && properties.esup.methods.bypass.activate) {
             if (data[0].bypass.codes) {
                 var checkOtp = false;
                 var codes = data[0].bypass.codes;
@@ -399,7 +399,7 @@ function verify_google_authenticator(req, res, next) {
             "message": properties.messages.error.user_not_found
         });
         else {
-            if (data[0].google_authenticator.active) {
+            if (data[0].google_authenticator.active && properties.esup.methods.google_authenticator.activate) {
                 var transport_window = 0;
                 checkSpeakeasy = speakeasy.totp.verify({
                     secret: data[0].google_authenticator.secret.base32,
