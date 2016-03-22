@@ -13,31 +13,22 @@ server.use(restify.acceptParser(server.acceptable));
 server.use(restify.queryParser());
 server.use(restify.bodyParser());
 
-var userDb_controller = require(process.cwd() + '/controllers/' + properties.esup.userDb);
+var userDb_controller;
 if (properties.esup.userDb) {
+    userDb_controller = require(process.cwd() + '/controllers/' + properties.esup.userDb);
     userDb_controller.initialize();
-} else console.log("Unkown userDb");
+} else console.log("Unknown userDb");
 
 // var mysql = require(process.cwd() + '/controllers/mysql');
 // mysql.initialize();
 // server.get("/mysql/get_user/:uid", validator.get_available_transports, mysql.get_available_transports);
 
-var apiDB_controller = require(process.cwd() + '/controllers/' + properties.esup.apiDB);
-switch (properties.esup.apiDB) {
-    case "mongodb":
-        var apiDB = require(properties.esup.mongodb.module);
-        apiDB.connect('mongodb://' + properties.esup.mongodb.address + '/' + properties.esup.mongodb.db, function(error) {
-            if (error) {
-                console.log(error);
-            } else {
-                apiDB_controller.initialize(apiDB, launch_server);
-            }
-        });
-        break;
-    default:
-        console.log("Unkown apiDB");
-        break;
+var apiDB_controller;
+if (properties.esup.apiDB) {
+    apiDB_controller = require(process.cwd() + '/controllers/' + properties.esup.apiDB);
+    apiDB_controller.initialize(launch_server);
 }
+
 server.get("/get_available_transports/:uid", validator.get_available_transports, userDb_controller.get_available_transports);
 
 server.get("/get_activate_methods/:uid", validator.get_activate_methods, apiDB_controller.get_activate_methods);
@@ -54,7 +45,7 @@ server.get("/get_methods/", utils.get_methods);
 server.get("/users/drop", apiDB_controller.drop);
 // server.get("/user/:uid/google_authenticator", validator.get_google_authenticator_secret, apiDB_controller.get_google_authenticator_secret);
 
-var launch_server = function() {
+function launch_server() {
     var port = properties.esup.port || 3000;
     server.listen(port, function(err) {
         if (err)

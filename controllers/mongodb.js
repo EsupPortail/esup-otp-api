@@ -6,17 +6,24 @@ var sms = require(process.cwd() + '/services/sms');
 var simple_generator = require(process.cwd() + '/services/simple-generator');
 var qrCode = require('qrcode-npm')
 var userDb_controller = require(process.cwd() + '/controllers/' + properties.esup.userDb);
+var mongoose = require('mongoose');
 
-exports.initialize = function(mongoose_instance, callback) {
-    initiatilize_user_model(mongoose_instance);
-    console.log("mongoose models initialized");
-    if (typeof(callback) === "function") callback();
+exports.initialize = function(callback) {
+    mongoose.connect('mongodb://' + properties.esup.mongodb.address + '/' + properties.esup.mongodb.db, function(error) {
+        if (error) {
+            console.log(error);
+        } else {
+            initiatilize_user_model();
+            console.log("mongoose models initialized");
+            if (typeof(callback) === "function") callback();
+        }
+    });
 }
 
 /** User Model **/
 var UserModel;
 
-function initiatilize_user_model(mongoose) {
+function initiatilize_user_model() {
     var Schema = mongoose.Schema;
 
     var UserSchema = new Schema({
