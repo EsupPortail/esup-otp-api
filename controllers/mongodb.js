@@ -132,33 +132,40 @@ function send_code_google_authenticator(req, res, next) {
         'uid': req.params.uid
     }).exec(function(err, data) {
         if (data[0]) {
-            data[0].google_authenticator.window = properties.esup.methods.google_authenticator.mail_window;
-            data[0].save(function() {
-                switch (req.params.transport) {
-                    case 'mail':
-                        userDb_controller.send_mail(req.params.uid, function(mail) {
-                            mailer.send_code(mail, speakeasy.totp({
-                                secret: data[0].google_authenticator.secret.base32,
-                                encoding: 'base32'
-                            }), res);
-                        }, res);
-                        break;
-                    case 'sms':
-                        userDb_controller.send_sms(req.params.uid, function(num) {
-                            sms.send_code(num, speakeasy.totp({
-                                secret: data[0].google_authenticator.secret.base32,
-                                encoding: 'base32'
-                            }), res);
-                        }, res);
-                        break;
-                    default:
-                        res.send({
-                            code: 'Error',
-                            message: properties.messages.error.unvailable_method_transport
-                        });
-                        break;
-                }
-            });
+            if (data[0].google_authenticator.active) {
+                data[0].google_authenticator.window = properties.esup.methods.google_authenticator.mail_window;
+                data[0].save(function() {
+                    switch (req.params.transport) {
+                        case 'mail':
+                            userDb_controller.send_mail(req.params.uid, function(mail) {
+                                mailer.send_code(mail, speakeasy.totp({
+                                    secret: data[0].google_authenticator.secret.base32,
+                                    encoding: 'base32'
+                                }), res);
+                            }, res);
+                            break;
+                        case 'sms':
+                            userDb_controller.send_sms(req.params.uid, function(num) {
+                                sms.send_code(num, speakeasy.totp({
+                                    secret: data[0].google_authenticator.secret.base32,
+                                    encoding: 'base32'
+                                }), res);
+                            }, res);
+                            break;
+                        default:
+                            res.send({
+                                code: 'Error',
+                                message: properties.messages.error.unvailable_method_transport
+                            });
+                            break;
+                    }
+                });
+            } else {
+                res.send({
+                    code: 'Error',
+                    message: properties.messages.error.method_not_found
+                });
+            }
         } else {
             res.send({
                 "code": "Error",
@@ -177,47 +184,54 @@ function send_code_google_authenticator(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 function send_code_simple_generator(req, res, next) {
-    console.log("send_simple_generator_mail :" + req.params.uid);
+    console.log("send_code_simple_generator :" + req.params.uid);
     UserModel.find({
         'uid': req.params.uid
     }).exec(function(err, data) {
-        var new_otp = {};
-        switch (properties.esup.methods.simple_generator.code_type) {
-            case "string":
-                new_otp.code = simple_generator.generate_string_code(properties.esup.methods.simple_generator.code_length);
-                break;
-            case "digit":
-                new_otp.code = simple_generator.generate_digit_code(properties.esup.methods.simple_generator.code_length);
-                break;
-            default:
-                new_otp.code = simple_generator.generate_string_code(properties.esup.methods.simple_generator.code_length);
-                break;
-        }
-        validity_time = properties.esup.methods.simple_generator.mail_validity * 60 * 1000;
-        validity_time += new Date().getTime();
-        new_otp.validity_time = validity_time;
         if (data[0]) {
-            data[0].simple_generator = new_otp;
-            data[0].save(function() {
-                switch (req.params.transport) {
-                    case 'mail':
-                        userDb_controller.send_mail(req.params.uid, function(mail) {
-                            mailer.send_code(mail, new_otp.code, res);
-                        }, res);
+            if (data[0].simple_generator.active) {
+                var new_otp = {};
+                switch (properties.esup.methods.simple_generator.code_type) {
+                    case "string":
+                        new_otp.code = simple_generator.generate_string_code(properties.esup.methods.simple_generator.code_length);
                         break;
-                    case 'sms':
-                        userDb_controller.send_sms(req.params.uid, function(num) {
-                            sms.send_code(num, new_otp.code, res);
-                        }, res);
+                    case "digit":
+                        new_otp.code = simple_generator.generate_digit_code(properties.esup.methods.simple_generator.code_length);
                         break;
                     default:
-                        res.send({
-                            code: 'Error',
-                            message: properties.messages.error.unvailable_method_transport
-                        });
+                        new_otp.code = simple_generator.generate_string_code(properties.esup.methods.simple_generator.code_length);
                         break;
                 }
-            });
+                validity_time = properties.esup.methods.simple_generator.mail_validity * 60 * 1000;
+                validity_time += new Date().getTime();
+                new_otp.validity_time = validity_time;
+                data[0].simple_generator = new_otp;
+                data[0].save(function() {
+                    switch (req.params.transport) {
+                        case 'mail':
+                            userDb_controller.send_mail(req.params.uid, function(mail) {
+                                mailer.send_code(mail, new_otp.code, res);
+                            }, res);
+                            break;
+                        case 'sms':
+                            userDb_controller.send_sms(req.params.uid, function(num) {
+                                sms.send_code(num, new_otp.code, res);
+                            }, res);
+                            break;
+                        default:
+                            res.send({
+                                code: 'Error',
+                                message: properties.messages.error.unvailable_method_transport
+                            });
+                            break;
+                    }
+                });
+            } else {
+                res.send({
+                    code: 'Error',
+                    message: properties.messages.error.methods_not_found
+                });
+            }
         } else {
             res.send({
                 "code": "Error",
@@ -561,7 +575,7 @@ exports.get_activate_methods = function(req, res, next) {
 exports.activate_method = function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
-    console.log(req.params.uid+" activate_method "+req.params.method);
+    console.log(req.params.uid + " activate_method " + req.params.method);
     switch (req.params.method) {
         case 'google_authenticator':
             activate_google_authenticator(req, res, next);
@@ -667,7 +681,7 @@ function activate_bypass(req, res, next) {
 exports.deactivate_method = function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
-    console.log(req.params.uid+" activate_method "+req.params.method);
+    console.log(req.params.uid + " activate_method " + req.params.method);
     switch (req.params.method) {
         case 'google_authenticator':
             deactivate_google_authenticator(req, res, next);
