@@ -12,7 +12,7 @@ exports.get_methods = function(req, res, next) {
     };
     response.methods = [];
     for (method in properties.esup.methods) {
-        if (properties.esup.methods[method]) {
+        if (properties.esup.methods[method].activate) {
             response.methods.push(method);
             response.code = "Ok";
             response.message = "Method(s) found";

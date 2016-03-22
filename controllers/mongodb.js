@@ -128,9 +128,6 @@ exports.send_code = function(req, res, next) {
  */
 function send_code_google_authenticator(req, res, next) {
     console.log("send_google_authenticator_mail :" + req.params.uid);
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
-
     UserModel.find({
         'uid': req.params.uid
     }).exec(function(err, data) {
@@ -181,10 +178,6 @@ function send_code_google_authenticator(req, res, next) {
  */
 function send_code_simple_generator(req, res, next) {
     console.log("send_simple_generator_mail :" + req.params.uid);
-
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
-
     UserModel.find({
         'uid': req.params.uid
     }).exec(function(err, data) {
@@ -273,9 +266,6 @@ exports.verify_code = function(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 function verify_simple_generator(req, res, next) {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
-
     UserModel.find({
         'uid': req.params.uid
     }).exec(function(err, data) {
@@ -321,9 +311,6 @@ function verify_simple_generator(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 function verify_bypass(req, res, next) {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
-
     UserModel.find({
         'uid': req.params.uid
     }).exec(function(err, data) {
@@ -379,8 +366,6 @@ function verify_bypass(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 function verify_google_authenticator(req, res, next) {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
     var checkSpeakeasy = false;
     UserModel.find({
         'uid': req.params.uid
@@ -460,8 +445,6 @@ exports.generate = function(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 function generate_google_authenticator(req, res, next) {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
     UserModel.update({
         'uid': req.params.uid
     }, {
@@ -484,8 +467,6 @@ function generate_google_authenticator(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 function generate_bypass(req, res, next) {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
     var codes = new Array();
     for (var it = 0; it < properties.esup.methods.bypass.codes_number; it++) {
         switch (properties.esup.methods.simple_generator.code_type) {
@@ -580,7 +561,7 @@ exports.get_activate_methods = function(req, res, next) {
 exports.activate_method = function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
-
+    console.log(req.params.uid+" activate_method "+req.params.method);
     switch (req.params.method) {
         case 'google_authenticator':
             activate_google_authenticator(req, res, next);
@@ -608,9 +589,6 @@ exports.activate_method = function(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 function activate_google_authenticator(req, res, next) {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
-
     UserModel.find({
         'uid': req.params.uid
     }).exec(function(err, data) {
@@ -636,9 +614,6 @@ function activate_google_authenticator(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 function activate_simple_generator(req, res, next) {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
-
     UserModel.find({
         'uid': req.params.uid
     }).exec(function(err, data) {
@@ -664,9 +639,6 @@ function activate_simple_generator(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 function activate_bypass(req, res, next) {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
-
     UserModel.find({
         'uid': req.params.uid
     }).exec(function(err, data) {
@@ -695,7 +667,7 @@ function activate_bypass(req, res, next) {
 exports.deactivate_method = function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
-
+    console.log(req.params.uid+" activate_method "+req.params.method);
     switch (req.params.method) {
         case 'google_authenticator':
             deactivate_google_authenticator(req, res, next);
@@ -723,9 +695,6 @@ exports.deactivate_method = function(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 function deactivate_google_authenticator(req, res, next) {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
-
     UserModel.find({
         'uid': req.params.uid
     }).exec(function(err, data) {
@@ -751,9 +720,6 @@ function deactivate_google_authenticator(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 function deactivate_simple_generator(req, res, next) {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
-
     UserModel.find({
         'uid': req.params.uid
     }).exec(function(err, data) {
@@ -779,9 +745,6 @@ function deactivate_simple_generator(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 function deactivate_bypass(req, res, next) {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
-
     UserModel.find({
         'uid': req.params.uid
     }).exec(function(err, data) {
@@ -808,9 +771,6 @@ function deactivate_bypass(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.activate_transport = function(req, res, next) {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
-
     switch (req.params.method) {
         case 'google_authenticator':
             activate_transport_code_google_authenticator(req, res, next);
