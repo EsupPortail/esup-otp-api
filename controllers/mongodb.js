@@ -537,6 +537,10 @@ function generate_bypass(req, res, next) {
 exports.get_google_authenticator_secret = function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
+    var response = {
+        "code": "Error",
+        "message": properties.messages.error.user_not_found
+    };
     UserModel.find({
         'uid': req.params.uid
     }).exec(function(err, data) {
@@ -544,11 +548,12 @@ exports.get_google_authenticator_secret = function(req, res, next) {
             var qr = qrCode.qrcode(4, 'M');
             qr.addData(data[0].google_authenticator.secret.otpauth_url);
             qr.make();
-            mailer.sendQRCode(data[0].mail, data[0].google_authenticator.secret.base32, qr.createImgTag(4), res);
-        } else res.send({
-            "code": "Error",
-            "message": properties.messages.error.user_not_found
-        });
+            response.code='Ok';
+            response.message=data[0].google_authenticator.secret.base32;
+            response.qrCode = qr.createImgTag(4);
+            res.send(response);
+            // mailer.sendQRCode(data[0].mail, data[0].google_authenticator.secret.base32, qr.createImgTag(4), res);
+        } else res.send(response);
     });
 };
 
@@ -632,7 +637,10 @@ function activate_google_authenticator(req, res, next) {
                 });
             });
         } else {
-            next(req, res);
+            res.send({
+                "code": "Error",
+                "message": properties.messages.error.user_not_found
+            });
         }
     });
 };
@@ -657,7 +665,10 @@ function activate_simple_generator(req, res, next) {
                 });
             });
         } else {
-            next(req, res);
+            res.send({
+                "code": "Error",
+                "message": properties.messages.error.user_not_found
+            });
         }
     });
 };
@@ -682,7 +693,10 @@ function activate_bypass(req, res, next) {
                 });
             });
         } else {
-            next(req, res);
+            res.send({
+                "code": "Error",
+                "message": properties.messages.error.user_not_found
+            });
         }
     });
 };
@@ -698,7 +712,7 @@ function activate_bypass(req, res, next) {
 exports.deactivate_method = function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
-    console.log(req.params.uid + " activate_method " + req.params.method);
+    console.log(req.params.uid + " deactivate_method " + req.params.method);
     switch (req.params.method) {
         case 'google_authenticator':
             deactivate_google_authenticator(req, res, next);
@@ -738,7 +752,10 @@ function deactivate_google_authenticator(req, res, next) {
                 });
             });
         } else {
-            next(req, res);
+            res.send({
+                "code": "Error",
+                "message": properties.messages.error.user_not_found
+            });
         }
     });
 };
@@ -763,7 +780,10 @@ function deactivate_simple_generator(req, res, next) {
                 });
             });
         } else {
-            next(req, res);
+            res.send({
+                "code": "Error",
+                "message": properties.messages.error.user_not_found
+            });
         }
     });
 };
@@ -788,7 +808,10 @@ function deactivate_bypass(req, res, next) {
                 });
             });
         } else {
-            next(req, res);
+            res.send({
+                "code": "Error",
+                "message": properties.messages.error.user_not_found
+            });
         }
     });
 };
