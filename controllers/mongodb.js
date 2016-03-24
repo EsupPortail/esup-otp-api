@@ -608,9 +608,9 @@ exports.get_activate_methods = function(req, res, next) {
     }).exec(function(err, data) {
         if (data[0]) {
             var result = {};
-            result.google_authenticator = data[0].google_authenticator.active;
-            result.simple_generator = data[0].simple_generator.active;
-            result.bypass = data[0].bypass.active;
+            for(method in properties.esup.methods){
+                if(properties.esup.methods[method].activate && data[0][method].active)result[method] = properties.esup.methods[method];
+            }
             response.code = "Ok";
             response.message = properties.messages.success.methods_found;
             response.methods = result;
@@ -848,51 +848,6 @@ function deactivate_bypass(req, res, next) {
     });
 };
 
-/**
- * Active la méthode
- *
- * @param req requete HTTP contenant le nom la personne recherchee
- * @param res response HTTP
- * @param next permet d'appeler le prochain gestionnaire (handler)
- */
-exports.activate_method_admin = function(req, res, next) {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
-    console.log("ADMIN activate_method " + req.params.method);
-    if (properties.esup.methods[req.params.method]) {
-        properties.esup.methods[req.params.method].activate = true;
-        res.send({
-            code: 'Ok',
-            message: ''
-        });
-    } else res.send({
-        "code": "Error",
-        "message": properties.messages.error.method_not_found
-    });
-};
-
-/**
- * Désctive la méthode
- *
- * @param req requete HTTP contenant le nom la personne recherchee
- * @param res response HTTP
- * @param next permet d'appeler le prochain gestionnaire (handler)
- */
-exports.deactivate_method_admin = function(req, res, next) {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
-    console.log("ADMIN deactivate_method " + req.params.method);
-    if (properties.esup.methods[req.params.method]) {
-        properties.esup.methods[req.params.method].activate = false;
-        res.send({
-            code: 'Ok',
-            message: ''
-        });
-    } else res.send({
-        "code": "Error",
-        "message": properties.messages.error.method_not_found
-    });
-};
 
 /**
  * Active le transport == req.params.transport de la method == req.params.method pour l'utilisateur avec l'uid == req.params.uid
