@@ -2,6 +2,7 @@ var restify = require('restify');
 
 var required = {
     create_user: ['uid'],
+    get_user: ['uid'],
     set_otp: ['uid', 'otp'],
     get_available_transports: ['uid'],
     verify_code: ['uid', 'otp'],
@@ -32,6 +33,14 @@ function check_parameters(req, required) {
 
 exports.create_user = function(req, res, next) {
     if (check_parameters(req, required.create_user)) {
+        return next();
+    } else {
+        return next(new restify.InvalidArgumentError());
+    }
+}
+
+exports.get_user = function(req, res, next) {
+    if (check_parameters(req, required.get_user)) {
         return next();
     } else {
         return next(new restify.InvalidArgumentError());

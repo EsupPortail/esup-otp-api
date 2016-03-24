@@ -1,10 +1,10 @@
 {
     "port": 3000,
     "proxyUrl" : "http://username:password@univ.fr:port",
-    "connector": "mongoose",
+    "apiDB": "mongodb",
     "mongodb": {
         "address": "localhost",
-        "db": "test"
+        "db": "test-otp"
     },
     "userDb": "ldap",
     "ldap": {
@@ -25,6 +25,9 @@
     },
     "methods": {
         "google_authenticator": {
+            "activate": true,
+            "sms": true,
+            "mail": true,
             "login_view": true,
             "sms_window": 6,
             "mail_window": 15,
@@ -32,6 +35,9 @@
             "default_window": 2
         },
         "simple_generator": {
+            "activate": true,
+            "sms": true,
+            "mail": true,
             "login_view": false,
             "sms_validity": 15,
             "mail_validity": 30,
@@ -39,6 +45,9 @@
             "code_length": 6
         },
         "bypass": {
+            "activate": true,
+            "sms": true,
+            "mail": true,
             "login_view": false,
             "codes_number": 10,
             "code_type": "string",

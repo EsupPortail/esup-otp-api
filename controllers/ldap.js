@@ -17,7 +17,6 @@ exports.initialize = function(bind, callback) {
             }, function(err) {
                 if (err) console.log(err);
                 else {
-                    console.log("ldap controller initialized");
                     if (typeof(callback) === "function") callback();
                 }
             });

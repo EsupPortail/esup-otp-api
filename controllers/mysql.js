@@ -6,7 +6,6 @@ var connection;
 
 exports.initialize = function(callback) {
     connection = mysql.createConnection(properties.esup.mysql);
-    console.log("mysql connection initialized ");
     if (typeof(callback) === "function") callback();
 }
 

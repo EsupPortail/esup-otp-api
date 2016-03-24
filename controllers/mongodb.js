@@ -14,7 +14,6 @@ exports.initialize = function(callback) {
             console.log(error);
         } else {
             initiatilize_user_model();
-            console.log("mongoose models initialized");
             if (typeof(callback) === "function") callback();
         }
     });
@@ -93,10 +92,42 @@ function initiatilize_user_model() {
 
 
 /**
+ * Renvoie l'utilisateur avec l'uid == req.params.uid
+ *
+ * @param req requete HTTP contenant le nom la personne recherchee
+ * @param res response HTTP
+ * @param next permet d'appeler le prochain gestionnaire (handler)
+ */
+exports.get_user = function(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+    console.log('get_user');
+
+    var response = {
+        "code": "Error",
+        "message": properties.messages.error.user_not_found
+    };
+    UserModel.find({
+        'uid': req.params.uid
+    }).exec(function(err, data) {
+        if (data[0]) {
+            response.code='Ok';
+            response.message='';
+            response.user = data[0];
+            console.log(response);
+            res.send(response);
+        }
+        else {
+            res.send(response);
+        }
+    });
+};
+
+/**
  * Envoie un code à l'utilisateur avec l'uid == req.params.uid et via la method == req.params.method
  *
  * @param req requete HTTP contenant le nom la personne recherchee
- * @param res reponse HTTP
+ * @param res response HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.send_code = function(req, res, next) {
@@ -130,7 +161,7 @@ exports.send_code = function(req, res, next) {
  * Retourne la réponse du service mail
  *
  * @param req requete HTTP contenant le nom la personne recherchee
- * @param res reponse HTTP
+ * @param res response HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 function send_code_google_authenticator(req, res, next) {
@@ -187,7 +218,7 @@ function send_code_google_authenticator(req, res, next) {
  * Retourne la réponse du service mail
  *
  * @param req requete HTTP contenant le nom la personne recherchee
- * @param res reponse HTTP
+ * @param res response HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 function send_code_simple_generator(req, res, next) {
@@ -254,7 +285,7 @@ function send_code_simple_generator(req, res, next) {
  * sinon: on renvoie une erreur 401 InvalidCredentialsError
  *
  * @param req requete HTTP contenant le nom la personne recherchee
- * @param res reponse HTTP
+ * @param res response HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.verify_code = function(req, res, next) {
@@ -283,7 +314,7 @@ exports.verify_code = function(req, res, next) {
  * sinon: on renvoie une erreur 401 InvalidCredentialsError
  *
  * @param req requete HTTP contenant le nom la personne recherchee
- * @param res reponse HTTP
+ * @param res response HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 function verify_simple_generator(req, res, next) {
@@ -293,11 +324,13 @@ function verify_simple_generator(req, res, next) {
         if (data[0].simple_generator.active && properties.esup.methods.simple_generator.activate) {
             if (data[0].simple_generator.code == req.params.otp) {
                 if (Date.now() < data[0].simple_generator.validity_time) {
+                    delete data[0].simple_generator.code;
+                    delete data[0].simple_generator.validity_time;
                     UserModel.update({
                         'uid': req.params.uid
                     }, {
                         $set: {
-                            simple_generator: {}
+                            simple_generator:data[0].simple_generator
                         }
                     }, function(err, data) {
                         if (err) {
@@ -328,7 +361,7 @@ function verify_simple_generator(req, res, next) {
  * sinon: on renvoie une erreur 401 InvalidCredentialsError
  *
  * @param req requete HTTP contenant le nom la personne recherchee
- * @param res reponse HTTP
+ * @param res response HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 function verify_bypass(req, res, next) {
@@ -343,6 +376,7 @@ function verify_bypass(req, res, next) {
                     if (data[0].bypass.codes[code] == req.params.otp) {
                         checkOtp = true;
                         codes.splice(code, 1);
+                        data[0].bypass.codes = codes;
                     }
                 }
                 if (checkOtp) {
@@ -350,9 +384,7 @@ function verify_bypass(req, res, next) {
                         'uid': req.params.uid
                     }, {
                         $set: {
-                            bypass: {
-                                codes: codes
-                            }
+                                bypass : data[0].bypass
                         }
                     }, function(err, data) {
                         if (err) {
@@ -383,7 +415,7 @@ function verify_bypass(req, res, next) {
  * sinon: on renvoie une erreur 401 InvalidCredentialsError
  *
  * @param req requete HTTP contenant le nom la personne recherchee
- * @param res reponse HTTP
+ * @param res response HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 function verify_google_authenticator(req, res, next) {
@@ -429,7 +461,7 @@ function verify_google_authenticator(req, res, next) {
  * Génére un nouvel attribut d'auth (secret key ou matrice)
  *
  * @param req requete HTTP contenant le nom la personne recherchee
- * @param res reponse HTTP
+ * @param res response HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.generate = function(req, res, next) {
@@ -462,7 +494,7 @@ exports.generate = function(req, res, next) {
  * Retourne la réponse de la base de donnée suite à l'association d'un nouveau secret à l'utilisateur.
  *
  * @param req requete HTTP contenant le nom la personne recherchee
- * @param res reponse HTTP
+ * @param res response HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 function generate_google_authenticator(req, res, next) {
@@ -489,7 +521,7 @@ function generate_google_authenticator(req, res, next) {
  * Retourne la réponse de la base de donnée suite à la génération de nouveau bypass codes
  *
  * @param req requete HTTP contenant le nom la personne recherchee
- * @param res reponse HTTP
+ * @param res response HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 function generate_bypass(req, res, next) {
@@ -531,7 +563,7 @@ function generate_bypass(req, res, next) {
  * Renvoie le secret de l'utilisateur afin qu'il puisse l'entrer dans son appli smartphone
  *
  * @param req requete HTTP contenant le nom la personne recherchee
- * @param res reponse HTTP
+ * @param res response HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.get_google_authenticator_secret = function(req, res, next) {
@@ -548,8 +580,8 @@ exports.get_google_authenticator_secret = function(req, res, next) {
             var qr = qrCode.qrcode(4, 'M');
             qr.addData(data[0].google_authenticator.secret.otpauth_url);
             qr.make();
-            response.code='Ok';
-            response.message=data[0].google_authenticator.secret.base32;
+            response.code = 'Ok';
+            response.message = data[0].google_authenticator.secret.base32;
             response.qrCode = qr.createImgTag(4);
             res.send(response);
             // mailer.sendQRCode(data[0].mail, data[0].google_authenticator.secret.base32, qr.createImgTag(4), res);
@@ -561,7 +593,7 @@ exports.get_google_authenticator_secret = function(req, res, next) {
  * Renvoie les méthodes activées de l'utilisateur
  *
  * @param req requete HTTP contenant le nom la personne recherchee
- * @param res reponse HTTP
+ * @param res response HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.get_activate_methods = function(req, res, next) {
@@ -591,7 +623,7 @@ exports.get_activate_methods = function(req, res, next) {
  * Active la méthode l'utilisateur ayant l'uid req.params.uid
  *
  * @param req requete HTTP contenant le nom la personne recherchee
- * @param res reponse HTTP
+ * @param res response HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.activate_method = function(req, res, next) {
@@ -621,7 +653,7 @@ exports.activate_method = function(req, res, next) {
  * Active la méthode google auth pour l'utilisateur ayant l'uid req.params.uid
  *
  * @param req requete HTTP contenant le nom la personne recherchee
- * @param res reponse HTTP
+ * @param res response HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 function activate_google_authenticator(req, res, next) {
@@ -649,7 +681,7 @@ function activate_google_authenticator(req, res, next) {
  * Active la méthode simple_generator pour l'utilisateur ayant l'uid req.params.uid
  *
  * @param req requete HTTP contenant le nom la personne recherchee
- * @param res reponse HTTP
+ * @param res response HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 function activate_simple_generator(req, res, next) {
@@ -677,7 +709,7 @@ function activate_simple_generator(req, res, next) {
  * Active la méthode bypass pour l'utilisateur ayant l'uid req.params.uid
  *
  * @param req requete HTTP contenant le nom la personne recherchee
- * @param res reponse HTTP
+ * @param res response HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 function activate_bypass(req, res, next) {
@@ -706,7 +738,7 @@ function activate_bypass(req, res, next) {
  * Désctive la méthode l'utilisateur ayant l'uid req.params.uid
  *
  * @param req requete HTTP contenant le nom la personne recherchee
- * @param res reponse HTTP
+ * @param res response HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.deactivate_method = function(req, res, next) {
@@ -736,7 +768,7 @@ exports.deactivate_method = function(req, res, next) {
  * Désactive la méthode google auth pour l'utilisateur ayant l'uid req.params.uid
  *
  * @param req requete HTTP contenant le nom la personne recherchee
- * @param res reponse HTTP
+ * @param res response HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 function deactivate_google_authenticator(req, res, next) {
@@ -764,7 +796,7 @@ function deactivate_google_authenticator(req, res, next) {
  * Désactive la méthode simple_generator pour l'utilisateur ayant l'uid req.params.uid
  *
  * @param req requete HTTP contenant le nom la personne recherchee
- * @param res reponse HTTP
+ * @param res response HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 function deactivate_simple_generator(req, res, next) {
@@ -792,7 +824,7 @@ function deactivate_simple_generator(req, res, next) {
  * Désactive la méthode bypass pour l'utilisateur ayant l'uid req.params.uid
  *
  * @param req requete HTTP contenant le nom la personne recherchee
- * @param res reponse HTTP
+ * @param res response HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 function deactivate_bypass(req, res, next) {
@@ -820,7 +852,7 @@ function deactivate_bypass(req, res, next) {
  * Active la méthode
  *
  * @param req requete HTTP contenant le nom la personne recherchee
- * @param res reponse HTTP
+ * @param res response HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.activate_method_admin = function(req, res, next) {
@@ -843,7 +875,7 @@ exports.activate_method_admin = function(req, res, next) {
  * Désctive la méthode
  *
  * @param req requete HTTP contenant le nom la personne recherchee
- * @param res reponse HTTP
+ * @param res response HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.deactivate_method_admin = function(req, res, next) {
@@ -866,7 +898,7 @@ exports.deactivate_method_admin = function(req, res, next) {
  * Active le transport == req.params.transport de la method == req.params.method pour l'utilisateur avec l'uid == req.params.uid
  *
  * @param req requete HTTP contenant le nom la personne recherchee
- * @param res reponse HTTP
+ * @param res response HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.activate_transport = function(req, res, next) {
