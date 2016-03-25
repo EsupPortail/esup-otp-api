@@ -2,11 +2,13 @@
     "success": {
         "valid_credentials": "Valid credentials",
         "transports_found": "Transports list found",
-        "methods_found": "Methods found"
+        "methods_found": "Methods found",
+        "update": "Successful update"
     },
     "error": {
         "invalid_credentials": "Invalid credentials",
         "user_not_found": "User not found",
+        "transport_not_found": "Transport not found",
         "method_not_found": "Method not found",
         "unvailable_method_operation": "Unvailable method operation",
         "unvailable_method_transport": "Unvailable method transport"

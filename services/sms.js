@@ -1,7 +1,7 @@
 var properties = require(process.cwd() + '/properties/properties');
 var request = require('request');
 
-var proxyUrl = properties.esup.proxyUrl;
+var proxyUrl = properties.esup.proxyUrl || '';
 
 exports.send_code = function(num, message, res) {
     var tel = properties.esup.dev.sms || num;

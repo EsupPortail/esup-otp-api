@@ -67,3 +67,7 @@ exports.send_mail = function(uid, callback, res) {
         message: "Wrong parameters"
     });
 }
+
+exports.update_transport = function(req, res, next) {
+    
+}

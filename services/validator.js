@@ -10,6 +10,7 @@ var required = {
     generate: ['uid', 'method'],
     get_google_authenticator_secret: ['uid'],
     toggle_method: ['uid', 'method'],
+    change_transport: ['uid', 'transport', 'new_transport'],
     toggle_method_transport: ['transport', 'method'],
     get_activate_methods: ['uid'],
     toggle_method_admin: ['method'],
@@ -74,6 +75,14 @@ exports.get_activate_methods = function(req, res, next) {
 
 exports.toggle_method = function(req, res, next) {
     if (check_parameters(req, required.toggle_method)) {
+        return next();
+    } else {
+        return next(new restify.InvalidArgumentError());
+    }
+}
+
+exports.update_transport = function(req, res, next) {
+    if (check_parameters(req, required.toggle_transport)) {
         return next();
     } else {
         return next(new restify.InvalidArgumentError());
