@@ -10,7 +10,7 @@ var required = {
     generate: ['uid', 'method'],
     get_google_authenticator_secret: ['uid'],
     toggle_method: ['uid', 'method'],
-    change_transport: ['uid', 'transport', 'new_transport'],
+    update_transport: ['uid', 'transport', 'new_transport'],
     toggle_method_transport: ['transport', 'method'],
     get_activate_methods: ['uid'],
     toggle_method_admin: ['method'],
@@ -19,7 +19,7 @@ var required = {
 function validate(req, required) {
     var validate = true;
     for (i in required) {
-        if (req.params[required[i]]);
+        if (req.params[required[i]] && req.params[required[i]]!='');
         else validate = false;
     }
     return validate;
@@ -82,7 +82,7 @@ exports.toggle_method = function(req, res, next) {
 }
 
 exports.update_transport = function(req, res, next) {
-    if (check_parameters(req, required.toggle_transport)) {
+    if (check_parameters(req, required.update_transport)) {
         return next();
     } else {
         return next(new restify.InvalidArgumentError());

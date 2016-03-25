@@ -39,7 +39,6 @@ exports.get_available_transports = function(req, res, next) {
         _res.on('searchEntry', function(entry) {
             user_found = true;
             var result = {};
-            console.log('entry: ' + JSON.stringify(entry.object));
             if (entry.object[properties.esup.ldap.transport.mail]) result.mail = utils.cover_string(entry.object[properties.esup.ldap.transport.mail], 4, 5);
             if (entry.object[properties.esup.ldap.transport.sms]) result.sms = utils.cover_string(entry.object[properties.esup.ldap.transport.sms], 2, 2);
             response.code = "Ok";
@@ -130,6 +129,8 @@ exports.send_mail = function(uid, callback, res) {
 }
 
 exports.update_transport = function(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
     var modification = {};
     modification[properties.esup.ldap.transport[req.params.transport]] = [req.params.new_transport]
     var change = new ldapjs.Change({
@@ -141,6 +142,6 @@ exports.update_transport = function(req, res, next) {
         else res.send({
             code: 'Ok',
             message: properties.messages.success.update
-        })
+        });
     });
 }
