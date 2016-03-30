@@ -113,7 +113,11 @@ exports.get_user = function(req, res, next) {
         if (data[0]) {
             response.code='Ok';
             response.message='';
-            response.user = data[0];
+            response.user={};
+            response.user.bypass = {};
+            response.user.bypass.available_code =data[0].bypass.codes.length;
+            response.user.bypass.used_code =properties.esup.methods.bypass.codes_number - data[0].bypass.codes.length;
+            response.user.matrix = data[0].matrix;
             console.log(response);
             res.send(response);
         }

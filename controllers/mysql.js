@@ -12,7 +12,7 @@ exports.initialize = function(callback) {
 exports.get_available_transports = function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
-    connection.query("Select * From "+ properties.esup.mysql.userTable +" u Where u.uid = '" + req.params.uid + "'", function(err, rows, fields) {
+    connection.query("Select * From "+ properties.esup.mysql.userTable +" u Where u.uid = ?", [req.params.uid],function(err, rows, fields) {
         if (err) throw err;
         if (rows[0]) {
             res.send({
@@ -31,7 +31,7 @@ exports.get_available_transports = function(req, res, next) {
 }
 
 exports.send_sms = function(uid, callback, res) {
-    connection.query("Select * From "+ properties.esup.mysql.userTable +" u Where u.uid = '" + uid + "'", function(err, rows, fields) {
+    connection.query("Select * From "+ properties.esup.mysql.userTable +" u Where u.uid = ?", [uid], function(err, rows, fields) {
         if (err) throw err;
         if (rows[0]) {
             if (typeof(callback) === "function" && rows[0].sms) callback(rows[0].sms);
@@ -44,7 +44,7 @@ exports.send_sms = function(uid, callback, res) {
 
 
 exports.send_mail = function(uid, callback, res) {
-    connection.query("Select * From "+ properties.esup.mysql.userTable +" u Where u.uid = '" + uid + "'", function(err, rows, fields) {
+    connection.query("Select * From "+ properties.esup.mysql.userTable +" u Where u.uid = ?", [uid], function(err, rows, fields) {
         if (err) throw err;
         if (rows[0]) {
             if (typeof(callback) === "function" && rows[0].mail) callback(rows[0].mail);
