@@ -57,8 +57,8 @@ exports.get_available_transports = function(req, res, next) {
     get_user(req, res, function(user) {
         var response = {};
         var result = {};
-        if (user.mail) result.mail = utils.cover_string(user.mail, 4, 5);
-        if (user.sms) result.sms = utils.cover_string(user.sms, 2, 2);
+        if (user[properties.esup.ldap.transport.mail]) result.mail = utils.cover_string(user[properties.esup.ldap.transport.mail], 4, 5);
+        if (user[properties.esup.ldap.transport.sms]) result.sms = utils.cover_string(user[properties.esup.ldap.transport.sms], 2, 2);
         response.code = "Ok";
         response.message = properties.messages.success.transports_found;
         response.transports_list = result;

@@ -1,10 +1,4 @@
 var properties = require(process.cwd() + '/properties/properties');
-var simplecrypt = require("simplecrypt");
-var sc = simplecrypt({salt: properties.esup.salt});
-
-exports.verify_hash= function(hash, uid){
-    return uid == sc.decrypt(hash);
-}
 
 exports.get_methods = function(req, res, next) {
     console.log("get_methods");

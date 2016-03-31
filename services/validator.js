@@ -1,25 +1,32 @@
 var restify = require('restify');
+var properties = require(process.cwd() + '/properties/properties');
+var TwinBcrypt = require('twin-bcrypt');
 
 var required = {
     create_user: ['uid'],
     get_user: ['uid'],
     set_otp: ['uid', 'otp'],
-    get_available_transports: ['uid'],
+    get_available_transports: ['uid', 'hash'],
     verify_code: ['uid', 'otp'],
-    send_code: ['uid', 'method', 'transport'],
+    send_code: ['uid', 'method', 'transport', 'hash'],
     generate: ['uid', 'method'],
     get_google_authenticator_secret: ['uid'],
     toggle_method: ['uid', 'method'],
     update_transport: ['uid', 'transport', 'new_transport'],
     toggle_method_transport: ['transport', 'method'],
-    get_activate_methods: ['uid'],
+    get_activate_methods: ['uid', 'hash'],
     toggle_method_admin: ['method'],
+}
+
+function compare_salt_level1(req, res, next) {
+    if (TwinBcrypt.compareSync(req.params.uid + properties.esup.salt, req.params.hash)) return next();
+    else return next(new restify.ForbiddenError());
 }
 
 function validate(req, required) {
     var validate = true;
     for (i in required) {
-        if (req.params[required[i]] && req.params[required[i]]!='');
+        if (req.params[required[i]] && req.params[required[i]] != '');
         else validate = false;
     }
     return validate;
@@ -59,7 +66,7 @@ exports.set_otp = function(req, res, next) {
 
 exports.get_available_transports = function(req, res, next) {
     if (check_parameters(req, required.get_available_transports)) {
-        return next();
+        compare_salt_level1(req, res, next);
     } else {
         return next(new restify.InvalidArgumentError());
     }
@@ -67,7 +74,7 @@ exports.get_available_transports = function(req, res, next) {
 
 exports.get_activate_methods = function(req, res, next) {
     if (check_parameters(req, required.get_activate_methods)) {
-        return next();
+        compare_salt_level1(req, res, next);
     } else {
         return next(new restify.InvalidArgumentError());
     }
@@ -121,7 +128,7 @@ exports.verify_code = function(req, res, next) {
     }
 }
 
-exports.generate= function(req, res, next) {
+exports.generate = function(req, res, next) {
     if (check_parameters(req, required.generate)) {
         return next();
     } else {
