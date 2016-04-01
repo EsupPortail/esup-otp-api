@@ -20,13 +20,17 @@ var required = {
 }
 
 function compare_salt(req, res, next) {
-    if (TwinBcrypt.compareSync(req.params.uid + properties.esup.salt, req.params.hash)) return next();
-    else return next(new restify.ForbiddenError());
+    TwinBcrypt.compare(req.params.uid + properties.esup.salt, req.params.hash, function(result) {
+        if (result === true) return next();
+        else return next(new restify.ForbiddenError());
+    });
 }
 
 function compare_secret_salt(req, res, next) {
-    if (TwinBcrypt.compareSync(properties.esup.secret_salt, req.params.hash)) return next();
-    else return next(new restify.ForbiddenError());
+    TwinBcrypt.compare(properties.esup.secret_salt, req.params.hash, function(result) {
+        if (result === true) return next();
+        else return next(new restify.ForbiddenError());
+    });
 }
 
 function validate(req, required) {
@@ -135,6 +139,7 @@ exports.send_code = function(req, res, next) {
 }
 
 exports.verify_code = function(req, res, next) {
+    console.log(req.params);
     if (check_parameters(req, required.verify_code)) {
         compare_secret_salt(req, res, next);
     } else {
