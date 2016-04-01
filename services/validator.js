@@ -3,23 +3,28 @@ var properties = require(process.cwd() + '/properties/properties');
 var TwinBcrypt = require('twin-bcrypt');
 
 var required = {
-    create_user: ['uid'],
-    get_user: ['uid'],
-    set_otp: ['uid', 'otp'],
+    create_user: ['uid', 'hash'],
+    get_user: ['uid', 'hash'],
+    set_otp: ['uid', 'otp', 'hash'],
     get_available_transports: ['uid', 'hash'],
-    verify_code: ['uid', 'otp'],
+    verify_code: ['uid', 'otp', 'hash'],
     send_code: ['uid', 'method', 'transport', 'hash'],
-    generate: ['uid', 'method'],
-    get_google_authenticator_secret: ['uid'],
-    toggle_method: ['uid', 'method'],
-    update_transport: ['uid', 'transport', 'new_transport'],
-    toggle_method_transport: ['transport', 'method'],
+    generate: ['uid', 'method', 'hash'],
+    get_google_authenticator_secret: ['uid', 'hash'],
+    toggle_method: ['uid', 'method', 'hash'],
+    update_transport: ['uid', 'transport', 'new_transport', 'hash'],
+    toggle_method_transport: ['transport', 'method', 'hash'],
     get_activate_methods: ['uid', 'hash'],
-    toggle_method_admin: ['method'],
+    toggle_method_admin: ['method', 'hash'],
 }
 
-function compare_salt_level1(req, res, next) {
+function compare_salt(req, res, next) {
     if (TwinBcrypt.compareSync(req.params.uid + properties.esup.salt, req.params.hash)) return next();
+    else return next(new restify.ForbiddenError());
+}
+
+function compare_secret_salt(req, res, next) {
+    if (TwinBcrypt.compareSync(properties.esup.secret_salt, req.params.hash)) return next();
     else return next(new restify.ForbiddenError());
 }
 
@@ -66,7 +71,7 @@ exports.set_otp = function(req, res, next) {
 
 exports.get_available_transports = function(req, res, next) {
     if (check_parameters(req, required.get_available_transports)) {
-        compare_salt_level1(req, res, next);
+        compare_salt(req, res, next);
     } else {
         return next(new restify.InvalidArgumentError());
     }
@@ -74,7 +79,7 @@ exports.get_available_transports = function(req, res, next) {
 
 exports.get_activate_methods = function(req, res, next) {
     if (check_parameters(req, required.get_activate_methods)) {
-        compare_salt_level1(req, res, next);
+        compare_salt(req, res, next);
     } else {
         return next(new restify.InvalidArgumentError());
     }
@@ -114,7 +119,7 @@ exports.toggle_method_admin = function(req, res, next) {
 
 exports.send_code = function(req, res, next) {
     if (check_parameters(req, required.send_code)) {
-        return next();
+        compare_salt(req, res, next);
     } else {
         return next(new restify.InvalidArgumentError());
     }
