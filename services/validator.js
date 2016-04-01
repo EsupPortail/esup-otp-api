@@ -5,6 +5,7 @@ var TwinBcrypt = require('twin-bcrypt');
 var required = {
     create_user: ['uid', 'hash'],
     get_user: ['uid', 'hash'],
+    get_methods: ['hash'],
     set_otp: ['uid', 'otp', 'hash'],
     get_available_transports: ['uid', 'hash'],
     verify_code: ['uid', 'otp', 'hash'],
@@ -55,6 +56,14 @@ exports.create_user = function(req, res, next) {
 
 exports.get_user = function(req, res, next) {
     if (check_parameters(req, required.get_user)) {
+        compare_secret_salt(req, res, next);
+    } else {
+        return next(new restify.InvalidArgumentError());
+    }
+}
+
+exports.get_methods = function(req, res, next) {
+    if (check_parameters(req, required.get_methods)) {
         compare_secret_salt(req, res, next);
     } else {
         return next(new restify.InvalidArgumentError());
