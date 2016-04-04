@@ -6,8 +6,7 @@ var client;
 
 exports.initialize = function(bind, callback) {
     client = ldapjs.createClient({
-        url: properties.esup.ldap.uri,
-        queueDisable: true
+        url: properties.esup.ldap.uri
     });
     client.bind(properties.esup.ldap.adminDn, properties.esup.ldap.password, function(err) {
         if (err) console.log('bind error : ' + err);
