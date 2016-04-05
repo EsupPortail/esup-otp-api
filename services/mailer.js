@@ -18,28 +18,6 @@ var mailOptions = {
     from: "Esup otp api <"+properties.esup.mailer.address+">", // sender address
 }
 
-exports.sendQRCode = function(mail, message, img, res) {
-    mailOptions.text = message;
-    mailOptions.html = img;
-    mailOptions.to = properties.esup.dev.mail || mail;
-    mailOptions.subject = "Google Authenticator QRCode";
-    // send mail with defined transport object
-    transporter.sendMail(mailOptions, function(error, response) {
-        if (error) {
-            res.send({
-                "code": "Error",
-                "message": error
-            });
-        } else {
-            res.send({
-                "code": "Ok",
-                "message": "QRCode sent"
-            });
-        }
-    });
-}
-
-
 exports.send_code = function(mail, message, res) {
     console.log("Message sent to " + mail + " with the message: " + message);
     mailOptions.text = message;

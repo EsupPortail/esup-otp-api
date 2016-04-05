@@ -90,6 +90,20 @@ function initiatilize_user_model() {
     UserModel = mongoose.model('User');
 }
 
+function find_user(criteria, res, callback) {
+    var response = {
+        "code": "Error",
+        "message": properties.messages.error.user_not_found
+    };
+    UserModel.find(criteria).exec(function(err, data) {
+        if (data[0]) {
+            if (typeof(callback) === "function") callback(data[0]);
+        } else {
+            res.send(response);
+        }
+    });
+}
+
 
 /**
  * Renvoie l'utilisateur avec l'uid == req.params.uid
@@ -101,28 +115,21 @@ function initiatilize_user_model() {
 exports.get_user = function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
+    
     console.log('get_user');
 
-    var response = {
-        "code": "Error",
-        "message": properties.messages.error.user_not_found
-    };
-    UserModel.find({
+    find_user({
         'uid': req.params.uid
-    }).exec(function(err, data) {
-        if (data[0]) {
-            response.code = 'Ok';
-            response.message = '';
-            response.user = {};
-            response.user.bypass = {};
-            response.user.bypass.available_code = data[0].bypass.codes.length;
-            response.user.bypass.used_code = properties.esup.methods.bypass.codes_number - data[0].bypass.codes.length;
-            response.user.matrix = data[0].matrix;
-            console.log(response);
-            res.send(response);
-        } else {
-            res.send(response);
-        }
+    }, res, function(user){
+        var response = {};
+        response.code = 'Ok';
+        response.message = '';
+        response.user = {};
+        response.user.bypass = {};
+        response.user.bypass.available_code = user.bypass.codes.length;
+        response.user.bypass.used_code = properties.esup.methods.bypass.codes_number - user.bypass.codes.length;
+        response.user.matrix = user.matrix;
+        res.send(response);
     });
 };
 
@@ -169,48 +176,41 @@ exports.send_code = function(req, res, next) {
  */
 function send_code_google_authenticator(req, res, next) {
     console.log("send_google_authenticator :" + req.params.uid);
-    UserModel.find({
+    find_user({
         'uid': req.params.uid
-    }).exec(function(err, data) {
-        if (data[0]) {
-            if (data[0].google_authenticator.active && properties.esup.methods.google_authenticator.activate) {
-                data[0].google_authenticator.window = properties.esup.methods.google_authenticator.mail_window;
-                data[0].save(function() {
-                    switch (req.params.transport) {
-                        case 'mail':
-                            userDb_controller.send_mail(req, res, function(mail) {
-                                mailer.send_code(mail, speakeasy.totp({
-                                    secret: data[0].google_authenticator.secret.base32,
-                                    encoding: 'base32'
-                                }), res);
-                            });
-                            break;
-                        case 'sms':
-                            userDb_controller.send_sms(req, res, function(num) {
-                                sms.send_code(num, speakeasy.totp({
-                                    secret: data[0].google_authenticator.secret.base32,
-                                    encoding: 'base32'
-                                }), res);
-                            });
-                            break;
-                        default:
-                            res.send({
-                                code: 'Error',
-                                message: properties.messages.error.unvailable_method_transport
-                            });
-                            break;
-                    }
-                });
-            } else {
-                res.send({
-                    code: 'Error',
-                    message: properties.messages.error.method_not_found
-                });
-            }
+    }, res, function(user) {
+        if (user.google_authenticator.active && properties.esup.methods.google_authenticator.activate) {
+            user.google_authenticator.window = properties.esup.methods.google_authenticator.mail_window;
+            user.save(function() {
+                switch (req.params.transport) {
+                    case 'mail':
+                        userDb_controller.send_mail(req, res, function(mail) {
+                            mailer.send_code(mail, speakeasy.totp({
+                                secret: user.google_authenticator.secret.base32,
+                                encoding: 'base32'
+                            }), res);
+                        });
+                        break;
+                    case 'sms':
+                        userDb_controller.send_sms(req, res, function(num) {
+                            sms.send_code(num, speakeasy.totp({
+                                secret: user.google_authenticator.secret.base32,
+                                encoding: 'base32'
+                            }), res);
+                        });
+                        break;
+                    default:
+                        res.send({
+                            code: 'Error',
+                            message: properties.messages.error.unvailable_method_transport
+                        });
+                        break;
+                }
+            });
         } else {
             res.send({
-                "code": "Error",
-                "message": properties.messages.error.user_not_found
+                code: 'Error',
+                message: properties.messages.error.method_not_found
             });
         }
     });
@@ -226,61 +226,55 @@ function send_code_google_authenticator(req, res, next) {
  */
 function send_code_simple_generator(req, res, next) {
     console.log("send_code_simple_generator :" + req.params.uid);
-    UserModel.find({
+    find_user({
         'uid': req.params.uid
-    }).exec(function(err, data) {
-        if (data[0]) {
-            if (data[0].simple_generator.active && properties.esup.methods.simple_generator.activate) {
-                var new_otp = {};
-                switch (properties.esup.methods.simple_generator.code_type) {
-                    case "string":
-                        new_otp.code = simple_generator.generate_string_code(properties.esup.methods.simple_generator.code_length);
+    }, res, function(user) {
+        if (user.simple_generator.active && properties.esup.methods.simple_generator.activate) {
+            var new_otp = {};
+            switch (properties.esup.methods.simple_generator.code_type) {
+                case "string":
+                    new_otp.code = simple_generator.generate_string_code(properties.esup.methods.simple_generator.code_length);
+                    break;
+                case "digit":
+                    new_otp.code = simple_generator.generate_digit_code(properties.esup.methods.simple_generator.code_length);
+                    break;
+                default:
+                    new_otp.code = simple_generator.generate_string_code(properties.esup.methods.simple_generator.code_length);
+                    break;
+            }
+            validity_time = properties.esup.methods.simple_generator.mail_validity * 60 * 1000;
+            validity_time += new Date().getTime();
+            new_otp.validity_time = validity_time;
+            user.simple_generator = new_otp;
+            user.save(function() {
+                switch (req.params.transport) {
+                    case 'mail':
+                        userDb_controller.send_mail(req, res, function(mail) {
+                            mailer.send_code(mail, new_otp.code, res);
+                        });
                         break;
-                    case "digit":
-                        new_otp.code = simple_generator.generate_digit_code(properties.esup.methods.simple_generator.code_length);
+                    case 'sms':
+                        userDb_controller.send_sms(req, res, function(num) {
+                            sms.send_code(num, new_otp.code, res);
+                        });
                         break;
                     default:
-                        new_otp.code = simple_generator.generate_string_code(properties.esup.methods.simple_generator.code_length);
+                        res.send({
+                            code: 'Error',
+                            message: properties.messages.error.unvailable_method_transport
+                        });
                         break;
                 }
-                validity_time = properties.esup.methods.simple_generator.mail_validity * 60 * 1000;
-                validity_time += new Date().getTime();
-                new_otp.validity_time = validity_time;
-                data[0].simple_generator = new_otp;
-                data[0].save(function() {
-                    switch (req.params.transport) {
-                        case 'mail':
-                            userDb_controller.send_mail(req, res, function(mail) {
-                                mailer.send_code(mail, new_otp.code, res);
-                            });
-                            break;
-                        case 'sms':
-                            userDb_controller.send_sms(req, res, function(num) {
-                                sms.send_code(num, new_otp.code, res);
-                            });
-                            break;
-                        default:
-                            res.send({
-                                code: 'Error',
-                                message: properties.messages.error.unvailable_method_transport
-                            });
-                            break;
-                    }
-                });
-            } else {
-                res.send({
-                    code: 'Error',
-                    message: properties.messages.error.methods_not_found
-                });
-            }
+            });
         } else {
             res.send({
-                "code": "Error",
-                "message": properties.messages.error.user_not_found
+                code: 'Error',
+                message: properties.messages.error.methods_not_found
             });
         }
     });
 };
+
 
 /**
  * Vérifie si le code fourni correspond à celui stocké en base de données
@@ -295,9 +289,10 @@ exports.verify_code = function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
 
-    UserModel.find({
+
+    find_user({
         'uid': req.params.uid
-    }).exec(function(err, data) {
+    }, res, function(user) {
         verify_simple_generator(req, res, function(req, res) {
             verify_google_authenticator(req, res, function() {
                 verify_bypass(req, res, function() {
@@ -311,6 +306,7 @@ exports.verify_code = function(req, res, next) {
     });
 };
 
+
 /**
  * Vérifie si le code fourni correspond à celui stocké en base de données
  * si oui: on retourne un réponse positive et on supprime l'otp de la base de donnée
@@ -321,19 +317,19 @@ exports.verify_code = function(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 function verify_simple_generator(req, res, next) {
-    UserModel.find({
+    find_user({
         'uid': req.params.uid
-    }).exec(function(err, data) {
-        if (data[0].simple_generator.active && properties.esup.methods.simple_generator.activate) {
-            if (data[0].simple_generator.code == req.params.otp) {
-                if (Date.now() < data[0].simple_generator.validity_time) {
-                    delete data[0].simple_generator.code;
-                    delete data[0].simple_generator.validity_time;
+    }, res, function(user) {
+        if (user.simple_generator.active && properties.esup.methods.simple_generator.activate) {
+            if (user.simple_generator.code == req.params.otp) {
+                if (Date.now() < user.simple_generator.validity_time) {
+                    delete user.simple_generator.code;
+                    delete user.simple_generator.validity_time;
                     UserModel.update({
                         'uid': req.params.uid
                     }, {
                         $set: {
-                            simple_generator: data[0].simple_generator
+                            simple_generator: user.simple_generator
                         }
                     }, function(err, data) {
                         if (err) {
@@ -368,18 +364,18 @@ function verify_simple_generator(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 function verify_bypass(req, res, next) {
-    UserModel.find({
+    find_user({
         'uid': req.params.uid
-    }).exec(function(err, data) {
-        if (data[0].bypass.active && properties.esup.methods.bypass.activate) {
-            if (data[0].bypass.codes) {
+    }, res, function(user) {
+        if (user.bypass.active && properties.esup.methods.bypass.activate) {
+            if (user.bypass.codes) {
                 var checkOtp = false;
-                var codes = data[0].bypass.codes;
+                var codes = user.bypass.codes;
                 for (code in codes) {
-                    if (data[0].bypass.codes[code] == req.params.otp) {
+                    if (user.bypass.codes[code] == req.params.otp) {
                         checkOtp = true;
                         codes.splice(code, 1);
-                        data[0].bypass.codes = codes;
+                        user.bypass.codes = codes;
                     }
                 }
                 if (checkOtp) {
@@ -387,7 +383,7 @@ function verify_bypass(req, res, next) {
                         'uid': req.params.uid
                     }, {
                         $set: {
-                            bypass: data[0].bypass
+                            bypass: user.bypass
                         }
                     }, function(err, data) {
                         if (err) {
@@ -412,6 +408,7 @@ function verify_bypass(req, res, next) {
 };
 
 
+
 /**
  * Vérifie si l'otp fourni correspond à celui généré
  * si oui: on retourne un réponse positive
@@ -423,42 +420,35 @@ function verify_bypass(req, res, next) {
  */
 function verify_google_authenticator(req, res, next) {
     var checkSpeakeasy = false;
-    UserModel.find({
+
+    find_user({
         'uid': req.params.uid
-    }).exec(function(err, data) {
-        if (err) {
-            console.log(err);
-            next(req, res);
-        } else if (data[0] == undefined) res.send({
-            "code": "Error",
-            "message": properties.messages.error.user_not_found
-        });
-        else {
-            if (data[0].google_authenticator.active && properties.esup.methods.google_authenticator.activate) {
-                var transport_window = 0;
-                checkSpeakeasy = speakeasy.totp.verify({
-                    secret: data[0].google_authenticator.secret.base32,
-                    encoding: 'base32',
-                    token: req.params.otp,
-                    window: data[0].google_authenticator.window
-                });
-                if (checkSpeakeasy) {
-                    data[0].google_authenticator.window = properties.esup.methods.google_authenticator.default_window;
-                    data[0].save(function() {
-                        res.send({
-                            "code": "Ok",
-                            "message": properties.messages.success.valid_credentials
-                        });
+    }, res, function(user) {
+        if (user.google_authenticator.active && properties.esup.methods.google_authenticator.activate) {
+            var transport_window = 0;
+            checkSpeakeasy = speakeasy.totp.verify({
+                secret: user.google_authenticator.secret.base32,
+                encoding: 'base32',
+                token: req.params.otp,
+                window: user.google_authenticator.window
+            });
+            if (checkSpeakeasy) {
+                user.google_authenticator.window = properties.esup.methods.google_authenticator.default_window;
+                user.save(function() {
+                    res.send({
+                        "code": "Ok",
+                        "message": properties.messages.success.valid_credentials
                     });
-                } else {
-                    next(req, res);
-                }
+                });
             } else {
                 next(req, res);
             }
+        } else {
+            next(req, res);
         }
     });
 };
+
 
 /**
  * Génére un nouvel attribut d'auth (secret key ou matrice)
@@ -502,23 +492,28 @@ exports.generate = function(req, res, next) {
  */
 function generate_google_authenticator(req, res, next) {
     if (properties.esup.methods.google_authenticator.activate) {
-        UserModel.update({
+        find_user({
             'uid': req.params.uid
-        }, {
-            $set: {
-                google_authenticator: {
-                    secret: speakeasy.generateSecret({ length: 16 })
+        }, res, function() {
+            UserModel.update({
+                'uid': req.params.uid
+            }, {
+                $set: {
+                    google_authenticator: {
+                        secret: speakeasy.generateSecret({ length: 16 })
+                    }
                 }
-            }
-        }, function(err, raw) {
-            if (err) return handleError(err);
-            res.send(raw);
-        })
+            }, function(err, raw) {
+                if (err) return handleError(err);
+                res.send(raw);
+            });
+        });
     } else res.send({
         code: 'Error',
         message: properties.messages.error.method_not_found
     });
 };
+
 
 /**
  * Retourne la réponse de la base de donnée suite à la génération de nouveau bypass codes
@@ -529,37 +524,42 @@ function generate_google_authenticator(req, res, next) {
  */
 function generate_bypass(req, res, next) {
     if (properties.esup.methods.bypass.activate) {
-        var codes = new Array();
-        for (var it = 0; it < properties.esup.methods.bypass.codes_number; it++) {
-            switch (properties.esup.methods.simple_generator.code_type) {
-                case "string":
-                    codes.push(simple_generator.generate_string_code(properties.esup.methods.bypass.code_length));
-                    break;
-                case "digit":
-                    codes.push(simple_generator.generate_digit_code(properties.esup.methods.bypass.code_length));
-                    break;
-                default:
-                    codes.push(simple_generator.generate_string_code(properties.esup.methods.bypass.code_length));
-                    break;
-            }
-        }
-        UserModel.update({
+        find_user({
             'uid': req.params.uid
-        }, {
-            $set: {
-                bypass: {
-                    codes: codes
+        }, res, function() {
+            var codes = new Array();
+            for (var it = 0; it < properties.esup.methods.bypass.codes_number; it++) {
+                switch (properties.esup.methods.simple_generator.code_type) {
+                    case "string":
+                        codes.push(simple_generator.generate_string_code(properties.esup.methods.bypass.code_length));
+                        break;
+                    case "digit":
+                        codes.push(simple_generator.generate_digit_code(properties.esup.methods.bypass.code_length));
+                        break;
+                    default:
+                        codes.push(simple_generator.generate_string_code(properties.esup.methods.bypass.code_length));
+                        break;
                 }
             }
-        }, function(err, raw) {
-            if (err) return handleError(err);
-            res.send(raw);
-        })
+            UserModel.update({
+                'uid': req.params.uid
+            }, {
+                $set: {
+                    bypass: {
+                        codes: codes
+                    }
+                }
+            }, function(err, raw) {
+                if (err) return handleError(err);
+                res.send(raw);
+            });
+        });
     } else res.send({
         code: 'Error',
         message: properties.messages.error.method_not_found
     });
 };
+
 
 
 /**
@@ -572,25 +572,20 @@ function generate_bypass(req, res, next) {
 exports.get_google_authenticator_secret = function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
-    var response = {
-        "code": "Error",
-        "message": properties.messages.error.user_not_found
-    };
-    UserModel.find({
+
+    find_user({
         'uid': req.params.uid
-    }).exec(function(err, data) {
-        if (data[0]) {
-            var qr = qrCode.qrcode(4, 'M');
-            qr.addData(data[0].google_authenticator.secret.otpauth_url);
-            qr.make();
-            response.code = 'Ok';
-            response.message = data[0].google_authenticator.secret.base32;
-            response.qrCode = qr.createImgTag(4);
-            res.send(response);
-            // mailer.sendQRCode(data[0].mail, data[0].google_authenticator.secret.base32, qr.createImgTag(4), res);
-        } else res.send(response);
+    }, res, function(user) {
+        var qr = qrCode.qrcode(4, 'M');
+        qr.addData(user.google_authenticator.secret.otpauth_url);
+        qr.make();
+        response.code = 'Ok';
+        response.message = user.google_authenticator.secret.base32;
+        response.qrCode = qr.createImgTag(4);
+        res.send(response);
     });
 };
+
 
 /**
  * Renvoie les méthodes activées de l'utilisateur
@@ -603,25 +598,21 @@ exports.get_activate_methods = function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
 
-    var response = {
-        "code": "Error",
-        "message": properties.messages.error.user_not_found
-    };
-    UserModel.find({
+    find_user({
         'uid': req.params.uid
-    }).exec(function(err, data) {
-        if (data[0]) {
-            var result = {};
-            for (method in properties.esup.methods) {
-                if (properties.esup.methods[method].activate && data[0][method].active) result[method] = properties.esup.methods[method];
-            }
-            response.code = "Ok";
-            response.message = properties.messages.success.methods_found;
-            response.methods = result;
-            res.send(response);
-        } else res.send(response);
+    }, res, function(user) {
+        var result = {};
+        for (method in properties.esup.methods) {
+            if (properties.esup.methods[method].activate && user[method].active) result[method] = properties.esup.methods[method];
+        }
+        response.code = "Ok";
+        response.message = properties.messages.success.methods_found;
+        response.methods = result;
+        res.send(response);
     });
+
 };
+
 
 /**
  * Active la méthode l'utilisateur ayant l'uid req.params.uid
