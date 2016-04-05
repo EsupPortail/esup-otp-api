@@ -576,6 +576,7 @@ exports.get_google_authenticator_secret = function(req, res, next) {
     find_user({
         'uid': req.params.uid
     }, res, function(user) {
+        var response = {};
         var qr = qrCode.qrcode(4, 'M');
         qr.addData(user.google_authenticator.secret.otpauth_url);
         qr.make();
@@ -601,6 +602,7 @@ exports.get_activate_methods = function(req, res, next) {
     find_user({
         'uid': req.params.uid
     }, res, function(user) {
+        var response = {};
         var result = {};
         for (method in properties.esup.methods) {
             if (properties.esup.methods[method].activate && user[method].active) result[method] = properties.esup.methods[method];
@@ -652,25 +654,19 @@ exports.activate_method = function(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 function activate_google_authenticator(req, res, next) {
-    UserModel.find({
+    find_user({
         'uid': req.params.uid
-    }).exec(function(err, data) {
-        if (data[0]) {
-            data[0].google_authenticator.active = true;
-            data[0].save(function() {
-                res.send({
-                    "code": "Ok",
-                    "message": ""
-                });
-            });
-        } else {
+    }, res, function(user) {
+        user.google_authenticator.active = true;
+        user.save(function() {
             res.send({
-                "code": "Error",
-                "message": properties.messages.error.user_not_found
+                "code": "Ok",
+                "message": ""
             });
-        }
+        });
     });
 };
+
 
 /**
  * Active la méthode simple_generator pour l'utilisateur ayant l'uid req.params.uid
@@ -680,23 +676,16 @@ function activate_google_authenticator(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 function activate_simple_generator(req, res, next) {
-    UserModel.find({
+    find_user({
         'uid': req.params.uid
-    }).exec(function(err, data) {
-        if (data[0]) {
-            data[0].simple_generator.active = true;
-            data[0].save(function() {
-                res.send({
-                    "code": "Ok",
-                    "message": ""
-                });
-            });
-        } else {
+    }, res, function(user) {
+        user.simple_generator.active = true;
+        user.save(function() {
             res.send({
-                "code": "Error",
-                "message": properties.messages.error.user_not_found
+                "code": "Ok",
+                "message": ""
             });
-        }
+        });
     });
 };
 
@@ -708,23 +697,16 @@ function activate_simple_generator(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 function activate_bypass(req, res, next) {
-    UserModel.find({
+       find_user({
         'uid': req.params.uid
-    }).exec(function(err, data) {
-        if (data[0]) {
-            data[0].bypass.active = true;
-            data[0].save(function() {
-                res.send({
-                    "code": "Ok",
-                    "message": ""
-                });
-            });
-        } else {
+    }, res, function(user) {
+        user.bypass.active = true;
+        user.save(function() {
             res.send({
-                "code": "Error",
-                "message": properties.messages.error.user_not_found
+                "code": "Ok",
+                "message": ""
             });
-        }
+        });
     });
 };
 
@@ -767,25 +749,19 @@ exports.deactivate_method = function(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 function deactivate_google_authenticator(req, res, next) {
-    UserModel.find({
+    find_user({
         'uid': req.params.uid
-    }).exec(function(err, data) {
-        if (data[0]) {
-            data[0].google_authenticator.active = false;
-            data[0].save(function() {
-                res.send({
-                    "code": "Ok",
-                    "message": ""
-                });
-            });
-        } else {
+    }, res, function(user) {
+        user.google_authenticator.active = false;
+        user.save(function() {
             res.send({
-                "code": "Error",
-                "message": properties.messages.error.user_not_found
+                "code": "Ok",
+                "message": ""
             });
-        }
+        });
     });
 };
+
 
 /**
  * Désactive la méthode simple_generator pour l'utilisateur ayant l'uid req.params.uid
@@ -795,25 +771,19 @@ function deactivate_google_authenticator(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 function deactivate_simple_generator(req, res, next) {
-    UserModel.find({
+    find_user({
         'uid': req.params.uid
-    }).exec(function(err, data) {
-        if (data[0]) {
-            data[0].simple_generator.active = false;
-            data[0].save(function() {
-                res.send({
-                    "code": "Ok",
-                    "message": ""
-                });
-            });
-        } else {
+    }, res, function(user) {
+        user.google_authenticator.active = false;
+        user.save(function() {
             res.send({
-                "code": "Error",
-                "message": properties.messages.error.user_not_found
+                "code": "Ok",
+                "message": ""
             });
-        }
+        });
     });
 };
+
 
 /**
  * Désactive la méthode bypass pour l'utilisateur ayant l'uid req.params.uid
@@ -823,56 +793,19 @@ function deactivate_simple_generator(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 function deactivate_bypass(req, res, next) {
-    UserModel.find({
+    find_user({
         'uid': req.params.uid
-    }).exec(function(err, data) {
-        if (data[0]) {
-            data[0].bypass.active = false;
-            data[0].save(function() {
-                res.send({
-                    "code": "Ok",
-                    "message": ""
-                });
-            });
-        } else {
+    }, res, function(user) {
+        user.google_authenticator.active = false;
+        user.save(function() {
             res.send({
-                "code": "Error",
-                "message": properties.messages.error.user_not_found
+                "code": "Ok",
+                "message": ""
             });
-        }
+        });
     });
 };
 
-
-/**
- * Active le transport == req.params.transport de la method == req.params.method pour l'utilisateur avec l'uid == req.params.uid
- *
- * @param req requete HTTP contenant le nom la personne recherchee
- * @param res response HTTP
- * @param next permet d'appeler le prochain gestionnaire (handler)
- */
-exports.activate_transport = function(req, res, next) {
-    switch (req.params.method) {
-        case 'google_authenticator':
-            activate_transport_code_google_authenticator(req, res, next);
-            break;
-        case 'simple_generator':
-            activate_transport_code_simple_generator(req, res, next);
-            break;
-        case 'bypass':
-            res.send({
-                "code": "Error",
-                "message": properties.messages.error.unvailable_method_operation
-            });
-            break;
-        default:
-            res.send({
-                "code": "Error",
-                "message": properties.messages.error.method_not_found
-            });
-            break;
-    }
-};
 /**
  * Drop Users
  */

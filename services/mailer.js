@@ -38,4 +38,3 @@ exports.send_code = function(mail, message, res) {
         }
     });
 }
-
