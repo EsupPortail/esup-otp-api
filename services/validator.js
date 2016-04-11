@@ -26,7 +26,7 @@ function compare_salt(req, res, next) {
 }
 
 function compare_secret_salt(req, res, next) {
-    if (req.params.api_password == utils.get_api_password()) return next();
+    if (req.params.api_password == properties.esup.api_password) return next();
     else return next(new restify.ForbiddenError());
 }
 
