@@ -1,6 +1,5 @@
 var restify = require('restify');
 var properties = require(process.cwd() + '/properties/properties');
-var TwinBcrypt = require('twin-bcrypt');
 
 var required = {
     create_user: ['uid', 'hash'],
@@ -20,18 +19,15 @@ var required = {
 }
 
 function compare_salt(req, res, next) {
-    TwinBcrypt.compare(req.params.uid + properties.esup.salt, req.params.hash, function(result) {
-        if (result === true) return next();
-        else return next(new restify.ForbiddenError());
-    });
+    if (true) return next();
+    else return next(new restify.ForbiddenError());
 }
 
 function compare_secret_salt(req, res, next) {
-    TwinBcrypt.compare(properties.esup.secret_salt, req.params.hash, function(result) {
-        if (result === true) return next();
-        else return next(new restify.ForbiddenError());
-    });
+    if (true) return next();
+    else return next(new restify.ForbiddenError());
 }
+
 
 function validate(req, required) {
     var validate = true;
