@@ -20,12 +20,12 @@ var required = {
     toggle_method_admin: ['method', 'api_password']
 }
 
-function compare_salt(req, res, next) {
-    if (true) return next();
+function check_hash(req, res, next) {
+    if (req.params.hash == utils.get_hash(req.params.uid)) return next();
     else return next(new restify.ForbiddenError());
 }
 
-function compare_secret_salt(req, res, next) {
+function check_api_password(req, res, next) {
     if (req.params.api_password == properties.esup.api_password) return next();
     else return next(new restify.ForbiddenError());
 }
@@ -52,7 +52,7 @@ function check_parameters(req, required) {
 
 exports.create_user = function(req, res, next) {
     if (check_parameters(req, required.create_user)) {
-        compare_secret_salt(req, res, next);
+        check_api_password(req, res, next);
     } else {
         return next(new restify.InvalidArgumentError());
     }
@@ -60,7 +60,7 @@ exports.create_user = function(req, res, next) {
 
 exports.get_user = function(req, res, next) {
     if (check_parameters(req, required.get_user)) {
-        compare_secret_salt(req, res, next);
+        check_api_password(req, res, next);
     } else {
         return next(new restify.InvalidArgumentError());
     }
@@ -68,7 +68,7 @@ exports.get_user = function(req, res, next) {
 
 exports.get_methods = function(req, res, next) {
     if (check_parameters(req, required.get_methods)) {
-        compare_secret_salt(req, res, next);
+        check_api_password(req, res, next);
     } else {
         return next(new restify.InvalidArgumentError());
     }
@@ -76,7 +76,7 @@ exports.get_methods = function(req, res, next) {
 
 exports.set_otp = function(req, res, next) {
     if (check_parameters(req, required.set_otp)) {
-        compare_secret_salt(req, res, next);
+        check_api_password(req, res, next);
     } else {
         return next(new restify.InvalidArgumentError());
     }
@@ -84,7 +84,7 @@ exports.set_otp = function(req, res, next) {
 
 exports.get_available_transports = function(req, res, next) {
     if (check_parameters(req, required.get_available_transports)) {
-        compare_salt(req, res, next);
+        check_hash(req, res, next);
     } else {
         return next(new restify.InvalidArgumentError());
     }
@@ -92,7 +92,7 @@ exports.get_available_transports = function(req, res, next) {
 
 exports.get_activate_methods = function(req, res, next) {
     if (check_parameters(req, required.get_activate_methods)) {
-        compare_salt(req, res, next);
+        check_hash(req, res, next);
     } else {
         return next(new restify.InvalidArgumentError());
     }
@@ -100,7 +100,7 @@ exports.get_activate_methods = function(req, res, next) {
 
 exports.toggle_method = function(req, res, next) {
     if (check_parameters(req, required.toggle_method)) {
-        compare_secret_salt(req, res, next);
+        check_api_password(req, res, next);
     } else {
         return next(new restify.InvalidArgumentError());
     }
@@ -108,7 +108,7 @@ exports.toggle_method = function(req, res, next) {
 
 exports.update_transport = function(req, res, next) {
     if (check_parameters(req, required.update_transport)) {
-        compare_secret_salt(req, res, next);
+        check_api_password(req, res, next);
     } else {
         return next(new restify.InvalidArgumentError());
     }
@@ -124,7 +124,7 @@ exports.toggle_method_transport = function(req, res, next) {
 
 exports.toggle_method_admin = function(req, res, next) {
     if (check_parameters(req, required.toggle_method_admin)) {
-        compare_secret_salt(req, res, next);
+        check_api_password(req, res, next);
     } else {
         return next(new restify.InvalidArgumentError());
     }
@@ -132,7 +132,7 @@ exports.toggle_method_admin = function(req, res, next) {
 
 exports.send_code = function(req, res, next) {
     if (check_parameters(req, required.send_code)) {
-        compare_salt(req, res, next);
+        check_hash(req, res, next);
     } else {
         return next(new restify.InvalidArgumentError());
     }
@@ -141,7 +141,7 @@ exports.send_code = function(req, res, next) {
 exports.verify_code = function(req, res, next) {
     console.log(req.params);
     if (check_parameters(req, required.verify_code)) {
-        compare_secret_salt(req, res, next);
+        check_api_password(req, res, next);
     } else {
         return next(new restify.InvalidArgumentError());
     }
@@ -149,7 +149,7 @@ exports.verify_code = function(req, res, next) {
 
 exports.generate = function(req, res, next) {
     if (check_parameters(req, required.generate)) {
-        compare_secret_salt(req, res, next);
+        check_api_password(req, res, next);
     } else {
         return next(new restify.InvalidArgumentError());
     }
@@ -157,7 +157,7 @@ exports.generate = function(req, res, next) {
 
 exports.get_google_authenticator_secret = function(req, res, next) {
     if (check_parameters(req, required.get_google_authenticator_secret)) {
-        compare_secret_salt(req, res, next);
+        check_api_password(req, res, next);
     } else {
         return next(new restify.InvalidArgumentError());
     }

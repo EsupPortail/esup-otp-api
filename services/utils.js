@@ -1,4 +1,5 @@
 var properties = require(process.cwd() + '/properties/properties');
+var CryptoJS = require('crypto-js');
 
 exports.get_methods = function(req, res, next) {
     console.log("get_methods");
@@ -17,6 +18,10 @@ exports.get_methods = function(req, res, next) {
         response.message = "Method(s) found";
     }
     res.send(response);
+}
+
+exports.get_hash = function(uid) {
+    return CryptoJS.SHA256(CryptoJS.MD5(properties.esup.users_secret).toString()+uid).toString();
 }
 
 exports.cover_string = function(str, start, end) {
