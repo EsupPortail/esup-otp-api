@@ -1,22 +1,23 @@
 var restify = require('restify');
 var properties = require(process.cwd() + '/properties/properties');
-var speakeasy = require('speakeasy');
+var utils = require(process.cwd() + '/services/utils');
 
 var required = {
-    create_user: ['uid', 'hash'],
-    get_user: ['uid', 'hash'],
-    get_methods: ['hash'],
-    set_otp: ['uid', 'otp', 'hash'],
-    get_available_transports: ['uid', 'hash'],
-    verify_code: ['uid', 'otp', 'hash'],
-    send_code: ['uid', 'method', 'transport', 'hash'],
-    generate: ['uid', 'method', 'hash'],
-    get_google_authenticator_secret: ['uid', 'hash'],
-    toggle_method: ['uid', 'method', 'hash'],
-    update_transport: ['uid', 'transport', 'new_transport', 'hash'],
-    toggle_method_transport: ['transport', 'method', 'hash'],
     get_activate_methods: ['uid', 'hash'],
-    toggle_method_admin: ['method', 'hash'],
+    get_available_transports: ['uid', 'hash'],
+    send_code: ['uid', 'method', 'transport', 'hash'],
+
+    create_user: ['uid', 'api_password'],
+    get_user: ['uid', 'api_password'],
+    get_methods: ['api_password'],
+    set_otp: ['uid', 'otp', 'api_password'],
+    verify_code: ['uid', 'otp', 'api_password'],
+    generate: ['uid', 'method', 'api_password'],
+    get_google_authenticator_secret: ['uid', 'api_password'],
+    toggle_method: ['uid', 'method', 'api_password'],
+    update_transport: ['uid', 'transport', 'new_transport', 'api_password'],
+    toggle_method_transport: ['transport', 'method', 'api_password'],
+    toggle_method_admin: ['method', 'api_password']
 }
 
 function compare_salt(req, res, next) {
@@ -25,12 +26,7 @@ function compare_salt(req, res, next) {
 }
 
 function compare_secret_salt(req, res, next) {
-    if (speakeasy.totp.verify({
-            secret: properties.esup.api_secret.base32,
-            encoding: 'base32',
-            token: req.params.hash,
-            window: 2
-        })) return next();
+    if (req.params.api_password == utils.get_api_password()) return next();
     else return next(new restify.ForbiddenError());
 }
 
