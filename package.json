@@ -12,8 +12,7 @@
     "qrcode-npm": "0.0.3",
     "request": "^2.69.0",
     "restify": "4.0.3",
-    "speakeasy": "^2.0.0",
-    "twin-bcrypt": "^2.1.1"
+    "speakeasy": "^2.0.0"
   },
   "bin": "./run.js"
 }

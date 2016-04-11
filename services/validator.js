@@ -1,5 +1,6 @@
 var restify = require('restify');
 var properties = require(process.cwd() + '/properties/properties');
+var speakeasy = require('speakeasy');
 
 var required = {
     create_user: ['uid', 'hash'],
@@ -24,9 +25,15 @@ function compare_salt(req, res, next) {
 }
 
 function compare_secret_salt(req, res, next) {
-    if (true) return next();
+    if (speakeasy.totp.verify({
+            secret: properties.esup.api_secret.base32,
+            encoding: 'base32',
+            token: req.params.hash,
+            window: 2
+        })) return next();
     else return next(new restify.ForbiddenError());
 }
+
 
 
 function validate(req, required) {

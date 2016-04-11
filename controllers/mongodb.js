@@ -117,7 +117,6 @@ exports.get_user = function(req, res, next) {
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
     
     console.log('get_user');
-
     find_user({
         'uid': req.params.uid
     }, res, function(user){
@@ -288,8 +287,6 @@ function send_code_simple_generator(req, res, next) {
 exports.verify_code = function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
-
-
     find_user({
         'uid': req.params.uid
     }, res, function(user) {
