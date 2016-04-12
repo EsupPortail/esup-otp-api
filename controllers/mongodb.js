@@ -502,7 +502,11 @@ function generate_google_authenticator(req, res, next) {
                 }
             }, function(err, raw) {
                 if (err) return handleError(err);
-                res.send(raw);
+                res.send({
+                    code: "Ok",
+                    message: "TODO : renvoyer qrcode et secret"
+
+                });
             });
         });
     } else res.send({
@@ -548,7 +552,12 @@ function generate_bypass(req, res, next) {
                 }
             }, function(err, raw) {
                 if (err) return handleError(err);
-                res.send(raw);
+                res.send({
+                    code: "Ok",
+                    message: "",
+                    codes : codes
+
+                });
             });
         });
     } else res.send({

@@ -13,11 +13,11 @@ exports.initialize = function(server, userDb_controller, apiDB_controller, callb
     
     //api_api_password
     server.get("/methods/:api_password", validator.get_methods, utils.get_methods);
-    server.get("/generate/:method/:uid/:api_password", validator.generate, apiDB_controller.generate);
     server.get("/secret/google_authenticator/:uid/:api_password", validator.get_google_authenticator_secret, apiDB_controller.get_google_authenticator_secret);
     server.put("/deactivate/:method/:uid/:api_password", validator.toggle_method, apiDB_controller.deactivate_method);
     server.put("/activate/:method/:uid/:api_password", validator.toggle_method, apiDB_controller.activate_method);
     server.put("/transport/:transport/:uid/:new_transport/:api_password", validator.update_transport, userDb_controller.update_transport);
+    server.post("/generate/:method/:uid/:api_password", validator.generate, apiDB_controller.generate);
     server.post("/verify_code/:uid/:otp/:api_password", validator.verify_code, apiDB_controller.verify_code);
     
     // routes DEV/ADMIN uniquement
