@@ -116,7 +116,6 @@ exports.get_user = function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
     
-    console.log('get_user');
     find_user({
         'uid': req.params.uid
     }, res, function(user){
@@ -124,10 +123,16 @@ exports.get_user = function(req, res, next) {
         response.code = 'Ok';
         response.message = '';
         response.user = {};
+        response.user.google_authenticator = {};
+        response.user.google_authenticator.active = user.google_authenticator.active;
+        response.user.simple_generator = {};
+        response.user.simple_generator.active = user.simple_generator.active;
         response.user.bypass = {};
+        response.user.bypass.active = user.bypass.active;
         response.user.bypass.available_code = user.bypass.codes.length;
         response.user.bypass.used_code = properties.esup.methods.bypass.codes_number - user.bypass.codes.length;
         response.user.matrix = user.matrix;
+        // response.user.matrix.active = user.matrix.active;
         res.send(response);
     });
 };
@@ -492,21 +497,25 @@ function generate_google_authenticator(req, res, next) {
         find_user({
             'uid': req.params.uid
         }, res, function() {
+            var secret = speakeasy.generateSecret({ length: 16 });
             UserModel.update({
                 'uid': req.params.uid
             }, {
                 $set: {
                     google_authenticator: {
-                        secret: speakeasy.generateSecret({ length: 16 })
+                        secret: secret
                     }
                 }
             }, function(err, raw) {
                 if (err) return handleError(err);
-                res.send({
-                    code: "Ok",
-                    message: "TODO : renvoyer qrcode et secret"
-
-                });
+                var response = {};
+                var qr = qrCode.qrcode(4, 'M');
+                qr.addData(secret.otpauth_url);
+                qr.make();
+                response.code = 'Ok';
+                response.message = secret.base32;
+                response.qrCode = qr.createImgTag(4);
+                res.send(response);
             });
         });
     } else res.send({
@@ -589,6 +598,7 @@ exports.get_google_authenticator_secret = function(req, res, next) {
         response.code = 'Ok';
         response.message = user.google_authenticator.secret.base32;
         response.qrCode = qr.createImgTag(4);
+
         res.send(response);
     });
 };
