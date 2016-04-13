@@ -327,17 +327,7 @@ function verify_simple_generator(req, res, next) {
                 if (Date.now() < user.simple_generator.validity_time) {
                     delete user.simple_generator.code;
                     delete user.simple_generator.validity_time;
-                    UserModel.update({
-                        'uid': req.params.uid
-                    }, {
-                        $set: {
-                            simple_generator: user.simple_generator
-                        }
-                    }, function(err, data) {
-                        if (err) {
-                            console.log(err)
-                            next(req, res);
-                        }
+                    user.save(function(){
                         res.send({
                             "code": "Ok",
                             "message": properties.messages.success.valid_credentials
@@ -381,17 +371,7 @@ function verify_bypass(req, res, next) {
                     }
                 }
                 if (checkOtp) {
-                    UserModel.update({
-                        'uid': req.params.uid
-                    }, {
-                        $set: {
-                            bypass: user.bypass
-                        }
-                    }, function(err, data) {
-                        if (err) {
-                            console.log(err)
-                            next(req, res);
-                        }
+                    user.save(function(){
                         res.send({
                             "code": "Ok",
                             "message": properties.messages.success.valid_credentials
@@ -496,24 +476,15 @@ function generate_google_authenticator(req, res, next) {
     if (properties.esup.methods.google_authenticator.activate) {
         find_user({
             'uid': req.params.uid
-        }, res, function() {
-            var secret = speakeasy.generateSecret({ length: 16 });
-            UserModel.update({
-                'uid': req.params.uid
-            }, {
-                $set: {
-                    google_authenticator: {
-                        secret: secret
-                    }
-                }
-            }, function(err, raw) {
-                if (err) return handleError(err);
+        }, res, function(user) {
+            user.google_authenticator.secret = speakeasy.generateSecret({ length: 16 });
+            user.save(function() {
                 var response = {};
                 var qr = qrCode.qrcode(4, 'M');
-                qr.addData(secret.otpauth_url);
+                qr.addData(user.google_authenticator.secret.otpauth_url);
                 qr.make();
                 response.code = 'Ok';
-                response.message = secret.base32;
+                response.message = user.google_authenticator.secret.base32;
                 response.qrCode = qr.createImgTag(4);
                 res.send(response);
             });
@@ -536,7 +507,7 @@ function generate_bypass(req, res, next) {
     if (properties.esup.methods.bypass.activate) {
         find_user({
             'uid': req.params.uid
-        }, res, function() {
+        }, res, function(user) {
             var codes = new Array();
             for (var it = 0; it < properties.esup.methods.bypass.codes_number; it++) {
                 switch (properties.esup.methods.simple_generator.code_type) {
@@ -551,16 +522,8 @@ function generate_bypass(req, res, next) {
                         break;
                 }
             }
-            UserModel.update({
-                'uid': req.params.uid
-            }, {
-                $set: {
-                    bypass: {
-                        codes: codes
-                    }
-                }
-            }, function(err, raw) {
-                if (err) return handleError(err);
+            user.bypass.codes = codes;
+            user.save(function() {
                 res.send({
                     code: "Ok",
                     message: "",

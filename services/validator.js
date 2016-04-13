@@ -43,7 +43,6 @@ function validate(req, required) {
 }
 
 function check_parameters(req, required) {
-    console.log('validator : check_parameters');
     if (validate(req, required)) {
         return true
     } else {
