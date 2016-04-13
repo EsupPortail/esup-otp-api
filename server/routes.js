@@ -28,6 +28,7 @@ exports.initialize = function(server, userDb_controller, apiDB_controller, callb
     server.put("admin/activate/:method/:api_password", validator.toggle_method_admin, utils.activate_method_admin);
     server.put("admin/deactivate/:method/:transport/:api_password", validator.toggle_method_transport, utils.deactivate_method_transport);
     server.put("admin/activate/:method/:transport/:api_password", validator.toggle_method_transport, utils.activate_method_transport);
+    server.del("admin/delete_method_secret/:method/:uid/:api_password", validator.delete_method_secret, apiDB_controller.delete_method_secret);
 
     if (typeof(callback) === "function") callback(server);
 }

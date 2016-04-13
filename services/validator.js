@@ -11,6 +11,7 @@ var required = {
     get_user: ['uid', 'api_password'],
     get_methods: ['api_password'],
     set_otp: ['uid', 'otp', 'api_password'],
+    delete_method_secret: ['uid', 'method', 'api_password'],
     verify_code: ['uid', 'otp', 'api_password'],
     generate: ['uid', 'method', 'api_password'],
     get_google_authenticator_secret: ['uid', 'api_password'],
@@ -60,6 +61,14 @@ exports.create_user = function(req, res, next) {
 
 exports.get_user = function(req, res, next) {
     if (check_parameters(req, required.get_user)) {
+        check_api_password(req, res, next);
+    } else {
+        return next(new restify.InvalidArgumentError());
+    }
+}
+
+exports.delete_method_secret = function(req, res, next) {
+    if (check_parameters(req, required.delete_method_secret)) {
         check_api_password(req, res, next);
     } else {
         return next(new restify.InvalidArgumentError());

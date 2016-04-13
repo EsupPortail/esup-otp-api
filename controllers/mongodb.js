@@ -453,7 +453,7 @@ function verify_google_authenticator(req, res, next) {
 
 
 /**
- * Génére un nouvel attribut d'auth (secret key ou matrice)
+ * Génére un nouvel attribut d'auth (secret key ou matrice ou bypass codes)
  *
  * @param req requete HTTP contenant le nom la personne recherchee
  * @param res response HTTP
@@ -575,7 +575,88 @@ function generate_bypass(req, res, next) {
     });
 };
 
+/**
+ * Supprime l'attribut d'auth (secret key ou matrice ou bypass codes)
+ *
+ * @param req requete HTTP contenant le nom la personne recherchee
+ * @param res response HTTP
+ * @param next permet d'appeler le prochain gestionnaire (handler)
+ */
+exports.delete_method_secret = function(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
 
+    switch (req.params.method) {
+        case 'google_authenticator':
+            delete_google_authenticator_secret(req, res, next);
+            break;
+        case 'simple_generator':
+            res.send({
+                "code": "Error",
+                "message": properties.messages.error.unvailable_method_operation
+            });
+            break;
+        case 'bypass':
+            delete_bypass_codes(req, res, next);
+            break;
+        default:
+            res.send({
+                "code": "Error",
+                "message": properties.messages.error.method_not_found
+            });
+            break;
+    }
+};
+
+/**
+ * Supprime le secret de l'utilisateur et désactive la méthode
+ *
+ * @param req requete HTTP contenant le nom la personne recherchee
+ * @param res response HTTP
+ * @param next permet d'appeler le prochain gestionnaire (handler)
+ */
+function delete_google_authenticator_secret(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+
+    find_user({
+        'uid': req.params.uid
+    }, res, function(user) {
+        user.google_authenticator.secret={};
+        user.save(function() {
+            console.log("delete google auth secret "+user.uid);
+            res.send({
+                "code": "Ok",
+                "message": 'Secret removed'
+            });
+        });
+    });
+};
+
+/**
+ * Supprime le secret de l'utilisateur et désactive la méthode
+ *
+ * @param req requete HTTP contenant le nom la personne recherchee
+ * @param res response HTTP
+ * @param next permet d'appeler le prochain gestionnaire (handler)
+ */
+function delete_bypass_codes(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+
+    find_user({
+        'uid': req.params.uid
+    }, res, function(user) {
+        user.bypass.codes = [];
+        user.save(function() {
+            console.log("delete bypass codes "+user.uid);
+            res.send({
+                "code": "Ok",
+                "message": 'Codes removed'
+            });
+        });
+    });
+};
 
 /**
  * Renvoie le secret de l'utilisateur afin qu'il puisse l'entrer dans son appli smartphone
