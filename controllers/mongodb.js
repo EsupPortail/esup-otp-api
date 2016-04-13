@@ -51,6 +51,7 @@ function initiatilize_user_model() {
         },
         bypass: {
             codes: Array,
+            used_codes: { type: Number, default: 0 },
             active: {
                 type: Boolean,
                 default: false
@@ -90,6 +91,10 @@ function initiatilize_user_model() {
     UserModel = mongoose.model('User');
 }
 
+function create_user(){
+
+}
+
 function find_user(criteria, res, callback) {
     var response = {
         "code": "Error",
@@ -103,7 +108,6 @@ function find_user(criteria, res, callback) {
         }
     });
 }
-
 
 /**
  * Renvoie l'utilisateur avec l'uid == req.params.uid
@@ -130,7 +134,7 @@ exports.get_user = function(req, res, next) {
         response.user.bypass = {};
         response.user.bypass.active = user.bypass.active;
         response.user.bypass.available_code = user.bypass.codes.length;
-        response.user.bypass.used_code = properties.esup.methods.bypass.codes_number - user.bypass.codes.length;
+        response.user.bypass.used_code = user.bypass.used_codes;
         response.user.matrix = user.matrix;
         // response.user.matrix.active = user.matrix.active;
         res.send(response);
@@ -368,6 +372,7 @@ function verify_bypass(req, res, next) {
                         checkOtp = true;
                         codes.splice(code, 1);
                         user.bypass.codes = codes;
+                        user.bypass.used_codes += 1;
                     }
                 }
                 if (checkOtp) {
@@ -548,7 +553,6 @@ function generate_bypass(req, res, next) {
 exports.delete_method_secret = function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
-
     switch (req.params.method) {
         case 'google_authenticator':
             delete_google_authenticator_secret(req, res, next);
@@ -581,10 +585,10 @@ exports.delete_method_secret = function(req, res, next) {
 function delete_google_authenticator_secret(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
-
     find_user({
         'uid': req.params.uid
     }, res, function(user) {
+        user.google_authenticator.active = false;
         user.google_authenticator.secret={};
         user.save(function() {
             console.log("delete google auth secret "+user.uid);
@@ -606,10 +610,10 @@ function delete_google_authenticator_secret(req, res, next) {
 function delete_bypass_codes(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
-
     find_user({
         'uid': req.params.uid
     }, res, function(user) {
+        user.bypass.active = false;
         user.bypass.codes = [];
         user.save(function() {
             console.log("delete bypass codes "+user.uid);
