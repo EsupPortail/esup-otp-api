@@ -436,7 +436,7 @@ exports.generate = function(req, res, next) {
                 "message": properties.messages.error.unvailable_method_operation
             });
             break;
-        case 'bypass':
+        case 'bypass'
             generate_bypass(req, res, next);
             break;
         default:
