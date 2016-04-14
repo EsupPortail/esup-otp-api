@@ -22,8 +22,11 @@ var required = {
 }
 
 function check_hash(req, res, next) {
-    if (req.params.hash == utils.get_hash(req.params.uid)) return next();
-    else return next(new restify.ForbiddenError());
+    var hashes = utils.get_hash(req.params.uid);
+    for (hash in hashes){
+        if (req.params.hash == hashes[hash]) return next();
+    }
+    return next(new restify.ForbiddenError());
 }
 
 function check_api_password(req, res, next) {

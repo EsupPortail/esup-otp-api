@@ -121,11 +121,7 @@ function find_user(req, res, callback) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.get_user = function(req, res, next) {
-
-    
-    find_user({
-        'uid': req.params.uid
-    }, res, function(user){
+    find_user(req, res, function(user){
         var response = {};
         response.code = 'Ok';
         response.message = '';
@@ -152,8 +148,6 @@ exports.get_user = function(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.send_code = function(req, res, next) {
-
-
     switch (req.params.method) {
         case 'google_authenticator':
             send_code_google_authenticator(req, res, next);
@@ -186,9 +180,7 @@ exports.send_code = function(req, res, next) {
  */
 function send_code_google_authenticator(req, res, next) {
     console.log("send_google_authenticator :" + req.params.uid);
-    find_user({
-        'uid': req.params.uid
-    }, res, function(user) {
+    find_user(req, res, function(user) {
         if (user.google_authenticator.active && properties.esup.methods.google_authenticator.activate) {
             user.google_authenticator.window = properties.esup.methods.google_authenticator.mail_window;
             user.save(function() {
@@ -236,9 +228,7 @@ function send_code_google_authenticator(req, res, next) {
  */
 function send_code_simple_generator(req, res, next) {
     console.log("send_code_simple_generator :" + req.params.uid);
-    find_user({
-        'uid': req.params.uid
-    }, res, function(user) {
+    find_user(req, res, function(user) {
         if (user.simple_generator.active && properties.esup.methods.simple_generator.activate) {
             var new_otp = {};
             switch (properties.esup.methods.simple_generator.code_type) {
@@ -296,10 +286,7 @@ function send_code_simple_generator(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.verify_code = function(req, res, next) {
-
-    find_user({
-        'uid': req.params.uid
-    }, res, function(user) {
+    find_user(req, res, function(user) {
         verify_simple_generator(req, res, function(req, res) {
             verify_google_authenticator(req, res, function() {
                 verify_bypass(req, res, function() {
@@ -324,9 +311,7 @@ exports.verify_code = function(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 function verify_simple_generator(req, res, next) {
-    find_user({
-        'uid': req.params.uid
-    }, res, function(user) {
+    find_user(req, res, function(user) {
         if (user.simple_generator.active && properties.esup.methods.simple_generator.activate) {
             if (user.simple_generator.code == req.params.otp) {
                 if (Date.now() < user.simple_generator.validity_time) {
@@ -361,9 +346,7 @@ function verify_simple_generator(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 function verify_bypass(req, res, next) {
-    find_user({
-        'uid': req.params.uid
-    }, res, function(user) {
+    find_user(req, res, function(user) {
         if (user.bypass.active && properties.esup.methods.bypass.activate) {
             if (user.bypass.codes) {
                 var checkOtp = false;
@@ -408,10 +391,7 @@ function verify_bypass(req, res, next) {
  */
 function verify_google_authenticator(req, res, next) {
     var checkSpeakeasy = false;
-
-    find_user({
-        'uid': req.params.uid
-    }, res, function(user) {
+    find_user(req, res, function(user) {
         if (user.google_authenticator.active && properties.esup.methods.google_authenticator.activate) {
             var transport_window = 0;
             checkSpeakeasy = speakeasy.totp.verify({
@@ -446,8 +426,6 @@ function verify_google_authenticator(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.generate = function(req, res, next) {
-
-
     switch (req.params.method) {
         case 'google_authenticator':
             generate_google_authenticator(req, res, next);
@@ -581,10 +559,7 @@ exports.delete_method_secret = function(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 function delete_google_authenticator_secret(req, res, next) {
-
-    find_user({
-        'uid': req.params.uid
-    }, res, function(user) {
+    find_user(req, res, function(user) {
         user.google_authenticator.active = false;
         user.google_authenticator.secret={};
         user.save(function() {
@@ -606,9 +581,7 @@ function delete_google_authenticator_secret(req, res, next) {
  */
 function delete_bypass_codes(req, res, next) {
 
-    find_user({
-        'uid': req.params.uid
-    }, res, function(user) {
+    find_user(req, res, function(user) {
         user.bypass.active = false;
         user.bypass.codes = [];
         user.save(function() {
@@ -629,11 +602,7 @@ function delete_bypass_codes(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.get_google_authenticator_secret = function(req, res, next) {
-
-
-    find_user({
-        'uid': req.params.uid
-    }, res, function(user) {
+    find_user(req, res, function(user) {
         var response = {};
         var qr = qrCode.qrcode(4, 'M');
         qr.addData(user.google_authenticator.secret.otpauth_url);
@@ -655,15 +624,14 @@ exports.get_google_authenticator_secret = function(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.get_activate_methods = function(req, res, next) {
-
-
-    find_user({
-        'uid': req.params.uid
-    }, res, function(user) {
+    find_user(req, res, function(user) {
         var response = {};
         var result = {};
         for (method in properties.esup.methods) {
-            if (properties.esup.methods[method].activate && user[method].active) result[method] = properties.esup.methods[method];
+            if (properties.esup.methods[method].activate) {
+                if(!user[method].active)result[method] = user[method].active;
+                else result[method] = properties.esup.methods[method];
+            }
         }
         response.code = "Ok";
         response.message = properties.messages.success.methods_found;
@@ -682,7 +650,6 @@ exports.get_activate_methods = function(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.activate_method = function(req, res, next) {
-
     console.log(req.params.uid + " activate_method " + req.params.method);
     switch (req.params.method) {
         case 'google_authenticator':
@@ -711,9 +678,7 @@ exports.activate_method = function(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 function activate_google_authenticator(req, res, next) {
-    find_user({
-        'uid': req.params.uid
-    }, res, function(user) {
+    find_user(req, res, function(user) {
         user.google_authenticator.active = true;
         user.save(function() {
             res.send({
@@ -733,9 +698,7 @@ function activate_google_authenticator(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 function activate_simple_generator(req, res, next) {
-    find_user({
-        'uid': req.params.uid
-    }, res, function(user) {
+    find_user(req, res, function(user) {
         user.simple_generator.active = true;
         user.save(function() {
             res.send({
@@ -754,9 +717,7 @@ function activate_simple_generator(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 function activate_bypass(req, res, next) {
-       find_user({
-        'uid': req.params.uid
-    }, res, function(user) {
+       find_user(req, res, function(user) {
         user.bypass.active = true;
         user.save(function() {
             res.send({
@@ -776,7 +737,6 @@ function activate_bypass(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.deactivate_method = function(req, res, next) {
-
     console.log(req.params.uid + " deactivate_method " + req.params.method);
     switch (req.params.method) {
         case 'google_authenticator':
@@ -805,9 +765,7 @@ exports.deactivate_method = function(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 function deactivate_google_authenticator(req, res, next) {
-    find_user({
-        'uid': req.params.uid
-    }, res, function(user) {
+    find_user(req, res, function(user) {
         user.google_authenticator.active = false;
         user.save(function() {
             res.send({
@@ -827,9 +785,7 @@ function deactivate_google_authenticator(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 function deactivate_simple_generator(req, res, next) {
-    find_user({
-        'uid': req.params.uid
-    }, res, function(user) {
+    find_user(req, res, function(user) {
         user.google_authenticator.active = false;
         user.save(function() {
             res.send({
@@ -849,9 +805,7 @@ function deactivate_simple_generator(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 function deactivate_bypass(req, res, next) {
-    find_user({
-        'uid': req.params.uid
-    }, res, function(user) {
+    find_user(req, res, function(user) {
         user.google_authenticator.active = false;
         user.save(function() {
             res.send({
