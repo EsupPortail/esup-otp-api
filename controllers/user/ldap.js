@@ -51,8 +51,7 @@ function find_user(req, res, callback) {
 
 exports.get_available_transports = function(req, res, next) {
     console.log("get_available_transports");
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+
 
     find_user(req, res, function(user) {
         var response = {};
@@ -81,8 +80,7 @@ exports.send_mail = function(req, res, callback) {
 }
 
 exports.update_transport = function(req, res, next) {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+
     var modification = {};
     modification[properties.esup.ldap.transport[req.params.transport]] = [req.params.new_transport]
     var change = new ldapjs.Change({

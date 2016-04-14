@@ -23,8 +23,7 @@ function find_user(req, res, callback) {
 }
 
 exports.get_available_transports = function(req, res, next) {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+
     find_user(req, res, function(user) {
         var response = {};
         var result = {};
@@ -52,8 +51,7 @@ exports.send_mail = function(req, res, callback) {
 }
 
 exports.update_transport = function(req, res, next) {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+
     connection.query(
         "UPDATE " + properties.esup.mysql.userTable + " SET " + properties.esup.mongodb.transport[req.params.transport] + " = ? Where uid = ?", [req.params.new_transport, req.params.uid],
         function(err, result) {
