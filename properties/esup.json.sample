@@ -1,7 +1,7 @@
 {
     "port": 3000,
     "proxyUrl" : "http://username:password@univ.fr:port",
-    "apiDB": "mongodb",
+    "apiDb": "mongodb",
     "mongodb": {
         "address": "localhost",
         "db": "test-otp"

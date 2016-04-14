@@ -13,27 +13,27 @@ server.use(restify.queryParser());
 server.use(restify.bodyParser());
 
 var userDb_controller;
-var apiDB_controller;
+var apiDb_controller;
 var routes;
 
 function initialize_userDB() {
     if (properties.esup.userDb) {
-        userDb_controller = require(process.cwd() + '/controllers/' + properties.esup.userDb);
-        userDb_controller.initialize(initialize_apiDB());
+        userDb_controller = require(process.cwd() + '/controllers/user/' + properties.esup.userDb);
+        userDb_controller.initialize(initialize_apiDb());
     } else console.log("Unknown userDb");
 }
 
-function initialize_apiDB() {
-    if (properties.esup.apiDB) {
-        apiDB_controller = require(process.cwd() + '/controllers/' + properties.esup.apiDB);
-        apiDB_controller.initialize(initialize_routes(launch_server));
+function initialize_apiDb() {
+    if (properties.esup.apiDb) {
+        apiDb_controller = require(process.cwd() + '/controllers/api/' + properties.esup.apiDb);
+        apiDb_controller.initialize(initialize_routes(launch_server));
     } else console.log("Unknown apiDb");
 }
 
 
 function initialize_routes(callback) {
     routes = require(process.cwd() + '/server/routes');
-    routes.initialize(server, userDb_controller, apiDB_controller, function(routed_server) {
+    routes.initialize(server, userDb_controller, apiDb_controller, function(routed_server) {
         server = routed_server;
         if (typeof(callback) === "function") callback();
     })

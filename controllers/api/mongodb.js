@@ -5,11 +5,12 @@ var mailer = require(process.cwd() + '/services/mailer');
 var sms = require(process.cwd() + '/services/sms');
 var simple_generator = require(process.cwd() + '/services/simple-generator');
 var qrCode = require('qrcode-npm')
-var userDb_controller = require(process.cwd() + '/controllers/' + properties.esup.userDb);
+var userDb_controller = require(process.cwd() + '/controllers/user/' + properties.esup.userDb);
 var mongoose = require('mongoose');
+var connection;
 
 exports.initialize = function(callback) {
-    mongoose.connect('mongodb://' + properties.esup.mongodb.address + '/' + properties.esup.mongodb.db, function(error) {
+    connection = mongoose.createConnection('mongodb://' + properties.esup.mongodb.address + '/' + properties.esup.mongodb.api_db, function(error) {
         if (error) {
             console.log(error);
         } else {
@@ -87,20 +88,22 @@ function initiatilize_user_model() {
         },
     });
 
-    mongoose.model('User', UserSchema, 'User');
-    UserModel = mongoose.model('User');
+    connection.model('User', UserSchema, 'User');
+    UserModel = connection.model('User');
 }
 
 function create_user(){
 
 }
 
-function find_user(criteria, res, callback) {
+function find_user(req, res, callback) {
     var response = {
         "code": "Error",
         "message": properties.messages.error.user_not_found
     };
-    UserModel.find(criteria).exec(function(err, data) {
+    UserModel.find({
+        'uid': req.params.uid
+    }).exec(function(err, data) {
         if (data[0]) {
             if (typeof(callback) === "function") callback(data[0]);
         } else {
@@ -108,6 +111,7 @@ function find_user(criteria, res, callback) {
         }
     });
 }
+
 
 /**
  * Renvoie l'utilisateur avec l'uid == req.params.uid

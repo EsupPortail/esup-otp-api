@@ -15,7 +15,7 @@ exports.initialize = function(bind, callback) {
 
 }
 
-function get_user(req, res, callback) {
+function find_user(req, res, callback) {
     var response = {
         "code": "Error",
         "message": properties.messages.error.user_not_found
@@ -54,7 +54,7 @@ exports.get_available_transports = function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
 
-    get_user(req, res, function(user) {
+    find_user(req, res, function(user) {
         var response = {};
         var result = {};
         if (user[properties.esup.ldap.transport.mail]) result.mail = utils.cover_string(user[properties.esup.ldap.transport.mail], 4, 5);
@@ -68,14 +68,14 @@ exports.get_available_transports = function(req, res, next) {
 
 
 exports.send_sms = function(req, res, callback) {
-    get_user(req, res, function(user) {
+    find_user(req, res, function(user) {
         if (typeof(callback) === "function" && user[properties.esup.ldap.transport.sms]) callback(user[properties.esup.ldap.transport.sms]);
     });
 }
 
 
 exports.send_mail = function(req, res, callback) {
-    get_user(req, res, function(user) {
+    find_user(req, res, function(user) {
         if (typeof(callback) === "function" && user[properties.esup.ldap.transport.mail]) callback(user[properties.esup.ldap.transport.mail]);
     });
 }
