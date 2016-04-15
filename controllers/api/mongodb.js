@@ -1,4 +1,5 @@
 var properties = require(process.cwd() + '/properties/properties');
+var methods;
 var restify = require('restify');
 var speakeasy = require('speakeasy');
 var mailer = require(process.cwd() + '/services/mailer');
@@ -15,6 +16,7 @@ exports.initialize = function(callback) {
             console.log(error);
         } else {
             initiatilize_user_model();
+            methods = require(process.cwd() + '/methods/methods');
             if (typeof(callback) === "function") callback();
         }
     });
@@ -112,6 +114,33 @@ function find_user(req, res, callback) {
     });
 }
 
+exports.save_user=function(user, callback) {
+    user.save(function() {
+        if (typeof(callback) === "function") callback();
+    })
+}
+
+exports.transport_code = function(code, req, res, next) {
+    switch (req.params.transport) {
+        case 'mail':
+            userDb_controller.send_mail(req, res, function(mail) {
+                mailer.send_code(mail,code, res);
+            });
+            break;
+        case 'sms':
+            userDb_controller.send_sms(req, res, function(num) {
+                sms.send_code(num, code, res);
+            });
+            break;
+        default:
+            res.send({
+                code: 'Error',
+                message: properties.messages.error.unvailable_method_transport
+            });
+            break;
+    }
+}
+
 
 /**
  * Renvoie l'utilisateur avec l'uid == req.params.uid
@@ -148,27 +177,42 @@ exports.get_user = function(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.send_code = function(req, res, next) {
-    switch (req.params.method) {
-        case 'google_authenticator':
-            send_code_google_authenticator(req, res, next);
-            break;
-        case 'simple_generator':
-            send_code_simple_generator(req, res, next);
-            break;
-        case 'bypass':
-            res.send({
-                "code": "Error",
-                "message": properties.messages.error.unvailable_method_operation
-            });
-            break;
-        default:
-            res.send({
-                "code": "Error",
-                "message": properties.messages.error.method_not_found
-            });
-            break;
+    // switch (req.params.method) {
+    //     case 'google_authenticator':
+    //         send_code_google_authenticator(req, res, next);
+    //         break;
+    //     case 'simple_generator':
+    //         send_code_simple_generator(req, res, next);
+    //         break;
+    //     case 'bypass':
+    //         res.send({
+    //             "code": "Error",
+    //             "message": properties.messages.error.unvailable_method_operation
+    //         });
+    //         break;
+    //     default:
+    //         res.send({
+    //             "code": "Error",
+    //             "message": properties.messages.error.method_not_found
+    //         });
+    //         break;
+    // }
+    console.log("send_code :" + req.params.uid);
+    if (properties.esup.methods[req.params.method]) {
+        find_user(req, res, function(user) {
+            if (user[req.params.method].active && properties.esup.methods[req.params.method].activate && methods[req.params.method]) {
+                methods[req.params.method].send_code(user, req, res, next);
+            } else {
+                res.send({
+                    code: 'Error',
+                    message: properties.messages.error.method_not_found
+                });
+            }
+        });
     }
 };
+
+
 
 /**
  * Envoie le code via le transport == req.params.transport
@@ -436,7 +480,7 @@ exports.generate = function(req, res, next) {
                 "message": properties.messages.error.unvailable_method_operation
             });
             break;
-        case 'bypass'
+        case 'bypass':
             generate_bypass(req, res, next);
             break;
         default:

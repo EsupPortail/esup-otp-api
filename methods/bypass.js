@@ -1,7 +1,8 @@
 var properties = require(process.cwd() + '/properties/properties');
 var restify = require('restify');
 
-exports.send_code = function(req, res, next) {
+exports.send_code = function(user, req, res, next) {
+    console.log('send_code : ' + __filename.split('/').pop());
     res.send({
         "code": "Error",
         "message": properties.messages.error.unvailable_method_operation
