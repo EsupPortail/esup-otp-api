@@ -86,10 +86,23 @@ exports.get_method_secret = function(req, res, next) {
     });
 }
 
-exports.user_activate = function(req, res, next) {
-    res.send({
-        "code": "Error",
-        "message": properties.messages.error.unvailable_method_operation
+exports.user_activate = function(user, req, res, next) {
+    user.google_authenticator.active = true;
+    apiDb_controller.save_user(user, function() {
+        res.send({
+            "code": "Ok",
+            "message": ""
+        });
+    });
+}
+
+exports.user_deactivate = function(user, req, res, next) {
+    user.google_authenticator.active = false;
+    apiDb_controller.save_user(user, function() {
+        res.send({
+            "code": "Ok",
+            "message": ""
+        });
     });
 }
 

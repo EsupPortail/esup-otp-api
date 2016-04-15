@@ -257,26 +257,6 @@ exports.verify_code = function(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.generate = function(req, res, next) {
-    // switch (req.params.method) {
-    //     case 'google_authenticator':
-    //         generate_google_authenticator(req, res, next);
-    //         break;
-    //     case 'simple_generator':
-    //         res.send({
-    //             "code": "Error",
-    //             "message": properties.messages.error.unvailable_method_operation
-    //         });
-    //         break;
-    //     case 'bypass':
-    //         generate_bypass(req, res, next);
-    //         break;
-    //     default:
-    //         res.send({
-    //             "code": "Error",
-    //             "message": properties.messages.error.method_not_found
-    //         });
-    //         break;
-    // }
     if (properties.esup.methods[req.params.method]) {
         find_user(req, res, function(user) {
             if (methods[req.params.method] && properties.esup.methods[req.params.method].activate) {
@@ -296,78 +276,6 @@ exports.generate = function(req, res, next) {
     }
 };
 
-
-
-
-
-/**
- * Retourne la réponse de la base de donnée suite à l'association d'un nouveau secret à l'utilisateur.
- *
- * @param req requete HTTP contenant le nom la personne recherchee
- * @param res response HTTP
- * @param next permet d'appeler le prochain gestionnaire (handler)
- */
-function generate_google_authenticator(req, res, next) {
-    if (properties.esup.methods.google_authenticator.activate) {
-        find_user(req, res, function(user) {
-            user.google_authenticator.secret = speakeasy.generateSecret({ length: 16 });
-            user.save(function() {
-                var response = {};
-                var qr = qrCode.qrcode(4, 'M');
-                qr.addData(user.google_authenticator.secret.otpauth_url);
-                qr.make();
-                response.code = 'Ok';
-                response.message = user.google_authenticator.secret.base32;
-                response.qrCode = qr.createImgTag(4);
-                res.send(response);
-            });
-        });
-    } else res.send({
-        code: 'Error',
-        message: properties.messages.error.method_not_found
-    });
-};
-
-
-/**
- * Retourne la réponse de la base de donnée suite à la génération de nouveau bypass codes
- *
- * @param req requete HTTP contenant le nom la personne recherchee
- * @param res response HTTP
- * @param next permet d'appeler le prochain gestionnaire (handler)
- */
-function generate_bypass(req, res, next) {
-    if (properties.esup.methods.bypass.activate) {
-        find_user(req, res, function(user) {
-            var codes = new Array();
-            for (var it = 0; it < properties.esup.methods.bypass.codes_number; it++) {
-                switch (properties.esup.methods.simple_generator.code_type) {
-                    case "string":
-                        codes.push(simple_generator.generate_string_code(properties.esup.methods.bypass.code_length));
-                        break;
-                    case "digit":
-                        codes.push(simple_generator.generate_digit_code(properties.esup.methods.bypass.code_length));
-                        break;
-                    default:
-                        codes.push(simple_generator.generate_string_code(properties.esup.methods.bypass.code_length));
-                        break;
-                }
-            }
-            user.bypass.codes = codes;
-            user.save(function() {
-                res.send({
-                    code: "Ok",
-                    message: "",
-                    codes : codes
-
-                });
-            });
-        });
-    } else res.send({
-        code: 'Error',
-        message: properties.messages.error.method_not_found
-    });
-};
 
 /**
  * Supprime l'attribut d'auth (secret key ou matrice ou bypass codes)
@@ -500,80 +408,13 @@ exports.get_activate_methods = function(req, res, next) {
  */
 exports.activate_method = function(req, res, next) {
     console.log(req.params.uid + " activate_method " + req.params.method);
-    switch (req.params.method) {
-        case 'google_authenticator':
-            activate_google_authenticator(req, res, next);
-            break;
-        case 'simple_generator':
-            activate_simple_generator(req, res, next);
-            break;
-        case 'bypass':
-            activate_bypass(req, res, next);
-            break;
-        default:
-            res.send({
-                "code": "Error",
-                "message": properties.messages.error.method_not_found
-            });
-            break;
-    }
-};
-
-/**
- * Active la méthode google auth pour l'utilisateur ayant l'uid req.params.uid
- *
- * @param req requete HTTP contenant le nom la personne recherchee
- * @param res response HTTP
- * @param next permet d'appeler le prochain gestionnaire (handler)
- */
-function activate_google_authenticator(req, res, next) {
-    find_user(req, res, function(user) {
-        user.google_authenticator.active = true;
-        user.save(function() {
-            res.send({
-                "code": "Ok",
-                "message": ""
-            });
+    if (methods[req.params.method]) {
+        find_user(req, res, function(user) {
+            methods[req.params.method].user_activate(user, req, res, next);
         });
-    });
-};
-
-
-/**
- * Active la méthode simple_generator pour l'utilisateur ayant l'uid req.params.uid
- *
- * @param req requete HTTP contenant le nom la personne recherchee
- * @param res response HTTP
- * @param next permet d'appeler le prochain gestionnaire (handler)
- */
-function activate_simple_generator(req, res, next) {
-    find_user(req, res, function(user) {
-        user.simple_generator.active = true;
-        user.save(function() {
-            res.send({
-                "code": "Ok",
-                "message": ""
-            });
-        });
-    });
-};
-
-/**
- * Active la méthode bypass pour l'utilisateur ayant l'uid req.params.uid
- *
- * @param req requete HTTP contenant le nom la personne recherchee
- * @param res response HTTP
- * @param next permet d'appeler le prochain gestionnaire (handler)
- */
-function activate_bypass(req, res, next) {
-       find_user(req, res, function(user) {
-        user.bypass.active = true;
-        user.save(function() {
-            res.send({
-                "code": "Ok",
-                "message": ""
-            });
-        });
+    } else res.send({
+        "code": "Error",
+        "message": properties.messages.error.method_not_found
     });
 };
 
@@ -587,23 +428,14 @@ function activate_bypass(req, res, next) {
  */
 exports.deactivate_method = function(req, res, next) {
     console.log(req.params.uid + " deactivate_method " + req.params.method);
-    switch (req.params.method) {
-        case 'google_authenticator':
-            deactivate_google_authenticator(req, res, next);
-            break;
-        case 'simple_generator':
-            deactivate_simple_generator(req, res, next);
-            break;
-        case 'bypass':
-            deactivate_bypass(req, res, next);
-            break;
-        default:
-            res.send({
-                "code": "Error",
-                "message": properties.messages.error.method_not_found
-            });
-            break;
-    }
+    if (methods[req.params.method]) {
+        find_user(req, res, function(user) {
+            methods[req.params.method].user_deactivate(user, req, res, next);
+        });
+    } else res.send({
+        "code": "Error",
+        "message": properties.messages.error.method_not_found
+    });
 };
 
 /**
