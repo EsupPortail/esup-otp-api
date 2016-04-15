@@ -5,7 +5,7 @@ var restify = require('restify');
 
 exports.send_code = function(user, req, res, next) {
     console.log('send_code : ' + __filename.split('/').pop());
-    var new_otp = {};
+    var new_otp = user.simple_generator;
     switch (properties.esup.methods.simple_generator.code_type) {
         case "string":
             new_otp.code = utils.generate_string_code(properties.esup.methods.simple_generator.code_length);

@@ -4,7 +4,6 @@ var restify = require('restify');
 var speakeasy = require('speakeasy');
 var mailer = require(process.cwd() + '/services/mailer');
 var sms = require(process.cwd() + '/services/sms');
-var simple_generator = require(process.cwd() + '/services/simple-generator');
 var qrCode = require('qrcode-npm')
 var userDb_controller = require(process.cwd() + '/controllers/user/' + properties.esup.userDb);
 var mongoose = require('mongoose');
@@ -98,6 +97,13 @@ function create_user(){
 
 }
 
+/**
+ * Retourne l'utilisateur mongo
+ *
+ * @param req requete HTTP contenant le nom la personne recherchee
+ * @param res response HTTP
+ * @param next permet d'appeler le prochain gestionnaire (handler)
+ */
 function find_user(req, res, callback) {
     var response = {
         "code": "Error",
@@ -114,12 +120,27 @@ function find_user(req, res, callback) {
     });
 }
 
+/**
+ * Sauve l'utilisateur
+ *
+ * @param req requete HTTP contenant le nom la personne recherchee
+ * @param res response HTTP
+ * @param next permet d'appeler le prochain gestionnaire (handler)
+ */
 exports.save_user=function(user, callback) {
     user.save(function() {
         if (typeof(callback) === "function") callback();
     })
 }
 
+/**
+ * Envoie le code via le transport == req.params.transport
+ * Retourne la réponse du service mail
+ *
+ * @param req requete HTTP contenant le nom la personne recherchee
+ * @param res response HTTP
+ * @param next permet d'appeler le prochain gestionnaire (handler)
+ */
 exports.transport_code = function(code, req, res, next) {
     switch (req.params.transport) {
         case 'mail':
@@ -177,26 +198,6 @@ exports.get_user = function(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.send_code = function(req, res, next) {
-    // switch (req.params.method) {
-    //     case 'google_authenticator':
-    //         send_code_google_authenticator(req, res, next);
-    //         break;
-    //     case 'simple_generator':
-    //         send_code_simple_generator(req, res, next);
-    //         break;
-    //     case 'bypass':
-    //         res.send({
-    //             "code": "Error",
-    //             "message": properties.messages.error.unvailable_method_operation
-    //         });
-    //         break;
-    //     default:
-    //         res.send({
-    //             "code": "Error",
-    //             "message": properties.messages.error.method_not_found
-    //         });
-    //         break;
-    // }
     console.log("send_code :" + req.params.uid);
     if (properties.esup.methods[req.params.method]) {
         find_user(req, res, function(user) {
@@ -211,114 +212,6 @@ exports.send_code = function(req, res, next) {
         });
     }
 };
-
-
-
-/**
- * Envoie le code via le transport == req.params.transport
- * Retourne la réponse du service mail
- *
- * @param req requete HTTP contenant le nom la personne recherchee
- * @param res response HTTP
- * @param next permet d'appeler le prochain gestionnaire (handler)
- */
-function send_code_google_authenticator(req, res, next) {
-    console.log("send_google_authenticator :" + req.params.uid);
-    find_user(req, res, function(user) {
-        if (user.google_authenticator.active && properties.esup.methods.google_authenticator.activate) {
-            user.google_authenticator.window = properties.esup.methods.google_authenticator.mail_window;
-            user.save(function() {
-                switch (req.params.transport) {
-                    case 'mail':
-                        userDb_controller.send_mail(req, res, function(mail) {
-                            mailer.send_code(mail, speakeasy.totp({
-                                secret: user.google_authenticator.secret.base32,
-                                encoding: 'base32'
-                            }), res);
-                        });
-                        break;
-                    case 'sms':
-                        userDb_controller.send_sms(req, res, function(num) {
-                            sms.send_code(num, speakeasy.totp({
-                                secret: user.google_authenticator.secret.base32,
-                                encoding: 'base32'
-                            }), res);
-                        });
-                        break;
-                    default:
-                        res.send({
-                            code: 'Error',
-                            message: properties.messages.error.unvailable_method_transport
-                        });
-                        break;
-                }
-            });
-        } else {
-            res.send({
-                code: 'Error',
-                message: properties.messages.error.method_not_found
-            });
-        }
-    });
-};
-
-/**
- * Envoie le code via le transport == req.params.transport
- * Retourne la réponse du service mail
- *
- * @param req requete HTTP contenant le nom la personne recherchee
- * @param res response HTTP
- * @param next permet d'appeler le prochain gestionnaire (handler)
- */
-function send_code_simple_generator(req, res, next) {
-    console.log("send_code_simple_generator :" + req.params.uid);
-    find_user(req, res, function(user) {
-        if (user.simple_generator.active && properties.esup.methods.simple_generator.activate) {
-            var new_otp = {};
-            switch (properties.esup.methods.simple_generator.code_type) {
-                case "string":
-                    new_otp.code = simple_generator.generate_string_code(properties.esup.methods.simple_generator.code_length);
-                    break;
-                case "digit":
-                    new_otp.code = simple_generator.generate_digit_code(properties.esup.methods.simple_generator.code_length);
-                    break;
-                default:
-                    new_otp.code = simple_generator.generate_string_code(properties.esup.methods.simple_generator.code_length);
-                    break;
-            }
-            validity_time = properties.esup.methods.simple_generator.mail_validity * 60 * 1000;
-            validity_time += new Date().getTime();
-            new_otp.validity_time = validity_time;
-            user.simple_generator = new_otp;
-            user.save(function() {
-                switch (req.params.transport) {
-                    case 'mail':
-                        userDb_controller.send_mail(req, res, function(mail) {
-                            mailer.send_code(mail, new_otp.code, res);
-                        });
-                        break;
-                    case 'sms':
-                        userDb_controller.send_sms(req, res, function(num) {
-                            sms.send_code(num, new_otp.code, res);
-                        });
-                        break;
-                    default:
-                        res.send({
-                            code: 'Error',
-                            message: properties.messages.error.unvailable_method_transport
-                        });
-                        break;
-                }
-            });
-        } else {
-            res.send({
-                code: 'Error',
-                message: properties.messages.error.methods_not_found
-            });
-        }
-    });
-};
-
 
 /**
  * Vérifie si le code fourni correspond à celui stocké en base de données
