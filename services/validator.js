@@ -14,7 +14,7 @@ var required = {
     delete_method_secret: ['uid', 'method', 'api_password'],
     verify_code: ['uid', 'otp', 'api_password'],
     generate: ['uid', 'method', 'api_password'],
-    get_google_authenticator_secret: ['uid', 'api_password'],
+    get_method_secret: ['uid', 'api_password', 'method'],
     toggle_method: ['uid', 'method', 'api_password'],
     update_transport: ['uid', 'transport', 'new_transport', 'api_password'],
     toggle_method_transport: ['transport', 'method', 'api_password'],
@@ -165,8 +165,8 @@ exports.generate = function(req, res, next) {
     }
 }
 
-exports.get_google_authenticator_secret = function(req, res, next) {
-    if (check_parameters(req, required.get_google_authenticator_secret)) {
+exports.get_method_secret = function(req, res, next) {
+    if (check_parameters(req, required.get_method_secret)) {
         check_api_password(req, res, next);
     } else {
         return next(new restify.InvalidArgumentError());

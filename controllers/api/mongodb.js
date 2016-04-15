@@ -285,70 +285,19 @@ exports.generate = function(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.delete_method_secret = function(req, res, next) {
-    switch (req.params.method) {
-        case 'google_authenticator':
-            delete_google_authenticator_secret(req, res, next);
-            break;
-        case 'simple_generator':
-            res.send({
-                "code": "Error",
-                "message": properties.messages.error.unvailable_method_operation
-            });
-            break;
-        case 'bypass':
-            delete_bypass_codes(req, res, next);
-            break;
-        default:
-            res.send({
-                "code": "Error",
-                "message": properties.messages.error.method_not_found
-            });
-            break;
+    if (properties.esup.methods[req.params.method]) {
+        find_user(req, res, function(user) {
+            methods[req.params.method].delete_method_secret(user, req, res, next);
+        });
+    } else {
+        res.send({
+            code: 'Error',
+            message: properties.messages.error.method_not_found
+        });
     }
 };
 
-/**
- * Supprime le secret de l'utilisateur et désactive la méthode
- *
- * @param req requete HTTP contenant le nom la personne recherchee
- * @param res response HTTP
- * @param next permet d'appeler le prochain gestionnaire (handler)
- */
-function delete_google_authenticator_secret(req, res, next) {
-    find_user(req, res, function(user) {
-        user.google_authenticator.active = false;
-        user.google_authenticator.secret={};
-        user.save(function() {
-            console.log("delete google auth secret "+user.uid);
-            res.send({
-                "code": "Ok",
-                "message": 'Secret removed'
-            });
-        });
-    });
-};
 
-/**
- * Supprime le secret de l'utilisateur et désactive la méthode
- *
- * @param req requete HTTP contenant le nom la personne recherchee
- * @param res response HTTP
- * @param next permet d'appeler le prochain gestionnaire (handler)
- */
-function delete_bypass_codes(req, res, next) {
-
-    find_user(req, res, function(user) {
-        user.bypass.active = false;
-        user.bypass.codes = [];
-        user.save(function() {
-            console.log("delete bypass codes "+user.uid);
-            res.send({
-                "code": "Ok",
-                "message": 'Codes removed'
-            });
-        });
-    });
-};
 
 /**
  * Renvoie le secret de l'utilisateur afin qu'il puisse l'entrer dans son appli smartphone
@@ -357,19 +306,19 @@ function delete_bypass_codes(req, res, next) {
  * @param res response HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
-exports.get_google_authenticator_secret = function(req, res, next) {
-    find_user(req, res, function(user) {
-        var response = {};
-        var qr = qrCode.qrcode(4, 'M');
-        qr.addData(user.google_authenticator.secret.otpauth_url);
-        qr.make();
-        response.code = 'Ok';
-        response.message = user.google_authenticator.secret.base32;
-        response.qrCode = qr.createImgTag(4);
-
-        res.send(response);
-    });
+exports.get_method_secret = function(req, res, next) {
+    if (properties.esup.methods[req.params.method]) {
+        find_user(req, res, function(user) {
+            methods[req.params.method].get_method_secret(user, req, res, next);
+        });
+    } else {
+        res.send({
+            code: 'Error',
+            message: properties.messages.error.method_not_found
+        });
+    }
 };
+
 
 
 /**

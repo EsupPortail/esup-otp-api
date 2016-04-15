@@ -73,12 +73,14 @@ exports.generate_method_secret = function(user, req, res, next) {
     });
 }
 
-
-
 exports.delete_method_secret = function(req, res, next) {
-    res.send({
-        "code": "Error",
-        "message": properties.messages.error.unvailable_method_operation
+    user.bypass.active = false;
+    user.bypass.codes = [];
+    apiDb_controller.save_user(user, function() {
+        res.send({
+            "code": "Ok",
+            "message": 'Secret removed'
+        });
     });
 }
 

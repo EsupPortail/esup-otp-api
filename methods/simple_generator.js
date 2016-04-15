@@ -50,9 +50,6 @@ exports.verify_code = function(user, req, res, callbacks) {
     }
 }
 
-
-
-
 exports.generate_method_secret = function(req, res, next) {
     res.send({
         "code": "Error",

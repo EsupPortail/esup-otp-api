@@ -67,24 +67,37 @@ exports.generate_method_secret = function(user, req, res, next) {
         response.message = user.google_authenticator.secret.base32;
         response.qrCode = qr.createImgTag(4);
         res.send(response);
-    })
-}
-
-
-
-exports.delete_method_secret = function(req, res, next) {
-    res.send({
-        "code": "Error",
-        "message": properties.messages.error.unvailable_method_operation
     });
 }
 
-exports.get_method_secret = function(req, res, next) {
-    res.send({
-        "code": "Error",
-        "message": properties.messages.error.unvailable_method_operation
+exports.delete_method_secret = function(user, req, res, next) {
+    user.google_authenticator.active = false;
+    user.google_authenticator.secret = {};
+    apiDb_controller.save_user(user, function() {
+        res.send({
+            "code": "Ok",
+            "message": 'Secret removed'
+        });
     });
 }
+
+exports.get_method_secret = function(user, req, res, next) {
+    var response = {};
+    var qr = qrCode.qrcode(4, 'M');
+    response.code = 'Ok';
+    if (!(Object.keys(user.google_authenticator.secret).length === 0 && JSON.stringify(user.google_authenticator.secret) === JSON.stringify({}))) {
+        qr.addData(user.google_authenticator.secret.otpauth_url);
+        qr.make();
+        response.message = user.google_authenticator.secret.base32;
+        response.qrCode = qr.createImgTag(4);
+    }else {
+        response.message = "Pas de qrCode, veuillez en générer un.";
+        response.qrCode = "";
+    }
+    res.send(response);
+}
+
+
 
 exports.user_activate = function(user, req, res, next) {
     user.google_authenticator.active = true;
