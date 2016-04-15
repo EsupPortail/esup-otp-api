@@ -17,7 +17,7 @@ exports.initialize = function(server, userDb_controller, apiDb_controller, callb
     server.put("/deactivate/:method/:uid/:api_password", validator.toggle_method, apiDb_controller.deactivate_method);
     server.put("/activate/:method/:uid/:api_password", validator.toggle_method, apiDb_controller.activate_method);
     server.put("/transport/:transport/:uid/:new_transport/:api_password", validator.update_transport, userDb_controller.update_transport);
-    server.post("/generate/:method/:uid/:api_password", validator.generate, apiDb_controller.generate);
+    server.post("/generate/:method/:uid/:api_password", validator.generate_method_secret, apiDb_controller.generate_method_secret);
     server.post("/verify_code/:uid/:otp/:api_password", validator.verify_code, apiDb_controller.verify_code);
     
     // routes DEV/ADMIN uniquement

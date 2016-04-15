@@ -256,7 +256,7 @@ exports.verify_code = function(req, res, next) {
  * @param res response HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
-exports.generate = function(req, res, next) {
+exports.generate_method_secret = function(req, res, next) {
     if (properties.esup.methods[req.params.method]) {
         find_user(req, res, function(user) {
             if (methods[req.params.method] && properties.esup.methods[req.params.method].activate) {
@@ -297,8 +297,6 @@ exports.delete_method_secret = function(req, res, next) {
     }
 };
 
-
-
 /**
  * Renvoie le secret de l'utilisateur afin qu'il puisse l'entrer dans son appli smartphone
  *
@@ -318,8 +316,6 @@ exports.get_method_secret = function(req, res, next) {
         });
     }
 };
-
-
 
 /**
  * Renvoie les méthodes activées de l'utilisateur
@@ -384,65 +380,6 @@ exports.deactivate_method = function(req, res, next) {
     } else res.send({
         "code": "Error",
         "message": properties.messages.error.method_not_found
-    });
-};
-
-/**
- * Désactive la méthode google auth pour l'utilisateur ayant l'uid req.params.uid
- *
- * @param req requete HTTP contenant le nom la personne recherchee
- * @param res response HTTP
- * @param next permet d'appeler le prochain gestionnaire (handler)
- */
-function deactivate_google_authenticator(req, res, next) {
-    find_user(req, res, function(user) {
-        user.google_authenticator.active = false;
-        user.save(function() {
-            res.send({
-                "code": "Ok",
-                "message": ""
-            });
-        });
-    });
-};
-
-
-/**
- * Désactive la méthode simple_generator pour l'utilisateur ayant l'uid req.params.uid
- *
- * @param req requete HTTP contenant le nom la personne recherchee
- * @param res response HTTP
- * @param next permet d'appeler le prochain gestionnaire (handler)
- */
-function deactivate_simple_generator(req, res, next) {
-    find_user(req, res, function(user) {
-        user.google_authenticator.active = false;
-        user.save(function() {
-            res.send({
-                "code": "Ok",
-                "message": ""
-            });
-        });
-    });
-};
-
-
-/**
- * Désactive la méthode bypass pour l'utilisateur ayant l'uid req.params.uid
- *
- * @param req requete HTTP contenant le nom la personne recherchee
- * @param res response HTTP
- * @param next permet d'appeler le prochain gestionnaire (handler)
- */
-function deactivate_bypass(req, res, next) {
-    find_user(req, res, function(user) {
-        user.google_authenticator.active = false;
-        user.save(function() {
-            res.send({
-                "code": "Ok",
-                "message": ""
-            });
-        });
     });
 };
 

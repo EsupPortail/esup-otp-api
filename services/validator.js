@@ -13,7 +13,7 @@ var required = {
     set_otp: ['uid', 'otp', 'api_password'],
     delete_method_secret: ['uid', 'method', 'api_password'],
     verify_code: ['uid', 'otp', 'api_password'],
-    generate: ['uid', 'method', 'api_password'],
+    generate_method_secret: ['uid', 'method', 'api_password'],
     get_method_secret: ['uid', 'api_password', 'method'],
     toggle_method: ['uid', 'method', 'api_password'],
     update_transport: ['uid', 'transport', 'new_transport', 'api_password'],
@@ -157,7 +157,7 @@ exports.verify_code = function(req, res, next) {
     }
 }
 
-exports.generate = function(req, res, next) {
+exports.generate_method_secret = function(req, res, next) {
     if (check_parameters(req, required.generate)) {
         check_api_password(req, res, next);
     } else {
