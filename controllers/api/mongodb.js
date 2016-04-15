@@ -1,10 +1,8 @@
 var properties = require(process.cwd() + '/properties/properties');
 var methods;
 var restify = require('restify');
-var speakeasy = require('speakeasy');
 var mailer = require(process.cwd() + '/services/mailer');
 var sms = require(process.cwd() + '/services/sms');
-var qrCode = require('qrcode-npm')
 var userDb_controller = require(process.cwd() + '/controllers/user/' + properties.esup.userDb);
 var mongoose = require('mongoose');
 var connection;
@@ -210,8 +208,14 @@ exports.send_code = function(req, res, next) {
                 });
             }
         });
+    } else {
+        res.send({
+            code: 'Error',
+            message: properties.messages.error.method_not_found
+        });
     }
 };
+
 
 /**
  * Vérifie si le code fourni correspond à celui stocké en base de données
@@ -253,27 +257,48 @@ exports.verify_code = function(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.generate = function(req, res, next) {
-    switch (req.params.method) {
-        case 'google_authenticator':
-            generate_google_authenticator(req, res, next);
-            break;
-        case 'simple_generator':
-            res.send({
-                "code": "Error",
-                "message": properties.messages.error.unvailable_method_operation
-            });
-            break;
-        case 'bypass':
-            generate_bypass(req, res, next);
-            break;
-        default:
-            res.send({
-                "code": "Error",
-                "message": properties.messages.error.method_not_found
-            });
-            break;
+    // switch (req.params.method) {
+    //     case 'google_authenticator':
+    //         generate_google_authenticator(req, res, next);
+    //         break;
+    //     case 'simple_generator':
+    //         res.send({
+    //             "code": "Error",
+    //             "message": properties.messages.error.unvailable_method_operation
+    //         });
+    //         break;
+    //     case 'bypass':
+    //         generate_bypass(req, res, next);
+    //         break;
+    //     default:
+    //         res.send({
+    //             "code": "Error",
+    //             "message": properties.messages.error.method_not_found
+    //         });
+    //         break;
+    // }
+    if (properties.esup.methods[req.params.method]) {
+        find_user(req, res, function(user) {
+            if (methods[req.params.method] && properties.esup.methods[req.params.method].activate) {
+                methods[req.params.method].generate_method_secret(user, req, res, next);
+            } else {
+                res.send({
+                    code: 'Error',
+                    message: properties.messages.error.method_not_found
+                });
+            }
+        });
+    } else {
+        res.send({
+            code: 'Error',
+            message: properties.messages.error.method_not_found
+        });
     }
 };
+
+
+
+
 
 /**
  * Retourne la réponse de la base de donnée suite à l'association d'un nouveau secret à l'utilisateur.
@@ -284,9 +309,7 @@ exports.generate = function(req, res, next) {
  */
 function generate_google_authenticator(req, res, next) {
     if (properties.esup.methods.google_authenticator.activate) {
-        find_user({
-            'uid': req.params.uid
-        }, res, function(user) {
+        find_user(req, res, function(user) {
             user.google_authenticator.secret = speakeasy.generateSecret({ length: 16 });
             user.save(function() {
                 var response = {};
@@ -315,9 +338,7 @@ function generate_google_authenticator(req, res, next) {
  */
 function generate_bypass(req, res, next) {
     if (properties.esup.methods.bypass.activate) {
-        find_user({
-            'uid': req.params.uid
-        }, res, function(user) {
+        find_user(req, res, function(user) {
             var codes = new Array();
             for (var it = 0; it < properties.esup.methods.bypass.codes_number; it++) {
                 switch (properties.esup.methods.simple_generator.code_type) {
@@ -451,6 +472,7 @@ exports.get_google_authenticator_secret = function(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.get_activate_methods = function(req, res, next) {
+    console.log("exports.get_activate_methods = function(req, res, next) {");
     find_user(req, res, function(user) {
         var response = {};
         var result = {};

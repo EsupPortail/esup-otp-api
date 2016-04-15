@@ -1,6 +1,7 @@
 var properties = require(process.cwd() + '/properties/properties');
 var apiDb_controller = require(process.cwd() + '/controllers/api/' + properties.esup.apiDb);
 var speakeasy = require('speakeasy');
+var qrCode = require('qrcode-npm')
 var restify = require('restify');
 
 exports.name = "google_authenticator";
@@ -48,19 +49,28 @@ exports.verify_code = function(user, req, res, callbacks) {
                 "code": "Ok",
                 "message": properties.messages.success.valid_credentials
             });
-        })
+        });
     } else {
         var next = callbacks.pop();
         next(user, req, res, callbacks);
     }
 }
 
-exports.generate_method_secret = function(req, res, next) {
-    res.send({
-        "code": "Error",
-        "message": properties.messages.error.unvailable_method_operation
-    });
+exports.generate_method_secret = function(user, req, res, next) {
+    user.google_authenticator.secret = speakeasy.generateSecret({ length: 16 });
+    apiDb_controller.save_user(user, function() {
+        var response = {};
+        var qr = qrCode.qrcode(4, 'M');
+        qr.addData(user.google_authenticator.secret.otpauth_url);
+        qr.make();
+        response.code = 'Ok';
+        response.message = user.google_authenticator.secret.base32;
+        response.qrCode = qr.createImgTag(4);
+        res.send(response);
+    })
 }
+
+
 
 exports.delete_method_secret = function(req, res, next) {
     res.send({
