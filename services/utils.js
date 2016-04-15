@@ -150,3 +150,11 @@ exports.deactivate_method_transport = function(req, res, next) {
         "message": properties.messages.error.method_not_found
     });
 };
+
+exports.generate_string_code = function(code_length) {
+    return Math.random().toString(36).substr(2, code_length);
+}
+
+exports.generate_digit_code = function(code_length) {
+    return Math.random().toString().substr(2, code_length);
+}
