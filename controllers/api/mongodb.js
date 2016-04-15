@@ -223,133 +223,23 @@ exports.send_code = function(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.verify_code = function(req, res, next) {
+    console.log('verify_code : '+req.params.uid);
     find_user(req, res, function(user) {
-        verify_simple_generator(req, res, function(req, res) {
-            verify_google_authenticator(req, res, function() {
-                verify_bypass(req, res, function() {
-                    res.send({
-                        "code": "Error",
-                        "message": properties.messages.error.invalid_credentials
-                    });
-                });
+        var callbacks = [function() {
+            console.log('Error : '+properties.messages.error.invalid_credentials);
+            res.send({
+                "code": "Error",
+                "message": properties.messages.error.invalid_credentials
             });
-        });
-    });
-};
-
-
-/**
- * Vérifie si le code fourni correspond à celui stocké en base de données
- * si oui: on retourne un réponse positive et on supprime l'otp de la base de donnée
- * sinon: on renvoie une erreur 401 InvalidCredentialsError
- *
- * @param req requete HTTP contenant le nom la personne recherchee
- * @param res response HTTP
- * @param next permet d'appeler le prochain gestionnaire (handler)
- */
-function verify_simple_generator(req, res, next) {
-    find_user(req, res, function(user) {
-        if (user.simple_generator.active && properties.esup.methods.simple_generator.activate) {
-            if (user.simple_generator.code == req.params.otp) {
-                if (Date.now() < user.simple_generator.validity_time) {
-                    delete user.simple_generator.code;
-                    delete user.simple_generator.validity_time;
-                    user.save(function(){
-                        res.send({
-                            "code": "Ok",
-                            "message": properties.messages.success.valid_credentials
-                        });
-                    });
-                } else {
-                    next(req, res);
-                }
-            } else {
-                next(req, res);
+        }];
+        var methods_length = Object.keys(methods).length;
+        var it = 1;
+        for (method in methods) {
+            if (user[method].active && properties.esup.methods[method].activate) {
+                if(it==methods_length)methods[method].verify_code(user, req, res, callbacks);
             }
-        } else {
-            next(req, res);
-        }
-    });
-};
-
-
-/**
- * Vérifie si le code fourni correspond à celui stocké en base de données
- * si oui: on retourne un réponse positive et on supprime l'otp de la base de donnée
- * sinon: on renvoie une erreur 401 InvalidCredentialsError
- *
- * @param req requete HTTP contenant le nom la personne recherchee
- * @param res response HTTP
- * @param next permet d'appeler le prochain gestionnaire (handler)
- */
-function verify_bypass(req, res, next) {
-    find_user(req, res, function(user) {
-        if (user.bypass.active && properties.esup.methods.bypass.activate) {
-            if (user.bypass.codes) {
-                var checkOtp = false;
-                var codes = user.bypass.codes;
-                for (code in codes) {
-                    if (user.bypass.codes[code] == req.params.otp) {
-                        checkOtp = true;
-                        codes.splice(code, 1);
-                        user.bypass.codes = codes;
-                        user.bypass.used_codes += 1;
-                    }
-                }
-                if (checkOtp) {
-                    user.save(function(){
-                        res.send({
-                            "code": "Ok",
-                            "message": properties.messages.success.valid_credentials
-                        });
-                    });
-                } else {
-                    next(req, res);
-                }
-            } else {
-                next(req, res);
-            }
-        } else {
-            next(req, res);
-        }
-    });
-};
-
-
-
-/**
- * Vérifie si l'otp fourni correspond à celui généré
- * si oui: on retourne un réponse positive
- * sinon: on renvoie une erreur 401 InvalidCredentialsError
- *
- * @param req requete HTTP contenant le nom la personne recherchee
- * @param res response HTTP
- * @param next permet d'appeler le prochain gestionnaire (handler)
- */
-function verify_google_authenticator(req, res, next) {
-    var checkSpeakeasy = false;
-    find_user(req, res, function(user) {
-        if (user.google_authenticator.active && properties.esup.methods.google_authenticator.activate) {
-            var transport_window = 0;
-            checkSpeakeasy = speakeasy.totp.verify({
-                secret: user.google_authenticator.secret.base32,
-                encoding: 'base32',
-                token: req.params.otp,
-                window: user.google_authenticator.window
-            });
-            if (checkSpeakeasy) {
-                user.google_authenticator.window = properties.esup.methods.google_authenticator.default_window;
-                user.save(function() {
-                    res.send({
-                        "code": "Ok",
-                        "message": properties.messages.success.valid_credentials
-                    });
-                });
-            } else {
-                next(req, res);
-            }
-        } else {
-            next(req, res);
+            callbacks.push(methods[method].verify_code);
+            it++;
         }
     });
 };

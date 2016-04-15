@@ -150,7 +150,6 @@ exports.send_code = function(req, res, next) {
 }
 
 exports.verify_code = function(req, res, next) {
-    console.log(req.params);
     if (check_parameters(req, required.verify_code)) {
         check_api_password(req, res, next);
     } else {
