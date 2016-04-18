@@ -63,6 +63,7 @@ exports.generate_method_secret = function(user, req, res, next) {
                 break;
         }
     }
+    user.bypass.codes = codes;
     api_controller.save_user(user, function() {
         res.send({
             code: "Ok",

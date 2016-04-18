@@ -1,6 +1,6 @@
 {
     "port": 3000,
-    "proxyUrl": "http://XXXXX:XwwX.unir.fr:3128",
+    "proxyUrl": "http://username:password@univ.fr:port",
     "api_password":"XXXXXXXXXXXX",
     "users_secret":"XXXXXXXXXXXX",
     "apiDb": "mongodb",
