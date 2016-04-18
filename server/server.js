@@ -22,27 +22,27 @@ server.use(
 );
 
 var userDb_controller;
-var apiDb_controller;
 var routes;
 
 function initialize_userDB() {
     if (properties.esup.userDb) {
         userDb_controller = require(process.cwd() + '/controllers/user/' + properties.esup.userDb);
-        userDb_controller.initialize(initialize_apiDb());
+        userDb_controller.initialize(initialize_apiController());
     } else console.log("Unknown userDb");
 }
 
-function initialize_apiDb() {
+var api_controller;
+
+function initialize_apiController() {
     if (properties.esup.apiDb) {
-        apiDb_controller = require(process.cwd() + '/controllers/api/' + properties.esup.apiDb);
-        apiDb_controller.initialize(initialize_routes(launch_server));
+        api_controller = require(process.cwd() + '/controllersV2/api');
+        api_controller.initialize(initialize_routes(launch_server));
     } else console.log("Unknown apiDb");
 }
 
-
 function initialize_routes(callback) {
     routes = require(process.cwd() + '/server/routes');
-    routes.initialize(server, userDb_controller, apiDb_controller, function(routed_server) {
+    routes.initialize(server, function(routed_server) {
         server = routed_server;
         if (typeof(callback) === "function") callback();
     })
