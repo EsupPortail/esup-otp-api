@@ -1,5 +1,5 @@
 var properties = require(process.cwd() + '/properties/properties');
-var apiDb_controller = require(process.cwd() + '/controllers/api/' + properties.esup.apiDb);
+var api_controller = require(process.cwd() + '/controllers/api');
 var utils = require(process.cwd() + '/services/utils');
 var restify = require('restify');
 
@@ -32,7 +32,7 @@ exports.verify_code = function(user, req, res, callbacks) {
             }
         }
         if (checkOtp) {
-            apiDb_controller.save_user(user, function() {
+            api_controller.save_user(user, function() {
                 res.send({
                     "code": "Ok",
                     "message": properties.messages.success.valid_credentials
@@ -63,7 +63,7 @@ exports.generate_method_secret = function(user, req, res, next) {
                 break;
         }
     }
-    apiDb_controller.save_user(user, function() {
+    api_controller.save_user(user, function() {
         res.send({
             code: "Ok",
             message: "",
@@ -76,7 +76,7 @@ exports.generate_method_secret = function(user, req, res, next) {
 exports.delete_method_secret = function(req, res, next) {
     user.bypass.active = false;
     user.bypass.codes = [];
-    apiDb_controller.save_user(user, function() {
+    api_controller.save_user(user, function() {
         res.send({
             "code": "Ok",
             "message": 'Secret removed'
@@ -93,7 +93,7 @@ exports.get_method_secret = function(req, res, next) {
 
 exports.user_activate = function(user, req, res, next) {
     user.bypass.active = true;
-    apiDb_controller.save_user(user, function() {
+    api_controller.save_user(user, function() {
         res.send({
             "code": "Ok",
             "message": ""
@@ -103,7 +103,7 @@ exports.user_activate = function(user, req, res, next) {
 
 exports.user_deactivate = function(user, req, res, next) {
     user.bypass.active = false;
-    apiDb_controller.save_user(user, function() {
+    api_controller.save_user(user, function() {
         res.send({
             "code": "Ok",
             "message": ""

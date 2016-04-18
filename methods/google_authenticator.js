@@ -1,5 +1,5 @@
 var properties = require(process.cwd() + '/properties/properties');
-var apiDb_controller = require(process.cwd() + '/controllers/api/' + properties.esup.apiDb);
+var api_controller = require(process.cwd() + '/controllers/api');
 var speakeasy = require('speakeasy');
 var qrCode = require('qrcode-npm')
 var restify = require('restify');
@@ -18,8 +18,8 @@ exports.send_code = function(user, req, res, next) {
             user.google_authenticator.window = properties.esup.methods.google_authenticator.default_window;
             break;
     }
-    apiDb_controller.save_user(user, function() {
-        apiDb_controller.transport_code(speakeasy.totp({
+    api_controller.save_user(user, function() {
+        api_controller.transport_code(speakeasy.totp({
             secret: user.google_authenticator.secret.base32,
             encoding: 'base32'
         }), req, res, next);
@@ -44,7 +44,7 @@ exports.verify_code = function(user, req, res, callbacks) {
     });
     if (checkSpeakeasy) {
         user.google_authenticator.window = properties.esup.methods.google_authenticator.default_window;
-        apiDb_controller.save_user(user, function() {
+        api_controller.save_user(user, function() {
             res.send({
                 "code": "Ok",
                 "message": properties.messages.success.valid_credentials
@@ -58,7 +58,7 @@ exports.verify_code = function(user, req, res, callbacks) {
 
 exports.generate_method_secret = function(user, req, res, next) {
     user.google_authenticator.secret = speakeasy.generateSecret({ length: 16 });
-    apiDb_controller.save_user(user, function() {
+    api_controller.save_user(user, function() {
         var response = {};
         var qr = qrCode.qrcode(4, 'M');
         qr.addData(user.google_authenticator.secret.otpauth_url);
@@ -73,7 +73,7 @@ exports.generate_method_secret = function(user, req, res, next) {
 exports.delete_method_secret = function(user, req, res, next) {
     user.google_authenticator.active = false;
     user.google_authenticator.secret = {};
-    apiDb_controller.save_user(user, function() {
+    api_controller.save_user(user, function() {
         res.send({
             "code": "Ok",
             "message": 'Secret removed'
@@ -101,7 +101,7 @@ exports.get_method_secret = function(user, req, res, next) {
 
 exports.user_activate = function(user, req, res, next) {
     user.google_authenticator.active = true;
-    apiDb_controller.save_user(user, function() {
+    api_controller.save_user(user, function() {
         res.send({
             "code": "Ok",
             "message": ""
@@ -111,7 +111,7 @@ exports.user_activate = function(user, req, res, next) {
 
 exports.user_deactivate = function(user, req, res, next) {
     user.google_authenticator.active = false;
-    apiDb_controller.save_user(user, function() {
+    api_controller.save_user(user, function() {
         res.send({
             "code": "Ok",
             "message": ""

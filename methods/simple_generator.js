@@ -1,5 +1,5 @@
 var properties = require(process.cwd() + '/properties/properties');
-var apiDb_controller = require(process.cwd() + '/controllers/api/' + properties.esup.apiDb);
+var api_controller = require(process.cwd() + '/controllers/api');
 var utils = require(process.cwd() + '/services/utils');
 var restify = require('restify');
 
@@ -22,8 +22,8 @@ exports.send_code = function(user, req, res, next) {
     validity_time += new Date().getTime();
     new_otp.validity_time = validity_time;
     user.simple_generator = new_otp;
-    apiDb_controller.save_user(user, function() {
-        apiDb_controller.transport_code(new_otp.code, req, res, next);
+    api_controller.save_user(user, function() {
+        api_controller.transport_code(new_otp.code, req, res, next);
     });
 }
 
@@ -38,7 +38,7 @@ exports.verify_code = function(user, req, res, callbacks) {
     if (user.simple_generator.code == req.params.otp && Date.now() < user.simple_generator.validity_time) {
         delete user.simple_generator.code;
         delete user.simple_generator.validity_time;
-        apiDb_controller.save_user(user, function() {
+        api_controller.save_user(user, function() {
             res.send({
                 "code": "Ok",
                 "message": properties.messages.success.valid_credentials
@@ -73,7 +73,7 @@ exports.get_method_secret = function(req, res, next) {
 
 exports.user_activate = function(user, req, res, next) {
     user.simple_generator.active = true;
-    apiDb_controller.save_user(user, function() {
+    api_controller.save_user(user, function() {
         res.send({
             "code": "Ok",
             "message": ""
@@ -83,7 +83,7 @@ exports.user_activate = function(user, req, res, next) {
 
 exports.user_deactivate = function(user, req, res, next) {
     user.simple_generator.active = false;
-    apiDb_controller.save_user(user, function() {
+    api_controller.save_user(user, function() {
         res.send({
             "code": "Ok",
             "message": ""

@@ -3,7 +3,7 @@ var methods;
 var restify = require('restify');
 var mailer = require(process.cwd() + '/services/mailer');
 var sms = require(process.cwd() + '/services/sms');
-var userDb_controller = require(process.cwd() + '/controllers/user/' + properties.esup.userDb);
+var userDb_controller = require(process.cwd() + '/databases/user/' + properties.esup.userDb);
 var mongoose = require('mongoose');
 var connection;
 

@@ -26,7 +26,7 @@ var routes;
 
 function initialize_userDB() {
     if (properties.esup.userDb) {
-        userDb_controller = require(process.cwd() + '/controllers/user/' + properties.esup.userDb);
+        userDb_controller = require(process.cwd() + '/databases/user/' + properties.esup.userDb);
         userDb_controller.initialize(initialize_apiController());
     } else console.log("Unknown userDb");
 }
@@ -35,7 +35,7 @@ var api_controller;
 
 function initialize_apiController() {
     if (properties.esup.apiDb) {
-        api_controller = require(process.cwd() + '/controllersV2/api');
+        api_controller = require(process.cwd() + '/controllers/api');
         api_controller.initialize(initialize_routes(launch_server));
     } else console.log("Unknown apiDb");
 }
