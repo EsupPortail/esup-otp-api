@@ -1,12 +1,19 @@
 {
     "port": 3000,
-    "proxyUrl" : "http://username:password@univ.fr:port",
+    "proxyUrl": "http://XXXXX:XwwX.unir.fr:3128",
+    "api_password":"XXXXXXXXXXXX",
+    "users_secret":"XXXXXXXXXXXX",
     "apiDb": "mongodb",
+    "userDb": "mongodb",
     "mongodb": {
         "address": "localhost",
-        "db": "test-otp"
+        "api_db": "test-otp",
+        "user_db": "user-db",
+        "transport": {
+            "mail": "mail",
+            "sms": "mobile"
+        }
     },
-    "userDb": "ldap",
     "ldap": {
         "uri": "ldap://X.X.X.X",
         "baseDn": "dc=fr",
