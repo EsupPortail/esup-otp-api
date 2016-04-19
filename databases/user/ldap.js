@@ -48,6 +48,11 @@ function find_user(req, res, callback) {
     });
 }
 
+exports.user_exist= function(req, res, callback){
+    find_user(req, res, function(user){
+         if (typeof(callback) === "function") callback(user);
+    })
+}
 
 exports.get_available_transports = function(req, res, next) {
     console.log("get_available_transports");

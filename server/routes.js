@@ -24,6 +24,7 @@ exports.initialize = function(server, callback) {
     //api_api_password
     server.get("admin/user/:uid/:api_password", validator.get_user, api_controller.get_user);
     server.get("admin/users/drop/:api_password", api_controller.drop); //dev
+    server.get("admin/activate_methods/:uid/:api_password", validator.get_activate_methods_admin, api_controller.get_activate_methods);
     server.put("admin/deactivate/:method/:api_password", validator.toggle_method_admin, api_controller.deactivate_method_admin);
     server.put("admin/activate/:method/:api_password", validator.toggle_method_admin, api_controller.activate_method_admin);
     server.put("admin/deactivate/:method/:transport/:api_password", validator.toggle_method_transport, api_controller.deactivate_method_transport);

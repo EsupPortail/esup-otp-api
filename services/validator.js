@@ -10,6 +10,7 @@ var required = {
     create_user: ['uid', 'api_password'],
     get_user: ['uid', 'api_password'],
     get_methods: ['api_password'],
+    get_activate_methods_admin: ['uid', 'api_password'],
     set_otp: ['uid', 'otp', 'api_password'],
     delete_method_secret: ['uid', 'method', 'api_password'],
     verify_code: ['uid', 'otp', 'api_password'],
@@ -135,6 +136,14 @@ exports.toggle_method_transport = function(req, res, next) {
 
 exports.toggle_method_admin = function(req, res, next) {
     if (check_parameters(req, required.toggle_method_admin)) {
+        check_api_password(req, res, next);
+    } else {
+        return next(new restify.InvalidArgumentError());
+    }
+}
+
+exports.get_activate_methods_admin = function(req, res, next) {
+    if (check_parameters(req, required.get_activate_methods_admin)) {
         check_api_password(req, res, next);
     } else {
         return next(new restify.InvalidArgumentError());

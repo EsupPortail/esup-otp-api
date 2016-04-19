@@ -45,16 +45,31 @@ function find_user(req, res, callback) {
         if (data[0]) {
             if (typeof(callback) === "function") callback(data[0]);
         } else {
-            res.send(response);
+            if(properties.esup.mfa)create_user(req, res, callback);
+            else res.send(response);
         }
     });
+}
+
+function create_user(req, res, callback) {
+    var new_user = new UserModel({
+        uid : req.params.uid
+    });
+    new_user.save(function() {
+        if (typeof(callback) === "function") callback(new_user);
+    });
+}
+
+exports.user_exists= function(req, res, callback){
+    console.log("user_exists mongodb_user");
+    find_user(req, res, function(user){
+         if (typeof(callback) === "function") callback(user);
+    })
 }
 
 
 exports.get_available_transports = function(req, res, next) {
     console.log("get_available_transports");
-
-
     find_user(req, res, function(user) {
         var response = {};
         var result = {};

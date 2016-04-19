@@ -37,16 +37,6 @@ function initiatilize_user_model() {
             active: {
                 type: Boolean,
                 default: false
-            },
-            transport: {
-                sms: {
-                    type: Boolean,
-                    default: false
-                },
-                mail: {
-                    type: Boolean,
-                    default: false
-                },
             }
         },
         bypass: {
@@ -55,16 +45,6 @@ function initiatilize_user_model() {
             active: {
                 type: Boolean,
                 default: false
-            },
-            transport: {
-                sms: {
-                    type: Boolean,
-                    default: false
-                },
-                mail: {
-                    type: Boolean,
-                    default: false
-                },
             }
         },
         google_authenticator: {
@@ -73,26 +53,12 @@ function initiatilize_user_model() {
             active: {
                 type: Boolean,
                 default: false
-            },
-            transport: {
-                sms: {
-                    type: Boolean,
-                    default: false
-                },
-                mail: {
-                    type: Boolean,
-                    default: false
-                },
             }
         },
     });
 
     connection.model('User', UserSchema, 'User');
     UserModel = connection.model('User');
-}
-
-function create_user(){
-
 }
 
 /**
@@ -113,9 +79,35 @@ function find_user(req, res, callback) {
         if (data[0]) {
             if (typeof(callback) === "function") callback(data[0]);
         } else {
-            res.send(response);
+            console.log("find_user api");
+            userDb_controller.user_exists(req, res, function(user) {
+                if (user) {
+                    var new_user = new UserModel({
+                        uid: user.uid
+                    });
+                    new_user.save(function() {
+                         if (typeof(callback) === "function") callback(new_user);
+                    })
+                }else res.send(response);
+            });
         }
     });
+}
+
+
+function parse_user(user){
+    var parsed_user = {};
+    parsed_user.google_authenticator = {};
+    parsed_user.google_authenticator.active = user.google_authenticator.active;
+    parsed_user.simple_generator = {};
+    parsed_user.simple_generator.active = user.simple_generator.active;
+    parsed_user.bypass = {};
+    parsed_user.bypass.active = user.bypass.active;
+    parsed_user.bypass.available_code = user.bypass.codes.length;
+    parsed_user.bypass.used_code = user.bypass.used_codes;
+    parsed_user.matrix = user.matrix;
+    // parsed_user.matrix.active = user.matrix.active;
+    return parsed_user;
 }
 
 /**
@@ -173,17 +165,7 @@ exports.get_user = function(req, res, next) {
         var response = {};
         response.code = 'Ok';
         response.message = '';
-        response.user = {};
-        response.user.google_authenticator = {};
-        response.user.google_authenticator.active = user.google_authenticator.active;
-        response.user.simple_generator = {};
-        response.user.simple_generator.active = user.simple_generator.active;
-        response.user.bypass = {};
-        response.user.bypass.active = user.bypass.active;
-        response.user.bypass.available_code = user.bypass.codes.length;
-        response.user.bypass.used_code = user.bypass.used_codes;
-        response.user.matrix = user.matrix;
-        // response.user.matrix.active = user.matrix.active;
+        response.user = parse_user(user);
         res.send(response);
     });
 };
