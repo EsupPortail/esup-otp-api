@@ -4,23 +4,23 @@ var speakeasy = require('speakeasy');
 var qrCode = require('qrcode-npm')
 var restify = require('restify');
 
-exports.name = "google_authenticator";
+exports.name = "totp";
 
 exports.send_code = function(user, req, res, next) {
     switch (req.params.transport) {
         case 'mail':
-            user.google_authenticator.window = properties.esup.methods.google_authenticator.mail_window;
+            user.totp.window = properties.esup.methods.totp.mail_window;
             break;
         case 'sms':
-            user.google_authenticator.window = properties.esup.methods.google_authenticator.sms_window;
+            user.totp.window = properties.esup.methods.totp.sms_window;
             break;
         default:
-            user.google_authenticator.window = properties.esup.methods.google_authenticator.default_window;
+            user.totp.window = properties.esup.methods.totp.default_window;
             break;
     }
     api_controller.save_user(user, function() {
         api_controller.transport_code(speakeasy.totp({
-            secret: user.google_authenticator.secret.base32,
+            secret: user.totp.secret.base32,
             encoding: 'base32'
         }), req, res, next);
     })
@@ -37,13 +37,13 @@ exports.send_code = function(user, req, res, next) {
  */
 exports.verify_code = function(user, req, res, callbacks) {
     var checkSpeakeasy = speakeasy.totp.verify({
-        secret: user.google_authenticator.secret.base32,
+        secret: user.totp.secret.base32,
         encoding: 'base32',
         token: req.params.otp,
-        window: user.google_authenticator.window
+        window: user.totp.window
     });
     if (checkSpeakeasy) {
-        user.google_authenticator.window = properties.esup.methods.google_authenticator.default_window;
+        user.totp.window = properties.esup.methods.totp.default_window;
         api_controller.save_user(user, function() {
             res.send({
                 "code": "Ok",
@@ -57,22 +57,22 @@ exports.verify_code = function(user, req, res, callbacks) {
 }
 
 exports.generate_method_secret = function(user, req, res, next) {
-    user.google_authenticator.secret = speakeasy.generateSecret({ length: 16 });
+    user.totp.secret = speakeasy.generateSecret({ length: 16 });
     api_controller.save_user(user, function() {
         var response = {};
         var qr = qrCode.qrcode(4, 'M');
-        qr.addData(user.google_authenticator.secret.otpauth_url);
+        qr.addData(user.totp.secret.otpauth_url);
         qr.make();
         response.code = 'Ok';
-        response.message = user.google_authenticator.secret.base32;
+        response.message = user.totp.secret.base32;
         response.qrCode = qr.createImgTag(4);
         res.send(response);
     });
 }
 
 exports.delete_method_secret = function(user, req, res, next) {
-    user.google_authenticator.active = false;
-    user.google_authenticator.secret = {};
+    user.totp.active = false;
+    user.totp.secret = {};
     api_controller.save_user(user, function() {
         res.send({
             "code": "Ok",
@@ -85,10 +85,10 @@ exports.get_method_secret = function(user, req, res, next) {
     var response = {};
     var qr = qrCode.qrcode(4, 'M');
     response.code = 'Ok';
-    if (!(Object.keys(user.google_authenticator.secret).length === 0 && JSON.stringify(user.google_authenticator.secret) === JSON.stringify({}))) {
-        qr.addData(user.google_authenticator.secret.otpauth_url);
+    if (!(Object.keys(user.totp.secret).length === 0 && JSON.stringify(user.totp.secret) === JSON.stringify({}))) {
+        qr.addData(user.totp.secret.otpauth_url);
         qr.make();
-        response.message = user.google_authenticator.secret.base32;
+        response.message = user.totp.secret.base32;
         response.qrCode = qr.createImgTag(4);
     }else {
         response.message = "Pas de qrCode, veuillez en générer un.";
@@ -100,7 +100,7 @@ exports.get_method_secret = function(user, req, res, next) {
 
 
 exports.user_activate = function(user, req, res, next) {
-    user.google_authenticator.active = true;
+    user.totp.active = true;
     api_controller.save_user(user, function() {
         res.send({
             "code": "Ok",
@@ -110,7 +110,7 @@ exports.user_activate = function(user, req, res, next) {
 }
 
 exports.user_deactivate = function(user, req, res, next) {
-    user.google_authenticator.active = false;
+    user.totp.active = false;
     api_controller.save_user(user, function() {
         res.send({
             "code": "Ok",

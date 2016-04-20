@@ -32,7 +32,7 @@
         "database": "xxxxxx"
     },
     "methods": {
-        "google_authenticator": {
+        "totp": {
             "activate": true,
             "sms": true,
             "mail": true,

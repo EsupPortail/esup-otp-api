@@ -47,7 +47,7 @@ function initiatilize_user_model() {
                 default: false
             }
         },
-        google_authenticator: {
+        totp: {
             secret: Object,
             window: Number,
             active: {
@@ -97,8 +97,8 @@ function find_user(req, res, callback) {
 
 function parse_user(user){
     var parsed_user = {};
-    parsed_user.google_authenticator = {};
-    parsed_user.google_authenticator.active = user.google_authenticator.active;
+    parsed_user.totp = {};
+    parsed_user.totp.active = user.totp.active;
     parsed_user.simple_generator = {};
     parsed_user.simple_generator.active = user.simple_generator.active;
     parsed_user.bypass = {};
