@@ -128,7 +128,7 @@ exports.save_user=function(user, callback) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.transport_code = function(code, req, res, next) {
-    apiDb.transport_code(code, res, res, next);
+    apiDb.transport_code(code, req, res, next);
 }
 
 
