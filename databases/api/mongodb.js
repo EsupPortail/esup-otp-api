@@ -31,7 +31,7 @@ function initiatilize_user_model() {
             required: true,
             unique: true
         },
-        simple_generator: {
+        random_code: {
             code: String,
             validity_time: Number,
             active: {
@@ -99,8 +99,8 @@ function parse_user(user){
     var parsed_user = {};
     parsed_user.totp = {};
     parsed_user.totp.active = user.totp.active;
-    parsed_user.simple_generator = {};
-    parsed_user.simple_generator.active = user.simple_generator.active;
+    parsed_user.random_code = {};
+    parsed_user.random_code.active = user.random_code.active;
     parsed_user.bypass = {};
     parsed_user.bypass.active = user.bypass.active;
     parsed_user.bypass.available_code = user.bypass.codes.length;

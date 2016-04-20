@@ -51,7 +51,7 @@ exports.verify_code = function(user, req, res, callbacks) {
 exports.generate_method_secret = function(user, req, res, next) {
     var codes = new Array();
     for (var it = 0; it < properties.esup.methods.bypass.codes_number; it++) {
-        switch (properties.esup.methods.simple_generator.code_type) {
+        switch (properties.esup.methods.random_code.code_type) {
             case "string":
                 codes.push(utils.generate_string_code(properties.esup.methods.bypass.code_length));
                 break;

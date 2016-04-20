@@ -3,25 +3,25 @@ var api_controller = require(process.cwd() + '/controllers/api');
 var utils = require(process.cwd() + '/services/utils');
 var restify = require('restify');
 
-exports.name = "simple_generator";
+exports.name = "random_code";
 
 exports.send_code = function(user, req, res, next) {
-    var new_otp = user.simple_generator;
-    switch (properties.esup.methods.simple_generator.code_type) {
+    var new_otp = user.random_code;
+    switch (properties.esup.methods.random_code.code_type) {
         case "string":
-            new_otp.code = utils.generate_string_code(properties.esup.methods.simple_generator.code_length);
+            new_otp.code = utils.generate_string_code(properties.esup.methods.random_code.code_length);
             break;
         case "digit":
-            new_otp.code = utils.generate_digit_code(properties.esup.methods.simple_generator.code_length);
+            new_otp.code = utils.generate_digit_code(properties.esup.methods.random_code.code_length);
             break;
         default:
-            new_otp.code = utils.generate_string_code(properties.esup.methods.simple_generator.code_length);
+            new_otp.code = utils.generate_string_code(properties.esup.methods.random_code.code_length);
             break;
     }
-    validity_time = properties.esup.methods.simple_generator.mail_validity * 60 * 1000;
+    validity_time = properties.esup.methods.random_code.mail_validity * 60 * 1000;
     validity_time += new Date().getTime();
     new_otp.validity_time = validity_time;
-    user.simple_generator = new_otp;
+    user.random_code = new_otp;
     api_controller.save_user(user, function() {
         api_controller.transport_code(new_otp.code, req, res, next);
     });
@@ -35,9 +35,9 @@ exports.send_code = function(user, req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.verify_code = function(user, req, res, callbacks) {
-    if (user.simple_generator.code == req.params.otp && Date.now() < user.simple_generator.validity_time) {
-        delete user.simple_generator.code;
-        delete user.simple_generator.validity_time;
+    if (user.random_code.code == req.params.otp && Date.now() < user.random_code.validity_time) {
+        delete user.random_code.code;
+        delete user.random_code.validity_time;
         api_controller.save_user(user, function() {
             res.send({
                 "code": "Ok",
@@ -72,7 +72,7 @@ exports.get_method_secret = function(req, res, next) {
 }
 
 exports.user_activate = function(user, req, res, next) {
-    user.simple_generator.active = true;
+    user.random_code.active = true;
     api_controller.save_user(user, function() {
         res.send({
             "code": "Ok",
@@ -82,7 +82,7 @@ exports.user_activate = function(user, req, res, next) {
 }
 
 exports.user_deactivate = function(user, req, res, next) {
-    user.simple_generator.active = false;
+    user.random_code.active = false;
     api_controller.save_user(user, function() {
         res.send({
             "code": "Ok",

@@ -42,7 +42,7 @@
             "app_window": 2,
             "default_window": 2
         },
-        "simple_generator": {
+        "random_code": {
             "activate": true,
             "sms": true,
             "mail": true,
