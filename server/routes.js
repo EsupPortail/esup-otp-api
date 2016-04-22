@@ -12,13 +12,13 @@ exports.initialize = function(server, callback) {
     server.get("/send_code/:method/:transport/:uid/:hash", validator.send_code, api_controller.send_code);
     
     //api_api_password
-    server.get("/methods/:api_password", validator.get_methods, api_controller.get_methods);
-    server.get("/secret/:method/:uid/:api_password", validator.get_method_secret, api_controller.get_method_secret);
-    server.put("/deactivate/:method/:uid/:api_password", validator.toggle_method, api_controller.deactivate_method);
-    server.put("/activate/:method/:uid/:api_password", validator.toggle_method, api_controller.activate_method);
-    server.put("/transport/:transport/:uid/:new_transport/:api_password", validator.update_transport, userDb_controller.update_transport);
-    server.post("protected/user/:uid/method/:method/secret/:api_password", validator.generate_method_secret, api_controller.generate_method_secret);
-    server.post("/verify_code/:uid/:otp/:api_password", validator.verify_code, api_controller.verify_code);
+    server.get("/protected/method/:api_password", validator.get_methods, api_controller.get_methods);
+    server.get("/protected/user/:uid/method/:method/secret/:api_password", validator.get_method_secret, api_controller.get_method_secret);
+    server.put("/protected/user/:uid/method/:method/deactivate/:api_password", validator.toggle_method, api_controller.deactivate_method);
+    server.put("/protected/user/:uid/method/:method/activate/:api_password", validator.toggle_method, api_controller.activate_method);
+    server.put("/protected/user/:uid/transport/:transport/:new_transport/:api_password", validator.update_transport, userDb_controller.update_transport);
+    server.post("/protected/user/:uid/method/:method/secret/:api_password", validator.generate_method_secret, api_controller.generate_method_secret);
+    server.post("/protected/user/:uid/code/verify/:otp/:api_password", validator.verify_code, api_controller.verify_code);
     
     // routes DEV/ADMIN uniquement
     //api_api_password

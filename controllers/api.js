@@ -10,7 +10,6 @@ exports.initialize= function(callback) {
 }
 
 exports.get_methods = function(req, res, next) {
-    console.log("get_methods");
     var response = {
         "code": "Error",
         "message": "No method found"
@@ -32,7 +31,6 @@ exports.get_methods = function(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.activate_method_admin = function(req, res, next) {
-    console.log("ADMIN activate_method " + req.params.method);
     if (properties.esup.methods[req.params.method]) {
         properties.esup.methods[req.params.method].activate = true;
         res.send({
@@ -53,7 +51,6 @@ exports.activate_method_admin = function(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.deactivate_method_admin = function(req, res, next) {
-    console.log("ADMIN deactivate_method " + req.params.method);
     if (properties.esup.methods[req.params.method]) {
         properties.esup.methods[req.params.method].activate = false;
         res.send({
@@ -74,7 +71,6 @@ exports.deactivate_method_admin = function(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.activate_method_transport = function(req, res, next) {
-    console.log("ADMIN activate_method_transport " +req.params.transport +' '+ req.params.method);
     if (properties.esup.methods[req.params.method]) {
         properties.esup.methods[req.params.method][req.params.transport] = true;
         res.send({
@@ -95,8 +91,6 @@ exports.activate_method_transport = function(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.deactivate_method_transport = function(req, res, next) {
-    console.log("ADMIN deactivate_method_transport " +req.params.transport +' '+req.params.method);
-    console.log(req.params.method);
     if (properties.esup.methods[req.params.method]) {
         properties.esup.methods[req.params.method][req.params.transport] = false;
         res.send({
@@ -152,7 +146,6 @@ exports.get_user = function(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.send_code = function(req, res, next) {
-    console.log("send_code :" + req.params.uid);
     apiDb.send_code(req, res, next);
 };
 
@@ -213,7 +206,6 @@ exports.get_method_secret = function(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.get_activate_methods = function(req, res, next) {
-    console.log("exports.get_activate_methods = function(req, res, next) {");
     apiDb.get_activate_methods(req, res, next);
 };
 
@@ -226,7 +218,6 @@ exports.get_activate_methods = function(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.activate_method = function(req, res, next) {
-    console.log(req.params.uid + " activate_method " + req.params.method);
     apiDb.activate_method(req, res, next);
 };
 
@@ -239,7 +230,6 @@ exports.activate_method = function(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.deactivate_method = function(req, res, next) {
-    console.log(req.params.uid + " deactivate_method " + req.params.method+'sdmfjqsmlkfdjlmj') ;
     apiDb.deactivate_method(req, res, next);
 };
 
