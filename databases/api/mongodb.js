@@ -306,7 +306,6 @@ exports.get_method_secret = function(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.get_activate_methods = function(req, res, next) {
-    console.log("exports.get_activate_methods = function(req, res, next) {");
     find_user(req, res, function(user) {
         var response = {};
         var result = {};
