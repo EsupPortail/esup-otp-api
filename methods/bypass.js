@@ -74,7 +74,7 @@ exports.generate_method_secret = function(user, req, res, next) {
     });
 }
 
-exports.delete_method_secret = function(req, res, next) {
+exports.delete_method_secret = function(user, req, res, next) {
     user.bypass.active = false;
     user.bypass.codes = [];
     api_controller.save_user(user, function() {

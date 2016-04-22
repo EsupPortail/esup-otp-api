@@ -79,7 +79,6 @@ function find_user(req, res, callback) {
         if (data[0]) {
             if (typeof(callback) === "function") callback(data[0]);
         } else {
-            console.log("find_user api");
             userDb_controller.user_exists(req, res, function(user) {
                 if (user) {
                     var new_user = new UserModel({
