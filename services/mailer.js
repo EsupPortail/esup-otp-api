@@ -20,7 +20,7 @@ var mailOptions = {
 
 exports.send_code = function(mail, message, res) {
     mailOptions.text = message;
-    mailOptions.to = properties.esup.dev.mail || mail;
+    mailOptions.to =mail;
     mailOptions.subject = "Code";
     // send mail with defined transport object
     transporter.sendMail(mailOptions, function(error, response) {
