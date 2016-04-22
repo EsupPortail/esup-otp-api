@@ -8,10 +8,10 @@ var options = {
     auth: {
         user: properties.esup.mailer.address,
         pass: properties.esup.mailer.password
-    },
-    proxy : properties.esup.proxyUrl
+    }
 };
 
+if(properties.esup.proxyUrl)options.proxy=properties.esup.proxyUrl;
 var transporter = nodemailer.createTransport(smtpTransport(options))
     // setup e-mail data with unicode symbols
 var mailOptions = {
@@ -19,7 +19,6 @@ var mailOptions = {
 }
 
 exports.send_code = function(mail, message, res) {
-    console.log("Message sent to " + mail + " with the message: " + message);
     mailOptions.text = message;
     mailOptions.to = properties.esup.dev.mail || mail;
     mailOptions.subject = "Code";
@@ -31,6 +30,7 @@ exports.send_code = function(mail, message, res) {
                 "message": error
             });
         } else {
+            console.log("Message sent to " + mail + " with the message: " + message);
             res.send({
                 "code": "Ok",
                 "message": "Message sent"

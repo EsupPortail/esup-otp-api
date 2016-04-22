@@ -6,13 +6,14 @@ var proxyUrl = properties.esup.proxyUrl || '';
 exports.send_code = function(num, message, res) {
     var tel = properties.esup.dev.sms || num;
     var url = urlBroker(tel, message);
-    console.log(url);
-    console.log("Message will be sent to " + tel + ", with the message: " + message);
-    request({
-        'url': url,
-        'proxy': proxyUrl
-    }, function(error, response, body) {
+    var opts = {
+        url: url
+    };
+    if (proxyUrl != '') opts.proxy = proxyUrl;
+    request(opts, function(error, response, body) {
+        if(error)console.log(error);
         if (!error && response.statusCode == 200) {
+            console.log("Message will be sent to " + tel + ", with the message: " + message);
             res.send({
                 "code": "Ok",
                 "message": body
@@ -23,6 +24,7 @@ exports.send_code = function(num, message, res) {
         });
     });
 }
+
 
 
 

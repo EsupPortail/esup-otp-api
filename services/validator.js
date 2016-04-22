@@ -128,7 +128,7 @@ exports.update_transport = function(req, res, next) {
 
 exports.toggle_method_transport = function(req, res, next) {
     if (check_parameters(req, required.toggle_method_transport)) {
-        return next();
+        check_api_password(req, res, next);
     } else {
         return next(new restify.InvalidArgumentError());
     }

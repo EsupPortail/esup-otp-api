@@ -4,15 +4,18 @@ var ldapjs = require('ldapjs');
 
 var client;
 
-exports.initialize = function(bind, callback) {
+exports.initialize = function(callback) {
+    console.log("initialize ldap connection, if this take too much time, verify your ldap");
     client = ldapjs.createClient({
         url: properties.esup.ldap.uri
     });
     client.bind(properties.esup.ldap.adminDn, properties.esup.ldap.password, function(err) {
         if (err) console.log('bind error : ' + err);
-        if (typeof(callback) === "function") callback();
+        else if (typeof(callback) === "function"){
+         console.log('ldap connection initialized');
+         callback();
+     }
     });
-
 }
 
 function find_user(req, res, callback) {
@@ -85,7 +88,6 @@ exports.send_mail = function(req, res, callback) {
 }
 
 exports.update_transport = function(req, res, next) {
-
     var modification = {};
     modification[properties.esup.ldap.transport[req.params.transport]] = [req.params.new_transport]
     var change = new ldapjs.Change({

@@ -96,6 +96,7 @@ exports.activate_method_transport = function(req, res, next) {
  */
 exports.deactivate_method_transport = function(req, res, next) {
     console.log("ADMIN deactivate_method_transport " +req.params.transport +' '+req.params.method);
+    console.log(req.params.method);
     if (properties.esup.methods[req.params.method]) {
         properties.esup.methods[req.params.method][req.params.transport] = false;
         res.send({
@@ -238,7 +239,7 @@ exports.activate_method = function(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.deactivate_method = function(req, res, next) {
-    console.log(req.params.uid + " deactivate_method " + req.params.method);
+    console.log(req.params.uid + " deactivate_method " + req.params.method+'sdmfjqsmlkfdjlmj') ;
     apiDb.deactivate_method(req, res, next);
 };
 
