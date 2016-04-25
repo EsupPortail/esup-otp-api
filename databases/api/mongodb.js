@@ -8,7 +8,7 @@ var mongoose = require('mongoose');
 var connection;
 
 exports.initialize = function(callback) {
-    connection = mongoose.createConnection('mongodb://' + properties.esup.mongodb.address + '/' + properties.esup.mongodb.api_db, function(error) {
+    connection = mongoose.createConnection('mongodb://' + properties.esup.mongodb.address + '/' + properties.esup.mongodb.db, function(error) {
         if (error) {
             console.log(error);
         } else {
@@ -57,8 +57,8 @@ function initiatilize_user_model() {
         },
     });
 
-    connection.model('User', UserSchema, 'User');
-    UserModel = connection.model('User');
+    connection.model('UserPreferences', UserSchema, 'UserPreferences');
+    UserModel = connection.model('UserPreferences');
 }
 
 /**

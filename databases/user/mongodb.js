@@ -4,7 +4,7 @@ var mongoose = require('mongoose');
 var connection;
 
 exports.initialize = function(callback) {
-    connection = mongoose.createConnection('mongodb://' + properties.esup.mongodb.address + '/' + properties.esup.mongodb.user_db, function(error) {
+    connection = mongoose.createConnection('mongodb://' + properties.esup.mongodb.address + '/' + properties.esup.mongodb.db, function(error) {
         if (error) {
             console.log(error);
         } else {

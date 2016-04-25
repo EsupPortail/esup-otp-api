@@ -8,8 +8,7 @@
     "userDb": "mongodb",
     "mongodb": {
         "address": "localhost",
-        "api_db": "test-otp",
-        "user_db": "user-db",
+        "db": "test-otp",
         "transport": {
             "mail": "mail",
             "sms": "mobile"
