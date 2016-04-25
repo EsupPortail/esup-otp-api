@@ -6,23 +6,24 @@ exports.get_hash = function(uid) {
     var day = d.getDay();
     var hour = d.getHours();
 
-    var next_day = day;
-    var past_day = day;
-    if(hour==23)next_day = day +1;
-    if(hour==0) past_day = day -1;
+    d.setHours(d.getHours()-1);
+    var past_h = d.getHours()
+    d.setHours(d.getHours()+2);
+    var next_h = d.getHours()
+    d.setHours(d.getHours()-1);
+    var present_h = d.getHours()
+    
+    d.setHours(d.getHours()+Math.abs(d.getTimezoneOffset()/60));
+    d.setHours(d.getHours()-1);
+    var past_salt = d.getUTCDate() + past_h.toString();
+    d.setHours(d.getHours()+2);
+    var next_salt = d.getUTCDate() + next_h.toString();
+    d.setHours(d.getHours()-1);
+    var present_salt = d.getUTCDate() + present_h.toString();
 
-    var next_hour;
-    var past_hour;    
-    next_hour = (hour + 1)%24;
-    past_hour = (hour - 1)%24;
-
-    var present_salt = day.toString()+hour.toString();
-    var next_salt = next_day.toString()+next_hour.toString();
-    var past_salt = past_day.toString()+past_hour.toString();
-
-    present_hash = CryptoJS.SHA256(CryptoJS.MD5(properties.esup.users_secret).toString()+uid+present_salt).toString(); 
-    next_hash = CryptoJS.SHA256(CryptoJS.MD5(properties.esup.users_secret).toString()+uid+next_salt).toString(); 
-    past_hash = CryptoJS.SHA256(CryptoJS.MD5(properties.esup.users_secret).toString()+uid+past_salt).toString(); 
+    var present_hash = CryptoJS.SHA256(CryptoJS.MD5(properties.esup.users_secret).toString()+uid+present_salt).toString(); 
+    var next_hash = CryptoJS.SHA256(CryptoJS.MD5(properties.esup.users_secret).toString()+uid+next_salt).toString(); 
+    var past_hash = CryptoJS.SHA256(CryptoJS.MD5(properties.esup.users_secret).toString()+uid+past_salt).toString(); 
 
     var hashes = [past_hash, present_hash, next_hash];
 
