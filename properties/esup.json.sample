@@ -48,7 +48,7 @@
             "login_view": false,
             "sms_validity": 15,
             "mail_validity": 30,
-            "code_type": "string",
+            "code_type": "digit",
             "code_length": 6
         },
         "bypass": {
@@ -57,7 +57,7 @@
             "mail": true,
             "login_view": false,
             "codes_number": 10,
-            "code_type": "string",
+            "code_type": "digit",
             "code_length": 6
         }        
     },
