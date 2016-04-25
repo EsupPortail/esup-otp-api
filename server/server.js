@@ -1,8 +1,6 @@
 var restify = require('restify');
 var properties = require(process.cwd() + '/properties/properties');
-var utils = require(process.cwd() + '/services/utils');
 
-console.log(utils.get_hash('john'));
 var fs = require('fs');
 
 var server = restify.createServer({
