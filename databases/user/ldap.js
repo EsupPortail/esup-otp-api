@@ -57,7 +57,7 @@ exports.user_exist= function(req, res, callback){
     })
 }
 
-exports.get_available_transports = function(req, res, next) {
+exports.get_available_transports = function(req, res, callback) {
     console.log("get_available_transports");
 
 
@@ -66,12 +66,16 @@ exports.get_available_transports = function(req, res, next) {
         var result = {};
         if (user[properties.esup.ldap.transport.mail]) result.mail = utils.cover_string(user[properties.esup.ldap.transport.mail], 4, 5);
         if (user[properties.esup.ldap.transport.sms]) result.sms = utils.cover_string(user[properties.esup.ldap.transport.sms], 2, 2);
-        response.code = "Ok";
-        response.message = properties.messages.success.transports_found;
-        response.transports_list = result;
-        res.send(response);
+        if (typeof(callback) === "function") callback(result);
+        else {
+            response.code = "Ok";
+            response.message = properties.messages.success.transports_found;
+            response.transports_list = result;
+            res.send(response);
+        }
     });
 }
+
 
 
 exports.send_sms = function(req, res, callback) {

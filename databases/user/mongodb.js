@@ -68,19 +68,24 @@ exports.user_exists= function(req, res, callback){
 }
 
 
-exports.get_available_transports = function(req, res, next) {
+exports.get_available_transports = function(req, res, callback) {
     console.log("get_available_transports");
     find_user(req, res, function(user) {
         var response = {};
         var result = {};
         if (user[properties.esup.mongodb.transport.mail]) result.mail = utils.cover_string(user[properties.esup.mongodb.transport.mail], 4, 5);
         if (user[properties.esup.mongodb.transport.sms]) result.sms = utils.cover_string(user[properties.esup.mongodb.transport.sms], 2, 2);
-        response.code = "Ok";
-        response.message = properties.messages.success.transports_found;
-        response.transports_list = result;
-        res.send(response);
+        if (typeof(callback) === "function") callback(result);
+        else {
+            console.log()
+            response.code = "Ok";
+            response.message = properties.messages.success.transports_found;
+            response.transports_list = result;
+            res.send(response);
+        }
     });
 }
+
 
 
 exports.send_sms = function(req, res, callback) {

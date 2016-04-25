@@ -37,6 +37,10 @@ function initiatilize_user_model() {
             active: {
                 type: Boolean,
                 default: false
+            },
+            transports: {
+                type: Array,
+                default: properties.esup.methods.random_code.transports
             }
         },
         bypass: {
@@ -48,6 +52,10 @@ function initiatilize_user_model() {
             active: {
                 type: Boolean,
                 default: false
+            },
+            transports: {
+                type: Array,
+                default: properties.esup.methods.bypass.transports
             }
         },
         totp: {
@@ -59,6 +67,10 @@ function initiatilize_user_model() {
             active: {
                 type: Boolean,
                 default: false
+            },
+            transports: {
+                type: Array,
+                default: properties.esup.methods.totp.transports
             }
         },
     });
@@ -104,12 +116,15 @@ function parse_user(user){
     var parsed_user = {};
     parsed_user.totp = {};
     parsed_user.totp.active = user.totp.active;
+    parsed_user.totp.transports = user.totp.transports;
     parsed_user.random_code = {};
     parsed_user.random_code.active = user.random_code.active;
+    parsed_user.random_code.transports = user.random_code.transports;
     parsed_user.bypass = {};
     parsed_user.bypass.active = user.bypass.active;
     parsed_user.bypass.available_code = user.bypass.codes.length;
     parsed_user.bypass.used_code = user.bypass.used_codes;
+    parsed_user.bypass.transports = user.bypass.transports;
     parsed_user.matrix = user.matrix;
     // parsed_user.matrix.active = user.matrix.active;
     return parsed_user;
@@ -174,6 +189,29 @@ exports.get_user = function(req, res, next) {
         res.send(response);
     });
 };
+
+/**
+ * Renvoie les infos (methodes activees, transports) de utilisateur avec l'uid == req.params.uid
+ *
+ * @param req requete HTTP contenant le nom la personne recherchee
+ * @param res response HTTP
+ * @param next permet d'appeler le prochain gestionnaire (handler)
+ */
+exports.get_user_infos = function(req, res, next) {
+    console.log();
+    find_user(req, res, function(user) {
+        userDb_controller.get_available_transports(req, res, function(data) {
+            var response = {};
+            response.code = 'Ok';
+            response.message = '';
+            response.user = {};
+            response.user.methods = parse_user(user);
+            response.user.transports = data;
+            res.send(response);
+        })
+    });
+};
+
 
 /**
  * Envoie un code à l'utilisateur avec l'uid == req.params.uid et via la method == req.params.method

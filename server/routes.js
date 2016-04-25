@@ -7,8 +7,7 @@ var server;
 exports.initialize = function(server, callback) {
 
     //user_hash
-    server.get("/available_transports/:uid/:hash", validator.get_available_transports, userDb_controller.get_available_transports);
-    server.get("/activate_methods/:uid/:hash", validator.get_activate_methods, api_controller.get_activate_methods);
+    server.get("/user/:uid/:hash", validator.get_user_infos, api_controller.get_user_infos);
     server.get("/send_code/:method/:transport/:uid/:hash", validator.send_code, api_controller.send_code);
     
     //api_api_password

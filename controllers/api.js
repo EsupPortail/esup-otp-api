@@ -139,6 +139,17 @@ exports.get_user = function(req, res, next) {
 };
 
 /**
+ * Renvoie les infos (methodes activees, tranports) de utilisateur avec l'uid == req.params.uid
+ *
+ * @param req requete HTTP contenant le nom la personne recherchee
+ * @param res response HTTP
+ * @param next permet d'appeler le prochain gestionnaire (handler)
+ */
+exports.get_user_infos = function(req, res, next) {
+    apiDb.get_user_infos(req, res, next);
+};
+
+/**
  * Envoie un code à l'utilisateur avec l'uid == req.params.uid et via la method == req.params.method
  *
  * @param req requete HTTP contenant le nom la personne recherchee

@@ -5,6 +5,7 @@ var utils = require(process.cwd() + '/services/utils');
 var required = {
     get_activate_methods: ['uid', 'hash'],
     get_available_transports: ['uid', 'hash'],
+    get_user_infos: ['uid', 'hash'],
     send_code: ['uid', 'method', 'transport', 'hash'],
 
     create_user: ['uid', 'api_password'],
@@ -96,6 +97,14 @@ exports.set_otp = function(req, res, next) {
 
 exports.get_available_transports = function(req, res, next) {
     if (check_parameters(req, required.get_available_transports)) {
+        check_hash(req, res, next);
+    } else {
+        return next(new restify.InvalidArgumentError());
+    }
+}
+
+exports.get_user_infos = function(req, res, next) {
+    if (check_parameters(req, required.get_user_infos)) {
         check_hash(req, res, next);
     } else {
         return next(new restify.InvalidArgumentError());

@@ -39,7 +39,8 @@
             "sms_window": 6,
             "mail_window": 15,
             "app_window": 2,
-            "default_window": 2
+            "default_window": 2,
+            "transports" : ["sms", "mail"]
         },
         "random_code": {
             "activate": true,
@@ -49,7 +50,8 @@
             "sms_validity": 15,
             "mail_validity": 30,
             "code_type": "digit",
-            "code_length": 6
+            "code_length": 6,
+            "transports" : ["sms"]
         },
         "bypass": {
             "activate": true,
@@ -58,7 +60,8 @@
             "login_view": false,
             "codes_number": 10,
             "code_type": "digit",
-            "code_length": 6
+            "code_length": 6,
+            "transports" : []
         }        
     },
     "mailer": {
