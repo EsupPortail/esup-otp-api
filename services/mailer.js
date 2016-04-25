@@ -4,18 +4,21 @@ var smtpTransport = require('nodemailer-smtp-transport');
 
 // create reusable transport method (opens pool of SMTP connections)
 var options = {
-    service: properties.esup.mailer.service,
-    auth: {
-        user: properties.esup.mailer.address,
-        pass: properties.esup.mailer.password
-    }
+    // service: properties.esup.mailer.service,
+    // auth: {
+    //     user: properties.esup.mailer.address,
+    //     pass: properties.esup.mailer.password
+    // }
+    host: properties.esup.mailer.hostname,
+    port: properties.esup.mailer.port,
+    secure: false
 };
 
 if(properties.esup.proxyUrl)options.proxy=properties.esup.proxyUrl;
 var transporter = nodemailer.createTransport(smtpTransport(options))
     // setup e-mail data with unicode symbols
 var mailOptions = {
-    from: "Esup otp api <"+properties.esup.mailer.address+">", // sender address
+    from: properties.esup.mailer.sender_name+" <"+properties.esup.mailer.sender_mail+">", // sender address
 }
 
 exports.send_code = function(mail, message, res) {

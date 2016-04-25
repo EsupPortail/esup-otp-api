@@ -61,11 +61,12 @@
             "code_type": "string",
             "code_length": 6
         }        
-    }, 
+    },
     "mailer": {
-        "service":"xmail",
-        "address":"xxxxxxx@xmail.com",
-        "password":"xxxxxxxx"
+        "sender_mail": "auth-api",
+        "sender_name": "Université",
+        "port": 25,
+        "hostname":"smtp.univ.fr"
     },
     "sms": {
         "url": "https://username:password@sms.univ.fr/esup-smsuapi/?action=SendSms&phoneNumber=$phoneNumber$&message=$message$"
