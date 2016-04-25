@@ -36,25 +36,31 @@ exports.send_code = function(user, req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.verify_code = function(user, req, res, callbacks) {
-    var checkSpeakeasy = speakeasy.totp.verify({
-        secret: user.totp.secret.base32,
-        encoding: 'base32',
-        token: req.params.otp,
-        window: user.totp.window
-    });
-    if (checkSpeakeasy) {
-        user.totp.window = properties.esup.methods.totp.default_window;
-        api_controller.save_user(user, function() {
-            res.send({
-                "code": "Ok",
-                "message": properties.messages.success.valid_credentials
-            });
+    if (user.totp.secret.base32) {
+        var checkSpeakeasy = speakeasy.totp.verify({
+            secret: user.totp.secret.base32,
+            encoding: 'base32',
+            token: req.params.otp,
+            window: user.totp.window
         });
+        if (checkSpeakeasy) {
+            user.totp.window = properties.esup.methods.totp.default_window;
+            api_controller.save_user(user, function() {
+                res.send({
+                    "code": "Ok",
+                    "message": properties.messages.success.valid_credentials
+                });
+            });
+        } else {
+            var next = callbacks.pop();
+            next(user, req, res, callbacks);
+        }
     } else {
         var next = callbacks.pop();
         next(user, req, res, callbacks);
     }
 }
+
 
 exports.generate_method_secret = function(user, req, res, next) {
     user.totp.secret = speakeasy.generateSecret({ length: 16 });

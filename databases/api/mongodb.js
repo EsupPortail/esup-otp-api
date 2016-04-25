@@ -40,7 +40,10 @@ function initiatilize_user_model() {
             }
         },
         bypass: {
-            codes: Array,
+            codes: {
+                type: Array,
+                default: []
+            },
             used_codes: { type: Number, default: 0 },
             active: {
                 type: Boolean,
@@ -48,7 +51,10 @@ function initiatilize_user_model() {
             }
         },
         totp: {
-            secret: Object,
+            secret: {
+                type: Object,
+                default: {}
+            },
             window: Number,
             active: {
                 type: Boolean,
