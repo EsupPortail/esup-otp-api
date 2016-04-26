@@ -21,7 +21,7 @@ var mailOptions = {
     from: properties.esup.mailer.sender_name+" <"+properties.esup.mailer.sender_mail+">", // sender address
 }
 
-exports.send_code = function(mail, message, res) {
+exports.send_message = function(mail, message, res) {
     mailOptions.text = message;
     mailOptions.to =mail;
     mailOptions.subject = "Code";

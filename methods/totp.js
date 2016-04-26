@@ -6,7 +6,7 @@ var restify = require('restify');
 
 exports.name = "totp";
 
-exports.send_code = function(user, req, res, next) {
+exports.send_message = function(user, req, res, next) {
     switch (req.params.transport) {
         case 'mail':
             user.totp.window = properties.esup.methods.totp.mail_window;

@@ -5,7 +5,7 @@ var restify = require('restify');
 
 exports.name = "random_code";
 
-exports.send_code = function(user, req, res, next) {
+exports.send_message = function(user, req, res, next) {
     var new_otp = user.random_code;
     switch (properties.esup.methods.random_code.code_type) {
         case "string":

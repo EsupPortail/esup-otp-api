@@ -5,7 +5,7 @@ var restify = require('restify');
 
 exports.name = "bypass";
 
-exports.send_code = function(user, req, res, next) {
+exports.send_message = function(user, req, res, next) {
     res.send({
         "code": "Error",
         "message": properties.messages.error.unvailable_method_operation

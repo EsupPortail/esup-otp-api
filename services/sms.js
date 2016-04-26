@@ -3,7 +3,7 @@ var request = require('request');
 
 var proxyUrl = properties.esup.proxyUrl || '';
 
-exports.send_code = function(num, message, res) {
+exports.send_message = function(num, message, res) {
     var tel = num;
     var url = urlBroker(tel, message);
     var opts = {

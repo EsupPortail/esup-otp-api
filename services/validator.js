@@ -6,9 +6,10 @@ var required = {
     get_activate_methods: ['uid', 'hash'],
     get_available_transports: ['uid', 'hash'],
     get_user_infos: ['uid', 'hash'],
-    send_code: ['uid', 'method', 'transport', 'hash'],
+    send_message: ['uid', 'method', 'transport', 'hash'],
 
     create_user: ['uid', 'api_password'],
+    transport_test: ['uid', 'transport','api_password'],
     get_user: ['uid', 'api_password'],
     get_methods: ['api_password'],
     get_activate_methods_admin: ['uid', 'api_password'],
@@ -65,6 +66,14 @@ exports.create_user = function(req, res, next) {
 
 exports.get_user = function(req, res, next) {
     if (check_parameters(req, required.get_user)) {
+        check_api_password(req, res, next);
+    } else {
+        return next(new restify.InvalidArgumentError());
+    }
+}
+
+exports.transport_test = function(req, res, next) {
+    if (check_parameters(req, required.transport_test)) {
         check_api_password(req, res, next);
     } else {
         return next(new restify.InvalidArgumentError());
@@ -159,8 +168,8 @@ exports.get_activate_methods_admin = function(req, res, next) {
     }
 }
 
-exports.send_code = function(req, res, next) {
-    if (check_parameters(req, required.send_code)) {
+exports.send_message = function(req, res, next) {
+    if (check_parameters(req, required.send_message)) {
         check_hash(req, res, next);
     } else {
         return next(new restify.InvalidArgumentError());

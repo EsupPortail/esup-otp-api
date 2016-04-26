@@ -150,14 +150,25 @@ exports.get_user_infos = function(req, res, next) {
 };
 
 /**
+ * Envoie un message de confirmation sur le transport
+ *
+ * @param req requete HTTP contenant le nom la personne recherchee
+ * @param res response HTTP
+ * @param next permet d'appeler le prochain gestionnaire (handler)
+ */
+exports.transport_test = function(req, res, next) {
+    apiDb.transport_test(req, res, next);
+};
+
+/**
  * Envoie un code à l'utilisateur avec l'uid == req.params.uid et via la method == req.params.method
  *
  * @param req requete HTTP contenant le nom la personne recherchee
  * @param res response HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
-exports.send_code = function(req, res, next) {
-    apiDb.send_code(req, res, next);
+exports.send_message = function(req, res, next) {
+    apiDb.send_message(req, res, next);
 };
 
 

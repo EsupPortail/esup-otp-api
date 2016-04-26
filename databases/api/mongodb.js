@@ -152,15 +152,37 @@ exports.save_user=function(user, callback) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.transport_code = function(code, req, res, next) {
+    transport(code, req, res, next);
+}
+
+/**
+ * Envoie un message de confirmation sur le transport
+ *
+ * @param req requete HTTP contenant le nom la personne recherchee
+ * @param res response HTTP
+ * @param next permet d'appeler le prochain gestionnaire (handler)
+ */
+exports.transport_test = function(req, res, next) {
+    transport("Ceci est un message de test à destination de l'utilisateur "+req.params.uid,req ,res, next);
+};
+
+/**
+ * Envoie un message
+ *
+ * @param req requete HTTP contenant le nom la personne recherchee
+ * @param res response HTTP
+ * @param next permet d'appeler le prochain gestionnaire (handler)
+ */
+function transport(message, req, res, next) {
     switch (req.params.transport) {
         case 'mail':
             userDb_controller.send_mail(req, res, function(mail) {
-                mailer.send_code(mail,code, res);
+                mailer.send_message(mail, message, res);
             });
             break;
         case 'sms':
             userDb_controller.send_sms(req, res, function(num) {
-                sms.send_code(num, code, res);
+                sms.send_message(num, message, res);
             });
             break;
         default:
@@ -171,6 +193,7 @@ exports.transport_code = function(code, req, res, next) {
             break;
     }
 }
+
 
 
 /**
@@ -220,12 +243,12 @@ exports.get_user_infos = function(req, res, next) {
  * @param res response HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
-exports.send_code = function(req, res, next) {
+exports.send_message = function(req, res, next) {
     console.log("send_code :" + req.params.uid);
     if (properties.esup.methods[req.params.method]) {
         find_user(req, res, function(user) {
             if (user[req.params.method].active && properties.esup.methods[req.params.method].activate && methods[req.params.method]) {
-                methods[req.params.method].send_code(user, req, res, next);
+                methods[req.params.method].send_message(user, req, res, next);
             } else {
                 res.send({
                     code: 'Error',
