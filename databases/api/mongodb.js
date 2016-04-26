@@ -198,7 +198,7 @@ exports.get_user = function(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.get_user_infos = function(req, res, next) {
-    console.log();
+    if(properties.esup.auto_create_user)req.params.create_user=true;
     find_user(req, res, function(user) {
         userDb_controller.get_available_transports(req, res, function(data) {
             var response = {};

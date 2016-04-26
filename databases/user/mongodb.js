@@ -45,7 +45,7 @@ function find_user(req, res, callback) {
         if (data[0]) {
             if (typeof(callback) === "function") callback(data[0]);
         } else {
-            if(properties.esup.auto_create_user)create_user(req, res, callback);
+            if(properties.esup.auto_create_user && req.params.create_user)create_user(req, res, callback);
             else res.send(response);
         }
     });
