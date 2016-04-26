@@ -4,3 +4,6 @@ node_modules/
 properties/esup.json
 certs/
 *.log
+npm-debug.log
+.buildpath
+.project

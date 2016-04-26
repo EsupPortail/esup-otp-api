@@ -33,7 +33,7 @@ function initialize_userDB() {
 
 var api_controller;
 
-function initialize_apiController() {;
+function initialize_apiController() {
     if (properties.esup.apiDb) {
         api_controller = require(process.cwd() + '/controllers/api');
         api_controller.initialize(initialize_routes(launch_server));
