@@ -49,14 +49,14 @@ exports.get_available_transports = function(req, res, next) {
 exports.send_sms = function(req, res, callback) {
     find_user(req, res, function(user) {
         console.log(user);
-        if (typeof(callback) === "function" && user[properties.esup.mysql.transport.sms]) callback(user[properties.esup.mysql.transport.sms]);
+        if (typeof(callback) === "function") callback(user[properties.esup.mysql.transport.sms]);
     });
 }
 
 
 exports.send_mail = function(req, res, callback) {
     find_user(req, res, function(user) {
-        if (typeof(callback) === "function" && user[properties.esup.mysql.transport.mail]) callback(user[properties.esup.mysql.transport.mail]);
+        if (typeof(callback) === "function") callback(user[properties.esup.mysql.transport.mail]);
     });
 }
 
@@ -64,6 +64,20 @@ exports.update_transport = function(req, res, next) {
 
     connection.query(
         "UPDATE " + properties.esup.mysql.userTable + " SET " + properties.esup.mongodb.transport[req.params.transport] + " = ? Where uid = ?", [req.params.new_transport, req.params.uid],
+        function(err, result) {
+            if (err) throw err;
+            else res.send({
+                code: 'Ok',
+                message: properties.messages.success.update
+            });
+        }
+    );
+}
+
+exports.delete_transport = function(req, res, next) {
+
+    connection.query(
+        "UPDATE " + properties.esup.mysql.userTable + " SET " + properties.esup.mongodb.transport[req.params.transport] + " = ? Where uid = ?", ["", req.params.uid],
         function(err, result) {
             if (err) throw err;
             else res.send({

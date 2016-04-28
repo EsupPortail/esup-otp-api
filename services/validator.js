@@ -10,6 +10,7 @@ var required = {
 
     create_user: ['uid', 'api_password'],
     transport_test: ['uid', 'transport','api_password'],
+    delete_transport: ['uid', 'transport','api_password'],
     get_user: ['uid', 'api_password'],
     get_methods: ['api_password'],
     get_activate_methods_admin: ['uid', 'api_password'],
@@ -74,6 +75,14 @@ exports.get_user = function(req, res, next) {
 
 exports.transport_test = function(req, res, next) {
     if (check_parameters(req, required.transport_test)) {
+        check_api_password(req, res, next);
+    } else {
+        return next(new restify.InvalidArgumentError());
+    }
+}
+
+exports.delete_transport = function(req, res, next) {
+    if (check_parameters(req, required.transport)) {
         check_api_password(req, res, next);
     } else {
         return next(new restify.InvalidArgumentError());

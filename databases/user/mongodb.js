@@ -90,22 +90,32 @@ exports.get_available_transports = function(req, res, callback) {
 
 exports.send_sms = function(req, res, callback) {
     find_user(req, res, function(user) {
-        if (typeof(callback) === "function" && user[properties.esup.mongodb.transport.sms]) callback(user[properties.esup.mongodb.transport.sms]);
+        if (typeof(callback) === "function") callback(user[properties.esup.mongodb.transport.sms]);
     });
 }
 
 
 exports.send_mail = function(req, res, callback) {
     find_user(req, res, function(user) {
-        if (typeof(callback) === "function" && user[properties.esup.mongodb.transport.mail]) callback(user[properties.esup.mongodb.transport.mail]);
+        if (typeof(callback) === "function") callback(user[properties.esup.mongodb.transport.mail]);
     });
 }
 
 exports.update_transport = function(req, res, next) {
-
-
     find_user(req, res, function(user) {
         user[properties.esup.mongodb.transport[req.params.transport]]=req.params.new_transport;
+        user.save(function(){
+            res.send({
+                code: 'Ok',
+                message: properties.messages.success.update
+            });
+        })
+    });
+}
+
+exports.delete_transport = function(req, res, next) {
+    find_user(req, res, function(user) {
+        user[properties.esup.mongodb.transport[req.params.transport]]="";
         user.save(function(){
             res.send({
                 code: 'Ok',

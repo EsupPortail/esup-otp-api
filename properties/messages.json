@@ -7,6 +7,8 @@
     },
     "error": {
         "invalid_credentials": "Invalid credentials",
+        "invalid_sms": "Invalid phone number",
+        "invalid_mail": "Invalid mail",
         "user_not_found": "User not found",
         "transport_not_found": "Transport not found",
         "method_not_found": "Method not found",

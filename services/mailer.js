@@ -1,4 +1,5 @@
 var properties = require(process.cwd() + '/properties/properties');
+var utils = require(process.cwd() + '/services/utils');
 var nodemailer = require("nodemailer");
 var smtpTransport = require('nodemailer-smtp-transport');
 
@@ -22,22 +23,28 @@ var mailOptions = {
 }
 
 exports.send_message = function(mail, message, res) {
-    mailOptions.text = message;
-    mailOptions.to =mail;
-    mailOptions.subject = "Code";
-    // send mail with defined transport object
-    transporter.sendMail(mailOptions, function(error, response) {
-        if (error) {
-            res.send({
-                "code": "Error",
-                "message": error
-            });
-        } else {
-            console.log("Message sent to " + mail + " with the message: " + message);
-            res.send({
-                "code": "Ok",
-                "message": "Message sent"
-            });
-        }
+    if (utils.check_transport_validity('mail', mail)) {
+        mailOptions.text = message;
+        mailOptions.to = mail;
+        mailOptions.subject = "Code";
+        // send mail with defined transport object
+        transporter.sendMail(mailOptions, function(error, response) {
+            if (error) {
+                res.send({
+                    "code": "Error",
+                    "message": error
+                });
+            } else {
+                console.log("Message sent to " + mail + " with the message: " + message);
+                res.send({
+                    "code": "Ok",
+                    "message": "Message sent"
+                });
+            }
+        });
+    } else res.send({
+        "code": "Error",
+        "message": properties.messages.error.invalid_mail
     });
 }
+

@@ -19,6 +19,7 @@ exports.initialize = function(server, callback) {
     server.put("/protected/user/:uid/transport/:transport/:new_transport/:api_password", validator.update_transport, userDb_controller.update_transport);
     server.post("/protected/user/:uid/method/:method/secret/:api_password", validator.generate_method_secret, api_controller.generate_method_secret);
     server.post("/protected/user/:uid/code/verify/:otp/:api_password", validator.verify_code, api_controller.verify_code);
+    server.del("/protected/user/:uid/transport/:transport/:api_password", validator.delete_transport, userDb_controller.delete_transport);
     
     // routes DEV/ADMIN uniquement
     //api_api_password
