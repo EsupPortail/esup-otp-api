@@ -15,7 +15,7 @@
         }
     },
     "ldap": {
-        "uri": "ldap://X.X.X.X",
+        "uri": "ldap://127.0.0.1",
         "baseDn": "dc=fr",
         "adminDn": "cn=admin,dc=fr",
         "password": "changeit",
@@ -25,17 +25,21 @@
         }
     },
     "mysql":{
-        "host": "X.X.X.X",
-        "user": "xxxxxxxx",
-        "password": "xxxxxxx",
-        "database": "xxxxxx"
+        "host": "127.0.0.1",
+        "user": "admin",
+        "password": "changeit",
+        "database": "test-otp",
+        "userTable": "User",
+        "transport": {
+            "mail": "mail",
+            "sms": "sms"
+        }
     },
     "methods": {
         "totp": {
             "activate": true,
             "sms": true,
-            "mail": true,
-            "login_view": true,
+            "mail": false,
             "sms_window": 6,
             "mail_window": 15,
             "app_window": 2,
@@ -45,8 +49,7 @@
         "random_code": {
             "activate": true,
             "sms": true,
-            "mail": true,
-            "login_view": false,
+            "mail": false,
             "sms_validity": 15,
             "mail_validity": 30,
             "code_type": "digit",
@@ -55,9 +58,8 @@
         },
         "bypass": {
             "activate": true,
-            "sms": true,
-            "mail": true,
-            "login_view": false,
+            "sms": false,
+            "mail": false,
             "codes_number": 10,
             "code_type": "digit",
             "code_length": 6,
