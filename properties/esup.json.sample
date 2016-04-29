@@ -38,8 +38,6 @@
     "methods": {
         "totp": {
             "activate": true,
-            "sms": true,
-            "mail": false,
             "sms_window": 6,
             "mail_window": 15,
             "app_window": 2,
@@ -48,8 +46,6 @@
         },
         "random_code": {
             "activate": true,
-            "sms": true,
-            "mail": false,
             "sms_validity": 15,
             "mail_validity": 30,
             "code_type": "digit",
@@ -58,14 +54,13 @@
         },
         "bypass": {
             "activate": true,
-            "sms": false,
-            "mail": false,
             "codes_number": 10,
             "code_type": "digit",
             "code_length": 6,
             "transports" : []
         }        
     },
+    "transports":["sms","mail"],
     "mailer": {
         "sender_mail": "auth-api",
         "sender_name": "Université",

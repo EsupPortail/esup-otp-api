@@ -72,7 +72,10 @@ exports.deactivate_method_admin = function(req, res, next) {
  */
 exports.activate_method_transport = function(req, res, next) {
     if (properties.esup.methods[req.params.method]) {
-        properties.esup.methods[req.params.method][req.params.transport] = true;
+        var index = properties.esup.methods[req.params.method].transports.indexOf(req.params.transport);
+        if (index < 0) {
+            properties.esup.methods[req.params.method].transports.push(req.params.transport);
+        }
         res.send({
             code: 'Ok',
             message: ''
@@ -92,7 +95,10 @@ exports.activate_method_transport = function(req, res, next) {
  */
 exports.deactivate_method_transport = function(req, res, next) {
     if (properties.esup.methods[req.params.method]) {
-        properties.esup.methods[req.params.method][req.params.transport] = false;
+        var index = properties.esup.methods[req.params.method].transports.indexOf(req.params.transport);
+        if (index >= 0) {
+            properties.esup.methods[req.params.method].transports.splice(index, 1);
+        }
         res.send({
             code: 'Ok',
             message: ''
@@ -102,6 +108,7 @@ exports.deactivate_method_transport = function(req, res, next) {
         "message": properties.messages.error.method_not_found
     });
 };
+
 
 /**
  * Sauve l'utilisateur
@@ -139,7 +146,7 @@ exports.get_user = function(req, res, next) {
 };
 
 /**
- * Renvoie les infos (methodes activees, tranports) de utilisateur avec l'uid == req.params.uid
+ * Renvoie les infos (methodes activees, transports) de utilisateur avec l'uid == req.params.uid
  *
  * @param req requete HTTP contenant le nom la personne recherchee
  * @param res response HTTP

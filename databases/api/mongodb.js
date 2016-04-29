@@ -40,7 +40,7 @@ function initiatilize_user_model() {
             },
             transports: {
                 type: Array,
-                default: properties.esup.methods.random_code.transports
+                default: properties.esup.transports
             }
         },
         bypass: {
@@ -55,7 +55,7 @@ function initiatilize_user_model() {
             },
             transports: {
                 type: Array,
-                default: properties.esup.methods.bypass.transports
+                default: properties.esup.transports
             }
         },
         totp: {
@@ -70,7 +70,7 @@ function initiatilize_user_model() {
             },
             transports: {
                 type: Array,
-                default: properties.esup.methods.totp.transports
+                default: properties.esup.transports
             }
         },
     });
@@ -116,18 +116,26 @@ function parse_user(user){
     var parsed_user = {};
     parsed_user.totp = {};
     parsed_user.totp.active = user.totp.active;
-    parsed_user.totp.transports = user.totp.transports;
+    parsed_user.totp.transports = available_transports(user.totp.transports, "totp");
     parsed_user.random_code = {};
     parsed_user.random_code.active = user.random_code.active;
-    parsed_user.random_code.transports = user.random_code.transports;
+    parsed_user.random_code.transports = available_transports(user.random_code.transports, 'random_code');
     parsed_user.bypass = {};
     parsed_user.bypass.active = user.bypass.active;
     parsed_user.bypass.available_code = user.bypass.codes.length;
     parsed_user.bypass.used_code = user.bypass.used_codes;
-    parsed_user.bypass.transports = user.bypass.transports;
+    parsed_user.bypass.transports = available_transports(user.bypass.transports, "bypass");
     parsed_user.matrix = user.matrix;
     // parsed_user.matrix.active = user.matrix.active;
     return parsed_user;
+}
+
+function available_transports(userTransports, method){
+    var available_transports = [];
+    for(t in userTransports){
+        if(properties.esup.methods[method].transports.indexOf(userTransports[t])>=0)available_transports.push(userTransports[t]);
+    }
+    return available_transports;
 }
 
 /**
