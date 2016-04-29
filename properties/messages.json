@@ -14,5 +14,9 @@
         "method_not_found": "Method not found",
         "unvailable_method_operation": "Unvailable method operation",
         "unvailable_method_transport": "Unvailable method transport"
+    },
+    "transport": {
+        "pre_test": "Les informations vous avez saisies sont correctes pour le compte ",
+        "post_test": "."
     }
 }

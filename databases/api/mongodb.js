@@ -163,7 +163,7 @@ exports.transport_code = function(code, req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.transport_test = function(req, res, next) {
-    transport("Ceci est un message de test à destination de l'utilisateur "+req.params.uid,req ,res, next);
+    transport(properties.messages.transport.pre_test+req.params.uid+properties.messages.transport.post_test,req ,res, next);
 };
 
 /**
