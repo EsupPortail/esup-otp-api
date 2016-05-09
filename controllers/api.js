@@ -1,10 +1,10 @@
-var properties = require(process.cwd() + '/properties/properties');
+var properties = require(__dirname + '/../properties/properties');
 
 var apiDb;
 
 exports.initialize= function(callback) {
     if (properties.esup.apiDb) {
-        apiDb = require(process.cwd() + '/databases/api/' + properties.esup.apiDb);
+        apiDb = require(__dirname + '/../databases/api/' + properties.esup.apiDb);
     	apiDb.initialize(callback);
     } else console.log("Unknown apiDb");
 }

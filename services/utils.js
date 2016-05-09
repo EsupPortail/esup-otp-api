@@ -1,4 +1,4 @@
-var properties = require(process.cwd() + '/properties/properties');
+var properties = require(__dirname + '/../properties/properties');
 var CryptoJS = require('crypto-js');
 
 exports.get_hash = function(uid) {

@@ -1,6 +1,6 @@
 var restify = require('restify');
-var properties = require(process.cwd() + '/properties/properties');
-var utils = require(process.cwd() + '/services/utils');
+var properties = require(__dirname + '/../properties/properties');
+var utils = require(__dirname + '/../services/utils');
 
 var required = {
     get_activate_methods: ['uid', 'hash'],

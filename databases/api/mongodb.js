@@ -1,9 +1,9 @@
-var properties = require(process.cwd() + '/properties/properties');
+var properties = require(__dirname + '/../../properties/properties');
 var methods;
 var restify = require('restify');
-var mailer = require(process.cwd() + '/services/mailer');
-var sms = require(process.cwd() + '/services/sms');
-var userDb_controller = require(process.cwd() + '/databases/user/' + properties.esup.userDb);
+var mailer = require(__dirname + '/../../services/mailer');
+var sms = require(__dirname + '/../../services/sms');
+var userDb_controller = require(__dirname + '/../../databases/user/' + properties.esup.userDb);
 var mongoose = require('mongoose');
 var connection;
 
@@ -13,7 +13,7 @@ exports.initialize = function(callback) {
             console.log(error);
         } else {
             initiatilize_user_model();
-            methods = require(process.cwd() + '/methods/methods');
+            methods = require(__dirname + '/../../methods/methods');
             if (typeof(callback) === "function") callback();
         }
     });

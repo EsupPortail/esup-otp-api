@@ -1,6 +1,6 @@
-var properties = require(process.cwd() + '/properties/properties');
-var api_controller = require(process.cwd() + '/controllers/api');
-var utils = require(process.cwd() + '/services/utils');
+var properties = require(__dirname + '/../properties/properties');
+var api_controller = require(__dirname + '/../controllers/api');
+var utils = require(__dirname + '/../services/utils');
 var restify = require('restify');
 
 exports.name = "random_code";

@@ -1,5 +1,5 @@
-var properties = require(process.cwd() + '/properties/properties');
-var utils = require(process.cwd() + '/services/utils');
+var properties = require(__dirname + '/../properties/properties');
+var utils = require(__dirname + '/../services/utils');
 var request = require('request');
 
 var proxyUrl = properties.esup.proxyUrl || '';

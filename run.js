@@ -1,4 +1,4 @@
-var server = require(process.cwd() + '/server/server');
+var server = require('./server/server');
 
 server.start();
 
