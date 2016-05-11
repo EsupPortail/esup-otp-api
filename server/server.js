@@ -55,7 +55,7 @@ function launch_server() {
         if (err)
             console.error(err)
         else {
-            console.log('App is ready at : ' + properties.esup.port || 3000);
+            console.log('App is ready at : ' + port);
         }
     });
 }
