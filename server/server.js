@@ -50,7 +50,7 @@ function initialize_routes(callback) {
 
 
 function launch_server() {
-    var port = properties.esup.port || 3000;
+    var port = process.env.PORT || 3000;
     server.listen(port, function(err) {
         if (err)
             console.error(err)

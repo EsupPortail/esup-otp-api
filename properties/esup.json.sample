@@ -1,6 +1,5 @@
 {
     "auto_create_user": true,
-    "port": 3000,
     "proxyUrl": "http://username:password@univ.fr:port",
     "api_password":"XXXXXXXXXXXX",
     "users_secret":"XXXXXXXXXXXX",
