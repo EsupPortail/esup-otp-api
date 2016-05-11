@@ -5,10 +5,10 @@ var mongoose = require('mongoose');
 
 var properties = require(__dirname + '/../properties/properties');
 
+var user_api_tests = require(__dirname + '/user.api.js');
 
 var mongo_connection;
 var userDb_connection;
-
 
 describe('Esup otp api', function() {
     it('Server is running', function(done) {
@@ -23,12 +23,18 @@ describe('Esup otp api', function() {
     it('Mongodb is reachable', function(done) {
         mongo_connection = mongoose.createConnection('mongodb://' + properties.esup.mongodb.address + '/' + properties.esup.mongodb.db, function(error) {
             if (error) throw error;
+            var Schema = mongoose.Schema;
+
+            var UserSchema = new Schema(require(__dirname + '/../databases/api/userPreferencesSchema').schema);
+            mongo_connection.model('UserPreferences', UserSchema, 'UserPreferences');
+            var UserModel = mongo_connection.model('UserPreferences');
+            user_api_tests.run(mongo_connection);
             done();
         });
     });
 
     it('UserDB is reachable', function(done) {
-        userDb_controller = require(__dirname+ '/../databases/user/' + properties.esup.userDb);
+        userDb_controller = require(__dirname + '/../databases/user/' + properties.esup.userDb);
         userDb_controller.initialize(done);
     });
 
