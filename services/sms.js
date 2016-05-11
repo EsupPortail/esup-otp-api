@@ -31,11 +31,6 @@ exports.send_message = function(num, message, res) {
     });
 }
 
-
-
-
-
-
 function urlBroker(num, message) {
     var url = properties.esup.sms.url.split("$");
     url[url.indexOf('phoneNumber')] = num;
