@@ -7,3 +7,4 @@ certs/
 npm-debug.log
 .buildpath
 .project
+test/
