@@ -10,6 +10,7 @@ exports.initialize= function(callback) {
     if (properties.esup.apiDb) {
         apiDb = require(__dirname + '/../databases/api/' + properties.esup.apiDb);
     	apiDb.initialize(callback);
+        exports.apiDb = apiDb;
     } else console.log("Unknown apiDb");
 }
 
@@ -114,6 +115,17 @@ exports.deactivate_method_transport = function(req, res, next) {
 };
 
 /**
+ * Crée l'utilisateur
+ *
+ * @param req requete HTTP contenant le nom la personne recherchee
+ * @param res response HTTP
+ * @param next permet d'appeler le prochain gestionnaire (handler)
+ */
+exports.create_user=function(uid, callback) {
+    apiDb.create_user(uid, callback);
+}
+
+/**
  * Sauve l'utilisateur
  *
  * @param req requete HTTP contenant le nom la personne recherchee
@@ -122,6 +134,17 @@ exports.deactivate_method_transport = function(req, res, next) {
  */
 exports.save_user=function(user, callback) {
     apiDb.save_user(user, callback);
+}
+
+/**
+ * Supprime l'utilisateur
+ *
+ * @param req requete HTTP contenant le nom la personne recherchee
+ * @param res response HTTP
+ * @param next permet d'appeler le prochain gestionnaire (handler)
+ */
+exports.remove_user=function(uid, callback) {
+    apiDb.remove_user(uid, callback);
 }
 
 /**

@@ -17,15 +17,15 @@ exports.initialize = function(callback) {
 }
 
 /** User Model **/
-var UserModel;
+var UserPreferences;
 
 function initiatilize_user_model() {
     var Schema = mongoose.Schema;
 
-    var UserSchema = new Schema(require(__dirname + '/userPreferencesSchema').schema);
+    var UserPreferencesSchema = new Schema(require(__dirname + '/userPreferencesSchema').schema);
 
-    connection.model('UserPreferences', UserSchema, 'UserPreferences');
-    UserModel = connection.model('UserPreferences');
+    connection.model('UserPreferences', UserPreferencesSchema, 'UserPreferences');
+    UserPreferences = connection.model('UserPreferences');
 }
 
 /**
@@ -40,7 +40,7 @@ exports.find_user= function(req, res, callback) {
         "code": "Error",
         "message": properties.messages.error.user_not_found
     };
-    UserModel.find({
+    UserPreferences.find({
         'uid': req.params.uid
     }).exec(function(err, data) {
         if (data[0]) {
@@ -48,12 +48,7 @@ exports.find_user= function(req, res, callback) {
         } else {
             userDb_controller.user_exists(req, res, function(user) {
                 if (user) {
-                    var new_user = new UserModel({
-                        uid: user.uid
-                    });
-                    new_user.save(function() {
-                         if (typeof(callback) === "function") callback(new_user);
-                    })
+                    create_user(user.uid, callback);
                 }else res.send(response);
             });
         }
@@ -71,6 +66,40 @@ exports.save_user=function(user, callback) {
     user.save(function() {
         if (typeof(callback) === "function") callback();
     })
+}
+
+/**
+ * Crée l'utilisateur
+ *
+ * @param req requete HTTP
+ * @param res response HTTP
+ * @param next permet d'appeler le prochain gestionnaire (handler)
+ */
+exports.create_user=function(uid, callback) {
+    create_user(uid, callback);
+}
+
+function create_user(uid, callback){
+    var new_user = new UserPreferences({
+        uid: uid
+    });
+    new_user.save(function() {
+        if (typeof(callback) === "function") callback(new_user);
+    })
+}
+
+/**
+ * Supprime l'utilisateur
+ *
+ * @param req requete HTTP
+ * @param res response HTTP
+ * @param next permet d'appeler le prochain gestionnaire (handler)
+ */
+exports.remove_user=function(uid, callback) {
+    UserPreferences.remove({uid:uid}, function(err, data) {
+        if (err) console.log(err);
+        if (typeof(callback) === "function") callback(data);
+    });
 }
 
 exports.parse_user= function(user){
@@ -103,7 +132,7 @@ function available_transports(userTransports, method){
  * Drop Users
  */
 exports.drop = function(req, res, next) {
-    UserModel.remove({}, function(err, data) {
+    UserPreferences.remove({}, function(err, data) {
         if (err) console.log(err);
         console.log('users removed');
         res.send(data);
