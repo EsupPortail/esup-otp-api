@@ -4,6 +4,7 @@
   "description": "One time passwords api for ESUP",
   "author": "Alex Bouskine <abouskine@gmail.com>",
   "dependencies": {
+    "async": "^2.0.0-rc.4",
     "chai": "^3.5.0",
     "crypto-js": "^3.1.6",
     "ldapjs": "^1.0.0",
