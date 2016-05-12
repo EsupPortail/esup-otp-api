@@ -58,9 +58,6 @@ exports.user_exist= function(req, res, callback){
 }
 
 exports.get_available_transports = function(req, res, callback) {
-    console.log("get_available_transports");
-
-
     find_user(req, res, function(user) {
         var response = {};
         var result = {};

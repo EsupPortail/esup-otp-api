@@ -29,7 +29,6 @@ exports.user_exist= function(req, res, callback){
 }
 
 exports.get_available_transports = function(req, res, next) {
-
     find_user(req, res, function(user) {
         var response = {};
         var result = {};
@@ -61,7 +60,6 @@ exports.send_mail = function(req, res, callback) {
 }
 
 exports.update_transport = function(req, res, next) {
-
     connection.query(
         "UPDATE " + properties.esup.mysql.userTable + " SET " + properties.esup.mongodb.transport[req.params.transport] + " = ? Where uid = ?", [req.params.new_transport, req.params.uid],
         function(err, result) {
@@ -75,7 +73,6 @@ exports.update_transport = function(req, res, next) {
 }
 
 exports.delete_transport = function(req, res, next) {
-
     connection.query(
         "UPDATE " + properties.esup.mysql.userTable + " SET " + properties.esup.mongodb.transport[req.params.transport] + " = ? Where uid = ?", ["", req.params.uid],
         function(err, result) {
