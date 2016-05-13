@@ -46,9 +46,11 @@ exports.initialize = function(server, callback) {
         });
     });
     server.post("/test/user/:uid/:api_password", function(req, res, next){
-        res.send({
-            code : 'Ok'
-        });
+        userDb_controller.create_user(req.params.uid,function () {
+            res.send({
+                code : 'Ok'
+            });
+        })
     });
     server.del("/test/user/:uid/:api_password", function(req, res, next){
         userDb_controller.remove_user(req.params.uid,function () {
