@@ -28,6 +28,9 @@ esup-otp-api uses a number of open NodeJS modules:
 esup-otp-api runs in http, if you want a secure mode you will need a reverse proxy.
 Check https://github.com/Hakall/esup-node-proxy if you want a simple NodeJS reverse proxy.
 
+### Tests
+Simply execute "mocha" in root directory of the project, the server must be launch before execute the tests
+
 ### Development
 
 ### Todos
