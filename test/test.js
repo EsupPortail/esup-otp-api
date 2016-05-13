@@ -73,6 +73,16 @@ describe('Esup otp api', function() {
             });
         })
 
+        it('get unknown user without auto_create', function(done) {
+            properties.esup.auto_create_user = false;
+            var url = server_url + '/user/unknown_user/'+ utils.get_hash('unknown_user')[1]
+            request({ url: url }, function(error, response, body) {
+                if (error) throw error;
+                assert(JSON.parse(body).code == 'Error');
+                done();
+            });
+        })
+
         afterEach(function() {
             properties = default_properties;
             api_controller.remove_user('test_user');
