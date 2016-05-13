@@ -2,12 +2,13 @@ var userDb_controller = require(__dirname + '/user');
 var restify = require('restify');
 var mailer = require(__dirname + '/../services/mailer');
 var sms = require(__dirname + '/../services/sms');
-
+var methods;
 var apiDb;
 
 exports.initialize= function(callback) {
     if (global.properties.esup.apiDb) {
         apiDb = require(__dirname + '/../databases/api/' + global.properties.esup.apiDb);
+        methods = require(__dirname + '/../methods/methods');
     	apiDb.initialize(callback);
         exports.apiDb = apiDb;
     } else console.log("Unknown apiDb");
@@ -277,10 +278,8 @@ exports.send_message = function(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.verify_code = function(req, res, next) {
-    console.log('verify_code : '+req.params.uid);
     apiDb.find_user(req, res, function(user) {
         var callbacks = [function() {
-            console.log('Error : '+properties.messages.error.invalid_credentials);
             res.send({
                 "code": "Error",
                 "message": properties.messages.error.invalid_credentials

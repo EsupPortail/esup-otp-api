@@ -1,3 +1,4 @@
+var utils = require(__dirname + '/../services/utils');
 var userDb;
 
 exports.initialize= function(callback) {
