@@ -15,7 +15,7 @@ exports.initialize = function(callback) {
 }
 
 /** User Model **/
-var UserModel;
+var User;
 
 function initiatilize_user_model() {
     var Schema = mongoose.Schema;
@@ -31,7 +31,7 @@ function initiatilize_user_model() {
     });
 
     connection.model('User', UserSchema, 'User');
-    UserModel = connection.model('User');
+    User = connection.model('User');
 }
 
 function find_user(req, res, callback) {
@@ -39,7 +39,7 @@ function find_user(req, res, callback) {
         "code": "Error",
         "message": properties.messages.error.user_not_found
     };
-    UserModel.find({
+    User.find({
         'uid': req.params.uid
     }).exec(function(err, data) {
         if (data[0]) {
@@ -52,7 +52,7 @@ function find_user(req, res, callback) {
 }
 
 function create_user(req, res, callback) {
-    var new_user = new UserModel({
+    var new_user = new User({
         uid : req.params.uid
     });
     new_user.save(function() {
