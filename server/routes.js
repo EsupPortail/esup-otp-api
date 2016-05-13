@@ -4,12 +4,12 @@ var api_controller = require(__dirname + '/../controllers/api');
 var userDb_controller = require(__dirname + '/../controllers/user');
 var server;
 
-exports.initialize = function(server, callback) {
+exports.initialize = function (server, callback) {
 
     //user_hash
     server.get("/user/:uid/:hash", validator.get_user_infos, api_controller.get_user_infos);
     server.get("/user/:uid/method/:method/transport/:transport/code/send/:hash", validator.send_message, api_controller.send_message);
-    
+
     //api_api_password
     server.get("/protected/method/:api_password", validator.get_methods, api_controller.get_methods);
     server.get("/protected/user/:uid/transport/:transport/test/:api_password", validator.transport_test, api_controller.transport_test);
@@ -20,7 +20,7 @@ exports.initialize = function(server, callback) {
     server.post("/protected/user/:uid/method/:method/secret/:api_password", validator.generate_method_secret, api_controller.generate_method_secret);
     server.post("/protected/user/:uid/code/verify/:otp/:api_password", validator.verify_code, api_controller.verify_code);
     server.del("/protected/user/:uid/transport/:transport/:api_password", validator.delete_transport, userDb_controller.delete_transport);
-    
+
     // routes DEV/ADMIN uniquement
     //api_api_password
     server.get("/protected/admin/user/:uid/:api_password", validator.get_user, api_controller.get_user);
@@ -33,30 +33,34 @@ exports.initialize = function(server, callback) {
     server.del("/protected/admin/user/:uid/method/:method/secret/:api_password", validator.delete_method_secret, api_controller.delete_method_secret);
 
     //tests routes
-    server.put("/test/auto_create/activate/:api_password", function(req, res, next){
+    server.put("/test/auto_create/activate/:api_password", function (req, res, next) {
         global.properties.esup.auto_create_user = true;
         res.send({
-            code : 'Ok'
+            code: 'Ok'
         });
     });
-    server.put("/test/auto_create/deactivate/:api_password", function(req, res , next){
+    server.put("/test/auto_create/deactivate/:api_password", function (req, res, next) {
         global.properties.esup.auto_create_user = false;
         res.send({
-           code : 'Ok'
+            code: 'Ok'
         });
     });
-    server.post("/test/user/:uid/:api_password", function(req, res, next){
-        userDb_controller.create_user(req.params.uid,function () {
-            res.send({
-                code : 'Ok'
-            });
+    server.post("/test/user/:uid/:api_password", function (req, res, next) {
+        userDb_controller.create_user(req.params.uid, function () {
+            api_controller.create_user(req.params.uid, function () {
+                res.send({
+                    code: 'Ok'
+                });
+            })
         })
     });
-    server.del("/test/user/:uid/:api_password", function(req, res, next){
-        userDb_controller.remove_user(req.params.uid,function () {
-            res.send({
-                code : 'Ok'
-            });
+    server.del("/test/user/:uid/:api_password", function (req, res, next) {
+        userDb_controller.remove_user(req.params.uid, function () {
+            api_controller.remove_user(req.params.uid, function () {
+                res.send({
+                    code: 'Ok'
+                });
+            })
         })
     });
     if (typeof(callback) === "function") callback(server);

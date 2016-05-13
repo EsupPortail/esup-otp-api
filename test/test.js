@@ -24,7 +24,7 @@ describe('Esup otp api', function () {
     });
 
     describe('Simple user api', function () {
-        before(function (done) {
+        beforeEach(function (done) {
             create_user('test_user', function () {
                 done();
             })
@@ -97,6 +97,15 @@ describe('Esup otp api', function () {
             });
         })
 
+        it('get test_user totp method generate secret', function (done) {
+            var url = server_url + '/protected/user/test_user/method/totp/secret/' +properties.esup.api_password
+            request({url: url, method : "POST"}, function (error, response, body) {
+                if (error) throw error;
+                assert(JSON.parse(body).code == 'Ok');
+                done();
+            });
+        })
+
         afterEach(function (done) {
             properties = default_properties;
             toggle_auto_create_user(true, function () {
@@ -105,12 +114,6 @@ describe('Esup otp api', function () {
                         done();
                     })
                 })
-            })
-        })
-
-        after(function (done) {
-            remove_user('test_user', function () {
-                done();
             })
         })
     })
