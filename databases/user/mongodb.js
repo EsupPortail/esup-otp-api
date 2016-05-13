@@ -45,82 +45,39 @@ function find_user(req, res, callback) {
         if (data[0]) {
             if (typeof(callback) === "function") callback(data[0]);
         } else {
-            if(properties.esup.auto_create_user)create_user(req, res, callback);
+            if(properties.esup.auto_create_user)create_user(req.params.uid, callback);
             else res.send(response);
         }
     });
 }
+exports.find_user= find_user;
 
-function create_user(req, res, callback) {
+function create_user(uid, callback) {
     var new_user = new User({
-        uid : req.params.uid
+        uid : uid
     });
     new_user.save(function() {
         if (typeof(callback) === "function") callback(new_user);
     });
 }
+exports.create_user= create_user;
 
-exports.user_exists= function(req, res, callback){
-    console.log("user_exists mongodb_user");
-    find_user(req, res, function(user){
-         if (typeof(callback) === "function") callback(user);
+exports.save_user=function(user, callback) {
+    user.save(function() {
+        if (typeof(callback) === "function") callback();
     })
 }
 
-
-exports.get_available_transports = function(req, res, callback) {
-    console.log("get_available_transports");
-    find_user(req, res, function(user) {
-        var response = {};
-        var result = {};
-        if (user[properties.esup.mongodb.transport.mail]) result.mail = utils.cover_string(user[properties.esup.mongodb.transport.mail], 4, 5);
-        if (user[properties.esup.mongodb.transport.sms]) result.sms = utils.cover_string(user[properties.esup.mongodb.transport.sms], 2, 2);
-        if (typeof(callback) === "function") callback(result);
-        else {
-            console.log()
-            response.code = "Ok";
-            response.message = properties.messages.success.transports_found;
-            response.transports_list = result;
-            res.send(response);
-        }
-    });
-}
-
-
-
-exports.send_sms = function(req, res, callback) {
-    find_user(req, res, function(user) {
-        if (typeof(callback) === "function") callback(user[properties.esup.mongodb.transport.sms]);
-    });
-}
-
-
-exports.send_mail = function(req, res, callback) {
-    find_user(req, res, function(user) {
-        if (typeof(callback) === "function") callback(user[properties.esup.mongodb.transport.mail]);
-    });
-}
-
-exports.update_transport = function(req, res, next) {
-    find_user(req, res, function(user) {
-        user[properties.esup.mongodb.transport[req.params.transport]]=req.params.new_transport;
-        user.save(function(){
-            res.send({
-                code: 'Ok',
-                message: properties.messages.success.update
-            });
-        })
-    });
-}
-
-exports.delete_transport = function(req, res, next) {
-    find_user(req, res, function(user) {
-        user[properties.esup.mongodb.transport[req.params.transport]]="";
-        user.save(function(){
-            res.send({
-                code: 'Ok',
-                message: properties.messages.success.update
-            });
-        })
+/**
+ * Supprime l'utilisateur
+ *
+ * @param req requete HTTP
+ * @param res response HTTP
+ * @param next permet d'appeler le prochain gestionnaire (handler)
+ */
+exports.remove_user=function(uid, callback) {
+    User.remove({uid:uid}, function(err, data) {
+        if (err) console.log(err);
+        if (typeof(callback) === "function") callback(data);
     });
 }

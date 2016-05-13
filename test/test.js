@@ -30,7 +30,7 @@ describe('Esup otp api', function() {
         });
 
         it('UserDB controller initialized', function(done) {
-            userDb_controller = require(__dirname + '/../databases/user/' + properties.esup.userDb);
+            userDb_controller = require(__dirname +  '/../controllers/user');
             userDb_controller.initialize(done);
         });
     })
@@ -39,11 +39,14 @@ describe('Esup otp api', function() {
         before(function () {
             api_controller = require(__dirname + '/../controllers/api');
             api_controller.initialize();
-            userDb_controller = require(__dirname + '/../databases/user/' + properties.esup.userDb);
+            userDb_controller = require(__dirname + '/../controllers/user');
             userDb_controller.initialize();
         })
         beforeEach(function() {
+            userDb_controller.remove_user('test_user');
+            userDb_controller.remove_user('unknown_user');
             api_controller.create_user('test_user');
+            userDb_controller.create_user('test_user');
         });
 
         it('get test_user', function(done) {
@@ -78,6 +81,7 @@ describe('Esup otp api', function() {
             var url = server_url + '/user/unknown_user/'+ utils.get_hash('unknown_user')[1]
             request({ url: url }, function(error, response, body) {
                 if (error) throw error;
+                console.log(JSON.parse(body));
                 assert(JSON.parse(body).code == 'Error');
                 done();
             });
@@ -87,6 +91,8 @@ describe('Esup otp api', function() {
             properties = default_properties;
             api_controller.remove_user('test_user');
             api_controller.remove_user('unknown_user');
+            userDb_controller.remove_user('test_user');
+            userDb_controller.remove_user('unknown_user');
         })
     })
 });

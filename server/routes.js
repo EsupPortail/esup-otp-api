@@ -1,7 +1,7 @@
 var properties = require(__dirname + '/../properties/properties');
 var validator = require(__dirname + '/../services/validator');
 var api_controller = require(__dirname + '/../controllers/api');
-var userDb_controller = require(__dirname + '/../databases/user/' + properties.esup.userDb);
+var userDb_controller = require(__dirname + '/../controllers/user');
 var server;
 
 exports.initialize = function(server, callback) {

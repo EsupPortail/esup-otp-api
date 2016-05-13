@@ -26,7 +26,7 @@ var routes;
 
 function initialize_userDB() {
     if (properties.esup.userDb) {
-        userDb_controller = require(__dirname+ '/../databases/user/' + properties.esup.userDb);
+        userDb_controller = require(__dirname+ '/../controllers/user');
         userDb_controller.initialize(initialize_apiController);
     } else console.log("Unknown userDb");
 }

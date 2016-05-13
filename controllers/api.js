@@ -1,5 +1,5 @@
 var properties = require(__dirname + '/../properties/properties');
-var userDb_controller = require(__dirname + '/../databases/user/' + properties.esup.userDb);
+var userDb_controller = require(__dirname + '/user');
 var restify = require('restify');
 var mailer = require(__dirname + '/../services/mailer');
 var sms = require(__dirname + '/../services/sms');

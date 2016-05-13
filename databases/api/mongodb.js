@@ -1,5 +1,5 @@
 var properties = require(__dirname + '/../../properties/properties');
-var userDb_controller = require(__dirname + '/../../databases/user/' + properties.esup.userDb);
+var userDb_controller = require(__dirname + '/../../controllers/user');
 var methods;
 var mongoose = require('mongoose');
 var connection;
