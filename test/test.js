@@ -23,30 +23,11 @@ describe('Esup otp api', function() {
         });
     });
 
-    describe('Databases access', function () {
-        it('Api Controller can be initialized', function(done) {
-            api_controller = require(__dirname + '/../controllers/api');
-            api_controller.initialize(done);
-        });
-
-        it('UserDB controller initialized', function(done) {
-            userDb_controller = require(__dirname +  '/../controllers/user');
-            userDb_controller.initialize(done);
-        });
-    })
-
     describe('Simple user api', function () {
-        before(function () {
-            api_controller = require(__dirname + '/../controllers/api');
-            api_controller.initialize();
-            userDb_controller = require(__dirname + '/../controllers/user');
-            userDb_controller.initialize();
-        })
-        beforeEach(function() {
-            userDb_controller.remove_user('test_user');
-            userDb_controller.remove_user('unknown_user');
-            api_controller.create_user('test_user');
-            userDb_controller.create_user('test_user');
+        beforeEach(function(done) {
+            create_user('test_user',function () {
+                done();
+            })
         });
 
         it('get test_user', function(done) {
@@ -68,31 +49,62 @@ describe('Esup otp api', function() {
         })
 
         it('get unknown user with auto_create', function(done) {
-            var url = server_url + '/user/unknown_user/'+ utils.get_hash('unknown_user')[1]
-            request({ url: url }, function(error, response, body) {
-                if (error) throw error;
-                assert(JSON.parse(body).code == 'Ok');
-                done();
-            });
+            toggle_auto_create_user(true, function () {
+                var url = server_url + '/user/unknown_user/'+ utils.get_hash('unknown_user')[1]
+                request({ url: url }, function(error, response, body) {
+                    if (error) throw error;
+                    assert(JSON.parse(body).code == 'Ok');
+                    done();
+                });
+            })
         })
 
         it('get unknown user without auto_create', function(done) {
-            properties.esup.auto_create_user = false;
-            var url = server_url + '/user/unknown_user/'+ utils.get_hash('unknown_user')[1]
-            request({ url: url }, function(error, response, body) {
-                if (error) throw error;
-                console.log(JSON.parse(body));
-                assert(JSON.parse(body).code == 'Error');
-                done();
-            });
+            toggle_auto_create_user(false, function () {
+                var url = server_url + '/user/unknown_user/'+ utils.get_hash('unknown_user')[1]
+                request({ url: url }, function(error, response, body) {
+                    if (error) throw error;
+                    assert(JSON.parse(body).code == 'Error');
+                    done();
+                });
+            })
         })
 
-        afterEach(function() {
+        afterEach(function(done) {
             properties = default_properties;
-            api_controller.remove_user('test_user');
-            api_controller.remove_user('unknown_user');
-            userDb_controller.remove_user('test_user');
-            userDb_controller.remove_user('unknown_user');
+            toggle_auto_create_user(true, function () {
+                remove_user('test_user', function () {
+                    remove_user('unknown_user', function () {
+                        done();
+                    })
+                })
+            })
         })
     })
 });
+
+function toggle_auto_create_user(activate, callback){
+    var bool = 'deactivate'
+    if(activate)bool = 'activate';
+    var url = server_url + '/test/auto_create/'+bool+'/'+properties.esup.api_password;
+        request({url: url, method: 'PUT'}, function(error, response, body){
+        if(error)throw error;
+        if(typeof(callback)==='function')callback();
+    });
+}
+
+function create_user(uid, callback){
+    var url = server_url + '/test/user/'+uid+'/'+properties.esup.api_password;
+    request({url: url, method: 'POST'}, function(error, response, body){
+        if(error)throw error;
+        if(typeof(callback)==='function')callback();
+    });
+}
+
+function remove_user(uid, callback){
+    var url = server_url + '/test/user/'+uid+'/'+properties.esup.api_password;
+    request({url: url, method: 'DELETE'}, function(error, response, body){
+        if(error)throw error;
+        if(typeof(callback)==='function')callback();
+    });
+}
