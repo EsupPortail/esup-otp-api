@@ -1,4 +1,3 @@
-var properties = require(__dirname + '/../properties/properties');
 var api_controller = require(__dirname + '/../controllers/api');
 var utils = require(__dirname + '/../services/utils');
 var restify = require('restify');
@@ -7,18 +6,18 @@ exports.name = "random_code";
 
 exports.send_message = function(user, req, res, next) {
     var new_otp = user.random_code;
-    switch (properties.esup.methods.random_code.code_type) {
+    switch (global.properties.esup.methods.random_code.code_type) {
         case "string":
-            new_otp.code = utils.generate_string_code(properties.esup.methods.random_code.code_length);
+            new_otp.code = utils.generate_string_code(global.properties.esup.methods.random_code.code_length);
             break;
         case "digit":
-            new_otp.code = utils.generate_digit_code(properties.esup.methods.random_code.code_length);
+            new_otp.code = utils.generate_digit_code(global.properties.esup.methods.random_code.code_length);
             break;
         default:
-            new_otp.code = utils.generate_string_code(properties.esup.methods.random_code.code_length);
+            new_otp.code = utils.generate_string_code(global.properties.esup.methods.random_code.code_length);
             break;
     }
-    validity_time = properties.esup.methods.random_code.mail_validity * 60 * 1000;
+    validity_time = global.properties.esup.methods.random_code.mail_validity * 60 * 1000;
     validity_time += new Date().getTime();
     new_otp.validity_time = validity_time;
     user.random_code = new_otp;

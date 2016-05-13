@@ -1,5 +1,3 @@
-var properties = require(__dirname + '/../../properties/properties');
-
 exports.schema = {
     uid: {
         type: String,
@@ -15,7 +13,7 @@ exports.schema = {
         },
         transports: {
             type: Array,
-            default: properties.esup.transports
+            default: global.properties.esup.transports
         }
     },
     bypass: {
@@ -30,7 +28,7 @@ exports.schema = {
         },
         transports: {
             type: Array,
-            default: properties.esup.transports
+            default: global.properties.esup.transports
         }
     },
     totp: {
@@ -45,7 +43,7 @@ exports.schema = {
         },
         transports: {
             type: Array,
-            default: properties.esup.transports
+            default: global.properties.esup.transports
         }
     },
 }

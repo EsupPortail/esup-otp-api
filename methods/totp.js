@@ -1,4 +1,3 @@
-var properties = require(__dirname + '/../properties/properties');
 var api_controller = require(__dirname + '/../controllers/api');
 var speakeasy = require('speakeasy');
 var qrCode = require('qrcode-npm')
@@ -9,13 +8,13 @@ exports.name = "totp";
 exports.send_message = function(user, req, res, next) {
     switch (req.params.transport) {
         case 'mail':
-            user.totp.window = properties.esup.methods.totp.mail_window;
+            user.totp.window = global.properties.esup.methods.totp.mail_window;
             break;
         case 'sms':
-            user.totp.window = properties.esup.methods.totp.sms_window;
+            user.totp.window = global.properties.esup.methods.totp.sms_window;
             break;
         default:
-            user.totp.window = properties.esup.methods.totp.default_window;
+            user.totp.window = global.properties.esup.methods.totp.default_window;
             break;
     }
     api_controller.save_user(user, function() {
@@ -44,7 +43,7 @@ exports.verify_code = function(user, req, res, callbacks) {
             window: user.totp.window
         });
         if (checkSpeakeasy) {
-            user.totp.window = properties.esup.methods.totp.default_window;
+            user.totp.window = global.properties.esup.methods.totp.default_window;
             api_controller.save_user(user, function() {
                 res.send({
                     "code": "Ok",

@@ -3,46 +3,108 @@ var os = require('os');
 var request = require('request');
 var mongoose = require('mongoose');
 var async = require('async');
+var utils = require(__dirname + '/../services/utils');
 
 var properties = require(__dirname + '/../properties/properties');
+var default_properties = properties;
 
-var user_api_tests = require(__dirname + '/user.api.js');
+var port = process.env.PORT || 3000;
+var server_url = 'http://' + os.hostname() + ':' + port;
 
-var mongo_connection;
+var api_controller;
 var userDb_controller;
 
 describe('Esup otp api', function() {
     it('Server is running', function(done) {
         var port = process.env.PORT || 3000;
-        var url = 'http://' + os.hostname() + ':' + port;
-        request({ url: url }, function(error, response, body) {
+        request({ url: server_url }, function(error, response, body) {
             if (error) throw error;
             done();
         });
     });
 
-    describe('Databases are reachable', function () {
-
-    })
-
-    it('Mongodb is reachable', function(done) {
-        mongo_connection = mongoose.createConnection('mongodb://' + properties.esup.mongodb.address + '/' + properties.esup.mongodb.db, function(error) {
-            if (error) throw error;
-            done();
+    describe('Simple user api', function () {
+        beforeEach(function(done) {
+            create_user('test_user',function () {
+                done();
+            })
         });
-    });
 
-    it('UserDB is reachable', function(done) {
-        userDb_controller = require(__dirname + '/../databases/user/' + properties.esup.userDb);
-        userDb_controller.initialize(done);
-    });
+        it('get test_user', function(done) {
+            var url = server_url + '/user/test_user/'+ utils.get_hash('test_user')[1]
+            request({ url: url }, function(error, response, body) {
+                if (error) throw error;
+                assert(JSON.parse(body).code == 'Ok');
+                done();
+            });
+        })
 
-    it('Simple user api', function () {
-        var Schema = mongoose.Schema;
-        var UserSchema = new Schema(require(__dirname + '/../databases/api/userPreferencesSchema').schema);
-        mongo_connection.model('UserPreferences', UserSchema, 'UserPreferences');
-        var UserModel = mongo_connection.model('UserPreferences');
-        user_api_tests.run(mongo_connection, userDb_controller);
+        it('get test_user with wrong hash', function(done) {
+            var url = server_url + '/user/test_user/turlututuchapeaupointu'
+            request({ url: url }, function(error, response, body) {
+                if (error) throw error;
+                assert(JSON.parse(body).code == 'ForbiddenError');
+                done();
+            });
+        })
+
+        it('get unknown user with auto_create', function(done) {
+            toggle_auto_create_user(true, function () {
+                var url = server_url + '/user/unknown_user/'+ utils.get_hash('unknown_user')[1]
+                request({ url: url }, function(error, response, body) {
+                    if (error) throw error;
+                    assert(JSON.parse(body).code == 'Ok');
+                    done();
+                });
+            })
+        })
+
+        it('get unknown user without auto_create', function(done) {
+            toggle_auto_create_user(false, function () {
+                var url = server_url + '/user/unknown_user/'+ utils.get_hash('unknown_user')[1]
+                request({ url: url }, function(error, response, body) {
+                    if (error) throw error;
+                    assert(JSON.parse(body).code == 'Error');
+                    done();
+                });
+            })
+        })
+
+        afterEach(function(done) {
+            properties = default_properties;
+            toggle_auto_create_user(true, function () {
+                remove_user('test_user', function () {
+                    remove_user('unknown_user', function () {
+                        done();
+                    })
+                })
+            })
+        })
     })
-
 });
+
+function toggle_auto_create_user(activate, callback){
+    var bool = 'deactivate'
+    if(activate)bool = 'activate';
+    var url = server_url + '/test/auto_create/'+bool+'/'+properties.esup.api_password;
+        request({url: url, method: 'PUT'}, function(error, response, body){
+        if(error)throw error;
+        if(typeof(callback)==='function')callback();
+    });
+}
+
+function create_user(uid, callback){
+    var url = server_url + '/test/user/'+uid+'/'+properties.esup.api_password;
+    request({url: url, method: 'POST'}, function(error, response, body){
+        if(error)throw error;
+        if(typeof(callback)==='function')callback();
+    });
+}
+
+function remove_user(uid, callback){
+    var url = server_url + '/test/user/'+uid+'/'+properties.esup.api_password;
+    request({url: url, method: 'DELETE'}, function(error, response, body){
+        if(error)throw error;
+        if(typeof(callback)==='function')callback();
+    });
+}
