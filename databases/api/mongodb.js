@@ -1,11 +1,10 @@
-var properties = require(__dirname + '/../../properties/properties');
 var userDb_controller = require(__dirname + '/../../controllers/user');
 var methods;
 var mongoose = require('mongoose');
 var connection;
 
 exports.initialize = function(callback) {
-    connection = mongoose.createConnection('mongodb://' + properties.esup.mongodb.address + '/' + properties.esup.mongodb.db, function(error) {
+    connection = mongoose.createConnection('mongodb://' + global.properties.esup.mongodb.address + '/' + global.properties.esup.mongodb.db, function(error) {
         if (error) {
             console.log(error);
         } else {
@@ -123,7 +122,7 @@ exports.parse_user= function(user){
 function available_transports(userTransports, method){
     var available_transports = [];
     for(t in userTransports){
-        if(properties.esup.methods[method].transports.indexOf(userTransports[t])>=0)available_transports.push(userTransports[t]);
+        if(global.properties.esup.methods[method].transports.indexOf(userTransports[t])>=0)available_transports.push(userTransports[t]);
     }
     return available_transports;
 }

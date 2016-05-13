@@ -1,10 +1,9 @@
-var properties = require(__dirname + '/../../properties/properties');
 var utils = require(__dirname + '/../../services/utils');
 var mongoose = require('mongoose');
 var connection;
 
 exports.initialize = function(callback) {
-    connection = mongoose.createConnection('mongodb://' + properties.esup.mongodb.address + '/' + properties.esup.mongodb.db, function(error) {
+    connection = mongoose.createConnection('mongodb://' + global.properties.esup.mongodb.address + '/' + global.properties.esup.mongodb.db, function(error) {
         if (error) {
             console.log(error);
         } else {
@@ -45,7 +44,7 @@ function find_user(req, res, callback) {
         if (data[0]) {
             if (typeof(callback) === "function") callback(data[0]);
         } else {
-            if(properties.esup.auto_create_user)create_user(req.params.uid, callback);
+            if(global.properties.esup.auto_create_user)create_user(req.params.uid, callback);
             else res.send(response);
         }
     });

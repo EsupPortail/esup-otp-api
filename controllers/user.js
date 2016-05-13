@@ -1,10 +1,8 @@
-var properties = require(__dirname + '/../properties/properties');
-
 var userDb;
 
 exports.initialize= function(callback) {
-    if (properties.esup.apiDb) {
-        userDb = require(__dirname + '/../databases/user/' + properties.esup.userDb);
+    if (global.properties.esup.apiDb) {
+        userDb = require(__dirname + '/../databases/user/' + global.properties.esup.userDb);
         userDb.initialize(callback);
         exports.userDb = userDb;
     } else console.log("Unknown apiDb");
@@ -19,12 +17,11 @@ exports.user_exists= function(req, res, callback){
 
 
 exports.get_available_transports = function(req, res, callback) {
-    console.log("get_available_transports");
     userDb.find_user(req, res, function(user) {
         var response = {};
         var result = {};
-        if (user[properties.esup.mongodb.transport.mail]) result.mail = utils.cover_string(user[properties.esup.mongodb.transport.mail], 4, 5);
-        if (user[properties.esup.mongodb.transport.sms]) result.sms = utils.cover_string(user[properties.esup.mongodb.transport.sms], 2, 2);
+        if (user[global.properties.esup.mongodb.transport.mail]) result.mail = utils.cover_string(user[global.properties.esup.mongodb.transport.mail], 4, 5);
+        if (user[global.properties.esup.mongodb.transport.sms]) result.sms = utils.cover_string(user[global.properties.esup.mongodb.transport.sms], 2, 2);
         if (typeof(callback) === "function") callback(result);
         else {
             console.log()
@@ -40,20 +37,20 @@ exports.get_available_transports = function(req, res, callback) {
 
 exports.send_sms = function(req, res, callback) {
     userDb.find_user(req, res, function(user) {
-        if (typeof(callback) === "function") callback(user[properties.esup.mongodb.transport.sms]);
+        if (typeof(callback) === "function") callback(user[global.properties.esup.mongodb.transport.sms]);
     });
 }
 
 
 exports.send_mail = function(req, res, callback) {
     userDb.find_user(req, res, function(user) {
-        if (typeof(callback) === "function") callback(user[properties.esup.mongodb.transport.mail]);
+        if (typeof(callback) === "function") callback(user[global.properties.esup.mongodb.transport.mail]);
     });
 }
 
 exports.update_transport = function(req, res, next) {
     userDb.find_user(req, res, function(user) {
-        user[properties.esup.mongodb.transport[req.params.transport]]=req.params.new_transport;
+        user[global.properties.esup.mongodb.transport[req.params.transport]]=req.params.new_transport;
         userDb.save_user(user, function(){
             res.send({
                 code: 'Ok',
@@ -65,7 +62,7 @@ exports.update_transport = function(req, res, next) {
 
 exports.delete_transport = function(req, res, next) {
     userDb.find_user(req, res, function(user) {
-        user[properties.esup.mongodb.transport[req.params.transport]]="";
+        user[global.properties.esup.mongodb.transport[req.params.transport]]="";
         userDb.save_user(user, function(){
             res.send({
                 code: 'Ok',
