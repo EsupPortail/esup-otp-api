@@ -84,7 +84,7 @@ exports.delete_method_secret = function(user, req, res, next) {
     });
 }
 
-exports.get_method_secret = function(req, res, next) {
+exports.get_method_secret = function(user, req, res, next) {
     res.send({
         "code": "Error",
         "message": properties.messages.error.unvailable_method_operation
