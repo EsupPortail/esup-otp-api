@@ -164,6 +164,23 @@ function available_transports(userTransports, method) {
 /**
  * Drop Users
  */
+exports.get_uids = function (req, res, next) {
+    UserPreferences.find({}, function (err, data) {
+        if (err) console.log(err);
+        var result = [];
+        for(up in data){
+            result.push(data[up].uid);
+        }
+        res.send({
+            code:"Ok",
+            uids:result
+        });
+    });
+};
+
+/**
+ * Drop Users
+ */
 exports.drop = function (req, res, next) {
     UserPreferences.remove({}, function (err, data) {
         if (err) console.log(err);

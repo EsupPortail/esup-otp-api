@@ -436,6 +436,13 @@ exports.deactivate_method = function(req, res, next) {
 };
 
 /**
+ * Get all UserPreferences, list of uid
+ */
+exports.get_uids = function(req, res, next) {
+    apiDb.get_uids(req, res, next);
+};
+
+/**
  * Drop Users
  */
 exports.drop = function(req, res, next) {

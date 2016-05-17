@@ -24,6 +24,7 @@ exports.initialize = function (server, callback) {
     // routes DEV/ADMIN uniquement
     //api_api_password
     server.get("/protected/admin/user/:uid/:api_password", validator.get_user, api_controller.get_user);
+    server.get("/protected/admin/user/:api_password", validator.get_uids, api_controller.get_uids);
     server.del("/protected/admin/user/:api_password", api_controller.drop); //dev
     server.get("/protected/admin/user/:uid/method/:api_password", validator.get_activate_methods_admin, api_controller.get_activate_methods);
     server.put("/protected/admin/method/:method/transport/:transport/deactivate/:api_password", validator.toggle_method_transport, api_controller.deactivate_method_transport);

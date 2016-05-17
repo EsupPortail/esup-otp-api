@@ -12,6 +12,7 @@ var required = {
     transport_test: ['uid', 'transport','api_password'],
     delete_transport: ['uid', 'transport','api_password'],
     get_user: ['uid', 'api_password'],
+    get_uids: ['api_password'],
     get_methods: ['api_password'],
     get_activate_methods_admin: ['uid', 'api_password'],
     set_otp: ['uid', 'otp', 'api_password'],
@@ -67,6 +68,13 @@ exports.create_user = function(req, res, next) {
 
 exports.get_user = function(req, res, next) {
     if (check_parameters(req, required.get_user)) {
+        check_api_password(req, res, next);
+    } else {
+        return next(new restify.InvalidArgumentError());
+    }
+}
+exports.get_uids = function(req, res, next) {
+    if (check_parameters(req, required.get_uids)) {
         check_api_password(req, res, next);
     } else {
         return next(new restify.InvalidArgumentError());
