@@ -16,7 +16,15 @@
         "unvailable_method_transport": "Unvailable method transport"
     },
     "transport": {
-        "pre_test": "Les informations vous avez saisies sont correctes pour le compte ",
-        "post_test": "."
+        "code": "Code d'authentification",
+        "test": "Test information transport",
+        "sms":{
+            "pre_test": "Ceci+est+un+message+de+test+%C3%A0+destination+de+l%27utilisateur+",
+            "post_test": "."
+        },
+        "mail":{
+            "pre_test": "Ceci est un message de test à destination de l'utilisateur ",
+            "post_test": "."
+        }
     }
 }

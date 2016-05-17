@@ -160,7 +160,10 @@ exports.remove_user=function(uid, callback) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.transport_code = function(code, req, res, next) {
-    transport(code, req, res, next);
+    var opts ={};
+    opts.object = properties.messages.transport.code;
+    opts.message = code;
+    transport(opts, req, res, next);
 }
 
 /**
@@ -171,7 +174,21 @@ exports.transport_code = function(code, req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.transport_test = function(req, res, next) {
-    transport(properties.messages.transport.pre_test+req.params.uid+properties.messages.transport.post_test,req ,res, next);
+    var opts ={}
+    opts.object = properties.messages.transport.test;
+    opts.message ='';
+    switch (req.params.transport) {
+        case 'mail':
+            opts.message = properties.messages.transport.mail.pre_test+req.params.uid+properties.messages.transport.mail.post_test
+            break;
+        case 'sms':
+            opts.message= properties.messages.transport.sms.pre_test+req.params.uid+properties.messages.transport.sms.post_test
+            break;
+        default:
+            opts.message= properties.messages.transport.mail.pre_test+req.params.uid+properties.messages.transport.mail.post_test
+            break;
+    }
+    transport(opts,req ,res, next);
 };
 
 /**
@@ -181,16 +198,16 @@ exports.transport_test = function(req, res, next) {
  * @param res response HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
-function transport(message, req, res, next) {
+function transport(opts, req, res, next) {
     switch (req.params.transport) {
         case 'mail':
             userDb_controller.send_mail(req, res, function(mail) {
-                mailer.send_message(mail, message, res);
+                mailer.send_message(mail, opts, res);
             });
             break;
         case 'sms':
             userDb_controller.send_sms(req, res, function(num) {
-                sms.send_message(num, message, res);
+                sms.send_message(num, opts, res);
             });
             break;
         default:

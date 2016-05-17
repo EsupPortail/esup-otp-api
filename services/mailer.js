@@ -22,11 +22,11 @@ var mailOptions = {
     from: properties.esup.mailer.sender_name+" <"+properties.esup.mailer.sender_mail+">", // sender address
 }
 
-exports.send_message = function(mail, message, res) {
+exports.send_message = function(mail, opts, res) {
     if (utils.check_transport_validity('mail', mail)) {
-        mailOptions.text = message;
+        mailOptions.text = opts.message;
         mailOptions.to = mail;
-        mailOptions.subject = "Code";
+        mailOptions.subject = opts.object;
         // send mail with defined transport object
         transporter.sendMail(mailOptions, function(error, response) {
             if (error) {
@@ -35,7 +35,7 @@ exports.send_message = function(mail, message, res) {
                     "message": error
                 });
             } else {
-                console.log("Message sent to " + mail + " with the message: " + message);
+                console.log("Message sent to " + mail + " with the message: " + opts.message);
                 res.send({
                     "code": "Ok",
                     "message": "Message sent"
