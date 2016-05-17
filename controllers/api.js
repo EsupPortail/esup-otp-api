@@ -38,6 +38,7 @@ exports.get_methods = function(req, res, next) {
 exports.activate_method_admin = function(req, res, next) {
     if (global.properties.esup.methods[req.params.method]) {
         global.properties.esup.methods[req.params.method].activate = true;
+        apiDb.update_api_preferences();
         res.send({
             code: 'Ok',
             message: ''
@@ -58,6 +59,7 @@ exports.activate_method_admin = function(req, res, next) {
 exports.deactivate_method_admin = function(req, res, next) {
     if (global.properties.esup.methods[req.params.method]) {
         global.properties.esup.methods[req.params.method].activate = false;
+        apiDb.update_api_preferences();
         res.send({
             code: 'Ok',
             message: ''
@@ -81,6 +83,7 @@ exports.activate_method_transport = function(req, res, next) {
         if (index < 0) {
             global.properties.esup.methods[req.params.method].transports.push(req.params.transport);
         }
+        apiDb.update_api_preferences();
         res.send({
             code: 'Ok',
             message: ''
@@ -104,6 +107,7 @@ exports.deactivate_method_transport = function(req, res, next) {
         if (index >= 0) {
             global.properties.esup.methods[req.params.method].transports.splice(index, 1);
         }
+        apiDb.update_api_preferences();
         res.send({
             code: 'Ok',
             message: ''

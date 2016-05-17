@@ -29,7 +29,7 @@ esup-otp-api runs in http, if you want a secure mode you will need a reverse pro
 Check https://github.com/Hakall/esup-node-proxy if you want a simple NodeJS reverse proxy.
 
 ### Tests
-Install mocha : npm install -g mocha
+Install mocha : npm install -g mocha .
 Simply execute "mocha" in root directory of the project, the server must be launch before execute the tests
 
 ### Development
