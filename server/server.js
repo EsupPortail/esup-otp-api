@@ -6,7 +6,7 @@ var fs = require('fs');
 var logger = new (winston.Logger)({
     transports: [
         new (winston.transports.Console)(),
-        //new (winston.transports.File)({ filename: __dirname+'/../logs/test.log' })
+        new (winston.transports.File)({ filename: __dirname+'/../logs/server.log' })
     ]
 });
 
@@ -31,7 +31,8 @@ server.use(
 var userDb_controller;
 var routes;
 
-function initialize_userDB() {
+function initialize_userDBController() {
+    logger.info(new Date(Date.now())+' : Initialize the userDB controller');
     if (global.properties.esup.userDb) {
         userDb_controller = require(__dirname+ '/../controllers/user');
         userDb_controller.initialize(initialize_apiController);
@@ -41,6 +42,7 @@ function initialize_userDB() {
 var api_controller;
 
 function initialize_apiController() {
+    logger.info(new Date(Date.now())+' : Initialize the api controller');
     if (global.properties.esup.apiDb) {
         api_controller = require(__dirname + '/../controllers/api');
         api_controller.initialize(initialize_routes(launch_server));
@@ -68,5 +70,5 @@ function launch_server() {
 }
 
 exports.start = function() {
-    initialize_userDB();
+    initialize_userDBController();
 }
