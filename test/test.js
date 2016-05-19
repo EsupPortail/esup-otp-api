@@ -11,8 +11,7 @@ var default_properties = properties;
 var port = process.env.PORT || 3000;
 var server_url = 'http://' + os.hostname() + ':' + port;
 
-var api_controller;
-var userDb_controller;
+var test_user = 'karlito'
 
 describe('Esup otp api', function () {
     it('Server is running', function (done) {
@@ -25,13 +24,13 @@ describe('Esup otp api', function () {
 
     describe('Simple user api', function () {
         beforeEach(function (done) {
-            create_user('test_user', function () {
+            create_user(test_user, function () {
                 done();
             })
         });
 
         it('get test_user', function (done) {
-            var url = server_url + '/user/test_user/' + utils.get_hash('test_user')[1]
+            var url = server_url + '/user/'+test_user+'/' + utils.get_hash(test_user)[1]
             request({url: url}, function (error, response, body) {
                 if (error) throw error;
                 assert(JSON.parse(body).code == 'Ok');
@@ -40,7 +39,7 @@ describe('Esup otp api', function () {
         })
 
         it('get test_user with wrong hash', function (done) {
-            var url = server_url + '/user/test_user/turlututuchapeaupointu'
+            var url = server_url + '/user/'+test_user+'/turlututuchapeaupointu'
             request({url: url}, function (error, response, body) {
                 if (error) throw error;
                 assert(JSON.parse(body).code == 'ForbiddenError');
@@ -53,7 +52,8 @@ describe('Esup otp api', function () {
                 var url = server_url + '/user/unknown_user/' + utils.get_hash('unknown_user')[1]
                 request({url: url}, function (error, response, body) {
                     if (error) throw error;
-                    assert(JSON.parse(body).code == 'Ok');
+                    if(properties.esup.userDb=='mongodb')assert(JSON.parse(body).code == 'Ok');
+                    assert(JSON.parse(body).message == properties.messages.error.user_not_found);
                     done();
                 });
             })
@@ -71,7 +71,7 @@ describe('Esup otp api', function () {
         })
 
         it('get test_user totp method secret, qrCode must be empty', function (done) {
-                var url = server_url + '/protected/user/test_user/method/totp/secret/' +properties.esup.api_password
+                var url = server_url + '/protected/user/'+test_user+'/method/totp/secret/' +properties.esup.api_password
                 request({url: url}, function (error, response, body) {
                     if (error) throw error;
                     assert(JSON.parse(body).qrCode == '');
@@ -80,7 +80,7 @@ describe('Esup otp api', function () {
         })
 
         it('get test_user bypass method secret response must be an error message', function (done) {
-            var url = server_url + '/protected/user/test_user/method/bypass/secret/' +properties.esup.api_password
+            var url = server_url + '/protected/user/'+test_user+'/method/bypass/secret/' +properties.esup.api_password
             request({url: url}, function (error, response, body) {
                 if (error) throw error;
                 assert(JSON.parse(body).message == properties.messages.error.unvailable_method_operation);
@@ -89,7 +89,7 @@ describe('Esup otp api', function () {
         })
 
         it('get test_user random_code method secret response must be an error message', function (done) {
-            var url = server_url + '/protected/user/test_user/method/random_code/secret/' +properties.esup.api_password
+            var url = server_url + '/protected/user/'+test_user+'/method/random_code/secret/' +properties.esup.api_password
             request({url: url}, function (error, response, body) {
                 if (error) throw error;
                 assert(JSON.parse(body).message == properties.messages.error.unvailable_method_operation);
@@ -98,7 +98,7 @@ describe('Esup otp api', function () {
         })
 
         it('get test_user totp method generate secret', function (done) {
-            var url = server_url + '/protected/user/test_user/method/totp/secret/' +properties.esup.api_password
+            var url = server_url + '/protected/user/'+test_user+'/method/totp/secret/' +properties.esup.api_password
             request({url: url, method : "POST"}, function (error, response, body) {
                 if (error) throw error;
                 assert(JSON.parse(body).code == 'Ok');
@@ -109,7 +109,7 @@ describe('Esup otp api', function () {
         afterEach(function (done) {
             properties = default_properties;
             toggle_auto_create_user(true, function () {
-                remove_user('test_user', function () {
+                remove_user(test_user, function () {
                     remove_user('unknown_user', function () {
                         done();
                     })
