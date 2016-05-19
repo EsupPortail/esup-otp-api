@@ -1,18 +1,61 @@
 var utils = require(__dirname + '/../../services/utils');
 var ldapjs = require('ldapjs');
+var winston = require('winston');
+
+var logger = new (winston.Logger)({
+    transports: [
+        new (winston.transports.Console)({
+            timestamp: function() {
+                return new Date(Date.now());
+            },
+            formatter: function(options) {
+                // Return string will be passed to logger.
+                return options.timestamp() +' '+ options.level.toUpperCase() +' '+__filename.split(global.base_dir)[1]+' '+ (undefined !== options.message ? options.message : '') +
+                    (options.meta && Object.keys(options.meta).length ? '\n\t'+ JSON.stringify(options.meta) : '' );
+            }
+        }),
+        new (winston.transports.File)({
+            timestamp: function() {
+                return ''+new Date(Date.now());
+            },
+            name: 'info-file',
+            filename: __dirname+'/../../logs/server.log',
+            json: false,
+            formatter: function(options) {
+                // Return string will be passed to logger.
+                return options.timestamp() +' '+ options.level.toUpperCase() +' '+__filename.split(global.base_dir)[1]+' '+ (undefined !== options.message ? options.message : '') +
+                    (options.meta && Object.keys(options.meta).length ? '\n\t'+ JSON.stringify(options.meta) : '' );
+            }
+        }),
+        new (winston.transports.File)({
+            timestamp: function() {
+                return ''+new Date(Date.now());
+            },
+            name: 'debug-file',
+            level: 'debug',
+            filename: __dirname+'/../../logs/debug.log',
+            json: false,
+            formatter: function(options) {
+                // Return string will be passed to logger.
+                return options.timestamp() +' '+ options.level.toUpperCase() +' '+__filename.split(global.base_dir)[1]+' '+ (undefined !== options.message ? options.message : '') +
+                    (options.meta && Object.keys(options.meta).length ? '\n\t'+ JSON.stringify(options.meta) : '' );
+            }
+        })
+    ]
+});
 
 var client;
 
 exports.initialize = function(callback) {
-    console.log("initialize ldap connection, if this take too much time, verify your ldap");
+    logger.info("Initializing ldap connection");
     client = ldapjs.createClient({
         url: global.properties.esup.ldap.uri
     });
     client.bind(global.properties.esup.ldap.adminDn, global.properties.esup.ldap.password, function(err) {
         if (err) console.log('bind error : ' + err);
         else if (typeof(callback) === "function"){
-         console.log('ldap connection initialized');
-         callback();
+            logger.info("Ldap connection Initialized");
+            callback();
      }
     });
 }
@@ -50,71 +93,62 @@ function find_user(req, res, callback) {
     });
 }
 
-exports.user_exist= function(req, res, callback){
-    find_user(req, res, function(user){
-         if (typeof(callback) === "function") callback(user);
-    })
-}
+exports.find_user= find_user;
 
-exports.get_available_transports = function(req, res, callback) {
-    find_user(req, res, function(user) {
-        var response = {};
-        var result = {};
-        if (user[global.properties.esup.ldap.transport.mail]) result.mail = utils.cover_string(user[global.properties.esup.ldap.transport.mail], 4, 5);
-        if (user[global.properties.esup.ldap.transport.sms]) result.sms = utils.cover_string(user[global.properties.esup.ldap.transport.sms], 2, 2);
-        if (typeof(callback) === "function") callback(result);
-        else {
-            response.code = "Ok";
-            response.message = properties.messages.success.transports_found;
-            response.transports_list = result;
-            res.send(response);
+function ldap_change(user, callback){
+    var changes = [];
+    var change;
+    var modif;
+    for(attr in user){
+        if(attr!='dn' && attr!='controls'){
+            modif = {};
+            modif[attr]=user[attr];
+            change = new ldapjs.Change({
+                operation: 'replace',
+                modification: modif
+            });
+            changes.push(change);
         }
-    });
+    }
+    if (typeof(callback) === "function") callback(changes);
 }
 
-
-
-exports.send_sms = function(req, res, callback) {
-    find_user(req, res, function(user) {
-        if (typeof(callback) === "function") callback(user[global.properties.esup.ldap.transport.sms]);
-    });
-}
-
-
-exports.send_mail = function(req, res, callback) {
-    find_user(req, res, function(user) {
-        if (typeof(callback) === "function") callback(user[global.properties.esup.ldap.transport.mail]);
-    });
-}
-
-exports.update_transport = function(req, res, next) {
-    var modification = {};
-    modification[global.properties.esup.ldap.transport[req.params.transport]] = [req.params.new_transport]
-    var change = new ldapjs.Change({
-        operation: 'replace',
-        modification: modification
-    });
-    client.modify('uid=' + req.params.uid + ',ou=people,dc=univ-lr,dc=fr', change, function(err) {
-        if (err) console.log('modify error : ' + err);
-        else res.send({
-            code: 'Ok',
-            message: properties.messages.success.update
+exports.save_user = function (user, callback) {
+    ldap_change(user, function (changes) {
+        client.modify(user.dn, changes, function (err) {
+            if (err) logger.error('modify error : ' + err);
+            if (typeof(callback) === "function") callback();
         });
     });
 }
 
-exports.delete_transport = function(req, res, next) {
-    var modification = {};
-    modification[global.properties.esup.ldap.transport[req.params.transport]] = ""
-    var change = new ldapjs.Change({
-        operation: 'replace',
-        modification: modification
+function create_user(uid, callback) {
+    var dn = 'uid=' + uid + ',' + global.properties.esup.ldap.baseDn;
+    logger.debug(dn);
+    var entry = {
+        cn: uid,
+        uid: uid,
+        sn: uid,
+        mail: uid + '@univ.org',
+        mobile: '0612345678',
+        objectclass: ['inetOrgPerson']
+    };
+    client.add(dn, entry, function (err) {
+        if (err)logger.error(err);
+        if (typeof(callback) === "function") callback();
     });
-    client.modify('uid=' + req.params.uid + ',ou=people,dc=univ-lr,dc=fr', change, function(err) {
-        if (err) console.log('modify error : ' + err);
-        else res.send({
-            code: 'Ok',
-            message: properties.messages.success.update
+}
+exports.create_user = create_user;
+
+exports.remove_user = function (uid, callback) {
+    find_user({params: {uid: uid}}, {
+        send: function () {
+        }
+    }, function () {
+        var dn = 'uid=' + uid + ',' + global.properties.esup.ldap.baseDn;
+        client.del(dn, function (err) {
+            if (err)logger.error(err);
+            if (typeof(callback) === "function") callback();
         });
-    });
+    })
 }
