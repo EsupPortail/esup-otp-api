@@ -1,5 +1,48 @@
+var winston = require('winston');
 var utils = require(__dirname + '/../services/utils');
 var userDb;
+
+var logger = new (winston.Logger)({
+    transports: [
+        new (winston.transports.Console)({
+            timestamp: function() {
+                return new Date(Date.now());
+            },
+            formatter: function(options) {
+                // Return string will be passed to logger.
+                return options.timestamp() +' '+ options.level.toUpperCase() +' '+__filename.split(global.base_dir)[1]+' '+ (undefined !== options.message ? options.message : '') +
+                    (options.meta && Object.keys(options.meta).length ? '\n\t'+ JSON.stringify(options.meta) : '' );
+            }
+        }),
+        new (winston.transports.File)({
+            timestamp: function() {
+                return ''+new Date(Date.now());
+            },
+            name: 'info-file',
+            filename: __dirname+'/../logs/server.log',
+            json: false,
+            formatter: function(options) {
+                // Return string will be passed to logger.
+                return options.timestamp() +' '+ options.level.toUpperCase() +' '+__filename.split(global.base_dir)[1]+' '+ (undefined !== options.message ? options.message : '') +
+                    (options.meta && Object.keys(options.meta).length ? '\n\t'+ JSON.stringify(options.meta) : '' );
+            }
+        }),
+        new (winston.transports.File)({
+            timestamp: function() {
+                return ''+new Date(Date.now());
+            },
+            name: 'debug-file',
+            level: 'debug',
+            filename: __dirname+'/../logs/debug.log',
+            json: false,
+            formatter: function(options) {
+                // Return string will be passed to logger.
+                return options.timestamp() +' '+ options.level.toUpperCase() +' '+__filename.split(global.base_dir)[1]+' '+ (undefined !== options.message ? options.message : '') +
+                    (options.meta && Object.keys(options.meta).length ? '\n\t'+ JSON.stringify(options.meta) : '' );
+            }
+        })
+    ]
+});
 
 exports.initialize= function(callback) {
     if (global.properties.esup.apiDb) {
@@ -10,7 +53,6 @@ exports.initialize= function(callback) {
 }
 
 exports.user_exists= function(req, res, callback){
-    console.log("user_exists mongodb_user");
     userDb.find_user(req, res, function(user){
         if (typeof(callback) === "function") callback(user);
     })
@@ -21,8 +63,8 @@ exports.get_available_transports = function(req, res, callback) {
     userDb.find_user(req, res, function(user) {
         var response = {};
         var result = {};
-        if (user[global.properties.esup.mongodb.transport.mail]) result.mail = utils.cover_string(user[global.properties.esup.mongodb.transport.mail], 4, 5);
-        if (user[global.properties.esup.mongodb.transport.sms]) result.sms = utils.cover_string(user[global.properties.esup.mongodb.transport.sms], 2, 2);
+        if (user[global.properties.esup[global.properties.esup.userDb].transport.mail]) result.mail = utils.cover_string(user[global.properties.esup[global.properties.esup.userDb].transport.mail], 4, 5);
+        if (user[global.properties.esup[global.properties.esup.userDb].transport.sms]) result.sms = utils.cover_string(user[global.properties.esup[global.properties.esup.userDb].transport.sms], 2, 2);
         if (typeof(callback) === "function") callback(result);
         else {
             console.log()
@@ -38,20 +80,20 @@ exports.get_available_transports = function(req, res, callback) {
 
 exports.send_sms = function(req, res, callback) {
     userDb.find_user(req, res, function(user) {
-        if (typeof(callback) === "function") callback(user[global.properties.esup.mongodb.transport.sms]);
+        if (typeof(callback) === "function") callback(user[global.properties.esup[global.properties.esup.userDb].transport.sms]);
     });
 }
 
 
 exports.send_mail = function(req, res, callback) {
     userDb.find_user(req, res, function(user) {
-        if (typeof(callback) === "function") callback(user[global.properties.esup.mongodb.transport.mail]);
+        if (typeof(callback) === "function") callback(user[global.properties.esup[global.properties.esup.userDb].transport.mail]);
     });
 }
 
 exports.update_transport = function(req, res, next) {
     userDb.find_user(req, res, function(user) {
-        user[global.properties.esup.mongodb.transport[req.params.transport]]=req.params.new_transport;
+        user[global.properties.esup[global.properties.esup.userDb].transport[req.params.transport]]=req.params.new_transport;
         userDb.save_user(user, function(){
             res.send({
                 code: 'Ok',
@@ -63,7 +105,7 @@ exports.update_transport = function(req, res, next) {
 
 exports.delete_transport = function(req, res, next) {
     userDb.find_user(req, res, function(user) {
-        user[global.properties.esup.mongodb.transport[req.params.transport]]="";
+        user[global.properties.esup[global.properties.esup.userDb].transport[req.params.transport]]="";
         userDb.save_user(user, function(){
             res.send({
                 code: 'Ok',
