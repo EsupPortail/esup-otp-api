@@ -2,7 +2,7 @@ var properties = require(__dirname + '/../properties/properties');
 var utils = require(__dirname + '/../services/utils');
 var request = require('request');
 
-var proxyUrl = properties.esup.proxyUrl || '';
+var proxyUrl = properties.getEsupProperty('proxyUrl') || '';
 
 exports.send_message = function(num, opts, res) {
     if (utils.check_transport_validity('sms', num)) {
@@ -27,12 +27,12 @@ exports.send_message = function(num, opts, res) {
         });
     } else res.send({
         "code": "Error",
-        "message": properties.messages.error.invalid_sms
+        "message": properties.getMessage('error','invalid_sms')
     });
 }
 
 function urlBroker(num, message) {
-    var url = properties.esup.sms.url.split("$");
+    var url = properties.getEsupProperty('sms').url.split("$");
     url[url.indexOf('phoneNumber')] = num;
     url[url.indexOf('message')] = message;
     return url.join("");

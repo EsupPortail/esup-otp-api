@@ -1,3 +1,4 @@
+var properties = require(__dirname + '/../properties/properties');
 var api_controller = require(__dirname + '/../controllers/api');
 var utils = require(__dirname + '/../services/utils');
 var restify = require('restify');
@@ -6,18 +7,18 @@ exports.name = "random_code";
 
 exports.send_message = function(user, req, res, next) {
     var new_otp = user.random_code;
-    switch (global.properties.esup.methods.random_code.code_type) {
+    switch (properties.getMethod('random_code').code_type) {
         case "string":
-            new_otp.code = utils.generate_string_code(global.properties.esup.methods.random_code.code_length);
+            new_otp.code = utils.generate_string_code(properties.getMethod('random_code').code_length);
             break;
         case "digit":
-            new_otp.code = utils.generate_digit_code(global.properties.esup.methods.random_code.code_length);
+            new_otp.code = utils.generate_digit_code(properties.getMethod('random_code').code_length);
             break;
         default:
-            new_otp.code = utils.generate_string_code(global.properties.esup.methods.random_code.code_length);
+            new_otp.code = utils.generate_string_code(properties.getMethod('random_code').code_length);
             break;
     }
-    validity_time = global.properties.esup.methods.random_code.mail_validity * 60 * 1000;
+    validity_time = properties.getMethod('random_code').mail_validity * 60 * 1000;
     validity_time += new Date().getTime();
     new_otp.validity_time = validity_time;
     user.random_code = new_otp;
@@ -40,7 +41,7 @@ exports.verify_code = function(user, req, res, callbacks) {
         api_controller.save_user(user, function() {
             res.send({
                 "code": "Ok",
-                "message": properties.messages.success.valid_credentials
+                "message": properties.getMessage('success','valid_credentials')
             });
         });
     } else {
@@ -52,21 +53,21 @@ exports.verify_code = function(user, req, res, callbacks) {
 exports.generate_method_secret = function(user, req, res, next) {
     res.send({
         "code": "Error",
-        "message": properties.messages.error.unvailable_method_operation
+        "message": properties.getMessage('error','unvailable_method_operation')
     });
 }
 
 exports.delete_method_secret = function(user, req, res, next) {
     res.send({
         "code": "Error",
-        "message": properties.messages.error.unvailable_method_operation
+        "message": properties.getMessage('error','unvailable_method_operation')
     });
 }
 
 exports.get_method_secret = function(user, req, res, next) {
     res.send({
         "code": "Error",
-        "message": properties.messages.error.unvailable_method_operation
+        "message": properties.getMessage('error','unvailable_method_operation')
     });
 }
 
@@ -93,6 +94,6 @@ exports.user_deactivate = function(user, req, res, next) {
 exports.admin_activate = function(req, res, next) {
     res.send({
         "code": "Error",
-        "message": properties.messages.error.unvailable_method_operation
+        "message": properties.getMessage('error','unvailable_method_operation')
     });
 }

@@ -1,44 +1,46 @@
+var properties = require(__dirname + '/../../properties/properties');
+
 exports.schema = {
     "auto_create_user": {
         type: Boolean,
         required: true,
-        default: global.properties.esup.auto_create_user
+        default: properties.getEsupProperty('auto_create_user')
     },
     "proxyUrl": {
         type: String,
         required: true,
-        default: global.properties.esup.proxyUrl
+        default: properties.getEsupProperty('proxyUrl')
     },
     "api_password": {
         type: String,
         required: true,
-        default: global.properties.esup.api_password
+        default: properties.getEsupProperty('api_password')
     },
     "users_secret": {
         type: String,
         required: true,
-        default: global.properties.esup.users_secret
+        default: properties.getEsupProperty('users_secret')
     },
     "apiDb": {
         type: String,
         required: true,
-        default: global.properties.esup.apiDb
+        default: properties.getEsupProperty('apiDb')
     },
     "userDb": {
         type: String,
         required: true,
-        default: global.properties.esup.userDb
+        default: properties.getEsupProperty('userDb')
     },
     "mongodb": {
         "address": {
             type: String,
             required: true,
-            default: global.properties.esup.mongodb.address
+            default: properties.getEsupProperty('mongodb').address
         },
         "db": {
             type: String,
             required: true,
-            default: global.properties.esup.mongodb.db
+            default: properties.getEsupProperty('mongodb').db
         },
         "transport": {
             "mail": {
@@ -158,35 +160,35 @@ exports.schema = {
     "transports": {
         type: Array,
         required: true,
-        default: global.properties.esup.transports
+        default: properties.getEsupProperty('transports')
     },
     "mailer": {
         "sender_mail": {
             type: String,
             required: true,
-            default: global.properties.esup.mailer.sender_mail
+            default: properties.getEsupProperty('mailer').sender_mail
         },
         "sender_name": {
             type: String,
             required: true,
-            default: global.properties.esup.mailer.sender_name
+            default: properties.getEsupProperty('mailer').sender_name
         },
         "port": {
             type: String,
             required: true,
-            default: global.properties.esup.mailer.port
+            default: properties.getEsupProperty('mailer').port
         },
         "hostname": {
             type: String,
             required: true,
-            default: global.properties.esup.mailer.hostname
+            default: properties.getEsupProperty('mailer').hostname
         }
     },
     "sms": {
         "url": {
             type: String,
             required: true,
-            default: global.properties.esup.sms.url
+            default: properties.getEsupProperty('sms').url
         }
     }
 }

@@ -82,13 +82,13 @@ exports.initialize = function (server, callback) {
     logger.info('Initializing test routes');
     //tests routes
     server.put("/test/auto_create/activate/:api_password", function (req, res, next) {
-        global.properties.esup.auto_create_user = true;
+        properties.setEsupProperty('auto_create_user', true);
         res.send({
             code: 'Ok'
         });
     });
     server.put("/test/auto_create/deactivate/:api_password", function (req, res, next) {
-        global.properties.esup.auto_create_user = false;
+        properties.setEsupProperty('auto_create_user', false);
         res.send({
             code: 'Ok'
         });

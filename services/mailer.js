@@ -10,16 +10,16 @@ var options = {
     //     user: properties.esup.mailer.address,
     //     pass: properties.esup.mailer.password
     // }
-    host: properties.esup.mailer.hostname,
-    port: properties.esup.mailer.port,
+    host: properties.getEsupProperty('mailer').hostname,
+    port: properties.getEsupProperty('mailer').port,
     secure: false
 };
 
-if(properties.esup.proxyUrl)options.proxy=properties.esup.proxyUrl;
+if(properties.getEsupProperty('proxyUrl'))options.proxy=properties.getEsupProperty('proxyUrl');
 var transporter = nodemailer.createTransport(smtpTransport(options))
     // setup e-mail data with unicode symbols
 var mailOptions = {
-    from: properties.esup.mailer.sender_name+" <"+properties.esup.mailer.sender_mail+">", // sender address
+    from: properties.getEsupProperty('mailer').sender_name+" <"+properties.getEsupProperty('mailer').sender_mail+">", // sender address
 }
 
 exports.send_message = function(mail, opts, res) {
@@ -44,7 +44,7 @@ exports.send_message = function(mail, opts, res) {
         });
     } else res.send({
         "code": "Error",
-        "message": properties.messages.error.invalid_mail
+        "message": properties.getMessages('error','invalid_mail')
     });
 }
 

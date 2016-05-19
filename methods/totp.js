@@ -1,3 +1,4 @@
+var properties = require(__dirname + '/../properties/properties');
 var api_controller = require(__dirname + '/../controllers/api');
 var speakeasy = require('speakeasy');
 var qrCode = require('qrcode-npm')
@@ -8,13 +9,13 @@ exports.name = "totp";
 exports.send_message = function(user, req, res, next) {
     switch (req.params.transport) {
         case 'mail':
-            user.totp.window = global.properties.esup.methods.totp.mail_window;
+            user.totp.window = properties.getMethod('totp').mail_window;
             break;
         case 'sms':
-            user.totp.window = global.properties.esup.methods.totp.sms_window;
+            user.totp.window = properties.getMethod('totp').sms_window;
             break;
         default:
-            user.totp.window = global.properties.esup.methods.totp.default_window;
+            user.totp.window = properties.getMethod('totp').default_window;
             break;
     }
     api_controller.save_user(user, function() {
@@ -43,11 +44,11 @@ exports.verify_code = function(user, req, res, callbacks) {
             window: user.totp.window
         });
         if (checkSpeakeasy) {
-            user.totp.window = global.properties.esup.methods.totp.default_window;
+            user.totp.window = properties.getMethod('totp').default_window;
             api_controller.save_user(user, function() {
                 res.send({
                     "code": "Ok",
-                    "message": properties.messages.success.valid_credentials
+                    "message": properties.getMessage('success','valid_credentials')
                 });
             });
         } else {
@@ -127,6 +128,6 @@ exports.user_deactivate = function(user, req, res, next) {
 exports.admin_activate = function(req, res, next) {
     res.send({
         "code": "Error",
-        "message": properties.messages.error.unvailable_method_operation
+        "message": properties.getMessage('error','unvailable_method_operation')
     });
 }

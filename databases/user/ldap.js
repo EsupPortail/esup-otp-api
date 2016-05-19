@@ -1,4 +1,5 @@
 var utils = require(__dirname + '/../../services/utils');
+var properties = require(__dirname + '/../../properties/properties');
 var ldapjs = require('ldapjs');
 var winston = require('winston');
 
@@ -49,9 +50,9 @@ var client;
 exports.initialize = function(callback) {
     logger.info("Initializing ldap connection");
     client = ldapjs.createClient({
-        url: global.properties.esup.ldap.uri
+        url: properties.getEsupProperty('ldap').uri
     });
-    client.bind(global.properties.esup.ldap.adminDn, global.properties.esup.ldap.password, function(err) {
+    client.bind(properties.getEsupProperty('ldap').adminDn, properties.getEsupProperty('ldap').password, function(err) {
         if (err) console.log('bind error : ' + err);
         else if (typeof(callback) === "function"){
             logger.info("Ldap connection Initialized");
@@ -69,11 +70,11 @@ function find_user(req, res, callback) {
     var opts = {
         filter: 'uid=' + req.params.uid,
         scope: 'sub',
-        attributes: [global.properties.esup.ldap.transport.sms, global.properties.esup.ldap.transport.mail]
+        attributes: [properties.getEsupProperty('ldap').transport.sms, properties.getEsupProperty('ldap').transport.mail]
     };
 
     var user_found = false;
-    client.search(global.properties.esup.ldap.baseDn, opts, function(err, _res) {
+    client.search(properties.getEsupProperty('ldap').baseDn, opts, function(err, _res) {
         if (err) console.log('search error : ' + err);
 
         _res.on('searchEntry', function(entry) {
@@ -123,7 +124,7 @@ exports.save_user = function (user, callback) {
 }
 
 function create_user(uid, callback) {
-    var dn = 'uid=' + uid + ',' + global.properties.esup.ldap.baseDn;
+    var dn = 'uid=' + uid + ',' + properties.getEsupProperty('ldap').baseDn;
     logger.debug(dn);
     var entry = {
         cn: uid,
@@ -145,7 +146,7 @@ exports.remove_user = function (uid, callback) {
         send: function () {
         }
     }, function () {
-        var dn = 'uid=' + uid + ',' + global.properties.esup.ldap.baseDn;
+        var dn = 'uid=' + uid + ',' + properties.getEsupProperty('ldap').baseDn;
         client.del(dn, function (err) {
             if (err)logger.error(err);
             if (typeof(callback) === "function") callback();

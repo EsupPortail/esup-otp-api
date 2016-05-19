@@ -2,12 +2,13 @@ var userDb_controller = require(__dirname + '/user');
 var restify = require('restify');
 var mailer = require(__dirname + '/../services/mailer');
 var sms = require(__dirname + '/../services/sms');
+var properties = require(__dirname + '/../properties/properties');
 var methods;
 var apiDb;
 
 exports.initialize= function(callback) {
-    if (global.properties.esup.apiDb) {
-        apiDb = require(__dirname + '/../databases/api/' + global.properties.esup.apiDb);
+    if (properties.getEsupProperty('apiDb')) {
+        apiDb = require(__dirname + '/../databases/api/' + properties.getEsupProperty('apiDb'));
         methods = require(__dirname + '/../methods/methods');
     	apiDb.initialize(callback);
         exports.apiDb = apiDb;
@@ -20,8 +21,8 @@ exports.get_methods = function(req, res, next) {
         "message": "No method found"
     };
     response.methods = {};
-    for (method in global.properties.esup.methods) {
-        response.methods[method] = global.properties.esup.methods[method];
+    for (method in properties.getEsupProperty('methods')) {
+        response.methods[method] = properties.getMethod(method);
         response.code = "Ok";
         response.message = "Method(s) found";
     }
@@ -36,8 +37,8 @@ exports.get_methods = function(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.activate_method_admin = function(req, res, next) {
-    if (global.properties.esup.methods[req.params.method]) {
-        global.properties.esup.methods[req.params.method].activate = true;
+    if (properties.getMethod(req.params.method)) {
+        properties.setMethodProperty(req.params.method, 'activate', true);
         apiDb.update_api_preferences();
         res.send({
             code: 'Ok',
@@ -57,8 +58,8 @@ exports.activate_method_admin = function(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.deactivate_method_admin = function(req, res, next) {
-    if (global.properties.esup.methods[req.params.method]) {
-        global.properties.esup.methods[req.params.method].activate = false;
+    if (properties.getMethod(req.params.method)) {
+        properties.setMethodProperty(req.params.method, 'activate', false);
         apiDb.update_api_preferences();
         res.send({
             code: 'Ok',
@@ -78,11 +79,8 @@ exports.deactivate_method_admin = function(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.activate_method_transport = function(req, res, next) {
-    if (global.properties.esup.methods[req.params.method]) {
-        var index = global.properties.esup.methods[req.params.method].transports.indexOf(req.params.transport);
-        if (index < 0) {
-            global.properties.esup.methods[req.params.method].transports.push(req.params.transport);
-        }
+    if (properties.getMethod(req.params.method)) {
+        properties.addMethodTransport(req.params.method, req.params.transport);
         apiDb.update_api_preferences();
         res.send({
             code: 'Ok',
@@ -102,11 +100,8 @@ exports.activate_method_transport = function(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.deactivate_method_transport = function(req, res, next) {
-    if (global.properties.esup.methods[req.params.method]) {
-        var index = global.properties.esup.methods[req.params.method].transports.indexOf(req.params.transport);
-        if (index >= 0) {
-            global.properties.esup.methods[req.params.method].transports.splice(index, 1);
-        }
+    if (properties.getMethod(req.params.method)) {
+        properties.removeMethodTransport(req.params.method, req.params.transport);
         apiDb.update_api_preferences();
         res.send({
             code: 'Ok',
@@ -161,7 +156,7 @@ exports.remove_user=function(uid, callback) {
  */
 exports.transport_code = function(code, req, res, next) {
     var opts ={};
-    opts.object = properties.messages.transport.code;
+    opts.object = properties.getMessage('transport','code');
     opts.message = code;
     transport(opts, req, res, next);
 }
@@ -175,17 +170,17 @@ exports.transport_code = function(code, req, res, next) {
  */
 exports.transport_test = function(req, res, next) {
     var opts ={}
-    opts.object = properties.messages.transport.test;
+    opts.object = properties.getMessage('transport','test');
     opts.message ='';
     switch (req.params.transport) {
         case 'mail':
-            opts.message = properties.messages.transport.mail.pre_test+req.params.uid+properties.messages.transport.mail.post_test
+            opts.message = properties.getMessage('transport','mail').pre_test+req.params.uid+properties.getMessage('transport','mail').post_test
             break;
         case 'sms':
-            opts.message= properties.messages.transport.sms.pre_test+req.params.uid+properties.messages.transport.sms.post_test
+            opts.message= properties.getMessage('transport','sms').pre_test+req.params.uid+properties.getMessage('transport','sms').post_test
             break;
         default:
-            opts.message= properties.messages.transport.mail.pre_test+req.params.uid+properties.messages.transport.mail.post_test
+            opts.message= properties.getMessage('transport','mail').pre_test+req.params.uid+properties.getMessage('transport','mail').post_test
             break;
     }
     transport(opts,req ,res, next);
@@ -213,7 +208,7 @@ function transport(opts, req, res, next) {
         default:
             res.send({
                 code: 'Error',
-                message: properties.messages.error.unvailable_method_transport
+                message: properties.getMessage('error','unvailable_method_transport')
             });
             break;
     }
@@ -269,21 +264,21 @@ exports.get_user_infos = function(req, res, next) {
  */
 exports.send_message = function(req, res, next) {
     console.log("send_code :" + req.params.uid);
-    if (global.properties.esup.methods[req.params.method]) {
+    if (properties.getMethod(req.params.method)) {
         apiDb.find_user(req, res, function(user) {
-            if (user[req.params.method].active && global.properties.esup.methods[req.params.method].activate && methods[req.params.method]) {
+            if (user[req.params.method].active && properties.getMethodProperty(req.params.method, 'activate') && methods[req.params.method]) {
                 methods[req.params.method].send_message(user, req, res, next);
             } else {
                 res.send({
                     code: 'Error',
-                    message: properties.messages.error.method_not_found
+                    message: properties.getMessage('error','method_not_found')
                 });
             }
         });
     } else {
         res.send({
             code: 'Error',
-            message: properties.messages.error.method_not_found
+            message: properties.getMessage('error','method_not_found')
         });
     }
 };
@@ -303,13 +298,13 @@ exports.verify_code = function(req, res, next) {
         var callbacks = [function() {
             res.send({
                 "code": "Error",
-                "message": properties.messages.error.invalid_credentials
+                "message": properties.getMessage('error','invalid_credentials')
             });
         }];
         var methods_length = Object.keys(methods).length;
         var it = 1;
         for (method in methods) {
-            if (user[method].active && global.properties.esup.methods[method].activate) {
+            if (user[method].active && properties.getMethodProperty(method, 'activate')) {
                 if(it==methods_length)methods[method].verify_code(user, req, res, callbacks);
             }
             callbacks.push(methods[method].verify_code);
@@ -327,21 +322,21 @@ exports.verify_code = function(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.generate_method_secret = function(req, res, next) {
-    if (global.properties.esup.methods[req.params.method]) {
+    if (properties.getMethod(req.params.method)) {
         apiDb.find_user(req, res, function(user) {
-            if (methods[req.params.method] && global.properties.esup.methods[req.params.method].activate) {
+            if (methods[req.params.method] && properties.getMethodProperty(req.params.method, 'activate')) {
                 methods[req.params.method].generate_method_secret(user, req, res, next);
             } else {
                 res.send({
                     code: 'Error',
-                    message: properties.messages.error.method_not_found
+                    message: properties.getMessage('error','method_not_found')
                 });
             }
         });
     } else {
         res.send({
             code: 'Error',
-            message: properties.messages.error.method_not_found
+            message: properties.getMessage('error','method_not_found')
         });
     }
 };
@@ -355,14 +350,14 @@ exports.generate_method_secret = function(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.delete_method_secret = function(req, res, next) {
-    if (global.properties.esup.methods[req.params.method]) {
+    if (properties.getMethod(req.params.method)) {
         apiDb.find_user(req, res, function(user) {
             methods[req.params.method].delete_method_secret(user, req, res, next);
         });
     } else {
         res.send({
             code: 'Error',
-            message: properties.messages.error.method_not_found
+            message: properties.getMessage('error','method_not_found')
         });
     }
 };
@@ -375,14 +370,14 @@ exports.delete_method_secret = function(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.get_method_secret = function(req, res, next) {
-    if (global.properties.esup.methods[req.params.method]) {
+    if (properties.getMethod(req.params.method)) {
         apiDb.find_user(req, res, function(user) {
             methods[req.params.method].get_method_secret(user, req, res, next);
         });
     } else {
         res.send({
             code: 'Error',
-            message: properties.messages.error.method_not_found
+            message: properties.getMessage('error','method_not_found')
         });
     }
 };
@@ -398,14 +393,14 @@ exports.get_activate_methods = function(req, res, next) {
     apiDb.find_user(req, res, function(user) {
         var response = {};
         var result = {};
-        for (method in global.properties.esup.methods) {
-            if (global.properties.esup.methods[method].activate) {
+        for (method in properties.getEsupProperty('methods')) {
+            if (properties.getMethodProperty('method','activate')) {
                 if(!user[method].active)result[method] = user[method].active;
-                else result[method] = global.properties.esup.methods[method];
+                else result[method] = properties.getMethod('method');
             }
         }
         response.code = "Ok";
-        response.message = properties.messages.success.methods_found;
+        response.message = properties.getMessage('success','methods_found');
         response.methods = result;
         res.send(response);
     });
@@ -428,7 +423,7 @@ exports.activate_method = function(req, res, next) {
         });
     } else res.send({
         "code": "Error",
-        "message": properties.messages.error.method_not_found
+        "message": properties.getMessage('error','method_not_found')
     });
 };
 
@@ -448,7 +443,7 @@ exports.deactivate_method = function(req, res, next) {
         });
     } else res.send({
         "code": "Error",
-        "message": properties.messages.error.method_not_found
+        "message": properties.getMessage('error','method_not_found')
     });
 };
 

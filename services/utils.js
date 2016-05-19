@@ -21,9 +21,9 @@ exports.get_hash = function(uid) {
     d.setHours(d.getHours()-1);
     var present_salt = d.getUTCDate() + present_h.toString();
 
-    var present_hash = CryptoJS.SHA256(CryptoJS.MD5(properties.esup.users_secret).toString()+uid+present_salt).toString(); 
-    var next_hash = CryptoJS.SHA256(CryptoJS.MD5(properties.esup.users_secret).toString()+uid+next_salt).toString(); 
-    var past_hash = CryptoJS.SHA256(CryptoJS.MD5(properties.esup.users_secret).toString()+uid+past_salt).toString(); 
+    var present_hash = CryptoJS.SHA256(CryptoJS.MD5(properties.getEsupProperty('users_secret')).toString()+uid+present_salt).toString();
+    var next_hash = CryptoJS.SHA256(CryptoJS.MD5(properties.getEsupProperty('users_secret')).toString()+uid+next_salt).toString();
+    var past_hash = CryptoJS.SHA256(CryptoJS.MD5(properties.getEsupProperty('users_secret')).toString()+uid+past_salt).toString();
 
     var hashes = [past_hash, present_hash, next_hash];
 

@@ -1,6 +1,6 @@
 var restify = require('restify');
 var winston = require('winston');
-global.properties = require(__dirname + '/../properties/properties');
+var properties = require(__dirname + '/../properties/properties');
 var fs = require('fs');
 
 global.base_dir = __dirname.split('/')[__dirname.split('/').length-2];
@@ -70,7 +70,7 @@ var routes;
 
 function initialize_userDBController() {
     logger.info('Initializing the userDB controller');
-    if (global.properties.esup.userDb) {
+    if (properties.getEsupProperty('userDb')) {
         userDb_controller = require(__dirname+ '/../controllers/user');
         userDb_controller.initialize(initialize_apiController);
     } else logger.error('Unknown userDb');
@@ -80,7 +80,7 @@ var api_controller;
 
 function initialize_apiController() {
     logger.info('Initializing the api controller');
-    if (global.properties.esup.apiDb) {
+    if (properties.getEsupProperty('apiDb')) {
         api_controller = require(__dirname + '/../controllers/api');
         api_controller.initialize(initialize_routes(launch_server));
     } else logger.error('Unknown apiDb');

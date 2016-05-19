@@ -1,10 +1,11 @@
 var userDb_controller = require(__dirname + '/../../controllers/user');
+var properties = require(__dirname + '/../../properties/properties');
 var methods;
 var mongoose = require('mongoose');
 var connection;
 
 exports.initialize = function (callback) {
-    connection = mongoose.createConnection('mongodb://' + global.properties.esup.mongodb.address + '/' + global.properties.esup.mongodb.db, function (error) {
+    connection = mongoose.createConnection('mongodb://' + properties.getEsupProperty('mongodb').address + '/' + properties.getEsupProperty('mongodb').db, function (error) {
         if (error) {
             console.log(error);
         } else {
@@ -26,7 +27,7 @@ function initiatilize_api_preferences() {
     connection.model('ApiPreferences', ApiPreferencesSchema, 'ApiPreferences');
     ApiPreferences = connection.model('ApiPreferences');
     ApiPreferences.find({}).exec(function (err, data) {
-        if (data[0]) global.properties.esup = data[0];
+        if (data[0]) properties.setEsup(data[0]);
         else {
             update_api_preferences();
         }
@@ -45,7 +46,7 @@ exports.update_api_preferences = update_api_preferences;
 function update_api_preferences() {
     ApiPreferences.remove({}, function (err) {
         if (err) console.log(err);
-        var api_preferences = new ApiPreferences(global.properties.esup);
+        var api_preferences = new ApiPreferences(properties.getEsup());
         api_preferences.save(function () {
             console.log("Api Preferences updated");
         });
@@ -71,7 +72,7 @@ function initiatilize_user_model() {
 exports.find_user = function (req, res, callback) {
     var response = {
         "code": "Error",
-        "message": properties.messages.error.user_not_found
+        "message": properties.getMessage('error','user_not_found')
     };
     UserPreferences.find({
         'uid': req.params.uid
@@ -139,7 +140,7 @@ exports.parse_user = function (user) {
     var parsed_user = {};
     parsed_user.totp = {};
     parsed_user.totp.active = user.totp.active;
-    parsed_user.totp.transports = available_transports(user.totp.transports, "totp");
+    parsed_user.totp.transports = available_transports(user.totp.transports, "totp");;
     parsed_user.random_code = {};
     parsed_user.random_code.active = user.random_code.active;
     parsed_user.random_code.transports = available_transports(user.random_code.transports, 'random_code');
@@ -156,7 +157,7 @@ exports.parse_user = function (user) {
 function available_transports(userTransports, method) {
     var available_transports = [];
     for (t in userTransports) {
-        if (global.properties.esup.methods[method].transports.indexOf(userTransports[t]) >= 0) available_transports.push(userTransports[t]);
+        if (properties.getMethod(method).transports.indexOf(userTransports[t]) >= 0) available_transports.push(userTransports[t]);
     }
     return available_transports;
 }

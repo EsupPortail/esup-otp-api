@@ -35,7 +35,7 @@ function check_hash(req, res, next) {
 }
 
 function check_api_password(req, res, next) {
-    if (req.params.api_password == properties.esup.api_password) return next();
+    if (req.params.api_password == properties.getEsupProperty('api_password')) return next();
     else return next(new restify.ForbiddenError());
 }
 

@@ -1,9 +1,10 @@
+var properties = require(__dirname + '/../../properties/properties');
 var utils = require(__dirname + '/../../services/utils');
 var mongoose = require('mongoose');
 var connection;
 
 exports.initialize = function(callback) {
-    connection = mongoose.createConnection('mongodb://' + global.properties.esup.mongodb.address + '/' + global.properties.esup.mongodb.db, function(error) {
+    connection = mongoose.createConnection('mongodb://' + properties.getEsupProperty('mongodb').address + '/' + properties.getEsupProperty('mongodb').db, function(error) {
         if (error) {
             console.log(error);
         } else {
@@ -36,7 +37,7 @@ function initiatilize_user_model() {
 function find_user(req, res, callback) {
     var response = {
         "code": "Error",
-        "message": properties.messages.error.user_not_found
+        "message": properties.getMessage('error', 'user_not_found')
     };
     User.find({
         'uid': req.params.uid
@@ -44,7 +45,7 @@ function find_user(req, res, callback) {
         if (data[0]) {
             if (typeof(callback) === "function") callback(data[0]);
         } else {
-            if(global.properties.esup.auto_create_user)create_user(req.params.uid, callback);
+            if(properties.getEsupProperty('auto_create_user'))create_user(req.params.uid, callback);
             else res.send(response);
         }
     });
