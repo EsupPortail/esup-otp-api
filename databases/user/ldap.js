@@ -64,7 +64,7 @@ exports.initialize = function(callback) {
 function find_user(req, res, callback) {
     var response = {
         "code": "Error",
-        "message": properties.messages.error.user_not_found
+        "message": properties.getMessage('error','user_not_found')
     };
 
     var opts = {

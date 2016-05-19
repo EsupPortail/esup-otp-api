@@ -59,7 +59,7 @@ function find_user(req, res, callback) {
             if (typeof(callback) === "function") callback(rows[0]);
         } else res.send({
             "code": "Error",
-            "message": properties.messages.error.user_not_found
+            "message": properties.getMessage('error','user_not_found')
         });
     });
 }

@@ -9,10 +9,6 @@ fs.readdirSync(__dirname).forEach(function (file) {
     }
 })
 
-for (properties_file in properties) {
-    exports[properties_file] = properties[properties_file];
-}
-
 exports.getMessages = function () {
     return properties.messages;
 }

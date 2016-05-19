@@ -46,7 +46,7 @@ exports.activate_method_admin = function(req, res, next) {
         });
     } else res.send({
         "code": "Error",
-        "message": properties.messages.error.method_not_found
+        "message": properties.getMessage('error','method_not_found')
     });
 };
 
@@ -67,7 +67,7 @@ exports.deactivate_method_admin = function(req, res, next) {
         });
     } else res.send({
         "code": "Error",
-        "message": properties.messages.error.method_not_found
+        "message": properties.getMessage('error','method_not_found')
     });
 };
 
@@ -88,7 +88,7 @@ exports.activate_method_transport = function(req, res, next) {
         });
     } else res.send({
         "code": "Error",
-        "message": properties.messages.error.method_not_found
+        "message": properties.getMessage('error','method_not_found')
     });
 };
 
@@ -109,7 +109,7 @@ exports.deactivate_method_transport = function(req, res, next) {
         });
     } else res.send({
         "code": "Error",
-        "message": properties.messages.error.method_not_found
+        "message": properties.getMessage('error','method_not_found')
     });
 };
 
