@@ -4,8 +4,6 @@ var validator = require(__dirname + '/../services/validator');
 var api_controller = require(__dirname + '/../controllers/api');
 var userDb_controller = require(__dirname + '/../controllers/user');
 
-var name_base_dir = __dirname.split('/')[__dirname.split('/').length-2];
-
 var logger = new (winston.Logger)({
     transports: [
         new (winston.transports.Console)({
@@ -14,7 +12,7 @@ var logger = new (winston.Logger)({
             },
             formatter: function(options) {
                 // Return string will be passed to logger.
-                return options.timestamp() +' '+ options.level.toUpperCase() +' '+__filename.split(name_base_dir)[1]+' '+ (undefined !== options.message ? options.message : '') +
+                return options.timestamp() +' '+ options.level.toUpperCase() +' '+__filename.split(global.base_dir)[1]+' '+ (undefined !== options.message ? options.message : '') +
                     (options.meta && Object.keys(options.meta).length ? '\n\t'+ JSON.stringify(options.meta) : '' );
             }
         }),
@@ -27,7 +25,7 @@ var logger = new (winston.Logger)({
             json: false,
             formatter: function(options) {
                 // Return string will be passed to logger.
-                return options.timestamp() +' '+ options.level.toUpperCase() +' '+__filename.split(name_base_dir)[1]+' '+ (undefined !== options.message ? options.message : '') +
+                return options.timestamp() +' '+ options.level.toUpperCase() +' '+__filename.split(global.base_dir)[1]+' '+ (undefined !== options.message ? options.message : '') +
                     (options.meta && Object.keys(options.meta).length ? '\n\t'+ JSON.stringify(options.meta) : '' );
             }
         }),
@@ -41,7 +39,7 @@ var logger = new (winston.Logger)({
             json: false,
             formatter: function(options) {
                 // Return string will be passed to logger.
-                return options.timestamp() +' '+ options.level.toUpperCase() +' '+__filename.split(name_base_dir)[1]+' '+ (undefined !== options.message ? options.message : '') +
+                return options.timestamp() +' '+ options.level.toUpperCase() +' '+__filename.split(global.base_dir)[1]+' '+ (undefined !== options.message ? options.message : '') +
                     (options.meta && Object.keys(options.meta).length ? '\n\t'+ JSON.stringify(options.meta) : '' );
             }
         })
