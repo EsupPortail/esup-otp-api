@@ -1,10 +1,13 @@
 var userDb_controller = require(__dirname + '/user');
 var restify = require('restify');
+var utils = require(__dirname + '/../services/utils');
 var mailer = require(__dirname + '/../services/mailer');
 var sms = require(__dirname + '/../services/sms');
 var properties = require(__dirname + '/../properties/properties');
 var methods;
 var apiDb;
+
+var logger = require(__dirname + '/../services/logger').getInstance();
 
 exports.initialize= function(callback) {
     if (properties.getEsupProperty('apiDb')) {
@@ -12,7 +15,7 @@ exports.initialize= function(callback) {
         methods = require(__dirname + '/../methods/methods');
     	apiDb.initialize(callback);
         exports.apiDb = apiDb;
-    } else console.log("Unknown apiDb");
+    } else logger.error(utils.getFileName(__filename)+' '+"Unknown apiDb");
 }
 
 exports.get_methods = function(req, res, next) {
@@ -263,7 +266,7 @@ exports.get_user_infos = function(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.send_message = function(req, res, next) {
-    console.log("send_code :" + req.params.uid);
+    logger.debug(utils.getFileName(__filename)+' '+"send_code :" + req.params.uid);
     if (properties.getMethod(req.params.method)) {
         apiDb.find_user(req, res, function(user) {
             if (user[req.params.method].active && properties.getMethodProperty(req.params.method, 'activate') && methods[req.params.method]) {
@@ -416,7 +419,7 @@ exports.get_activate_methods = function(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.activate_method = function(req, res, next) {
-    console.log(req.params.uid + " activate_method " + req.params.method);
+    logger.info(utils.getFileName(__filename)+' '+req.params.uid + " activate_method " + req.params.method);
     if (methods[req.params.method]) {
         apiDb.find_user(req, res, function(user) {
             methods[req.params.method].user_activate(user, req, res, next);
@@ -436,7 +439,7 @@ exports.activate_method = function(req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.deactivate_method = function(req, res, next) {
-    console.log(req.params.uid + " deactivate_method " + req.params.method);
+    logger.info(utils.getFileName(__filename)+' '+req.params.uid + " deactivate_method " + req.params.method);
     if (methods[req.params.method]) {
         apiDb.find_user(req, res, function(user) {
             methods[req.params.method].user_deactivate(user, req, res, next);

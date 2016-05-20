@@ -3,10 +3,12 @@ var utils = require(__dirname + '/../../services/utils');
 var mongoose = require('mongoose');
 var connection;
 
+var logger = require(__dirname + '/../../services/logger').getInstance();
+
 exports.initialize = function(callback) {
     connection = mongoose.createConnection('mongodb://' + properties.getEsupProperty('mongodb').address + '/' + properties.getEsupProperty('mongodb').db, function(error) {
         if (error) {
-            console.log(error);
+            logger.error(utils.getFileName(__filename)+' '+error);
         } else {
             initiatilize_user_model();
             if (typeof(callback) === "function") callback();
@@ -77,7 +79,7 @@ exports.save_user=function(user, callback) {
  */
 exports.remove_user=function(uid, callback) {
     User.remove({uid:uid}, function(err, data) {
-        if (err) console.log(err);
+        if (err) logger.error(utils.getFileName(__filename)+' '+error);
         if (typeof(callback) === "function") callback(data);
     });
 }

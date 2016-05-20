@@ -1,13 +1,16 @@
 var userDb_controller = require(__dirname + '/../../controllers/user');
 var properties = require(__dirname + '/../../properties/properties');
+var utils = require(__dirname + '/../../services/utils');
 var methods;
 var mongoose = require('mongoose');
 var connection;
 
+var logger = require(__dirname + '/../../services/logger').getInstance();
+
 exports.initialize = function (callback) {
     connection = mongoose.createConnection('mongodb://' + properties.getEsupProperty('mongodb').address + '/' + properties.getEsupProperty('mongodb').db, function (error) {
         if (error) {
-            console.log(error);
+            logger.error(utils.getFileName(__filename)+' '+error);
         } else {
             initiatilize_api_preferences();
             initiatilize_user_model();
@@ -45,10 +48,10 @@ exports.update_api_preferences = update_api_preferences;
 
 function update_api_preferences() {
     ApiPreferences.remove({}, function (err) {
-        if (err) console.log(err);
+        if (err) logger.error(utils.getFileName(__filename)+' '+err);
         var api_preferences = new ApiPreferences(properties.getEsup());
         api_preferences.save(function () {
-            console.log("Api Preferences updated");
+            logger.info(utils.getFileName(__filename)+' '+"Api Preferences updated");
         });
     });
 }
@@ -131,7 +134,7 @@ function create_user(uid, callback) {
  */
 exports.remove_user = function (uid, callback) {
     UserPreferences.remove({uid: uid}, function (err, data) {
-        if (err) console.log(err);
+        if (err) logger.error(err);
         if (typeof(callback) === "function") callback(data);
     });
 }
@@ -167,7 +170,7 @@ function available_transports(userTransports, method) {
  */
 exports.get_uids = function (req, res, next) {
     UserPreferences.find({}, function (err, data) {
-        if (err) console.log(err);
+        if (err) logger.error(utils.getFileName(__filename)+' '+err);
         var result = [];
         for(up in data){
             result.push(data[up].uid);
@@ -184,8 +187,8 @@ exports.get_uids = function (req, res, next) {
  */
 exports.drop = function (req, res, next) {
     UserPreferences.remove({}, function (err, data) {
-        if (err) console.log(err);
-        console.log('users removed');
+        if (err) logger.error(utils.getFileName(__filename)+' '+err);
+        logger.debug('users removed');
         res.send(data);
     });
 };

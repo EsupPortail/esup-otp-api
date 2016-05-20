@@ -4,6 +4,14 @@ var userDb;
 
 var logger = require(__dirname + '/../services/logger').getInstance();
 
+exports.initialize= function(callback) {
+        if (properties.getEsupProperty('apiDb')) {
+        userDb = require(__dirname + '/../databases/user/' + properties.getEsupProperty('userDb'));
+        userDb.initialize(callback);
+        exports.userDb = userDb;
+    } else logger.error(utils.getFileName(__filename)+' '+"Unknown apiDb");
+}
+
 exports.user_exists= function(req, res, callback){
     userDb.find_user(req, res, function(user){
         if (typeof(callback) === "function") callback(user);
@@ -19,7 +27,6 @@ exports.get_available_transports = function(req, res, callback) {
         if (user[properties.getEsupProperty(properties.getEsupProperty('userDb')).transport.sms]) result.sms = utils.cover_string(user[properties.getEsupProperty(properties.getEsupProperty('userDb')).transport.sms], 2, 2);
         if (typeof(callback) === "function") callback(result);
         else {
-            console.log()
             response.code = "Ok";
             response.message = properties.getMessage('success','transports_found');
             response.transports_list = result;
