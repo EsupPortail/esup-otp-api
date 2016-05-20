@@ -1,60 +1,20 @@
-var winston = require('winston');
 var properties = require(__dirname + '/../properties/properties');
+var utils = require(__dirname + '/../services/utils');
 var validator = require(__dirname + '/../services/validator');
 var api_controller = require(__dirname + '/../controllers/api');
 var userDb_controller = require(__dirname + '/../controllers/user');
 
-var logger = new (winston.Logger)({
-    transports: [
-        new (winston.transports.Console)({
-            timestamp: function() {
-                return new Date(Date.now());
-            },
-            formatter: function(options) {
-                // Return string will be passed to logger.
-                return options.timestamp() +' '+ options.level.toUpperCase() +' '+__filename.split(global.base_dir)[1]+' '+ (undefined !== options.message ? options.message : '') +
-                    (options.meta && Object.keys(options.meta).length ? '\n\t'+ JSON.stringify(options.meta) : '' );
-            }
-        }),
-        new (winston.transports.File)({
-            timestamp: function() {
-                return ''+new Date(Date.now());
-            },
-            name: 'info-file',
-            filename: __dirname+'/../logs/server.log',
-            json: false,
-            formatter: function(options) {
-                // Return string will be passed to logger.
-                return options.timestamp() +' '+ options.level.toUpperCase() +' '+__filename.split(global.base_dir)[1]+' '+ (undefined !== options.message ? options.message : '') +
-                    (options.meta && Object.keys(options.meta).length ? '\n\t'+ JSON.stringify(options.meta) : '' );
-            }
-        }),
-        new (winston.transports.File)({
-            timestamp: function() {
-                return ''+new Date(Date.now());
-            },
-            name: 'debug-file',
-            level: 'debug',
-            filename: __dirname+'/../logs/debug.log',
-            json: false,
-            formatter: function(options) {
-                // Return string will be passed to logger.
-                return options.timestamp() +' '+ options.level.toUpperCase() +' '+__filename.split(global.base_dir)[1]+' '+ (undefined !== options.message ? options.message : '') +
-                    (options.meta && Object.keys(options.meta).length ? '\n\t'+ JSON.stringify(options.meta) : '' );
-            }
-        })
-    ]
-});
+var logger = require(__dirname + '/../services/logger').getInstance();
 
 exports.initialize = function (server, callback) {
-    logger.info('Initializing Routes');
+    logger.info(utils.getFileName(__filename)+' '+'Initializing Routes');
 
-    logger.info('Initializing "unprotected" routes');
+    logger.info(utils.getFileName(__filename)+' '+'Initializing "unprotected" routes');
     //user_hash
     server.get("/user/:uid/:hash", validator.get_user_infos, api_controller.get_user_infos);
     server.get("/user/:uid/method/:method/transport/:transport/code/send/:hash", validator.send_message, api_controller.send_message);
 
-    logger.info('Initializing protected routes');
+    logger.info(utils.getFileName(__filename)+' '+'Initializing protected routes');
     //api_api_password
     server.get("/protected/method/:api_password", validator.get_methods, api_controller.get_methods);
     server.get("/protected/user/:uid/transport/:transport/test/:api_password", validator.transport_test, api_controller.transport_test);
@@ -66,7 +26,7 @@ exports.initialize = function (server, callback) {
     server.post("/protected/user/:uid/code/verify/:otp/:api_password", validator.verify_code, api_controller.verify_code);
     server.del("/protected/user/:uid/transport/:transport/:api_password", validator.delete_transport, userDb_controller.delete_transport);
 
-    logger.info('Initializing admin routes');
+    logger.info(utils.getFileName(__filename)+' '+'Initializing admin routes');
     // routes DEV/ADMIN uniquement
     //api_api_password
     server.get("/protected/admin/user/:uid/:api_password", validator.get_user, api_controller.get_user);
@@ -79,7 +39,7 @@ exports.initialize = function (server, callback) {
     server.put("/protected/admin/method/:method/activate/:api_password", validator.toggle_method_admin, api_controller.activate_method_admin);
     server.del("/protected/admin/user/:uid/method/:method/secret/:api_password", validator.delete_method_secret, api_controller.delete_method_secret);
 
-    logger.info('Initializing test routes');
+    logger.info(utils.getFileName(__filename)+' '+'Initializing test routes');
     //tests routes
     server.put("/test/auto_create/activate/:api_password", function (req, res, next) {
         properties.setEsupProperty('auto_create_user', true);
@@ -112,5 +72,5 @@ exports.initialize = function (server, callback) {
         })
     });
     if (typeof(callback) === "function") callback(server);
-    logger.info('Routes initialized');
+    logger.info(utils.getFileName(__filename)+' '+'Routes initialized');
 }

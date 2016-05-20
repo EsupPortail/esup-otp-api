@@ -4,7 +4,7 @@ var request = require('request');
 var mongoose = require('mongoose');
 var async = require('async');
 var utils = require(__dirname + '/../services/utils');
-
+var logger = require(__dirname + '/../services/logger').getInstance();
 var properties = require(__dirname + '/../properties/properties');
 var default_properties = properties;
 

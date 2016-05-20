@@ -1,51 +1,11 @@
 var restify = require('restify');
-var winston = require('winston');
 var properties = require(__dirname + '/../properties/properties');
+var utils = require(__dirname + '/../services/utils');
 var fs = require('fs');
 
 global.base_dir = __dirname.split('/')[__dirname.split('/').length-2];
 
-var logger = new (winston.Logger)({
-    transports: [
-        new (winston.transports.Console)({
-            timestamp: function() {
-                return new Date(Date.now());
-            },
-            formatter: function(options) {
-                // Return string will be passed to logger.
-                return options.timestamp() +' '+ options.level.toUpperCase() +' '+__filename.split(global.base_dir)[1]+' '+ (undefined !== options.message ? options.message : '') +
-                    (options.meta && Object.keys(options.meta).length ? '\n\t'+ JSON.stringify(options.meta) : '' );
-            }
-        }),
-        new (winston.transports.File)({
-            timestamp: function() {
-                return ''+new Date(Date.now());
-            },
-            name: 'info-file',
-            filename: __dirname+'/../logs/server.log',
-            json: false,
-            formatter: function(options) {
-                // Return string will be passed to logger.
-                return options.timestamp() +' '+ options.level.toUpperCase() +' '+__filename.split(global.base_dir)[1]+' '+ (undefined !== options.message ? options.message : '') +
-                    (options.meta && Object.keys(options.meta).length ? '\n\t'+ JSON.stringify(options.meta) : '' );
-            }
-        }),
-        new (winston.transports.File)({
-            timestamp: function() {
-                return ''+new Date(Date.now());
-            },
-            name: 'debug-file',
-            level: 'debug',
-            filename: __dirname+'/../logs/debug.log',
-            json: false,
-            formatter: function(options) {
-                // Return string will be passed to logger.
-                return options.timestamp() +' '+ options.level.toUpperCase() +' '+__filename.split(global.base_dir)[1]+' '+ (undefined !== options.message ? options.message : '') +
-                    (options.meta && Object.keys(options.meta).length ? '\n\t'+ JSON.stringify(options.meta) : '' );
-            }
-        })
-    ]
-});
+var logger = require(__dirname + '/../services/logger').getInstance();
 
 var server = restify.createServer({
     name: 'esup-otp',
@@ -69,7 +29,7 @@ var userDb_controller;
 var routes;
 
 function initialize_userDBController() {
-    logger.info('Initializing the userDB controller');
+    logger.info(utils.getFileName(__filename)+' '+'Initializing the userDB controller');
     if (properties.getEsupProperty('userDb')) {
         userDb_controller = require(__dirname+ '/../controllers/user');
         userDb_controller.initialize(initialize_apiController);
@@ -79,11 +39,11 @@ function initialize_userDBController() {
 var api_controller;
 
 function initialize_apiController() {
-    logger.info('Initializing the api controller');
+    logger.info(utils.getFileName(__filename)+' '+'Initializing the api controller');
     if (properties.getEsupProperty('apiDb')) {
         api_controller = require(__dirname + '/../controllers/api');
         api_controller.initialize(initialize_routes(launch_server));
-    } else logger.error('Unknown apiDb');
+    } else logger.error(utils.getFileName(__filename)+' '+'Unknown apiDb');
 }
 
 function initialize_routes(callback) {
@@ -99,9 +59,9 @@ function launch_server() {
     var port = process.env.PORT || 3000;
     server.listen(port, function(err) {
         if (err)
-            logger.error(err);
+            logger.error(utils.getFileName(__filename)+' '+err);
         else {
-            logger.info('App is ready at : ' + port);
+            logger.info(utils.getFileName(__filename)+' '+'App is ready at : ' + port);
         }
     });
 }

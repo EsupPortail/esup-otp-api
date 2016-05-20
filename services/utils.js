@@ -56,3 +56,7 @@ exports.check_transport_validity= function(transport, value){
     else reg = new RegExp(/^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/);
     return reg.test(value);
 }
+
+exports.getFileName= function(filename){
+    return filename.split(global.base_dir)[1];
+}

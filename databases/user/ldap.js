@@ -1,61 +1,20 @@
 var utils = require(__dirname + '/../../services/utils');
 var properties = require(__dirname + '/../../properties/properties');
 var ldapjs = require('ldapjs');
-var winston = require('winston');
 
-var logger = new (winston.Logger)({
-    transports: [
-        new (winston.transports.Console)({
-            timestamp: function() {
-                return new Date(Date.now());
-            },
-            formatter: function(options) {
-                // Return string will be passed to logger.
-                return options.timestamp() +' '+ options.level.toUpperCase() +' '+__filename.split(global.base_dir)[1]+' '+ (undefined !== options.message ? options.message : '') +
-                    (options.meta && Object.keys(options.meta).length ? '\n\t'+ JSON.stringify(options.meta) : '' );
-            }
-        }),
-        new (winston.transports.File)({
-            timestamp: function() {
-                return ''+new Date(Date.now());
-            },
-            name: 'info-file',
-            filename: __dirname+'/../../logs/server.log',
-            json: false,
-            formatter: function(options) {
-                // Return string will be passed to logger.
-                return options.timestamp() +' '+ options.level.toUpperCase() +' '+__filename.split(global.base_dir)[1]+' '+ (undefined !== options.message ? options.message : '') +
-                    (options.meta && Object.keys(options.meta).length ? '\n\t'+ JSON.stringify(options.meta) : '' );
-            }
-        }),
-        new (winston.transports.File)({
-            timestamp: function() {
-                return ''+new Date(Date.now());
-            },
-            name: 'debug-file',
-            level: 'debug',
-            filename: __dirname+'/../../logs/debug.log',
-            json: false,
-            formatter: function(options) {
-                // Return string will be passed to logger.
-                return options.timestamp() +' '+ options.level.toUpperCase() +' '+__filename.split(global.base_dir)[1]+' '+ (undefined !== options.message ? options.message : '') +
-                    (options.meta && Object.keys(options.meta).length ? '\n\t'+ JSON.stringify(options.meta) : '' );
-            }
-        })
-    ]
-});
+var logger = require(__dirname + '/../../services/logger').getInstance();
 
 var client;
 
 exports.initialize = function(callback) {
-    logger.info("Initializing ldap connection");
+    logger.info(utils.getFileName(__filename)+' '+"Initializing ldap connection");
     client = ldapjs.createClient({
         url: properties.getEsupProperty('ldap').uri
     });
     client.bind(properties.getEsupProperty('ldap').adminDn, properties.getEsupProperty('ldap').password, function(err) {
-        if (err) console.log('bind error : ' + err);
+        if (err) logger.error(utils.getFileName(__filename)+' bind error : ' + err);
         else if (typeof(callback) === "function"){
-            logger.info("Ldap connection Initialized");
+            logger.info(utils.getFileName(__filename)+' '+"Ldap connection Initialized");
             callback();
      }
     });
@@ -75,7 +34,7 @@ function find_user(req, res, callback) {
 
     var user_found = false;
     client.search(properties.getEsupProperty('ldap').baseDn, opts, function(err, _res) {
-        if (err) console.log('search error : ' + err);
+        if (err) logger.error(utils.getFileName(__filename)+' search error : ' + err);
 
         _res.on('searchEntry', function(entry) {
             user_found = true;
@@ -84,7 +43,7 @@ function find_user(req, res, callback) {
         });
 
         _res.on('error', function(err) {
-            console.log('search error : ' + err);
+            logger.error(utils.getFileName(__filename)+' bind error : ' + err);
         });
 
         _res.on('end', function(err) {
@@ -125,7 +84,6 @@ exports.save_user = function (user, callback) {
 
 function create_user(uid, callback) {
     var dn = 'uid=' + uid + ',' + properties.getEsupProperty('ldap').baseDn;
-    logger.debug(dn);
     var entry = {
         cn: uid,
         uid: uid,
@@ -144,11 +102,12 @@ exports.create_user = create_user;
 exports.remove_user = function (uid, callback) {
     find_user({params: {uid: uid}}, {
         send: function () {
+            if(typeof(callback) === 'function')callback();
         }
     }, function () {
         var dn = 'uid=' + uid + ',' + properties.getEsupProperty('ldap').baseDn;
         client.del(dn, function (err) {
-            if (err)logger.error(err);
+            if (err)logger.error(utils.getFileName(__filename)+' delete error : ' + err);
             if (typeof(callback) === "function") callback();
         });
     })
