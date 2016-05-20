@@ -30,7 +30,7 @@ function initiatilize_api_preferences() {
     connection.model('ApiPreferences', ApiPreferencesSchema, 'ApiPreferences');
     ApiPreferences = connection.model('ApiPreferences');
     ApiPreferences.find({}).exec(function (err, data) {
-        if (data[0]) properties.setEsup(data[0]);
+        if (data[0]) properties.setEsupProperty('methods',data[0]);
         else {
             update_api_preferences();
         }
@@ -49,7 +49,7 @@ exports.update_api_preferences = update_api_preferences;
 function update_api_preferences() {
     ApiPreferences.remove({}, function (err) {
         if (err) logger.error(utils.getFileName(__filename)+' '+err);
-        var api_preferences = new ApiPreferences(properties.getEsup());
+        var api_preferences = new ApiPreferences(properties.getEsupProperty('methods'));
         api_preferences.save(function () {
             logger.info(utils.getFileName(__filename)+' '+"Api Preferences updated");
         });
