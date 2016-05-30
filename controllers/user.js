@@ -74,10 +74,6 @@ exports.delete_transport = function(req, res, next) {
     });
 }
 
-exports.delete_transport = function(req, res, next) {
-    userDb.delete_transport(req, res, next);
-}
-
 /**
  * Supprime l'utilisateur
  *
