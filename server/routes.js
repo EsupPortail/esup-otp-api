@@ -11,33 +11,33 @@ exports.initialize = function (server, callback) {
 
     logger.info(utils.getFileName(__filename)+' '+'Initializing "unprotected" routes');
     //user_hash
-    server.get("/user/:uid/:hash", validator.get_user_infos, api_controller.get_user_infos);
-    server.get("/user/:uid/method/:method/transport/:transport/code/send/:hash", validator.send_message, api_controller.send_message);
+    server.get("/users/:uid/:hash", validator.get_user_infos, api_controller.get_user_infos);
+    server.post("/users/:uid/methods/:method/transports/:transport/:hash", validator.send_message, api_controller.send_message);
 
     logger.info(utils.getFileName(__filename)+' '+'Initializing protected routes');
     //api_api_password
-    server.get("/protected/method/:api_password", validator.get_methods, api_controller.get_methods);
-    server.get("/protected/user/:uid/transport/:transport/test/:api_password", validator.transport_test, api_controller.transport_test);
-    server.get("/protected/user/:uid/method/:method/secret/:api_password", validator.get_method_secret, api_controller.get_method_secret);
-    server.put("/protected/user/:uid/method/:method/deactivate/:api_password", validator.toggle_method, api_controller.deactivate_method);
-    server.put("/protected/user/:uid/method/:method/activate/:api_password", validator.toggle_method, api_controller.activate_method);
-    server.put("/protected/user/:uid/transport/:transport/:new_transport/:api_password", validator.update_transport, userDb_controller.update_transport);
-    server.post("/protected/user/:uid/method/:method/secret/:api_password", validator.generate_method_secret, api_controller.generate_method_secret);
-    server.post("/protected/user/:uid/code/verify/:otp/:api_password", validator.verify_code, api_controller.verify_code);
-    server.del("/protected/user/:uid/transport/:transport/:api_password", validator.delete_transport, userDb_controller.delete_transport);
+    server.get("/protected/methods/:api_password", validator.get_methods, api_controller.get_methods);
+    server.get("/protected/users/:uid/transports/:transport/test/:api_password", validator.transport_test, api_controller.transport_test);
+    server.get("/protected/users/:uid/methods/:method/secret/:api_password", validator.get_method_secret, api_controller.get_method_secret);
+    server.put("/protected/users/:uid/methods/:method/deactivate/:api_password", validator.toggle_method, api_controller.deactivate_method);
+    server.put("/protected/users/:uid/methods/:method/activate/:api_password", validator.toggle_method, api_controller.activate_method);
+    server.put("/protected/users/:uid/transports/:transport/:new_transport/:api_password", validator.update_transport, userDb_controller.update_transport);
+    server.post("/protected/users/:uid/methods/:method/secret/:api_password", validator.generate_method_secret, api_controller.generate_method_secret);
+    server.post("/protected/users/:uid/:otp/:api_password", validator.verify_code, api_controller.verify_code);
+    server.del("/protected/users/:uid/transports/:transport/:api_password", validator.delete_transport, userDb_controller.delete_transport);
 
     logger.info(utils.getFileName(__filename)+' '+'Initializing admin routes');
     // routes DEV/ADMIN uniquement
     //api_api_password
-    server.get("/protected/admin/user/:uid/:api_password", validator.get_user, api_controller.get_user);
-    server.get("/protected/admin/user/:api_password", validator.get_uids, api_controller.get_uids);
-    server.del("/protected/admin/user/:api_password", api_controller.drop); //dev
-    server.get("/protected/admin/user/:uid/method/:api_password", validator.get_activate_methods_admin, api_controller.get_activate_methods);
-    server.put("/protected/admin/method/:method/transport/:transport/deactivate/:api_password", validator.toggle_method_transport, api_controller.deactivate_method_transport);
-    server.put("/protected/admin/method/:method/transport/:transport/activate/:api_password", validator.toggle_method_transport, api_controller.activate_method_transport);
-    server.put("/protected/admin/method/:method/deactivate/:api_password", validator.toggle_method_admin, api_controller.deactivate_method_admin);
-    server.put("/protected/admin/method/:method/activate/:api_password", validator.toggle_method_admin, api_controller.activate_method_admin);
-    server.del("/protected/admin/user/:uid/method/:method/secret/:api_password", validator.delete_method_secret, api_controller.delete_method_secret);
+    server.get("/admin/users/:uid/:api_password", validator.get_user, api_controller.get_user);
+    server.get("/admin/users/:api_password", validator.get_uids, api_controller.get_uids);
+    server.del("/admin/users/:api_password", api_controller.drop); //dev
+    server.get("/admin/users/:uid/methods/:api_password", validator.get_activate_methods_admin, api_controller.get_activate_methods);
+    server.put("/admin/methods/:method/transports/:transport/deactivate/:api_password", validator.toggle_method_transport, api_controller.deactivate_method_transport);
+    server.put("/admin/methods/:method/transports/:transport/activate/:api_password", validator.toggle_method_transport, api_controller.activate_method_transport);
+    server.put("/admin/methods/:method/deactivate/:api_password", validator.toggle_method_admin, api_controller.deactivate_method_admin);
+    server.put("/admin/methods/:method/activate/:api_password", validator.toggle_method_admin, api_controller.activate_method_admin);
+    server.del("/admin/users/:uid/methods/:method/secret/:api_password", validator.delete_method_secret, api_controller.delete_method_secret);
 
     logger.info(utils.getFileName(__filename)+' '+'Initializing test routes');
     //tests routes
@@ -53,7 +53,7 @@ exports.initialize = function (server, callback) {
             code: 'Ok'
         });
     });
-    server.post("/test/user/:uid/:api_password", function (req, res, next) {
+    server.post("/test/users/:uid/:api_password", function (req, res, next) {
         userDb_controller.create_user(req.params.uid, function () {
             api_controller.create_user(req.params.uid, function () {
                 res.send({
@@ -62,7 +62,7 @@ exports.initialize = function (server, callback) {
             })
         })
     });
-    server.del("/test/user/:uid/:api_password", function (req, res, next) {
+    server.del("/test/users/:uid/:api_password", function (req, res, next) {
         userDb_controller.remove_user(req.params.uid, function () {
             api_controller.remove_user(req.params.uid, function () {
                 res.send({
