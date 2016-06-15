@@ -25,6 +25,13 @@ server.use(
   }
 );
 
+server.use(
+    function logRequestUrl(req,res,next){
+        logger.debug(req.url);
+        return next();
+    }
+);
+
 var userDb_controller;
 var routes;
 
