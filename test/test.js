@@ -102,6 +102,21 @@ describe('Esup otp api', function () {
             request({url: url, method : "POST"}, function (error, response, body) {
                 if (error) throw error;
                 assert(JSON.parse(body).code == 'Ok');
+                var url = server_url + '/protected/users/'+test_user+'/methods/totp/secret/' +properties.getEsupProperty('api_password')
+                request({url: url}, function (error, response, body) {
+                    if (error) throw error;
+                    assert(JSON.parse(body).qrCode != '');
+                    done();
+                });
+            });
+        })
+
+        it('get test_user bypass method generate secret', function (done) {
+            var url = server_url + '/protected/users/'+test_user+'/methods/bypass/secret/' +properties.getEsupProperty('api_password')
+            request({url: url, method : "POST"}, function (error, response, body) {
+                if (error) throw error;
+                assert(JSON.parse(body).codes.length == properties.getMethodProperty('bypass','codes_number'));
+                assert(JSON.parse(body).code == 'Ok');
                 done();
             });
         })
