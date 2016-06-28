@@ -1,6 +1,7 @@
 var restify = require('restify');
 var properties = require(__dirname + '/../properties/properties');
 var utils = require(__dirname + '/../services/utils');
+var logger = require(__dirname + '/../services/logger').getInstance();
 
 var required = {
     get_activate_methods: ['uid', 'hash'],
@@ -194,6 +195,7 @@ exports.send_message = function(req, res, next) {
 }
 
 exports.verify_code = function(req, res, next) {
+    logger.debug("verify_code: "+JSON.stringify(req.params));
     if (check_parameters(req, required.verify_code)) {
         check_api_password(req, res, next);
     } else {

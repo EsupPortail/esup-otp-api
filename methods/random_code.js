@@ -2,6 +2,7 @@ var properties = require(__dirname + '/../properties/properties');
 var api_controller = require(__dirname + '/../controllers/api');
 var utils = require(__dirname + '/../services/utils');
 var restify = require('restify');
+var logger = require(__dirname + '/../services/logger').getInstance();
 
 exports.name = "random_code";
 
@@ -35,10 +36,12 @@ exports.send_message = function(user, req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.verify_code = function(user, req, res, callbacks) {
+    logger.debug(utils.getFileName(__filename)+' '+"verify_code: "+user.uid);
     if (user.random_code.code == req.params.otp && Date.now() < user.random_code.validity_time) {
         delete user.random_code.code;
         delete user.random_code.validity_time;
         api_controller.save_user(user, function() {
+            logger.info("Valid credentials by "+user.uid);
             res.send({
                 "code": "Ok",
                 "message": properties.getMessage('success','valid_credentials')

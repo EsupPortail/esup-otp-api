@@ -3,6 +3,8 @@ var api_controller = require(__dirname + '/../controllers/api');
 var speakeasy = require('speakeasy');
 var qrCode = require('qrcode-npm')
 var restify = require('restify');
+var utils = require(__dirname + '/../services/utils');
+var logger = require(__dirname + '/../services/logger').getInstance();
 
 exports.name = "totp";
 
@@ -36,6 +38,7 @@ exports.send_message = function(user, req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.verify_code = function(user, req, res, callbacks) {
+    logger.debug(utils.getFileName(__filename)+' '+"verify_code: "+user.uid);
     if (user.totp.secret.base32) {
         var checkSpeakeasy = speakeasy.totp.verify({
             secret: user.totp.secret.base32,
@@ -46,6 +49,7 @@ exports.verify_code = function(user, req, res, callbacks) {
         if (checkSpeakeasy) {
             user.totp.window = properties.getMethod('totp').default_window;
             api_controller.save_user(user, function() {
+                logger.info("Valid credentials by "+user.uid);
                 res.send({
                     "code": "Ok",
                     "message": properties.getMessage('success','valid_credentials')
