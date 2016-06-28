@@ -30,7 +30,13 @@ function initiatilize_api_preferences() {
     connection.model('ApiPreferences', ApiPreferencesSchema, 'ApiPreferences');
     ApiPreferences = connection.model('ApiPreferences');
     ApiPreferences.find({}).exec(function (err, data) {
-        if (data[0]) properties.setEsupProperty('methods',data[0]);
+        if (data[0]) {
+            var prefs = {};
+            prefs.totp = data[0].totp;
+            prefs.random_code = data[0].random_code;
+            prefs.bypass = data[0].bypass;
+            properties.setEsupProperty('methods',prefs);
+        }
         else {
             update_api_preferences();
         }
