@@ -19,7 +19,7 @@ esup-otp-api uses a number of open NodeJS modules:
     "speakeasy": "^2.0.0"
 
 ### Installation
-- git clone https://github.com/Hakall/esup-otp-api.git
+- git clone https://github.com/EsupPortail/esup-otp-api.git
 - npm install
 - change the fields values in esup.sample.json to your installation
 - rename esup.sample.json to esup.json
