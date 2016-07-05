@@ -1,5 +1,12 @@
 var winston = require('winston');
+var properties = require(__dirname + '/../properties/properties');
 var utils = require('./utils');
+
+var info_filename = __dirname+'/../esup-otp-api-info.log';
+if(properties.getEsupProperty('logs').path && properties.getEsupProperty('logs').info_filename)info_filename = __dirname+properties.getEsupProperty('logs').path+properties.getEsupProperty('logs').info_filename;
+var debug_filename = __dirname+'/../esup-otp-api-debug.log';
+if(properties.getEsupProperty('logs').path && properties.getEsupProperty('logs').path)debug_filename = __dirname+properties.getEsupProperty('logs').path+properties.getEsupProperty('logs').debug_filename;
+
 var logger = new (winston.Logger)({
     transports: [
         new (winston.transports.Console)({
@@ -17,7 +24,7 @@ var logger = new (winston.Logger)({
                 return ''+new Date(Date.now());
             },
             name: 'info-file',
-            filename: __dirname+'/../logs/server.log',
+            filename: info_filename,
             json: false,
             formatter: function(options) {
                 // Return string will be passed to logger.
@@ -31,7 +38,7 @@ var logger = new (winston.Logger)({
             },
             name: 'debug-file',
             level: 'debug',
-            filename: __dirname+'/../logs/debug.log',
+            filename: debug_filename,
             json: false,
             formatter: function(options) {
                 // Return string will be passed to logger.
