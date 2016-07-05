@@ -159,8 +159,19 @@ exports.remove_user = function (uid, callback) {
  */
 exports.transport_code = function (code, req, res, next) {
     var opts = {};
-    opts.object = properties.getMessage('transport', 'code');
+    opts.object = properties.getMessage('transport', 'code').object;
     opts.message = code;
+    switch (req.params.transport) {
+        case 'mail':
+            opts.message = properties.getMessage('transport', 'code').mail.pre_test + code + properties.getMessage('transport', 'code').mail.post_test
+            break;
+        case 'sms':
+            opts.message = properties.getMessage('transport', 'code').sms.pre_test + code + properties.getMessage('transport', 'code').sms.post_test
+            break;
+        default:
+            opts.message = properties.getMessage('transport', 'code').mail.pre_test + code + properties.getMessage('transport', 'code').mail.post_test
+            break;
+    }
     transport(opts, req, res, next);
 }
 
@@ -173,17 +184,17 @@ exports.transport_code = function (code, req, res, next) {
  */
 exports.transport_test = function (req, res, next) {
     var opts = {}
-    opts.object = properties.getMessage('transport', 'test');
+    opts.object = properties.getMessage('transport', 'test').object;
     opts.message = '';
     switch (req.params.transport) {
         case 'mail':
-            opts.message = properties.getMessage('transport', 'mail').pre_test + req.params.uid + properties.getMessage('transport', 'mail').post_test
+            opts.message = properties.getMessage('transport', 'test').mail.pre_test + req.params.uid + properties.getMessage('transport', 'test').mail.post_test
             break;
         case 'sms':
-            opts.message = properties.getMessage('transport', 'sms').pre_test + req.params.uid + properties.getMessage('transport', 'sms').post_test
+            opts.message = properties.getMessage('transport', 'test').sms.pre_test + req.params.uid + properties.getMessage('transport', 'test').sms.post_test
             break;
         default:
-            opts.message = properties.getMessage('transport', 'mail').pre_test + req.params.uid + properties.getMessage('transport', 'mail').post_test
+            opts.message = properties.getMessage('transport', 'test').mail.pre_test + req.params.uid + properties.getMessage('transport', 'test').mail.post_test
             break;
     }
     transport(opts, req, res, next);

@@ -8,11 +8,11 @@ exports.send_message = function(num, opts, res) {
     if (utils.check_transport_validity('sms', num)) {
         var tel = num;
         var url = urlBroker(tel, opts.message);
-        var opts = {
+        var options = {
             url: url
         };
         if (proxyUrl != '') opts.proxy = proxyUrl;
-        request(opts, function(error, response, body) {
+        request(options, function(error, response, body) {
             if (error) console.log(error);
             if (!error && response.statusCode == 200) {
                 console.log("Message will be sent to " + tel + ", with the message: " + opts.message);
