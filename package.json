@@ -3,6 +3,11 @@
   "version": "0.1.0",
   "description": "One time passwords api for ESUP",
   "author": "Alex Bouskine <abouskine@gmail.com>",
+  "repository": {
+	    "type": "git",
+	      "url": "git://github.com/EsupPortail/esup-otp-api.git"
+  },
+  "license": "MIT",
   "dependencies": {
     "chai": "^3.5.0",
     "crypto-js": "^3.1.6",
