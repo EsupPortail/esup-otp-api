@@ -68,10 +68,5 @@
     },
     "sms": {
         "url": "https://username:password@sms.univ.fr/esup-smsuapi/?action=SendSms&phoneNumber=$phoneNumber$&message=$message$"
-    },
-    "logs" :{
-    "path" :"/../",
-        "debug_filename" : "debug.log",
-        "info_filename" : "server.log"
     }
 }

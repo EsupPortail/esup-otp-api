@@ -23,7 +23,7 @@ esup-otp-api uses a number of open NodeJS modules:
 - npm install
 - change the fields values in esup.sample.json to your installation
 - rename esup.sample.json to esup.json
-- add a directory named logs at the root of the project
+- rename logs.json.sample to logs.json, set the value of level, path and filename
 - node run
 
 esup-otp-api runs in http, if you want a secure mode you will need a reverse proxy.

@@ -1,11 +1,10 @@
 var winston = require('winston');
 var properties = require(__dirname + '/../properties/properties');
+var logs_config = require(__dirname + '/../logs/logs.json');
 var utils = require('./utils');
 
-var info_filename = __dirname+'/../esup-otp-api-info.log';
-if(properties.getEsupProperty('logs').path && properties.getEsupProperty('logs').info_filename)info_filename = __dirname+properties.getEsupProperty('logs').path+properties.getEsupProperty('logs').info_filename;
-var debug_filename = __dirname+'/../esup-otp-api-debug.log';
-if(properties.getEsupProperty('logs').path && properties.getEsupProperty('logs').path)debug_filename = __dirname+properties.getEsupProperty('logs').path+properties.getEsupProperty('logs').debug_filename;
+var filename = __dirname+'/../logs/esup-otp-api-info.log';
+if(logs_config.path && logs_config.filename)filename = logs_config.path + logs_config.filename;
 
 var logger = new (winston.Logger)({
     transports: [
@@ -13,6 +12,7 @@ var logger = new (winston.Logger)({
             timestamp: function() {
                 return new Date(Date.now());
             },
+            level: logs_config.level || "info",
             formatter: function(options) {
                 // Return string will be passed to logger.
                 return options.timestamp() +' '+ options.level.toUpperCase() +' '+ (undefined !== options.message ? options.message : '') +
@@ -23,22 +23,9 @@ var logger = new (winston.Logger)({
             timestamp: function() {
                 return ''+new Date(Date.now());
             },
-            name: 'info-file',
-            filename: info_filename,
-            json: false,
-            formatter: function(options) {
-                // Return string will be passed to logger.
-                return options.timestamp() +' '+ options.level.toUpperCase() +' '+ (undefined !== options.message ? options.message : '') +
-                    (options.meta && Object.keys(options.meta).length ? '\n\t'+ JSON.stringify(options.meta) : '' );
-            }
-        }),
-        new (winston.transports.File)({
-            timestamp: function() {
-                return ''+new Date(Date.now());
-            },
-            name: 'debug-file',
-            level: 'debug',
-            filename: debug_filename,
+            name: 'log-file',
+            level: logs_config.level || "info",
+            filename: filename,
             json: false,
             formatter: function(options) {
                 // Return string will be passed to logger.
