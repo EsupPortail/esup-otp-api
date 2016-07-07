@@ -1,6 +1,7 @@
-{
+{   
     "auto_create_user": true,
-    "proxyUrl": "http://username:password@univ.fr:port",
+    "proxyUrl": "",
+    "#how_to_proxyUrl": "If setted, API will use this proxy configurations, usually proxyURl must be like : http://username:password@univ.fr:port",
     "api_password":"changeit",
     "users_secret":"changeit",
     "apiDb": "mongodb",
@@ -15,19 +16,19 @@
     },
     "ldap": {
         "uri": "ldap://127.0.0.1",
-        "baseDn": "dc=fr",
-        "adminDn": "cn=admin,dc=fr",
+        "baseDn": "dc=univ,dc=fr",
+        "adminDn": "cn=admin,dc=univ,dc=fr",
         "password": "changeit",
         "transport": {
             "mail": "mail",
             "sms": "mobile"
         }
     },
-    "mysql":{
+    "mysql": {
         "host": "127.0.0.1",
         "user": "admin",
         "password": "changeit",
-        "database": "test-otp",
+        "database": "test_otp",
         "userTable": "User",
         "transport": {
             "mail": "mail",
@@ -41,7 +42,7 @@
             "mail_window": 15,
             "app_window": 2,
             "default_window": 2,
-            "transports" : ["sms", "mail"]
+            "transports" : []
         },
         "random_code": {
             "activate": true,
@@ -49,7 +50,7 @@
             "mail_validity": 30,
             "code_type": "digit",
             "code_length": 6,
-            "transports" : ["sms"]
+            "transports" : ["mail","sms"]
         },
         "bypass": {
             "activate": true,
@@ -57,16 +58,21 @@
             "code_type": "digit",
             "code_length": 6,
             "transports" : []
-        }        
+        }
     },
     "transports":["sms","mail"],
     "mailer": {
         "sender_mail": "auth-api",
         "sender_name": "Université",
         "port": 25,
-        "hostname":"smtp.univ.fr"
+        "hostname":"mail.univ.fr"
     },
     "sms": {
-        "url": "https://username:password@sms.univ.fr/esup-smsuapi/?action=SendSms&phoneNumber=$phoneNumber$&message=$message$"
+        "url": "https://esup-otp-api:chat auto air@sms.univ-paris1.fr/esup-smsuapi/?action=SendSms&phoneNumber=$phoneNumber$&message=$message$"
+    },
+    "logs" :{
+        "path" :"/../logs/",
+        "debug_filename" : "debug.log",
+        "info_filename" : "server.log"
     }
 }

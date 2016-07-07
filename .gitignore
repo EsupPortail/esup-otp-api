@@ -1,7 +1,6 @@
 .DS_Store
 data/
 node_modules/
-properties/esup.json
 certs/
 *.log
 npm-debug.log
