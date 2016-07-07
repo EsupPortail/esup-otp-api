@@ -22,5 +22,7 @@
     "speakeasy": "^2.0.0",
     "winston": "^2.2.0"
   },
-  "bin": "./run.js"
+  "scripts": {
+    "start": "nohup node run &"
+  }
 }
