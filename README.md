@@ -21,7 +21,7 @@ esup-otp-api uses a number of open NodeJS modules:
 ### Installation
 - git clone https://github.com/EsupPortail/esup-otp-api.git
 - npm install
-- change the fields values in esup.json to your installation, some explanations are in #how_to attributes
+- change the fields values in properties/esup.json to your installation, some explanations are in #how_to attributes
 - npm start
 
 esup-otp-api runs in http, if you want a secure mode you will need a reverse proxy.
