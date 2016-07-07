@@ -3,7 +3,7 @@
 esup-otp-api is restful api using NodeJS for generate, send and verify one-time codes for [EsupPortail]
 
 ### Version
-0.0.1
+0.9.0
 
 ### Tech
 
@@ -21,9 +21,7 @@ esup-otp-api uses a number of open NodeJS modules:
 ### Installation
 - git clone https://github.com/EsupPortail/esup-otp-api.git
 - npm install
-- change the fields values in esup.sample.json to your installation
-- rename esup.sample.json to esup.json
-- rename logs/logs.json.sample to logs.json, set the value of level, path and filename
+- change the fields values in esup.json to your installation, some explanations are in #how_to attributes
 - node run
 
 esup-otp-api runs in http, if you want a secure mode you will need a reverse proxy.
@@ -35,9 +33,6 @@ Simply execute "mocha" in root directory of the project, the server must be laun
 
 ### Development
 
-### Todos
- - Write Tests
- - Add Code Comments
 
 License
 ----
