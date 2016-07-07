@@ -1,7 +1,7 @@
 {   
     "auto_create_user": true,
     "proxyUrl": "",
-    "#how_to_proxyUrl": "If setted, API will use this proxy configurations, usually proxyURl must be like : http://username:password@univ.fr:port",
+    "#how_to_proxyUrl": "If setted, API will use this proxy configurations, usually proxyURl must be like : http://username:password@univ.fr:port may be necessary for sms and mailer services",
     "api_password":"changeit",
     "users_secret":"changeit",
     "apiDb": "mongodb",
