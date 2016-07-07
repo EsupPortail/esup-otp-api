@@ -1,5 +1,0 @@
-{
-	"level": "debug",
-    "path" : "/var/log/",
-    "filename" : "esup-otp-api.log"
-}
