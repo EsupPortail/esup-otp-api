@@ -65,7 +65,8 @@
         "sender_mail": "auth-api",
         "sender_name": "Université",
         "port": 25,
-        "hostname":"mail.univ.fr"
+        "hostname":"mail.univ.fr",
+        "#how_to_mailer":"change hostname with your smtp server address"
     },
     "sms": {
         "url": "https://esup-otp-api:chat auto air@sms.univ-paris1.fr/esup-smsuapi/?action=SendSms&phoneNumber=$phoneNumber$&message=$message$"
