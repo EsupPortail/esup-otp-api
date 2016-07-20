@@ -11,33 +11,33 @@ exports.initialize = function (server, callback) {
 
     logger.info(utils.getFileName(__filename)+' '+'Initializing "unprotected" routes');
     //user_hash
-    server.get("/users/:uid/:hash", validator.get_user_infos, api_controller.get_user_infos);
-    server.post("/users/:uid/methods/:method/transports/:transport/:hash", validator.send_message, api_controller.send_message);
+    server.get("/users/:uid/:hash", validator.check_hash, api_controller.get_user_infos);
+    server.post("/users/:uid/methods/:method/transports/:transport/:hash", validator.check_hash, api_controller.send_message);
 
     logger.info(utils.getFileName(__filename)+' '+'Initializing protected routes');
     //api_api_password
-    server.get("/protected/methods/:api_password", validator.get_methods, api_controller.get_methods);
-    server.get("/protected/users/:uid/transports/:transport/test/:api_password", validator.transport_test, api_controller.transport_test);
-    server.get("/protected/users/:uid/methods/:method/secret/:api_password", validator.get_method_secret, api_controller.get_method_secret);
-    server.put("/protected/users/:uid/methods/:method/deactivate/:api_password", validator.toggle_method, api_controller.deactivate_method);
-    server.put("/protected/users/:uid/methods/:method/activate/:api_password", validator.toggle_method, api_controller.activate_method);
-    server.put("/protected/users/:uid/transports/:transport/:new_transport/:api_password", validator.update_transport, userDb_controller.update_transport);
-    server.post("/protected/users/:uid/methods/:method/secret/:api_password", validator.generate_method_secret, api_controller.generate_method_secret);
-    server.post("/protected/users/:uid/:otp/:api_password", validator.verify_code, api_controller.verify_code);
-    server.del("/protected/users/:uid/transports/:transport/:api_password", validator.delete_transport, userDb_controller.delete_transport);
+    server.get("/protected/methods/:api_password", validator.check_api_password, api_controller.get_methods);
+    server.get("/protected/users/:uid/transports/:transport/test/:api_password", validator.check_api_password, api_controller.transport_test);
+    server.get("/protected/users/:uid/methods/:method/secret/:api_password", validator.check_api_password, api_controller.get_method_secret);
+    server.put("/protected/users/:uid/methods/:method/deactivate/:api_password", validator.check_api_password, api_controller.deactivate_method);
+    server.put("/protected/users/:uid/methods/:method/activate/:api_password", validator.check_api_password, api_controller.activate_method);
+    server.put("/protected/users/:uid/transports/:transport/:new_transport/:api_password", validator.check_api_password, userDb_controller.update_transport);
+    server.post("/protected/users/:uid/methods/:method/secret/:api_password", validator.check_api_password, api_controller.generate_method_secret);
+    server.post("/protected/users/:uid/:otp/:api_password", validator.check_api_password, api_controller.verify_code);
+    server.del("/protected/users/:uid/transports/:transport/:api_password", validator.check_api_password, userDb_controller.delete_transport);
 
     logger.info(utils.getFileName(__filename)+' '+'Initializing admin routes');
     // routes DEV/ADMIN uniquement
     //api_api_password
-    server.get("/admin/users/:uid/:api_password", validator.get_user, api_controller.get_user);
-    server.get("/admin/users/:api_password", validator.get_uids, api_controller.get_uids);
+    server.get("/admin/users/:uid/:api_password", validator.check_api_password, api_controller.get_user);
+    server.get("/admin/users/:api_password",validator.check_api_password, api_controller.get_uids);
     server.del("/admin/users/:api_password", api_controller.drop); //dev
-    server.get("/admin/users/:uid/methods/:api_password", validator.get_activate_methods_admin, api_controller.get_activate_methods);
-    server.put("/admin/methods/:method/transports/:transport/deactivate/:api_password", validator.toggle_method_transport, api_controller.deactivate_method_transport);
-    server.put("/admin/methods/:method/transports/:transport/activate/:api_password", validator.toggle_method_transport, api_controller.activate_method_transport);
-    server.put("/admin/methods/:method/deactivate/:api_password", validator.toggle_method_admin, api_controller.deactivate_method_admin);
-    server.put("/admin/methods/:method/activate/:api_password", validator.toggle_method_admin, api_controller.activate_method_admin);
-    server.del("/admin/users/:uid/methods/:method/secret/:api_password", validator.delete_method_secret, api_controller.delete_method_secret);
+    server.get("/admin/users/:uid/methods/:api_password", validator.check_api_password, api_controller.get_activate_methods);
+    server.put("/admin/methods/:method/transports/:transport/deactivate/:api_password", validator.check_api_password, api_controller.deactivate_method_transport);
+    server.put("/admin/methods/:method/transports/:transport/activate/:api_password", validator.check_api_password, api_controller.activate_method_transport);
+    server.put("/admin/methods/:method/deactivate/:api_password", validator.check_api_password, api_controller.deactivate_method_admin);
+    server.put("/admin/methods/:method/activate/:api_password", validator.check_api_password, api_controller.activate_method_admin);
+    server.del("/admin/users/:uid/methods/:method/secret/:api_password", validator.check_api_password, api_controller.delete_method_secret);
 
     logger.info(utils.getFileName(__filename)+' '+'Initializing test routes');
     //tests routes
