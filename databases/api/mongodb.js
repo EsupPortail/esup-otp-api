@@ -161,19 +161,29 @@ exports.remove_user = function (uid, callback) {
 
 exports.parse_user = function (user) {
     var parsed_user = {};
-    parsed_user.totp = {};
-    parsed_user.totp.active = user.totp.active;
-    parsed_user.totp.transports = available_transports(user.totp.transports, "totp");;
-    parsed_user.random_code = {};
-    parsed_user.random_code.active = user.random_code.active;
-    parsed_user.random_code.transports = available_transports(user.random_code.transports, 'random_code');
-    parsed_user.bypass = {};
-    parsed_user.bypass.active = user.bypass.active;
-    parsed_user.bypass.available_code = user.bypass.codes.length;
-    parsed_user.bypass.used_code = user.bypass.used_codes;
-    parsed_user.bypass.transports = available_transports(user.bypass.transports, "bypass");
+    parsed_user.totp = {
+        active : user.totp.active,
+        transports : available_transports(user.totp.transports, "totp")
+    };
+    parsed_user.random_code = {
+        active : user.random_code.active,
+        transports : available_transports(user.random_code.transports, 'random_code')
+    };
+    parsed_user.bypass = {
+        active : user.bypass.active,
+        available_code : user.bypass.codes.length,
+        used_code : user.bypass.used_codes,
+        transports : available_transports(user.bypass.transports, "bypass")
+    };
     parsed_user.matrix = user.matrix;
     // parsed_user.matrix.active = user.matrix.active;
+    parsed_user.push = {
+        device : {
+            platform : user.push.device.platform,
+            phone_number : user.push.device.phone_number
+        },
+        active : user.push.active
+    };
     return parsed_user;
 }
 
