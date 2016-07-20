@@ -50,10 +50,23 @@ exports.schema = {
     },
     push: {
         device: {
-            type: Object,
-            default: {}
+            platform: {
+                type: String,
+                default: null
+            },
+            gcm_id: {
+                type: String,
+                default: null
+            },
+            phone_number: {
+                type: String,
+                default: null
+            }
         },
-        activation_code: String,
+        activation_code:{
+            type: String,
+            default: null
+        },
         active: {
             type: Boolean,
             default: false

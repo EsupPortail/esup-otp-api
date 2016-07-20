@@ -3,7 +3,8 @@
         "valid_credentials": "Valid credentials",
         "transports_found": "Transports list found",
         "methods_found": "Methods found",
-        "update": "Successful update"
+        "update": "Successful update",
+        "wait_for_confirmation" : "Confirmez ce code dans l'application mobile : "
     },
     "error": {
         "invalid_credentials": "Invalid credentials",
