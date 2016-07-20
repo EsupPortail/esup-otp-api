@@ -105,6 +105,13 @@ exports.user_activate = function(user, req, res, next) {
     });
 }
 
+exports.confirm_user_activate = function(user, req, res, next) {
+    res.send({
+        "code": "Error",
+        "message": properties.getMessage('error','unvailable_method_operation')
+    });
+}
+
 exports.user_deactivate = function(user, req, res, next) {
     user.bypass.active = false;
     api_controller.save_user(user, function() {

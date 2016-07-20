@@ -439,6 +439,26 @@ exports.activate_method = function (req, res, next) {
     });
 };
 
+/**
+ * Certaine méthode (push) nécessite une activation en deux étapes
+ * Confirme l'activation de la méthode l'utilisateur ayant l'uid req.params.uid
+ *
+ * @param req requete HTTP contenant le nom la personne recherchee
+ * @param res response HTTP
+ * @param next permet d'appeler le prochain gestionnaire (handler)
+ */
+exports.confirm_activate_method = function (req, res, next) {
+    logger.info(utils.getFileName(__filename) + ' ' + req.params.uid + " activate_method " + req.params.method);
+    if (methods[req.params.method]) {
+        apiDb.find_user(req, res, function (user) {
+            methods[req.params.method].confirm_user_activate(user, req, res, next);
+        });
+    } else res.send({
+        "code": "Error",
+        "message": properties.getMessage('error', 'method_not_found')
+    });
+};
+
 
 /**
  * Désctive la méthode l'utilisateur ayant l'uid req.params.uid
