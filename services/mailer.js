@@ -2,6 +2,7 @@ var properties = require(__dirname + '/../properties/properties');
 var  utils = require(__dirname + '/../services/utils');
 var nodemailer = require("nodemailer");
 var smtpTransport = require('nodemailer-smtp-transport');
+var logger = require(__dirname + '/../services/logger').getInstance();
 
 // create reusable transport method (opens pool of SMTP connections)
 var options = {
@@ -30,10 +31,12 @@ exports.send_message = function(mail, opts, res) {
         // send mail with defined transport object
         transporter.sendMail(mailOptions, function(error, response) {
             if (error) {
+                logger.info(error.message);
                 res.send({
                     "code": "Error",
-                    "message": error
+                    "message": error.message
                 });
+
             } else {
                 console.log("Message sent to " + mail + " with the message: " + opts.message);
                 res.send({

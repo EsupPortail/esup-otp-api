@@ -57,5 +57,13 @@ exports.schema = {
         "transports": {
             type: Array,
         }
+    },
+    "push": {
+        "activate": {
+            type: Boolean,
+        },
+        "transports": {
+            type: Array,
+        }
     }
 }

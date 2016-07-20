@@ -58,6 +58,10 @@
             "code_type": "digit",
             "code_length": 6,
             "transports" : []
+        },
+        "push": {
+            "activate": true,
+            "transports" : []
         }
     },
     "transports":["sms","mail"],

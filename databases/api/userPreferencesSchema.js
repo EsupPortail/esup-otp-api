@@ -48,4 +48,19 @@ exports.schema = {
             default: properties.getEsupProperty('transports')
         }
     },
+    push: {
+        device: {
+            type: Object,
+            default: {}
+        },
+        activation_code: String,
+        active: {
+            type: Boolean,
+            default: false
+        },
+        transports: {
+            type: Array,
+            default: []
+        }
+    },
 }
