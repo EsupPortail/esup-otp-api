@@ -31,14 +31,14 @@ function initiatilize_api_preferences() {
     ApiPreferences = connection.model('ApiPreferences');
     ApiPreferences.find({}).exec(function (err, data) {
         if (data[0]) {
-            var prefs = {};
-            prefs.totp = data[0].totp;
-            prefs.random_code = data[0].random_code;
-            prefs.bypass = data[0].bypass;
+            var prefs = properties.getEsupProperty('methods');
+            for(p in data[0]){
+                prefs[p] = data[0][p];
+            }
             properties.setEsupProperty('methods',prefs);
-        }
-        else {
             update_api_preferences();
+        }else{
+            create_api_preferences();
         }
     });
 }
@@ -53,15 +53,29 @@ function initiatilize_api_preferences() {
 exports.update_api_preferences = update_api_preferences;
 
 function update_api_preferences() {
+    ApiPreferences.find({}).exec(function (err, data) {
+        if (data[0]) {
+            var prefs = properties.getEsupProperty('methods');
+            var api_preferences = data[0];
+            for(p in prefs){
+                data[0][p]=prefs[p];
+            }
+            api_preferences.save(function () {
+                logger.info(utils.getFileName(__filename)+' '+"Api Preferences updated");
+            });
+        }
+    });
+}
+
+function create_api_preferences() {
     ApiPreferences.remove({}, function (err) {
         if (err) logger.error(utils.getFileName(__filename)+' '+err);
         var api_preferences = new ApiPreferences(properties.getEsupProperty('methods'));
         api_preferences.save(function () {
-            logger.info(utils.getFileName(__filename)+' '+"Api Preferences updated");
+            logger.info(utils.getFileName(__filename)+' '+"Api Preferences created");
         });
     });
 }
-
 /** User Model **/
 var UserPreferences;
 
