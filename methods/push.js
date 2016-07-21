@@ -72,7 +72,7 @@ exports.user_activate = function(user, req, res, next) {
 exports.confirm_user_activate = function(user, req, res, next) {
     if(req.params.activation_code == user.push.activation_code){
         user.push.active = true;
-        user.push.device.platform = req.params.activation_code || "AndroidDev";
+        user.push.device.platform = req.params.platform || "AndroidDev";
         user.push.device.gcm_id = req.params.gcm_id || "GCMIDDev";
         user.push.device.phone_number = req.params.phone_number || "0147200001Dev";
         user.push.activation_code = "";
@@ -82,11 +82,17 @@ exports.confirm_user_activate = function(user, req, res, next) {
                 "message": ""
             });
         });
-    }else return next(new restify.ForbiddenError());
+    }else res.send({
+        "code": "Error",
+        "message": properties.getMessage('error','invalid_credentials')
+    });
 }
 
 exports.user_deactivate = function(user, req, res, next) {
     user.push.active = false;
+    user.push.device.platform = "";
+    user.push.device.gcm_id = "";
+    user.push.device.phone_number = "";
     api_controller.save_user(user, function() {
         res.send({
             "code": "Ok",
