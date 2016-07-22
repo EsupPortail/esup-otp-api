@@ -61,6 +61,14 @@ exports.schema = {
             phone_number: {
                 type: String,
                 default: null
+            },
+            manufacturer: {
+                type: String,
+                default: null
+            },
+            model: {
+                type: String,
+                default: null
             }
         },
         activation_code:{
@@ -73,7 +81,8 @@ exports.schema = {
         },
         transports: {
             type: Array,
-            default: []
-        }
+            default: properties.getEsupProperty('transports')
+        },
+        code : String
     },
 }

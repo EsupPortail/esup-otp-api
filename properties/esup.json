@@ -42,7 +42,9 @@
             "mail_window": 15,
             "app_window": 2,
             "default_window": 2,
-            "transports" : []
+            "transports" : [],
+            "codeRequired" : true,
+            "waitingFor" : false
         },
         "random_code": {
             "activate": true,
@@ -50,21 +52,27 @@
             "mail_validity": 30,
             "code_type": "digit",
             "code_length": 6,
-            "transports" : ["mail","sms"]
+            "transports" : ["mail","sms"],
+            "codeRequired" : true,
+            "waitingFor" : false
         },
         "bypass": {
             "activate": true,
             "codes_number": 10,
             "code_type": "digit",
             "code_length": 6,
-            "transports" : []
+            "transports" : [],
+            "codeRequired" : false,
+            "waitingFor" : false
         },
         "push": {
             "activate": true,
-            "transports" : []
+            "transports" : ["push"],
+            "codeRequired" : false,
+            "waitingFor" : true
         }
     },
-    "transports":["sms","mail"],
+    "transports":["sms","mail","push"],
     "mailer": {
         "sender_mail": "auth-api",
         "sender_name": "Université",

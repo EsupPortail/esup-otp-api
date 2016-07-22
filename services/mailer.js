@@ -41,7 +41,9 @@ exports.send_message = function(mail, opts, res) {
                 console.log("Message sent to " + mail + " with the message: " + opts.message);
                 res.send({
                     "code": "Ok",
-                    "message": "Message sent"
+                    "message": "Message sent",
+                    "codeRequired" : opts.codeRequired,
+                    "waitingFor" : opts.waitingFor
                 });
             }
         });

@@ -18,7 +18,9 @@ exports.send_message = function(num, opts, res) {
                 console.log("Message will be sent to " + tel + ", with the message: " + opts.message);
                 res.send({
                     "code": "Ok",
-                    "message": body
+                    "message": body,
+                    "codeRequired" : opts.codeRequired,
+                    "waitingFor" : opts.waitingFor
                 });
             } else res.send({
                 "code": "Error",

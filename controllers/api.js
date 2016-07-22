@@ -161,6 +161,8 @@ exports.transport_code = function (code, req, res, next) {
     var opts = {};
     opts.object = properties.getMessage('transport', 'code').object;
     opts.message = code;
+    opts.codeRequired = properties.getMethodProperty(req.params.method, 'codeRequired');
+    opts.waitingFor = properties.getMethodProperty(req.params.method, 'waitingFor');
     switch (req.params.transport) {
         case 'mail':
             opts.message = properties.getMessage('transport', 'code').mail.pre_test + code + properties.getMessage('transport', 'code').mail.post_test
@@ -261,6 +263,7 @@ exports.get_user_infos = function (req, res, next) {
             response.message = '';
             response.user = {};
             response.user.methods = apiDb.parse_user(user);
+            data.push = user.push.device.platform+' Push';
             response.user.transports = data;
             res.send(response);
         })
