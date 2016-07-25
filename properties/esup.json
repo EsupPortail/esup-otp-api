@@ -66,6 +66,7 @@
             "waitingFor" : false
         },
         "push": {
+            "serverKey" : "AIzaSyAVz-ebB4QQYvqRnZVf3i7ZxQn8ZBWxNeM",
             "activate": true,
             "transports" : ["push"],
             "codeRequired" : false,

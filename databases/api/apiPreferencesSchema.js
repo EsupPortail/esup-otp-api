@@ -77,6 +77,9 @@ exports.schema = {
         }
     },
     "push": {
+        "serverKey": {
+            type: String,
+        },
         "activate": {
             type: Boolean,
         },

@@ -7,13 +7,40 @@ var qrCode = require('qrcode-npm')
 var restify = require('restify');
 var utils = require(__dirname + '/../services/utils');
 var logger = require(__dirname + '/../services/logger').getInstance();
+var gcm = require('node-gcm');
+
+// Set up the sender with you API key, prepare your recipients' registration tokens.
+var sender = new gcm.Sender(properties.getMethodProperty('push','serverKey'), {'proxy':'http://wwwcache.univ-lr.fr:3128'});
 
 exports.name = "push";
 
 exports.send_message = function(user, req, res, next) {
-    res.send({
-        "code": "Error",
-        "message": properties.getMessage('error','unvailable_method_operation')
+    var message = new gcm.Message({
+            priority:"high",
+            data: {
+            title: "Stample title notif",
+                body: "Stample title notif",
+                text: "Stample text notif"
+        },
+        to : user.push.device.gcm_id
+    });
+
+    var regTokens = [user.push.device.gcm_id];
+
+    sender.send(message, { registrationTokens: regTokens }, function (err, response) {
+        if(err){
+            console.error(err);
+            res.send({
+                "code": "Error",
+                "message": JSON.stringify(err)
+            });
+        } else {
+            res.send({
+                "code": "Ok",
+                "message": response
+            });
+            console.log(response);
+        }
     });
 }
 
@@ -58,7 +85,7 @@ exports.get_method_secret = function(user, req, res, next) {
 
 
 exports.user_activate = function(user, req, res, next) {
-    var activation_code = "changeActivationCodeGenerationMethod"
+    var activation_code = "123456"
     user.push.activation_code = activation_code;
     api_controller.save_user(user, function() {
         res.send({
