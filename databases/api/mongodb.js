@@ -161,19 +161,24 @@ exports.remove_user = function (uid, callback) {
 
 exports.parse_user = function (user) {
     var parsed_user = {};
+    parsed_user.codeRequired = false;
+    parsed_user.waitingFor = false;
     if (properties.getMethod('totp').activate) {
+        if(user.totp.active)parsed_user.codeRequired = true;
         parsed_user.totp = {
             active: user.totp.active,
             transports: available_transports(user.totp.transports, "totp")
         };
     }
     if (properties.getMethod('random_code').activate) {
+        if(user.random_code.active)parsed_user.codeRequired = true;
         parsed_user.random_code = {
             active: user.random_code.active,
             transports: available_transports(user.random_code.transports, 'random_code')
         };
     }
     if (properties.getMethod('bypass').activate) {
+        if(user.bypass.active)parsed_user.codeRequired = true;
         parsed_user.bypass = {
             active: user.bypass.active,
             available_code: user.bypass.codes.length,
@@ -186,6 +191,7 @@ exports.parse_user = function (user) {
     //}
     // parsed_user.matrix.active = user.matrix.active;
     if(properties.getMethod('push').activate){
+        if(user.push.active)parsed_user.waitingFor = true;
         parsed_user.push = {
             device : {
                 platform : user.push.device.platform,
