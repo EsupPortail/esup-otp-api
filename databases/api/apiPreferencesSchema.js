@@ -19,12 +19,6 @@ exports.schema = {
         },
         "transports": {
             type: Array,
-        },
-        "codeRequired": {
-            type: Boolean,
-        },
-        "waitingFor": {
-            type: Boolean,
         }
     },
     "random_code": {
@@ -45,12 +39,6 @@ exports.schema = {
         },
         "transports": {
             type: Array,
-        },
-        "codeRequired": {
-            type: Boolean,
-        },
-        "waitingFor": {
-            type: Boolean,
         }
     },
     "bypass": {
@@ -68,12 +56,6 @@ exports.schema = {
         },
         "transports": {
             type: Array,
-        },
-        "codeRequired": {
-            type: Boolean,
-        },
-        "waitingFor": {
-            type: Boolean,
         }
     },
     "push": {
@@ -85,12 +67,6 @@ exports.schema = {
         },
         "transports": {
             type: Array,
-        },
-        "codeRequired": {
-            type: Boolean,
-        },
-        "waitingFor": {
-            type: Boolean,
         }
     }
 }

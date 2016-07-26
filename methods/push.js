@@ -101,7 +101,6 @@ exports.confirm_user_activate = function(user, req, res, next) {
         user.push.active = true;
         user.push.device.platform = req.params.platform || "AndroidDev";
         user.push.device.gcm_id = req.params.gcm_id || "GCMIDDev";
-        user.push.device.phone_number = req.params.phone_number || "0147200001Dev";
         user.push.device.manufacturer = req.params.manufacturer || "DevCorp";
         user.push.device.model = req.params.model || "DevDevice";
         user.push.activation_code = utils.generate_digit_code(6);

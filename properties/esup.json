@@ -42,9 +42,7 @@
             "mail_window": 15,
             "app_window": 2,
             "default_window": 2,
-            "transports" : [],
-            "codeRequired" : true,
-            "waitingFor" : false
+            "transports" : []
         },
         "random_code": {
             "activate": true,
@@ -52,25 +50,19 @@
             "mail_validity": 30,
             "code_type": "digit",
             "code_length": 6,
-            "transports" : ["mail","sms"],
-            "codeRequired" : true,
-            "waitingFor" : false
+            "transports" : ["mail","sms"]
         },
         "bypass": {
             "activate": true,
             "codes_number": 10,
             "code_type": "digit",
             "code_length": 6,
-            "transports" : [],
-            "codeRequired" : false,
-            "waitingFor" : false
+            "transports" : []
         },
         "push": {
             "serverKey" : "AIzaSyAVz-ebB4QQYvqRnZVf3i7ZxQn8ZBWxNeM",
             "activate": true,
-            "transports" : ["push"],
-            "codeRequired" : false,
-            "waitingFor" : true
+            "transports" : ["push"]
         }
     },
     "transports":["sms","mail","push"],

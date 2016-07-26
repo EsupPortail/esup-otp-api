@@ -12,7 +12,7 @@ exports.initialize = function (server, callback) {
     logger.info(utils.getFileName(__filename)+' '+'Initializing "unprotected" routes');
 
     //app
-    server.post("/users/:uid/methods/:method/activate/:activation_code/:gcm_id/:platform/:phone_number/:manufacturer/:model", api_controller.confirm_activate_method);
+    server.post("/users/:uid/methods/:method/activate/:activation_code/:gcm_id/:platform/:manufacturer/:model", api_controller.confirm_activate_method);
 
     //user_hash
     server.get("/users/:uid/:hash", validator.check_hash, api_controller.get_user_infos);

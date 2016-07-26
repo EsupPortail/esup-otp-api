@@ -58,10 +58,6 @@ exports.schema = {
                 type: String,
                 default: null
             },
-            phone_number: {
-                type: String,
-                default: null
-            },
             manufacturer: {
                 type: String,
                 default: null
