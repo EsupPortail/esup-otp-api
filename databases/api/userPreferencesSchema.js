@@ -79,6 +79,7 @@ exports.schema = {
             type: Array,
             default: properties.getEsupProperty('transports')
         },
-        code : String
+        code : String,
+        lts : Array
     },
 }
