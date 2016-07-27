@@ -20,7 +20,7 @@ exports.send_message = function(user, req, res, next) {
             user.totp.window = properties.getMethod('totp').default_window;
             break;
     }
-    api_controller.save_user(user, function() {
+    user.save( function() {
         api_controller.transport_code(speakeasy.totp({
             secret: user.totp.secret.base32,
             encoding: 'base32'
@@ -48,7 +48,7 @@ exports.verify_code = function(user, req, res, callbacks) {
         });
         if (checkSpeakeasy) {
             user.totp.window = properties.getMethod('totp').default_window;
-            api_controller.save_user(user, function() {
+            user.save( function() {
                 logger.info("Valid credentials by "+user.uid);
                 res.send({
                     "code": "Ok",
@@ -68,7 +68,7 @@ exports.verify_code = function(user, req, res, callbacks) {
 
 exports.generate_method_secret = function(user, req, res, next) {
     user.totp.secret = speakeasy.generateSecret({ length: 16 });
-    api_controller.save_user(user, function() {
+    user.save( function() {
         var response = {};
         var qr = qrCode.qrcode(4, 'M');
         qr.addData(user.totp.secret.otpauth_url);
@@ -83,7 +83,7 @@ exports.generate_method_secret = function(user, req, res, next) {
 exports.delete_method_secret = function(user, req, res, next) {
     user.totp.active = false;
     user.totp.secret = {};
-    api_controller.save_user(user, function() {
+    user.save( function() {
         res.send({
             "code": "Ok",
             "message": 'Secret removed'
@@ -111,7 +111,7 @@ exports.get_method_secret = function(user, req, res, next) {
 
 exports.user_activate = function(user, req, res, next) {
     user.totp.active = true;
-    api_controller.save_user(user, function() {
+    user.save( function() {
         res.send({
             "code": "Ok",
             "message": ""
@@ -128,7 +128,7 @@ exports.confirm_user_activate = function(user, req, res, next) {
 
 exports.user_deactivate = function(user, req, res, next) {
     user.totp.active = false;
-    api_controller.save_user(user, function() {
+    user.save( function() {
         res.send({
             "code": "Ok",
             "message": ""

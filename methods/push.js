@@ -29,7 +29,7 @@ exports.send_message = function (user, req, res, next) {
 
     var regTokens = [user.push.device.gcm_id];
 
-    api_controller.save_user(user, function () {
+    user.save( function () {
         sender.send(message, {registrationTokens: regTokens}, function (err, response) {
             if (err) {
                 logger.info(err);
@@ -60,7 +60,7 @@ exports.verify_code = function (user, req, res, callbacks) {
     logger.debug(utils.getFileName(__filename) + ' ' + "verify_code: " + user.uid);
     if (user.push.code == req.params.otp) {
         delete user.push.code;
-        api_controller.save_user(user, function () {
+        user.save( function () {
             logger.info("Valid credentials by " + user.uid);
             res.send({
                 "code": "Ok",
@@ -99,7 +99,7 @@ exports.get_method_secret = function (user, req, res, next) {
 exports.user_activate = function (user, req, res, next) {
     var activation_code = "123456"
     user.push.activation_code = activation_code;
-    api_controller.save_user(user, function () {
+    user.save( function () {
         res.send({
             "code": "Ok",
             "message": properties.getMessage('success', 'wait_for_confirmation'),
@@ -116,7 +116,7 @@ exports.confirm_user_activate = function (user, req, res, next) {
         user.push.device.manufacturer = req.params.manufacturer || "DevCorp";
         user.push.device.model = req.params.model || "DevDevice";
         user.push.activation_code = utils.generate_digit_code(6);
-        api_controller.save_user(user, function () {
+        user.save( function () {
             res.send({
                 "code": "Ok",
                 "message": ""
@@ -132,17 +132,11 @@ exports.accept_authentication = function (user, req, res, next) {
     if (user.push.device.gcm_id == req.params.gcm_id) {
         user.push.lts.push(req.params.loginTicket);
         user.save(function () {
-            logger.debug('user.save(function () {');
             res.send({
                 "code": "Ok"
             });
         });
-        //TODO replace api_controller.save_user(user, function () by user.save
-        /**api_controller.save_user(user, function () {
-            res.send({
-                "code": "Ok"
-            });
-        });**/
+        //TODO replace user.save( function () by user.save
     } else res.send({
         "code": "Error",
         "message": properties.getMessage('error', 'unvailable_method_operation')
@@ -153,12 +147,7 @@ exports.check_accept_authentication = function (user, req, res, next) {
     if (user.push.lts.indexOf(req.params.loginTicket)>-1) {
         code = user.push.code;
         user.push.lts = [];
-        api_controller.save_user(user, function () {
-            logger.debug('api_controller.save_user(user, function () {');
-            logger.debug({
-                "code": "Ok",
-                "otp": user.push.code
-            });
+        user.save( function () {
             res.send({
                 "code": "Ok",
                 "otp": user.push.code
@@ -175,7 +164,7 @@ exports.user_deactivate = function (user, req, res, next) {
     user.push.device.platform = "";
     user.push.device.gcm_id = "";
     user.push.device.phone_number = "";
-    api_controller.save_user(user, function () {
+    user.save( function () {
         res.send({
             "code": "Ok",
             "message": ""

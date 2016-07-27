@@ -34,7 +34,7 @@ exports.verify_code = function(user, req, res, callbacks) {
             }
         }
         if (checkOtp) {
-            api_controller.save_user(user, function() {
+            user.save( function() {
                 logger.info("Valid credentials by "+user.uid);
                 res.send({
                     "code": "Ok",
@@ -67,7 +67,7 @@ exports.generate_method_secret = function(user, req, res, next) {
         }
     }
     user.bypass.codes = codes;
-    api_controller.save_user(user, function() {
+    user.save( function() {
         res.send({
             code: "Ok",
             message: "",
@@ -80,7 +80,7 @@ exports.generate_method_secret = function(user, req, res, next) {
 exports.delete_method_secret = function(user, req, res, next) {
     user.bypass.active = false;
     user.bypass.codes = [];
-    api_controller.save_user(user, function() {
+    user.save( function() {
         res.send({
             "code": "Ok",
             "message": 'Secret removed'
@@ -97,7 +97,7 @@ exports.get_method_secret = function(user, req, res, next) {
 
 exports.user_activate = function(user, req, res, next) {
     user.bypass.active = true;
-    api_controller.save_user(user, function() {
+    user.save( function() {
         res.send({
             "code": "Ok",
             "message": ""
@@ -114,7 +114,7 @@ exports.confirm_user_activate = function(user, req, res, next) {
 
 exports.user_deactivate = function(user, req, res, next) {
     user.bypass.active = false;
-    api_controller.save_user(user, function() {
+    user.save( function() {
         res.send({
             "code": "Ok",
             "message": ""

@@ -23,7 +23,7 @@ exports.send_message = function(user, req, res, next) {
     validity_time += new Date().getTime();
     new_otp.validity_time = validity_time;
     user.random_code = new_otp;
-    api_controller.save_user(user, function() {
+    user.save( function() {
         api_controller.transport_code(new_otp.code, req, res, next);
     });
 }
@@ -40,7 +40,7 @@ exports.verify_code = function(user, req, res, callbacks) {
     if (user.random_code.code == req.params.otp && Date.now() < user.random_code.validity_time) {
         delete user.random_code.code;
         delete user.random_code.validity_time;
-        api_controller.save_user(user, function() {
+        user.save( function() {
             logger.info("Valid credentials by "+user.uid);
             res.send({
                 "code": "Ok",
@@ -76,7 +76,7 @@ exports.get_method_secret = function(user, req, res, next) {
 
 exports.user_activate = function(user, req, res, next) {
     user.random_code.active = true;
-    api_controller.save_user(user, function() {
+    user.save( function() {
         res.send({
             "code": "Ok",
             "message": ""
@@ -93,7 +93,7 @@ exports.confirm_user_activate = function(user, req, res, next) {
 
 exports.user_deactivate = function(user, req, res, next) {
     user.random_code.active = false;
-    api_controller.save_user(user, function() {
+    user.save( function() {
         res.send({
             "code": "Ok",
             "message": ""
