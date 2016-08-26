@@ -136,7 +136,6 @@ exports.accept_authentication = function (user, req, res, next) {
                 "code": "Ok"
             });
         });
-        //TODO replace user.save( function () by user.save
     } else res.send({
         "code": "Error",
         "message": properties.getMessage('error', 'unvailable_method_operation')
@@ -170,6 +169,28 @@ exports.user_deactivate = function (user, req, res, next) {
             "message": ""
         });
     });
+}
+
+exports.user_desync = function (user, req, res, next) {
+    logger.debug(utils.getFileName(__filename) + ' ' + "user_desync: " + user.uid);
+    if(req.params.gcm_id == user.push.device.gcm_id){
+        user.push.active = false;
+        user.push.device.platform = "";
+        user.push.device.gcm_id = "";
+        user.push.device.phone_number = "";
+        user.save( function () {
+            res.send({
+                "code": "Ok",
+                "message": ""
+            });
+        });
+    }else {
+        res.send({
+            "code": "Error",
+            "message": "gcm_id"
+        });
+
+    }
 }
 
 exports.admin_activate = function (req, res, next) {

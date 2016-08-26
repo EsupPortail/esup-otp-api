@@ -142,3 +142,10 @@ exports.admin_activate = function(req, res, next) {
         "message": properties.getMessage('error','unvailable_method_operation')
     });
 }
+
+exports.user_desync = function (user, req, res, next) {
+    res.send({
+        "code": "Error",
+        "message": properties.getMessage('error','unvailable_method_operation')
+    });
+}

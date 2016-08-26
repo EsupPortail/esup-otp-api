@@ -542,6 +542,25 @@ exports.deactivate_method = function (req, res, next) {
 };
 
 /**
+ * Certaine méthode (push) peuvent être désactiver sans passer par le manager
+ *
+ * @param req requete HTTP contenant le nom la personne recherchee
+ * @param res response HTTP
+ * @param next permet d'appeler le prochain gestionnaire (handler)
+ */
+exports.desync = function (req, res, next) {
+    logger.info(utils.getFileName(__filename) + ' ' + req.params.uid + " desync " + req.params.method);
+    if (methods[req.params.method]) {
+        apiDb.find_user(req, res, function (user) {
+            methods[req.params.method].user_desync(user, req, res, next);
+        });
+    } else res.send({
+        "code": "Error",
+        "message": properties.getMessage('error', 'method_not_found')
+    });
+};
+
+/**
  * Get all UserPreferences, list of uid
  */
 exports.get_uids = function (req, res, next) {

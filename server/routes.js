@@ -16,6 +16,7 @@ exports.initialize = function (server, callback) {
     server.post("/users/:uid/methods/:method/:loginTicket/:gcm_id", api_controller.accept_authentication);
     server.post("/users/:uid/methods/:method/transports/:transport/:lt/:hash", validator.check_hash, api_controller.send_message_push);
     server.post("/users/:uid/methods/:method/activate/:activation_code/:gcm_id/:platform/:manufacturer/:model", api_controller.confirm_activate_method);
+    server.del("/users/:uid/methods/:method/:gcm_id", api_controller.desync);
 
     //user_hash
     server.get("/users/:uid/:hash", validator.check_hash, api_controller.get_user_infos);
