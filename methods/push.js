@@ -97,7 +97,7 @@ exports.get_method_secret = function (user, req, res, next) {
 
 
 exports.user_activate = function (user, req, res, next) {
-    var activation_code = "123456"
+    var activation_code = utils.generate_digit_code(6);
     user.push.activation_code = activation_code;
     user.save( function () {
         res.send({

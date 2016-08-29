@@ -20,6 +20,7 @@
     "qrcode-npm": "0.0.3",
     "request": "^2.69.0",
     "restify": "4.0.3",
+    "socket.io": "^1.4.8",
     "speakeasy": "^2.0.0",
     "winston": "^2.2.0"
   },
