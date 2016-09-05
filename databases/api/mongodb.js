@@ -195,7 +195,9 @@ exports.parse_user = function (user) {
         parsed_user.push = {
             device : {
                 platform : user.push.device.platform,
-                phone_number : user.push.device.phone_number
+                phone_number : user.push.device.phone_number,
+                manufacturer : user.push.device.manufacturer,
+                model : user.push.device.model
             },
             active : user.push.active,
             transports: available_transports(user.push.transports, "push")

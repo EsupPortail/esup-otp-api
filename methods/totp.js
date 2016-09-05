@@ -1,7 +1,7 @@
 var properties = require(__dirname + '/../properties/properties');
 var api_controller = require(__dirname + '/../controllers/api');
 var speakeasy = require('speakeasy');
-var qrCode = require('qrcode-npm')
+var qrCode = require('qrcode-npm');
 var restify = require('restify');
 var utils = require(__dirname + '/../services/utils');
 var logger = require(__dirname + '/../services/logger').getInstance();

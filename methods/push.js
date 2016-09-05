@@ -7,6 +7,7 @@ var restify = require('restify');
 var utils = require(__dirname + '/../services/utils');
 var logger = require(__dirname + '/../services/logger').getInstance();
 var gcm = require('node-gcm');
+var qrCode = require('qrcode-npm');
 
 // Set up the sender with you API key, prepare your recipients' registration tokens.
 var sender = new gcm.Sender(properties.getMethodProperty('push', 'serverKey'), {'proxy': 'http://wwwcache.univ-lr.fr:3128'});
@@ -20,6 +21,8 @@ exports.send_message = function (user, req, res, next) {
         data: {
             title: "Esup-OTP-Push",
             body: "Demande de connexion à votre compte",
+            text: "Demande de connexion à votre compte",
+            action: 'auth',
             uid: user.uid,
             code: user.push.code,
             lt: req.params.lt
@@ -99,11 +102,13 @@ exports.get_method_secret = function (user, req, res, next) {
 exports.user_activate = function (user, req, res, next) {
     var activation_code = utils.generate_digit_code(6);
     user.push.activation_code = activation_code;
+    var qr = qrCode.qrcode(4, 'M');
+    qr.addData(req.headers.host+'/users/'+user.uid+'/methods/push/'+activation_code);
+    qr.make();
     user.save( function () {
         res.send({
             "code": "Ok",
-            "message": properties.getMessage('success', 'wait_for_confirmation'),
-            "activation_code": activation_code
+            "message": properties.getMessage('success', 'push_confirmation1') + qr.createImgTag(4) + properties.getMessage('success', 'push_confirmation2') + activation_code + properties.getMessage('success', 'push_confirmation3') + req.headers.host + properties.getMessage('success', 'push_confirmation4')
         });
     });
 }
@@ -159,6 +164,7 @@ exports.check_accept_authentication = function (user, req, res, next) {
 }
 
 exports.user_deactivate = function (user, req, res, next) {
+    alert_deactivate(user);
     user.push.active = false;
     user.push.device.platform = "";
     user.push.device.gcm_id = "";
@@ -168,6 +174,25 @@ exports.user_deactivate = function (user, req, res, next) {
             "code": "Ok",
             "message": ""
         });
+    });
+}
+
+function alert_deactivate(user) {
+    var message = new gcm.Message({
+        priority: "high",
+        data: {
+            title: "Esup-OTP-Push",
+            body: "Les notifications push ont été désactivées pour votre compte",
+            text: "Les notifications push ont été désactivées pour votre compte",
+            action: "desync"
+        },
+        to: user.push.device.gcm_id
+    });
+    var regTokens = [user.push.device.gcm_id];
+    sender.send(message, {registrationTokens: regTokens}, function (err, response) {
+        if (err) {
+            logger.info(err);
+        }
     });
 }
 

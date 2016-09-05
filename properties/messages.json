@@ -4,7 +4,10 @@
         "transports_found": "Transports list found",
         "methods_found": "Methods found",
         "update": "Successful update",
-        "wait_for_confirmation" : "Confirmez ce code dans l'application mobile : "
+        "push_confirmation1" : "<p><p>Veuillez scannez ce code dans l'application smartphone</p>",
+        "push_confirmation2" : "<p>Si votre smartphone ne dispose pas d'un appreil photo fonctionnel ou que vous épprouvez des difficultés à scanner le code précédent.</p><div style=\"padding:15px; \"><p>Allez dans le menu \"Paramètres\" puis cliquer sur \"Activation sans scan\".</p><p>Entrez votre nom de compte.</p><p>Entrez votre le code d'activation :",
+        "push_confirmation3" : "</p><p>Entrez l'adresse : ",
+        "push_confirmation4" : "</p><p>Puis cliquez sur \"Ok\"</p></div></p>"
     },
     "error": {
         "invalid_credentials": "Invalid credentials",
