@@ -13,6 +13,16 @@ function check_hash(req, res, next) {
     return next(new restify.ForbiddenError());
 }
 
+exports.check_hash_socket = check_hash_socket;
+
+function check_hash_socket(uid, hash) {
+    var hashes = utils.get_hash(uid);
+    for (_hash in hashes){
+        if (hash == hashes[_hash]) return true;
+    }
+    return false;
+}
+
 exports.check_api_password = check_api_password;
 
 function check_api_password(req, res, next) {

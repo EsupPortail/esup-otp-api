@@ -2,6 +2,7 @@ var restify = require('restify');
 var properties = require(__dirname + '/../properties/properties');
 var utils = require(__dirname + '/../services/utils');
 var fs = require('fs');
+var sockets = require('./sockets');
 
 global.base_dir = __dirname.split('/')[__dirname.split('/').length-2];
 
@@ -68,6 +69,7 @@ function launch_server() {
         if (err)
             logger.error(utils.getFileName(__filename)+' '+err);
         else {
+            sockets.attach(server);
             logger.info(utils.getFileName(__filename)+' '+'App is ready at : ' + port);
         }
     });

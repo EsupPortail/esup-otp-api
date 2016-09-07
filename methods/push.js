@@ -8,6 +8,7 @@ var utils = require(__dirname + '/../services/utils');
 var logger = require(__dirname + '/../services/logger').getInstance();
 var gcm = require('node-gcm');
 var qrCode = require('qrcode-npm');
+var sockets = require('../server/sockets');
 
 // Set up the sender with you API key, prepare your recipients' registration tokens.
 var sender = new gcm.Sender(properties.getMethodProperty('push', 'serverKey'), {'proxy': 'http://wwwcache.univ-lr.fr:3128'});
@@ -122,6 +123,7 @@ exports.confirm_user_activate = function (user, req, res, next) {
         user.push.device.model = req.params.model || "DevDevice";
         user.push.activation_code = utils.generate_digit_code(6);
         user.save( function () {
+            sockets.emitManager('userUpdate',{uid:user.uid});
             res.send({
                 "code": "Ok",
                 "message": ""
@@ -137,6 +139,7 @@ exports.accept_authentication = function (user, req, res, next) {
     if (user.push.device.gcm_id == req.params.gcm_id) {
         user.push.lts.push(req.params.loginTicket);
         user.save(function () {
+            sockets.emitCas(user.uid,'userAuth');
             res.send({
                 "code": "Ok"
             });
