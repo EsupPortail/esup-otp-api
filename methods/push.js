@@ -107,9 +107,17 @@ exports.user_activate = function (user, req, res, next) {
     qr.addData(req.headers.host+'/users/'+user.uid+'/methods/push/'+activation_code);
     qr.make();
     user.save( function () {
+        var http = 'http://';
+        if(req.isSecure())http="https://";
         res.send({
             "code": "Ok",
-            "message": properties.getMessage('success', 'push_confirmation1') + qr.createImgTag(4) + properties.getMessage('success', 'push_confirmation2') + activation_code + properties.getMessage('success', 'push_confirmation3') + req.headers.host + properties.getMessage('success', 'push_confirmation4')
+            "message1": properties.getMessage('success', 'push_confirmation1'),
+            "message2": properties.getMessage('success', 'push_confirmation2'),
+            "message3": properties.getMessage('success', 'push_confirmation3'),
+            "message4": properties.getMessage('success', 'push_confirmation4'),
+            "message5": properties.getMessage('success', 'push_confirmation5'),
+            "qrCode" : qr.createImgTag(4),
+            "activationCode" : activation_code
         });
     });
 }
