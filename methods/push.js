@@ -104,11 +104,11 @@ exports.user_activate = function (user, req, res, next) {
     var activation_code = utils.generate_digit_code(6);
     user.push.activation_code = activation_code;
     var qr = qrCode.qrcode(4, 'M');
-    qr.addData(req.headers.host+'/users/'+user.uid+'/methods/push/'+activation_code);
+    var http = 'http://';
+    if(req.isSecure())http="https://";
+    qr.addData(http+req.headers.host+'/users/'+user.uid+'/methods/push/'+activation_code);
     qr.make();
     user.save( function () {
-        var http = 'http://';
-        if(req.isSecure())http="https://";
         res.send({
             "code": "Ok",
             "message1": properties.getMessage('success', 'push_confirmation1'),
