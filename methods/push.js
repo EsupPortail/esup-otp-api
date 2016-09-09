@@ -11,7 +11,9 @@ var qrCode = require('qrcode-npm');
 var sockets = require('../server/sockets');
 
 // Set up the sender with you API key, prepare your recipients' registration tokens.
-var sender = new gcm.Sender(properties.getMethodProperty('push', 'serverKey'), {'proxy': 'http://wwwcache.univ-lr.fr:3128'});
+var opts={};
+if(properties.getEsupProperty('proxyUrl'))opts={'proxy': properties.getEsupProperty('proxyUrl')};
+var sender = new gcm.Sender(properties.getMethodProperty('push', 'serverKey'), opts);
 
 exports.name = "push";
 
