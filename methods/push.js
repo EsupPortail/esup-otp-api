@@ -105,8 +105,10 @@ exports.user_activate = function (user, req, res, next) {
     user.push.activation_code = activation_code;
     var qr = qrCode.qrcode(4, 'M');
     var http = 'http://';
-    if(req.isSecure())http="https://";
-    qr.addData(http+req.headers.host+'/users/'+user.uid+'/methods/push/'+activation_code);
+    if(req.headers["x-forwarded-proto"])http=req.headers["x-forwarded-proto"]+"://";
+    var host = req.headers.host;
+    if(req.headers["x-forwarded-host"])host=req.headers["x-forwarded-host"].replace(/,.*/,'');
+    qr.addData(http+host+'/users/'+user.uid+'/methods/push/'+activation_code);
     qr.make();
     user.save( function () {
         res.send({
