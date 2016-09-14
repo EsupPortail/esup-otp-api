@@ -44,7 +44,12 @@ exports.send_message = function (user, req, res, next) {
                     "message": JSON.stringify(err)
                 });
             } else {
-                res.send({
+                if(response.failure>0){
+                    logger.debug(response);
+                    if(response.results[0].error == "NotRegistered"){
+                        user_unactivate(user, req, res, next);
+                    };
+                }else res.send({
                     "code": "Ok",
                     "message": response
                 });
@@ -178,7 +183,9 @@ exports.check_accept_authentication = function (user, req, res, next) {
     });
 }
 
-exports.user_deactivate = function (user, req, res, next) {
+exports.user_deactivate = user_deactivate;
+
+function user_deactivate(user, req, res, next) {
     alert_deactivate(user);
     user.push.active = false;
     user.push.device.platform = "";
@@ -190,7 +197,20 @@ exports.user_deactivate = function (user, req, res, next) {
             "message": ""
         });
     });
-}
+};
+
+function user_unactivate(user, req, res, next) {
+    user.push.active = false;
+    user.push.device.platform = "";
+    user.push.device.gcm_id = "";
+    user.push.device.phone_number = "";
+    user.save( function () {
+        res.send({
+            "code": "Error",
+            "message": properties.getMessage('error', 'push_not_registered')
+        });
+    });
+};
 
 function alert_deactivate(user) {
     var message = new gcm.Message({
