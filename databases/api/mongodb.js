@@ -181,6 +181,7 @@ exports.parse_user = function (user) {
         if(user.bypass.active)parsed_user.codeRequired = true;
         parsed_user.bypass = {
             active: user.bypass.active,
+            codes: [],
             available_code: user.bypass.codes.length,
             used_code: user.bypass.used_codes,
             transports: available_transports(user.bypass.transports, "bypass")
