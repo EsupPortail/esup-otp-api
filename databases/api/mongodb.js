@@ -200,7 +200,10 @@ exports.parse_user = function (user) {
                 platform : user.push.device.platform,
                 phone_number : user.push.device.phone_number,
                 manufacturer : user.push.device.manufacturer,
-                model : user.push.device.model
+                model : user.push.device.model,
+                activationCode: {},
+                qrCode: {},
+                api_url: {}
             },
             active : user.push.active,
             transports: available_transports(user.push.transports, "push")
