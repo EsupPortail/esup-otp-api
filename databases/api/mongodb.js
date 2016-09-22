@@ -168,7 +168,7 @@ exports.parse_user = function (user) {
         parsed_user.totp = {
             active: user.totp.active,
             message: "",
-            qrCode: ""
+            qrCode: "",
             transports: available_transports(user.totp.transports, "totp")
         };
     }
