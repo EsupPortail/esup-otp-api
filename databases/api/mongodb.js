@@ -167,6 +167,9 @@ exports.parse_user = function (user) {
         if(user.totp.active)parsed_user.codeRequired = true;
         parsed_user.totp = {
             active: user.totp.active,
+            message: "",
+            qrCode: "",
+            uid: "",
             transports: available_transports(user.totp.transports, "totp")
         };
     }

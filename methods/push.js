@@ -190,6 +190,8 @@ function user_deactivate(user, req, res, next) {
     user.push.active = false;
     user.push.device.platform = "";
     user.push.device.gcm_id = "";
+    user.push.device.manufacturer = "";
+    user.push.device.model = "";
     user.push.device.phone_number = "";
     user.save( function () {
         res.send({
@@ -203,6 +205,8 @@ function user_unactivate(user, req, res, next) {
     user.push.active = false;
     user.push.device.platform = "";
     user.push.device.gcm_id = "";
+    user.push.device.manufacturer = "";
+    user.push.device.model = ""
     user.push.device.phone_number = "";
     user.save( function () {
         res.send({
