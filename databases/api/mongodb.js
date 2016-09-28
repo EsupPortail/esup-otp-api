@@ -202,6 +202,9 @@ exports.parse_user = function (user) {
                 manufacturer : user.push.device.manufacturer,
                 model : user.push.device.model
             },
+            activationCode : '',
+            api_url : '',
+            qrCode : '',
             active : user.push.active,
             transports: available_transports(user.push.transports, "push")
         };

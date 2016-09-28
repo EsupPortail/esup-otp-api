@@ -140,7 +140,8 @@ exports.confirm_user_activate = function (user, req, res, next) {
         user.push.device.model = req.params.model || "DevDevice";
         user.push.activation_code = utils.generate_digit_code(6);
         user.save( function () {
-            sockets.emitManager('userUpdate',{uid:user.uid});
+            sockets.emitManager('userPushActivate',{uid:user.uid});
+            sockets.emitToManagers('userPushActivateManager', user.uid);
             res.send({
                 "code": "Ok",
                 "message": ""
@@ -194,6 +195,7 @@ function user_deactivate(user, req, res, next) {
     user.push.device.model = "";
     user.push.device.phone_number = "";
     user.save( function () {
+        sockets.emitManager('userPushDeactivate',{uid:user.uid});
         res.send({
             "code": "Ok",
             "message": ""

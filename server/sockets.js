@@ -6,7 +6,7 @@ var properties = require(__dirname + '/../properties/properties');
 var validator = require('../services/validator');
 var managerSocket;
 
-var users = {};
+var users = {_managers:[]};
 exports.attach = function(server){
     io = require('socket.io')({path: "/sockets"}).attach(server.server);
     initialize();
@@ -22,7 +22,11 @@ function initialize() {
             if(validator.check_hash_socket(socket.handshake.query.uid, socket.handshake.query.hash)){
                 userConnection(socket.handshake.query.uid, socket.id);
             }
-        }
+        } else socket.disconnect('Forbidden');
+
+        socket.on('managers', function (data) {
+            users._managers = data;
+        })
 
         socket.on('disconnect', function () {
             userDisconnection(socket.id);
@@ -32,6 +36,12 @@ function initialize() {
 
 exports.emitManager= function (emit, data) {
     io.to(managerSocket).emit(emit, data);
+};
+
+exports.emitToManagers= function (emit, target) {
+    for(manager in users['_managers']){
+        io.to(managerSocket).emit(emit, {uid:users['_managers'][manager], target: target});
+    }
 };
 
 exports.emitCas= function (uid, emit, data) {
