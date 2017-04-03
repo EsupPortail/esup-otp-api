@@ -32,8 +32,9 @@ Check https://github.com/Hakall/esup-node-proxy if you want a simple NodeJS reve
 Install mocha : npm install -g mocha .
 Simply execute "mocha" in root directory of the project, the server must be launch before execute the tests
 
-### Development
-
+### See also
+- [esup-otp-manager](https://github.com/EsupPortail/esup-otp-manager)
+- [esup-otp-cas](https://github.com/EsupPortail/esup-otp-cas)
 
 License
 ----
