@@ -279,27 +279,7 @@ exports.get_user_infos = function (req, res, next) {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.send_message = function (req, res, next) {
-    if (properties.getMethod(req.params.method) && req.params.method!='push') {
-        apiDb.find_user(req, res, function (user) {
-            if (user[req.params.method].active && properties.getMethodProperty(req.params.method, 'activate') && methods[req.params.method]) {
-                methods[req.params.method].send_message(user, req, res, next);
-            } else {
-                res.send({
-                    code: 'Error',
-                    message: properties.getMessage('error', 'method_not_found')
-                });
-            }
-        });
-    } else {
-        res.send({
-            code: 'Error',
-            message: properties.getMessage('error', 'method_not_found')
-        });
-    }
-};
-
-exports.send_message_push = function (req, res, next) {
-    if (properties.getMethod(req.params.method) && req.params.method=='push') {
+    if (properties.getMethod(req.params.method)) {
         apiDb.find_user(req, res, function (user) {
             if (user[req.params.method].active && properties.getMethodProperty(req.params.method, 'activate') && methods[req.params.method]) {
                 methods[req.params.method].send_message(user, req, res, next);

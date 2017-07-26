@@ -25,6 +25,6 @@
     "winston": "^2.2.0"
   },
   "scripts": {
-    "start": "nohup node run &"
+    "start": "node run"
   }
 }
