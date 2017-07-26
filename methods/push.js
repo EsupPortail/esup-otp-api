@@ -157,7 +157,11 @@ exports.accept_authentication = function (user, req, res, next) {
     if (user.push.device.gcm_id == req.params.gcm_id) {
         user.push.lts.push(req.params.loginTicket);
         user.save(function () {
-            sockets.emitCas(user.uid,'userAuth');
+            var data = {
+                "code": "Ok",
+                "otp": user.push.code
+            };
+            sockets.emitCas(user.uid, 'userAuth', data);
             res.send({
                 "code": "Ok"
             });
