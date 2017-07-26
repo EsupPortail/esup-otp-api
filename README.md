@@ -5,18 +5,15 @@ esup-otp-api is restful api using NodeJS for generate, send and verify one-time 
 ### Version
 0.9.0
 
-### Tech
+Run on Node v4.* and npm v2
 
-esup-otp-api uses a number of open NodeJS modules:
+### Requirement
 
-    "ldap-client": "^3.1.0",
-    "mongoose": "4.4.0",
-    "nodemailer": "^2.2.1",
-    "nodemailer-smtp-transport": "^2.4.1",
-    "qrcode-npm": "0.0.3",
-    "request": "^2.69.0",
-    "restify": "4.0.3",
-    "speakeasy": "^2.0.0"
+Require [Mongodb](https://docs.mongodb.com/manual/tutorial/install-mongodb-on-ubuntu)
+
+```bash
+sudo service mongod start
+```
 
 ### Installation
 - git clone https://github.com/EsupPortail/esup-otp-api.git
