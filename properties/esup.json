@@ -6,6 +6,7 @@
     "users_secret":"changeit",
     "apiDb": "mongodb",
     "userDb": "mongodb",
+    "port": "",
     "mongodb": {
         "address": "localhost",
         "db": "test-otp",
