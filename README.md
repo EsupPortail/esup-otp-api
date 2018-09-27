@@ -25,9 +25,25 @@ sudo service mongod start
 esup-otp-api runs in http, if you want a secure mode you will need a reverse proxy.
 Check https://github.com/Hakall/esup-node-proxy if you want a simple NodeJS reverse proxy.
 
+### Si derrière Apache
+- https 
+
+>
+ RequestHeader set X-Forwarded-Proto https
+ RequestHeader set X-Forwarded-Port 443
+
+- websocket
+
+>
+  RewriteEngine On
+  RewriteCond %{QUERY_STRING} transport=websocket [NC]
+  RewriteRule /(.*) ws://esup-otp-api-serveur/$1 [P]
+
+
 ### Tests
 Install mocha : npm install -g mocha .
 Simply execute "mocha" in root directory of the project, the server must be launch before execute the tests
+
 
 ### See also
 - [esup-otp-manager](https://github.com/EsupPortail/esup-otp-manager)
