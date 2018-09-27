@@ -28,14 +28,12 @@ Check https://github.com/Hakall/esup-node-proxy if you want a simple NodeJS reve
 ### Si derrière Apache
 - https 
 
->
- RequestHeader set X-Forwarded-Proto https
+> RequestHeader set X-Forwarded-Proto https
  RequestHeader set X-Forwarded-Port 443
 
 - websocket
 
->
-  RewriteEngine On
+> RewriteEngine On
   RewriteCond %{QUERY_STRING} transport=websocket [NC]
   RewriteRule /(.*) ws://esup-otp-api-serveur/$1 [P]
 
