@@ -19,7 +19,7 @@
     "nodemailer-smtp-transport": "^2.4.1",
     "qrcode-npm": "0.0.3",
     "request": "^2.69.0",
-    "restify": "4.0.3",
+    "restify": "^4.3.4",
     "socket.io": "^1.4.8",
     "speakeasy": "^2.0.0",
     "winston": "^2.2.0"
