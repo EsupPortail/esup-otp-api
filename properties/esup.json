@@ -61,7 +61,7 @@
             "transports" : []
         },
         "push": {
-            "serverKey" : "AIzaSyAVz-ebB4QQYvqRnZVf3i7ZxQn8ZBWxNeM",
+            "serverKey" : "AIzaSyAWf2o8SyaTgtVQczI86lAeQQyHhBuxxME",
             "activate": true,
             "transports" : ["push"]
         }

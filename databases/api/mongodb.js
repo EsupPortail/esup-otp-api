@@ -8,6 +8,17 @@ var connection;
 var logger = require(__dirname + '/../../services/logger').getInstance();
 
 exports.initialize = function (callback) {
+    // sart comment - added lines to resolve warnings:
+    // 1 -- current URL string parser is deprecated, and will be removed in a future version. 
+    //      To use the new parser, pass option { useNewUrlParser: true } to MongoClient.connect.
+    // 2 -- DeprecationWarning: collection.ensureIndex is deprecated. Use createIndexes instead.
+    
+    //to resolve warning 1.
+    mongoose.set('useNewUrlParser', true); 
+    // to resolve warning 2.
+    mongoose.set('useFindAndModify', false); 
+    mongoose.set('useCreateIndex', true);
+    // end comment - added lines to resolve warnings:
     connection = mongoose.createConnection('mongodb://' + properties.getEsupProperty('mongodb').address + '/' + properties.getEsupProperty('mongodb').db, function (error) {
         if (error) {
             logger.error(utils.getFileName(__filename)+' '+error);

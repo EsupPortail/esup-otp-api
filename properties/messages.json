@@ -8,7 +8,8 @@
         "push_confirmation2" : "<p>Si votre smartphone ne dispose pas d'un appreil photo fonctionnel ou que vous épprouvez des difficultés à scanner le code précédent.</p><div style=\"padding:15px; \"><p>Allez dans le menu \"Paramètres\" puis cliquer sur \"Activation sans scan\".</p><p>Entrez votre nom de compte : <b>",
         "push_confirmation3" : "</b></p><p>Entrez le code d'activation : <b>",
         "push_confirmation4" : "</b></p><p>Entrez l'adresse : <b>",
-        "push_confirmation5" : "</b></p><p>Puis cliquez sur \"Ok\"</p></div></p>"
+        "push_confirmation5" : "</b></p><p>Puis cliquez sur \"Ok\"</p></div></p>",
+        "label" : "esup-otp"
     },
     "error": {
         "invalid_credentials": "Invalid credentials",

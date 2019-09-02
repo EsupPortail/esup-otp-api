@@ -96,7 +96,7 @@ exports.activate_method_transport = function (req, res, next) {
 };
 
 /**
- * Désctive le transport req.params.transport pour la  méthode req.params.method
+ * Désactive le transport req.params.transport pour la  méthode req.params.method
  *
  * @param req requete HTTP contenant le nom la personne recherchee
  * @param res response HTTP
@@ -270,7 +270,10 @@ exports.get_user_infos = function (req, res, next) {
     });
 };
 
-
+/**
+ * 
+ * 
+ */
 /**
  * Envoie un code à l'utilisateur avec l'uid == req.params.uid et via la method == req.params.method
  *
@@ -511,6 +514,7 @@ exports.confirm_activate_method = function (req, res, next) {
  */
 exports.deactivate_method = function (req, res, next) {
     logger.info(utils.getFileName(__filename) + ' ' + req.params.uid + " deactivate_method " + req.params.method);
+    logger.info(methods[req.params.method]);
     if (methods[req.params.method]) {
         apiDb.find_user(req, res, function (user) {
             methods[req.params.method].user_deactivate(user, req, res, next);

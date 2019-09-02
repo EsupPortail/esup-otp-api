@@ -67,7 +67,8 @@ exports.verify_code = function(user, req, res, callbacks) {
 
 
 exports.generate_method_secret = function(user, req, res, next) {
-    user.totp.secret = speakeasy.generateSecret({ length: 16 });
+    user.totp.secret = speakeasy.generateSecret({ length: 16 ,
+        name: properties.getMessage('success','label')});
     user.save( function() {
         var response = {};
         var qr = qrCode.qrcode(4, 'M');
