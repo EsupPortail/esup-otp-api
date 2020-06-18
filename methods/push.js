@@ -161,7 +161,8 @@ exports.confirm_user_activate = function (user, req, res, next) {
 
 exports.accept_authentication = function (user, req, res, next) {
     if (user.push.token_secret == req.params.tokenSecret) {
-        user.push.lts.push(req.params.loginTicket);
+        var lt = req.params.loginTicket;
+        user.push.lt = lt;
         user.save(function () {
             sockets.emitCas(user.uid,'userAuth');
             res.send({
@@ -175,9 +176,9 @@ exports.accept_authentication = function (user, req, res, next) {
 }
 
 exports.check_accept_authentication = function (user, req, res, next) {
-    if (user.push.lts.indexOf(req.params.loginTicket)>-1) {
+    if (user.push.lt.indexOf(req.params.loginTicket)>-1) {
         code = user.push.code;
-        user.push.lts = [];
+        user.push.lt = "";
         user.save( function () {
             res.send({
                 "code": "Ok",

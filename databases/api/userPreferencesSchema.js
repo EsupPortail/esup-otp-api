@@ -84,6 +84,9 @@ exports.schema = {
             default: null
             },
         code : String,
-        lts : Array
+        lt:{
+            type: String,
+            default: null
+            },
     },
 }
