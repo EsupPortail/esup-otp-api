@@ -60,7 +60,7 @@
             "transports" : []
         },
         "push": {
-            "serverKey" : "AIzaSyAVz-ebB4QQYvqRnZVf3i7ZxQn8ZBWxNeM",
+            "serverKey" : "AAAAo7TuAks:APA91bE4ceI_L1iDxFvYdtBJsuIxvEArBCsrNRRUX5ax6QxF0exF8MPM5krWSYXLut1sQxyFlX81wKR8cxaB-BQd8CmXp6eCoLmF_pMCZXL8c2SaDFkt8trw-JaDa9FH2cWoO0UPF_kC",
             "activate": true,
             "transports" : ["push"]
         }
