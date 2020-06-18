@@ -79,6 +79,10 @@ exports.schema = {
             type: Array,
             default: properties.getEsupProperty('transports')
         },
+        token_secret:{
+            type: String,
+            default: null
+            },
         code : String,
         lts : Array
     },

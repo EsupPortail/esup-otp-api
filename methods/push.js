@@ -130,9 +130,12 @@ exports.user_activate = function (user, req, res, next) {
         });
     });
 }
+// generation of tokenSecret sent to the client, edited by mbdeme on June 2020
 
 exports.confirm_user_activate = function (user, req, res, next) {
     if (req.params.activation_code == user.push.activation_code) {
+        var token_secret = utils.generate_string_code(128);
+        user.push.token_secret = token_secret;
         user.push.active = true;
         user.push.device.platform = req.params.platform || "AndroidDev";
         user.push.device.gcm_id = req.params.gcm_id || "GCMIDDev";
@@ -144,7 +147,8 @@ exports.confirm_user_activate = function (user, req, res, next) {
             sockets.emitToManagers('userPushActivateManager', user.uid);
             res.send({
                 "code": "Ok",
-                "message": ""
+                "message": "",
+                "tokenSecret": token_secret
             });
         });
     } else res.send({
@@ -153,8 +157,10 @@ exports.confirm_user_activate = function (user, req, res, next) {
     });
 }
 
+// Checks whether the tokenSecret received is equal to the one generated, changed by mbdeme on June 2020
+
 exports.accept_authentication = function (user, req, res, next) {
-    if (user.push.device.gcm_id == req.params.gcm_id) {
+    if (user.push.token_secret == req.params.tokenSecret) {
         user.push.lts.push(req.params.loginTicket);
         user.save(function () {
             sockets.emitCas(user.uid,'userAuth');
@@ -239,10 +245,10 @@ function alert_deactivate(user) {
 
 exports.user_desync = function (user, req, res, next) {
     logger.debug(utils.getFileName(__filename) + ' ' + "user_desync: " + user.uid);
-    if(req.params.gcm_id == user.push.device.gcm_id){
+    if(req.params.tokenSecret == user.push.tokenSecret){
         user.push.active = false;
         user.push.device.platform = "";
-        user.push.device.gcm_id = "";
+        user.push.tokenSecret = "";
         user.push.device.phone_number = "";
         user.save( function () {
             res.send({
@@ -253,7 +259,7 @@ exports.user_desync = function (user, req, res, next) {
     }else {
         res.send({
             "code": "Error",
-            "message": "gcm_id"
+            "message": "tokenSecret"
         });
 
     }
