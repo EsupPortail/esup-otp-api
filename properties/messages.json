@@ -25,8 +25,8 @@
         "code": {
             "object" : "Code d'authentification",
             "sms": {
-                "pre_test": "Bonjour%2C%0AVotre%20code%20d%27authentification%20est%20",
-                "post_test": ".%0ACordialement."
+                "pre_test": "",
+                "post_test": "%20 est votre code d'authentification.%0APantheonsorbonne.fr"
             },
             "mail": {
                 "pre_test": "Bonjour, votre code d'authentification est ",
