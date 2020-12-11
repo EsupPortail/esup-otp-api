@@ -28,18 +28,23 @@ Check https://github.com/Hakall/esup-node-proxy if you want a simple NodeJS reve
 ### behind Apache
 - https 
 
-```RequestHeader set X-Forwarded-Proto https```
+```
+RequestHeader set X-Forwarded-Proto https
+RequestHeader set X-Forwarded-Port 443
 
-```RequestHeader set X-Forwarded-Port 443```
+<Location />
+ProxyPass http://127.0.0.1:3000/
+ProxyPassReverse http://127.0.0.1:3000/
+</Location>
+```
 
 - websocket
 
-```RewriteEngine On```
-
-```RewriteCond %{QUERY_STRING} transport=websocket [NC]```
-
-```RewriteRule /(.*) ws://esup-otp-api-serveur/$1 [P]```
-
+```
+RewriteEngine On
+RewriteCond %{QUERY_STRING} transport=websocket [NC]
+RewriteRule /(.*) ws://127.0.0.1:3000/$1 [P]
+```
 
 ### Tests
 Install mocha : npm install -g mocha .
