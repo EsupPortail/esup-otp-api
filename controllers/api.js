@@ -299,6 +299,7 @@ exports.send_message = function (req, res, next) {
 };
 
 exports.send_message_push = function (req, res, next) {
+    logger.debug("send_message_push : " + req.params.method + " - " + properties.getMethod(req.params.method));
     if (properties.getMethod(req.params.method) && req.params.method=='push') {
         apiDb.find_user(req, res, function (user) {
             if (user[req.params.method].active && properties.getMethodProperty(req.params.method, 'activate') && methods[req.params.method]) {
