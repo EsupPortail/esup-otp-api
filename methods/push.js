@@ -22,7 +22,7 @@ exports.send_message = function (user, req, res, next) {
     var message = new gcm.Message({
         priority: "high",
         data: {
-            title: "Esup-OTP-Push",
+            title: "Esup Auth",
             body: "Demande de connexion à votre compte",
             text: "Demande de connexion à votre compte",
             action: 'auth',
@@ -229,7 +229,7 @@ function alert_deactivate(user) {
     var message = new gcm.Message({
         priority: "high",
         data: {
-            title: "Esup-OTP-Push",
+            title: "Esup Auth",
             body: "Les notifications push ont été désactivées pour votre compte",
             text: "Les notifications push ont été désactivées pour votre compte",
             action: "desync"
