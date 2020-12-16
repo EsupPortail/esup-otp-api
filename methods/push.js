@@ -19,6 +19,8 @@ exports.name = "push";
 
 exports.send_message = function (user, req, res, next) {
     user.push.code = utils.generate_digit_code(properties.getMethod('random_code').code_length);
+    var lt = req.params.lt != undefined ? req.params.lt : req.params.hash;
+    logger.debug("gcm.Message with 'lt' as secret : " + lt);    
     var message = new gcm.Message({
         priority: "high",
         data: {
@@ -28,7 +30,7 @@ exports.send_message = function (user, req, res, next) {
             action: 'auth',
             uid: user.uid,
             code: user.push.code,
-            lt: req.params.lt
+            lt: lt
         },
         to: user.push.device.gcm_id
     });
@@ -36,6 +38,7 @@ exports.send_message = function (user, req, res, next) {
     var regTokens = [user.push.device.gcm_id];
 
     user.save( function () {
+	logger.debug("send gsm push ...");
         sender.send(message, {registrationTokens: regTokens}, function (err, response) {
             if (err) {
                 logger.info(err);
@@ -49,10 +52,13 @@ exports.send_message = function (user, req, res, next) {
                     if(response.results[0].error == "NotRegistered"){
                         user_unactivate(user, req, res, next);
                     };
-                }else res.send({
-                    "code": "Ok",
-                    "message": response
-                });
+                }else {
+		    logger.debug("send gsm push ok : " + response);
+		    res.send({
+			"code": "Ok",
+			"message": response
+		    });
+		}
             }
         });
     });
@@ -160,19 +166,25 @@ exports.confirm_user_activate = function (user, req, res, next) {
 // Checks whether the tokenSecret received is equal to the one generated, changed by mbdeme on June 2020
 
 exports.accept_authentication = function (user, req, res, next) {
+    logger.debug("accept_authentication ? " + user.push.token_secret + " VS " + req.params.tokenSecret);
     if (user.push.token_secret == req.params.tokenSecret) {
         var lt = req.params.loginTicket;
         user.push.lt = lt;
+	logger.debug("accept_authentication OK : lt = " + lt);
         user.save(function () {
-            sockets.emitCas(user.uid,'userAuth');
+            sockets.emitCas(user.uid,'userAuth', {"code": "Ok", "otp": user.push.code});
             res.send({
                 "code": "Ok"
             });
+	    logger.debug("sockets.emitCas OK : otp = " + user.push.code);
         });
-    } else res.send({
-        "code": "Error",
-        "message": properties.getMessage('error', 'unvailable_method_operation')
-    });
+    } else {
+	logger.error("token secret doesn't match : " + user.push.token_secret + " != " + req.params.tokenSecret); 
+	res.send({
+            "code": "Error",
+            "message": properties.getMessage('error', 'unvailable_method_operation')
+	});
+    }
 }
 
 exports.check_accept_authentication = function (user, req, res, next) {
@@ -185,10 +197,13 @@ exports.check_accept_authentication = function (user, req, res, next) {
                 "otp": user.push.code
             });
         })
-    } else res.send({
-        "code": "Error",
-        "message": properties.getMessage('error', 'unvailable_method_operation')
-    });
+    } else {
+	logger.error("CAS Login Ticket doesn't match : " + user.push.lt + " != " + req.params.loginTicket); 
+	res.send({
+            "code": "Error",
+            "message": "CAS Login Ticket doesn't match"
+	});
+    }
 }
 
 exports.user_deactivate = user_deactivate;

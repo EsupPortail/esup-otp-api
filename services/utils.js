@@ -1,31 +1,30 @@
 var properties = require(__dirname + '/../properties/properties');
 var CryptoJS = require('crypto-js');
+var logger = require(__dirname + '/../services/logger').getInstance();
 
 exports.get_hash = function(uid) {
     var d = new Date();
-    var day = d.getDay();
-    var hour = d.getHours();
-
-    d.setHours(d.getHours()-1);
-    var past_h = d.getHours()
-    d.setHours(d.getHours()+2);
-    var next_h = d.getHours()
-    d.setHours(d.getHours()-1);
-    var present_h = d.getHours()
+    var d2 = new Date();
     
-    d.setHours(d.getHours()+Math.abs(d.getTimezoneOffset()/60));
-    d.setHours(d.getHours()-1);
-    var past_salt = d.getUTCDate() + past_h.toString();
-    d.setHours(d.getHours()+2);
-    var next_salt = d.getUTCDate() + next_h.toString();
-    d.setHours(d.getHours()-1);
-    var present_salt = d.getUTCDate() + present_h.toString();
+    var present_salt=d.getUTCDate()+d.getUTCHours().toString();
+    //calcul de la date - 1h (3600000 millisecondes)
+    d2.setTime(d.getTime()-3600000);
+    var past_salt=d2.getUTCDate()+d2.getUTCHours().toString();
+
+    //calcul de la date + 1h
+    d2.setTime(d.getTime()+3600000);
+    var next_salt=d2.getUTCDate()+d2.getUTCHours().toString();
+
+    logger.debug("past_salt,present_salt,next_salt :"+past_salt+","+present_salt+","+next_salt);
+
 
     var present_hash = CryptoJS.SHA256(CryptoJS.MD5(properties.getEsupProperty('users_secret')).toString()+uid+present_salt).toString();
     var next_hash = CryptoJS.SHA256(CryptoJS.MD5(properties.getEsupProperty('users_secret')).toString()+uid+next_salt).toString();
     var past_hash = CryptoJS.SHA256(CryptoJS.MD5(properties.getEsupProperty('users_secret')).toString()+uid+past_salt).toString();
 
     var hashes = [past_hash, present_hash, next_hash];
+
+    logger.debug("hashes for "+uid+": "+hashes);
 
     return hashes;
 }
