@@ -29,7 +29,6 @@ exports.send_message = function (user, req, res, next) {
             text: "Demande de connexion à votre compte",
             action: 'auth',
             uid: user.uid,
-            code: user.push.code,
             lt: lt
         },
         to: user.push.device.gcm_id
