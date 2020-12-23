@@ -5,18 +5,6 @@ exports.schema = {
         "activate": {
             type: Boolean,
         },
-        "sms_window": {
-            type: Number,
-        },
-        "mail_window": {
-            type: Number,
-        },
-        "app_window": {
-            type: Number,
-        },
-        "default_window": {
-            type: Number,
-        },
         "transports": {
             type: Array,
         }
@@ -24,18 +12,6 @@ exports.schema = {
     "random_code": {
         "activate": {
             type: Boolean,
-        },
-        "sms_validity": {
-            type: Number,
-        },
-        "mail_validity": {
-            type: Number,
-        },
-        "code_type": {
-            type: String,
-        },
-        "code_length": {
-            type: Number,
         },
         "transports": {
             type: Array,
@@ -45,23 +21,11 @@ exports.schema = {
         "activate": {
             type: Boolean,
         },
-        "codes_number": {
-            type: Number,
-        },
-        "code_type": {
-            type: String,
-        },
-        "code_length": {
-            type: Number,
-        },
         "transports": {
             type: Array,
         }
     },
     "push": {
-        "serverKey": {
-            type: String,
-        },
         "activate": {
             type: Boolean,
         },

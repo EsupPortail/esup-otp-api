@@ -32,8 +32,9 @@ function initiatilize_api_preferences() {
     ApiPreferences.find({}).exec(function (err, data) {
         if (data[0]) {
             var prefs = properties.getEsupProperty('methods');
-            for(p in data[0]){
-                prefs[p] = data[0][p];
+            for(p in prefs){
+                prefs[p].activate = data[0][p].activate;
+                prefs[p].transports = data[0][p].transports;
             }
             properties.setEsupProperty('methods',prefs);
             update_api_preferences();
