@@ -19,7 +19,7 @@ exports.name = "push";
 
 exports.send_message = function (user, req, res, next) {
     user.push.code = utils.generate_digit_code(properties.getMethod('random_code').code_length);
-    var lt = req.params.lt != undefined ? req.params.lt : req.params.hash;
+    var lt = req.params.lt != undefined ? req.params.lt : utils.generate_string_code(30);
     logger.debug("gcm.Message with 'lt' as secret : " + lt);    
     var message = new gcm.Message({
         priority: "high",
@@ -29,7 +29,6 @@ exports.send_message = function (user, req, res, next) {
             text: "Demande de connexion à votre compte",
             action: 'auth',
             uid: user.uid,
-            code: user.push.code,
             lt: lt
         },
         to: user.push.device.gcm_id
