@@ -9,6 +9,7 @@ var logger = require(__dirname + '/../services/logger').getInstance();
 var gcm = require('node-gcm');
 var qrCode = require('qrcode-npm');
 var sockets = require('../server/sockets');
+var geoip = require('geoip-lite');
 
 // Set up the sender with you API key, prepare your recipients' registration tokens.
 var opts={};
@@ -21,12 +22,23 @@ exports.send_message = function (user, req, res, next) {
     user.push.code = utils.generate_digit_code(properties.getMethod('random_code').code_length);
     var lt = req.params.lt != undefined ? req.params.lt : utils.generate_string_code(30);
     logger.debug("gcm.Message with 'lt' as secret : " + lt);    
+    var ip=req.headers['x-real-ip']||req.connection.remoteAddress;
+    logger.debug("x-real-ip :"+req.headers['x-real-ip']);
+    logger.debug("Client ip is :"+ip);
+    var geo = geoip.lookup(ip);
+    logger.debug("Client geoip is :"+JSON.stringify(geo));
+    var city=null;
+    if(geo!=null) city=geo.city;
+   
+    var text="Demande de connexion à votre compte";
+    if(city!=null) text+=" à proximité de "+city;
+
     var message = new gcm.Message({
         priority: "high",
         data: {
             title: "Esup Auth",
             body: "Demande de connexion à votre compte",
-            text: "Demande de connexion à votre compte",
+            text: text,
             action: 'auth',
             uid: user.uid,
             lt: lt
