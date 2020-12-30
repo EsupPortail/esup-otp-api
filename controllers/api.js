@@ -263,7 +263,7 @@ exports.get_user_infos = function (req, res, next) {
             response.message = '';
             response.user = {};
             response.user.methods = apiDb.parse_user(user);
-            data.push = user.push.device.platform+' Push';
+            data.push = user.push.device.manufacturer+' '+user.push.device.model;
             response.user.transports = data;
             res.send(response);
         })
