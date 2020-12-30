@@ -30,15 +30,16 @@ exports.send_message = function (user, req, res, next) {
     var city=null;
     if(geo!=null) city=geo.city;
    
-    var text="Demande de connexion à votre compte";
-    if(city!=null) text+=" à proximité de "+city;
+    var text=properties.getMethod('push').text1;
+    if(city!=null)
+	text+=properties.getMethod('push').text2.replace('$city',city);
 
     var message = new gcm.Message({
         priority: "high",
         data: {
-            title: "Esup Auth",
-            body: "Demande de connexion à votre compte",
-            text: text,
+            title: properties.getMethod('push').title,
+            body: properties.getMethod('push').body,
+	    text: text,
             action: 'auth',
             uid: user.uid,
             lt: lt
