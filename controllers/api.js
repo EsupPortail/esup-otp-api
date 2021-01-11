@@ -574,3 +574,35 @@ exports.get_uids = function (req, res, next) {
 exports.drop = function (req, res, next) {
     apiDb.drop(req, res, next);
 };
+
+/**
+ * ESUPNFC
+ */
+exports.esupnfc_locations = function (req, res, next) {
+    methods['esupnfc'].locations(req, res, next);
+};
+
+exports.esupnfc_check_accept_authentication = function (req, res, next) {
+    methods['esupnfc'].check_accept_authentication(req, res, next);
+};
+
+exports.esupnfc_accept_authentication = function (req, res, next) {
+    var eppn = req.body.eppn;
+    var uid = eppn.replace(/@.*/,'');
+    logger.debug("user uid: " + uid);
+    req.params.uid = uid;
+    apiDb.find_user(req, res, function (user) {
+	methods['esupnfc'].accept_authentication(user, req, res, next);
+    });
+};
+
+exports.esupnfc_send_message = function (req, res, next) {
+    var eppn = req.body.eppn;
+    var uid = eppn.replace(/@.*/,'');
+    logger.debug("user uid: " + uid);
+    req.params.uid = uid;
+    apiDb.find_user(req, res, function (user) {
+	methods['esupnfc'].send_message(user, req, res, next);
+    });
+};
+

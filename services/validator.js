@@ -29,3 +29,18 @@ function check_api_password(req, res, next) {
     if (req.params.api_password == properties.getEsupProperty('api_password')) return next();
     else return next(new restify.ForbiddenError());
 }
+
+exports.esupnfc_check_server_ip = function esupnfc_check_server_ip(req, res, next) {
+    let ip = req.headers["x-forwarded-for"];
+    //logger.debug(req.headers);
+    if(ip == undefined) {
+	ip = req.connection.remoteAddress;
+    }
+    if (ip == properties.getEsupProperty('esupnfc').server_ip) {
+	return next();
+    }
+    else {
+	logger.info("remote ip : " + ip + " is not esupnfc server ip -> forbidden");
+	return next(new restify.ForbiddenError());
+    }
+};

@@ -213,6 +213,14 @@ exports.parse_user = function (user) {
             transports: available_transports(user.push.transports, "push")
         };
     }
+    if (properties.getMethod('esupnfc').activate) {
+	// autologin
+        if(user.esupnfc.active) parsed_user.waitingFor = true;
+        parsed_user.esupnfc = {
+            active: user.esupnfc.active,
+            transports: available_transports(user.esupnfc.transports, 'esupnfc')
+        };
+    }  
     return parsed_user;
 }
 

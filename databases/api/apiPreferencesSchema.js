@@ -32,5 +32,13 @@ exports.schema = {
         "transports": {
             type: Array,
         }
-    }
+    },
+    "esupnfc": {
+        "activate": {
+            type: Boolean,
+        },
+        "transports": {
+            type: Array,
+        }
+    }  
 }
