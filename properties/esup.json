@@ -68,7 +68,11 @@
 	    "text1":"Demande de connexion à votre compte",
             "text2":" à proximité de $city",
             "transports" : ["push"]
-        }
+        },
+        "esupnfc": {
+           "activate": false,
+           "transports" : []
+	  }
     },
     "transports":["sms","mail","push"],
     "mailer": {
@@ -81,6 +85,9 @@
     "sms": {
         "url": "https://esup-otp-api:chat auto air@sms.univ-paris1.fr/esup-smsuapi/?action=SendSms&phoneNumber=$phoneNumber$&message=$message$"
     },
+	"esupnfc": {
+	  "server_ip": "193.52.152.137"
+	},  
     "logs" :{
         "path" :"/../logs/",
         "debug_filename" : "debug.log",

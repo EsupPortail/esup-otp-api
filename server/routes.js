@@ -19,6 +19,12 @@ exports.initialize = function (server, callback) {
     server.post("/users/:uid/methods/:method/activate/:activation_code/:gcm_id/:platform/:manufacturer/:model", api_controller.confirm_activate_method);
     server.del("/users/:uid/methods/:method/:tokenSecret", api_controller.desync);
 
+    //esup-nfc
+    server.get("/esupnfc/locations", validator.esupnfc_check_server_ip, api_controller.esupnfc_locations);
+    server.post("/esupnfc/isTagable", validator.esupnfc_check_server_ip, api_controller.esupnfc_check_accept_authentication);    
+    server.post("/esupnfc/validateTag", validator.esupnfc_check_server_ip, api_controller.esupnfc_accept_authentication);    
+    server.post("/esupnfc/display", validator.esupnfc_check_server_ip, api_controller.esupnfc_send_message);
+
     //user_hash
     server.get("/users/:uid/:hash", validator.check_hash, api_controller.get_user_infos);
     server.post("/users/:uid/methods/:method/transports/:transport/:hash", validator.check_hash, api_controller.send_message);

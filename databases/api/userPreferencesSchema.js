@@ -89,4 +89,15 @@ exports.schema = {
             default: null
             },
     },
+    esupnfc: {
+        code : String,
+        active: {
+            type: Boolean,
+            default: false
+        },
+        transports: {
+            type: Array,
+            default: properties.getEsupProperty('transports')
+        }
+    },
 }
