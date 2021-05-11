@@ -5,12 +5,20 @@ var api_controller = require(__dirname + '/../controllers/api');
 var userDb_controller = require(__dirname + '/../controllers/user');
 
 var logger = require(__dirname + '/../services/logger').getInstance();
+var fs = require('fs');
 
 exports.initialize = function (server, callback) {
     logger.info(utils.getFileName(__filename)+' '+'Initializing Routes');
 
     logger.info(utils.getFileName(__filename)+' '+'Initializing "unprotected" routes');
 
+    // goal: simply let esup-otp-cas get /js/socket.io.js from esup-otp-api (avoid use of cdn)
+    server.get("/js/socket.io.js", function(req, res, next){ 
+       var file = __dirname + "/../node_modules/socket.io-client/dist/socket.io.min.js";
+        var filestream = fs.createReadStream(file);
+       filestream.pipe(res);
+    });
+    
     //app
     server.get("/users/:uid/methods/:method/:loginTicket/:hash", validator.check_hash, api_controller.check_accept_authentication);
     server.post("/users/:uid/methods/:method/:loginTicket/:tokenSecret", api_controller.accept_authentication);
