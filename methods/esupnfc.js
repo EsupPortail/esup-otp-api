@@ -6,9 +6,14 @@ var sockets = require('../server/sockets');
 
 exports.name = "esupnfc";
 
-exports.locations = function (req, res, next) {
-    logger.debug("locations: ESUP-OTP");
-    res.send(["ESUP-OTP"]);
+exports.locations = function (user, req, res, next) {
+    if(user.esupnfc.active) {
+	logger.debug("locations: [ESUP-OTP]");
+	res.send(["ESUP-OTP"]);
+    } else {
+	logger.debug("locations: []");
+	res.send([]);
+    }
 };
 
 exports.check_accept_authentication = function (req, res, next) {
