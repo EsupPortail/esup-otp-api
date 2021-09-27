@@ -579,7 +579,10 @@ exports.drop = function (req, res, next) {
  * ESUPNFC
  */
 exports.esupnfc_locations = function (req, res, next) {
-    methods['esupnfc'].locations(req, res, next);
+    req.params.uid = req.params.eppn.split('@').shift();
+    apiDb.find_user(req, res, function (user) {
+	methods['esupnfc'].locations(user, req, res, next);
+    });
 };
 
 exports.esupnfc_check_accept_authentication = function (req, res, next) {
