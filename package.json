@@ -22,6 +22,7 @@
     "request": "^2.69.0",
     "restify": "^4.3.4",
     "socket.io": "^1.4.8",
+    "socket.io-client": "^4.3.2",
     "speakeasy": "^2.0.0",
     "winston": "^2.2.0"
   },
