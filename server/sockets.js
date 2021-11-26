@@ -4,6 +4,7 @@
 var io;
 var properties = require(__dirname + '/../properties/properties');
 var validator = require('../services/validator');
+var utils = require('../services/utils');
 var managerSocket;
 
 var users = {_managers:[]};
@@ -15,7 +16,11 @@ exports.attach = function(server){
 function initialize() {
     io.on("connection", function(socket) {
         if(socket.handshake.query.app=="manager"){
-            if(socket.handshake.query.secret != properties.getEsupProperty('api_password'))socket.disconnect('Forbidden');
+            const secret = socket.handshake.query.secret || utils.get_auth_bearer(socket.handshake.headers)
+            if(secret != properties.getEsupProperty('api_password')) { 
+                console.error("denying manager app with wrong password");
+                socket.disconnect('Forbidden');
+            }
             managerSocket = socket.id;
         }
         else if(socket.handshake.query.app=="cas" && socket.handshake.query.uid && socket.handshake.query.hash){

@@ -26,7 +26,11 @@ function check_hash_socket(uid, hash) {
 exports.check_api_password = check_api_password;
 
 function check_api_password(req, res, next) {
-    if (req.params.api_password == properties.getEsupProperty('api_password')) return next();
+    let param = req.params.api_password
+    if (req.headers.authorization && param === '') {
+        param = utils.get_auth_bearer(req.headers)
+    }
+    if (param == properties.getEsupProperty('api_password')) return next();
     else return next(new restify.ForbiddenError());
 }
 

@@ -59,3 +59,7 @@ exports.check_transport_validity= function(transport, value){
 exports.getFileName= function(filename){
     return filename.split(global.base_dir)[1];
 }
+
+exports.get_auth_bearer = function (headers) {
+    return (headers.authorization.match(/^Bearer (.*)/) || [])[1]
+}
