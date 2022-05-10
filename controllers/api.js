@@ -265,6 +265,7 @@ exports.get_user_infos = function (req, res, next) {
             response.user.methods = apiDb.parse_user(user);
             data.push = user.push.device.manufacturer+' '+user.push.device.model;
             response.user.transports = data;
+            response.user.last_send_message = user.last_send_message
             res.send(response);
         })
     });
@@ -282,6 +283,7 @@ exports.send_message = function (req, res, next) {
     if (properties.getMethod(req.params.method) && req.params.method!='push') {
         apiDb.find_user(req, res, function (user) {
             if (user[req.params.method].active && properties.getMethodProperty(req.params.method, 'activate') && methods[req.params.method]) {
+                user.last_send_message = { method: req.params.method, time: Date.now(), auto: "auto" in req.query }
                 methods[req.params.method].send_message(user, req, res, next);
             } else {
                 res.send({
@@ -303,6 +305,7 @@ exports.send_message_push = function (req, res, next) {
     if (properties.getMethod(req.params.method) && req.params.method=='push') {
         apiDb.find_user(req, res, function (user) {
             if (user[req.params.method].active && properties.getMethodProperty(req.params.method, 'activate') && methods[req.params.method]) {
+                user.last_send_message = { method: req.params.method, time: Date.now(), auto: "auto" in req.query }
                 methods[req.params.method].send_message(user, req, res, next);
             } else {
                 res.send({
@@ -371,6 +374,7 @@ exports.check_accept_authentication = function (req, res, next) {
  */
 exports.verify_code = function (req, res, next) {
     apiDb.find_user(req, res, function (user) {
+        if (user.last_send_message) user.last_send_message.verified = true
         logger.debug("verify_code: " + user.uid);
         var callbacks = [function () {
             logger.info(utils.getFileName(__filename) + ' ' + "Invalid credentials submit for user with uid : " + user.uid);
