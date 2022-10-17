@@ -9,7 +9,11 @@ var managerSocket;
 
 var users = {_managers:[]};
 exports.attach = function(server){
-    io = require('socket.io')({path: "/sockets"}).attach(server.server);
+    const casVhost = properties.getEsupProperty("casVhost")
+    if (!casVhost) {
+        throw "casVhost must be defined in properties/esup.json"
+    }
+    io = require('socket.io')({path: "/sockets"}).attach(server.server, { cors: { origin: "https://" + casVhost }});
     initialize();
 };
 
