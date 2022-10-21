@@ -100,4 +100,10 @@ exports.schema = {
             default: properties.getEsupProperty('transports')
         }
     },
+    last_send_message: { 
+        method: { type: String },
+        time: { type: Number }, 
+        auto: { type: Boolean },
+        verified: { type: Boolean },
+    },
 }
