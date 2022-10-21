@@ -151,6 +151,7 @@ exports.user_activate = function (user, req, res, next) {
 // generation of tokenSecret sent to the client, edited by mbdeme on June 2020
 
 exports.confirm_user_activate = function (user, req, res, next) {
+
     if (req.params.activation_code == user.push.activation_code) {
         var token_secret = utils.generate_string_code(128);
         user.push.token_secret = token_secret;
@@ -167,6 +168,23 @@ exports.confirm_user_activate = function (user, req, res, next) {
                 "code": "Ok",
                 "message": "",
                 "tokenSecret": token_secret
+            });
+        });
+    } else res.send({
+        "code": "Error",
+        "message": properties.getMessage('error', 'invalid_credentials')
+    });
+}
+
+// refresh gcm_id when it is regenerated
+exports.refresh_user_gcm_id = function (user, req, res, next) {
+ if (req.params.tokenSecret == user.push.token_secret && req.params.gcm_id==user.push.device.gcm_id)
+    {
+        logger.debug("refresh old gcm_id : " + user.push.device.gcm_id + " with "+req.params.gcm_id_refreshed);
+        user.save( function () {
+            res.send({
+                "code": "Ok",
+                "message": ""
             });
         });
     } else res.send({

@@ -25,6 +25,7 @@ exports.initialize = function (server, callback) {
     server.post("/users/:uid/methods/:method/transports/push/:lt/:hash", validator.check_hash, api_controller.send_message_push);
     server.post("/users/:uid/methods/:method/transports/push/:hash", validator.check_hash, api_controller.send_message_push);
     server.post("/users/:uid/methods/:method/activate/:activation_code/:gcm_id/:platform/:manufacturer/:model", api_controller.confirm_activate_method);
+    server.post("/users/:uid/methods/:method/refresh/:tokenSecret/:gcm_id/:gcm_id_refreshed", api_controller.refresh_gcm_id_method);
     server.del("/users/:uid/methods/:method/:tokenSecret", api_controller.desync);
 
     //esup-nfc

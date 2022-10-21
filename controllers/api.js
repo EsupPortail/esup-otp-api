@@ -521,7 +521,17 @@ exports.confirm_activate_method = function (req, res, next) {
         "message": properties.getMessage('error', 'method_not_found')
     });
 };
-
+exports.refresh_gcm_id_method = function (req, res, next) {
+    logger.info(utils.getFileName(__filename) + ' ' + req.params.uid + " refresh_push " + req.params.method);
+    if (methods[req.params.method]) {
+        apiDb.find_user(req, res, function (user) {
+            methods[req.params.method].refresh_user_gcm_id(user, req, res, next);
+        });
+    } else res.send({
+        "code": "Error",
+        "message": properties.getMessage('error', 'method_not_found')
+    });
+};
 
 /**
  * Désctive la méthode l'utilisateur ayant l'uid req.params.uid
