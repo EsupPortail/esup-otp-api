@@ -89,24 +89,10 @@ exports.delete_method_secret = function(user, req, res, next) {
 }
 
 exports.get_method_secret = function(user, req, res, next) {
-    var response = {};
-    if (!(Object.keys(user.totp.secret).length === 0 && JSON.stringify(user.totp.secret) === JSON.stringify({}))) {
-        response.message = user.totp.secret.base32;
-        qrcode.toDataURL(user.totp.secret.otpauth_url, (err, imageUrl) => {
-	  if (err) {
-	    logger.error('Error with QR');
-	    return;
-	  }
-        response.code = 'Ok';
-	response.qrCode ="<img src='".concat(imageUrl,"'width='164' height='164'>");
-	res.send(response);
-	}); 
-    }else {
-        response.message = "Pas de qrCode, veuillez en générer un.";
-        response.qrCode = "";
-	res.send(response);
-    }
-   
+  res.send({
+        "code": "Error",
+        "message": properties.getMessage('error','unvailable_method_operation')
+    });   
 }
 
 
