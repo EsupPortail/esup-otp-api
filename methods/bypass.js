@@ -35,7 +35,7 @@ exports.verify_code = function(user, req, res, callbacks) {
         }
         if (checkOtp) {
             user.save( function() {
-                logger.info("Valid credentials by "+user.uid);
+                logger.info(utils.getFileName(__filename)+" Valid credentials by "+user.uid);
                 res.send({
                     "code": "Ok",
                     "message": properties.getMessage('success','valid_credentials')
