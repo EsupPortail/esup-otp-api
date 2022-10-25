@@ -36,7 +36,7 @@ exports.send_message = function(user, req, res, next) {
  */
 exports.verify_code = function(user, req, res, callbacks) {
     logger.debug(utils.getFileName(__filename)+' '+"verify_code: "+user.uid);
-    if (user.totp.secret) {
+    if (user.totp.secret.base32) {
         var isValid = authenticator.verify({"token":req.params.otp, "secret":user.totp.secret.base32});
         if (isValid) {
             user.totp.window = properties.getMethod('totp').default_window;
