@@ -383,15 +383,12 @@ exports.verify_code = function (req, res, next) {
                 "message": properties.getMessage('error', 'invalid_credentials')
             });
         }];
-        var methods_length = Object.keys(methods).length;
-        var it = 1;
-        for (method in methods) {
-            if (it == methods_length)
-                methods[method].verify_code(user, req, res, callbacks);
-            else
-                callbacks.push(methods[method].verify_code);
-            it++;
-        }
+        for (method in methods){
+		if(user[method].active)	
+		         callbacks.push(methods[method].verify_code);
+	}
+	var next = callbacks.pop();
+        next(user, req, res, callbacks);	          
     });
 };
 
