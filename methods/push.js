@@ -241,6 +241,7 @@ exports.user_deactivate = user_deactivate;
 function user_deactivate(user, req, res, next) {
     alert_deactivate(user);
     user.push.active = false;
+    user.push.activation_code = null;
     user.push.device.platform = "";
     user.push.device.gcm_id = "";
     user.push.device.manufacturer = "";
