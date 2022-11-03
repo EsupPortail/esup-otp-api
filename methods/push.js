@@ -128,6 +128,7 @@ exports.get_method_secret = function (user, req, res, next) {
 exports.user_activate = function (user, req, res, next) {
     var activation_code = utils.generate_digit_code(6);
     user.push.activation_code = activation_code;
+    user.push.active=false;
     var qr = qrCode.qrcode(10, 'M');
     var http = 'http://';
     if(req.headers["x-forwarded-proto"])http=req.headers["x-forwarded-proto"]+"://";
@@ -152,7 +153,7 @@ exports.user_activate = function (user, req, res, next) {
 
 exports.confirm_user_activate = function (user, req, res, next) {
 
-    if (req.params.activation_code == user.push.activation_code) {
+    if (!user.push.active && req.params.activation_code == user.push.activation_code) {
         var token_secret = utils.generate_string_code(128);
         user.push.token_secret = token_secret;
         user.push.active = true;
