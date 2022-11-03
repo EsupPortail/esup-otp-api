@@ -293,10 +293,10 @@ function alert_deactivate(user) {
 
 exports.user_desync = function (user, req, res, next) {
     logger.debug(utils.getFileName(__filename) + ' ' + "user_desync: " + user.uid);
-    if(req.params.tokenSecret == user.push.tokenSecret){
+    if(req.params.tokenSecret == user.push.token_secret){
         user.push.active = false;
         user.push.device.platform = "";
-        user.push.tokenSecret = "";
+        user.push.token_secret = "";
         user.push.device.phone_number = "";
         user.save( function () {
             res.send({
