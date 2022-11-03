@@ -160,7 +160,7 @@ exports.confirm_user_activate = function (user, req, res, next) {
         user.push.device.gcm_id = req.params.gcm_id || "GCMIDDev";
         user.push.device.manufacturer = req.params.manufacturer || "DevCorp";
         user.push.device.model = req.params.model || "DevDevice";
-        user.push.activation_code = utils.generate_digit_code(6);
+        user.push.activation_code = null;
         user.save( function () {
             sockets.emitManager('userPushActivate',{uid:user.uid});
             sockets.emitToManagers('userPushActivateManager', user.uid);
