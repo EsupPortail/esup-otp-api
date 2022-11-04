@@ -181,6 +181,7 @@ exports.refresh_user_gcm_id = function (user, req, res, next) {
  if (req.params.tokenSecret == user.push.token_secret && req.params.gcm_id==user.push.device.gcm_id)
     {
         logger.debug("refresh old gcm_id : " + user.push.device.gcm_id + " with "+req.params.gcm_id_refreshed);
+        user.push.device.gcm_id = req.params.gcm_id_refreshed;
         user.save( function () {
             res.send({
                 "code": "Ok",
