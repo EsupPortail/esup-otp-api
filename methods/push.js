@@ -90,7 +90,7 @@ exports.verify_code = function (user, req, res, callbacks) {
     if (user.push.code == req.params.otp) {
         delete user.push.code;
         user.save( function () {
-            logger.info("Valid credentials by " + user.uid);
+            logger.info(utils.getFileName(__filename)+" Valid credentials by " + user.uid);
             res.send({
                 "code": "Ok",
                 "message": properties.getMessage('success', 'valid_credentials')
@@ -128,6 +128,7 @@ exports.get_method_secret = function (user, req, res, next) {
 exports.user_activate = function (user, req, res, next) {
     var activation_code = utils.generate_digit_code(6);
     user.push.activation_code = activation_code;
+    user.push.active=false;
     var qr = qrCode.qrcode(10, 'M');
     var http = 'http://';
     if(req.headers["x-forwarded-proto"])http=req.headers["x-forwarded-proto"]+"://";
@@ -152,7 +153,7 @@ exports.user_activate = function (user, req, res, next) {
 
 exports.confirm_user_activate = function (user, req, res, next) {
 
-    if (req.params.activation_code == user.push.activation_code) {
+    if (!user.push.active && req.params.activation_code == user.push.activation_code) {
         var token_secret = utils.generate_string_code(128);
         user.push.token_secret = token_secret;
         user.push.active = true;
@@ -160,7 +161,7 @@ exports.confirm_user_activate = function (user, req, res, next) {
         user.push.device.gcm_id = req.params.gcm_id || "GCMIDDev";
         user.push.device.manufacturer = req.params.manufacturer || "DevCorp";
         user.push.device.model = req.params.model || "DevDevice";
-        user.push.activation_code = utils.generate_digit_code(6);
+        user.push.activation_code = null;
         user.save( function () {
             sockets.emitManager('userPushActivate',{uid:user.uid});
             sockets.emitToManagers('userPushActivateManager', user.uid);
@@ -242,6 +243,7 @@ exports.user_deactivate = user_deactivate;
 function user_deactivate(user, req, res, next) {
     alert_deactivate(user);
     user.push.active = false;
+    user.push.activation_code = null;
     user.push.device.platform = "";
     user.push.device.gcm_id = "";
     user.push.device.manufacturer = "";
@@ -292,10 +294,10 @@ function alert_deactivate(user) {
 
 exports.user_desync = function (user, req, res, next) {
     logger.debug(utils.getFileName(__filename) + ' ' + "user_desync: " + user.uid);
-    if(req.params.tokenSecret == user.push.tokenSecret){
+    if(req.params.tokenSecret == user.push.token_secret){
         user.push.active = false;
         user.push.device.platform = "";
-        user.push.tokenSecret = "";
+        user.push.token_secret = "";
         user.push.device.phone_number = "";
         user.save( function () {
             res.send({

@@ -1,10 +1,10 @@
 var properties = require(__dirname + '/../properties/properties');
 var api_controller = require(__dirname + '/../controllers/api');
-var speakeasy = require('speakeasy');
-var qrCode = require('qrcode-npm');
+var qrcode = require('qrcode');
 var restify = require('restify');
 var utils = require(__dirname + '/../services/utils');
 var logger = require(__dirname + '/../services/logger').getInstance();
+const { authenticator } = require('otplib');
 
 exports.name = "totp";
 
@@ -21,10 +21,7 @@ exports.send_message = function(user, req, res, next) {
             break;
     }
     user.save( function() {
-        api_controller.transport_code(speakeasy.totp({
-            secret: user.totp.secret.base32,
-            encoding: 'base32'
-        }), req, res, next);
+        api_controller.transport_code(authenticator.generate(user.totp.secret.base32), req, res, next);
     })
 }
 
@@ -40,16 +37,11 @@ exports.send_message = function(user, req, res, next) {
 exports.verify_code = function(user, req, res, callbacks) {
     logger.debug(utils.getFileName(__filename)+' '+"verify_code: "+user.uid);
     if (user.totp.secret.base32) {
-        var checkSpeakeasy = speakeasy.totp.verify({
-            secret: user.totp.secret.base32,
-            encoding: 'base32',
-            token: req.params.otp,
-            window: user.totp.window
-        });
-        if (checkSpeakeasy) {
+        var isValid = authenticator.verify({"token":req.params.otp, "secret":user.totp.secret.base32});
+        if (isValid) {
             user.totp.window = properties.getMethod('totp').default_window;
             user.save( function() {
-                logger.info("Valid credentials by "+user.uid);
+                logger.info(utils.getFileName(__filename)+" Valid credentials by "+user.uid);
                 res.send({
                     "code": "Ok",
                     "message": properties.getMessage('success','valid_credentials')
@@ -67,16 +59,21 @@ exports.verify_code = function(user, req, res, callbacks) {
 
 
 exports.generate_method_secret = function(user, req, res, next) {
-    user.totp.secret = speakeasy.generateSecret({ length: 16,name: properties.getMethod('totp').name});
-    user.save( function() {
-        var response = {};
-        var qr = qrCode.qrcode(4, 'M');
-        qr.addData(user.totp.secret.otpauth_url);
-        qr.make();
+    var secret_base32 = authenticator.generateSecret(16);
+    var secret_otpauth_url=authenticator.keyuri(user.uid, properties.getMethod('totp').name, secret_base32);
+    user.totp.secret={base32:secret_base32,otpauth_url:secret_otpauth_url};
+    user.save( function() {    
+	var response = {};
         response.code = 'Ok';
         response.message = user.totp.secret.base32;
-        response.qrCode = qr.createImgTag(4);
-        res.send(response);
+        qrcode.toDataURL(user.totp.secret.otpauth_url, (err, imageUrl) => {
+	  if (err) {
+	    logger.error('Error with QR');
+	    return;
+	  }
+	response.qrCode = "<img src='".concat(imageUrl,"'width='164' height='164'>"); 
+	res.send(response); 
+	});      
     });
 }
 
@@ -92,19 +89,10 @@ exports.delete_method_secret = function(user, req, res, next) {
 }
 
 exports.get_method_secret = function(user, req, res, next) {
-    var response = {};
-    var qr = qrCode.qrcode(4, 'M');
-    response.code = 'Ok';
-    if (!(Object.keys(user.totp.secret).length === 0 && JSON.stringify(user.totp.secret) === JSON.stringify({}))) {
-        qr.addData(user.totp.secret.otpauth_url);
-        qr.make();
-        response.message = user.totp.secret.base32;
-        response.qrCode = qr.createImgTag(4);
-    }else {
-        response.message = "Pas de qrCode, veuillez en générer un.";
-        response.qrCode = "";
-    }
-    res.send(response);
+  res.send({
+        "code": "Error",
+        "message": properties.getMessage('error','unvailable_method_operation')
+    });   
 }
 
 

@@ -117,7 +117,7 @@ exports.verify_code = function (user, req, res, callbacks) {
     if (user.esupnfc.code == req.params.otp) {
         delete user.esupnfc.code;
         user.save( function () {
-            logger.info("Valid credentials by " + user.uid);
+            logger.info(utils.getFileName(__filename)+" valid credentials by " + user.uid);
             res.send({
                 "code": "Ok",
                 "message": properties.getMessage('success', 'valid_credentials')
