@@ -250,7 +250,6 @@ function user_deactivate(user, req, res, next) {
     user.push.device.model = "";
     user.push.device.phone_number = "";
     user.save( function () {
-        sockets.emitManager('userPushDeactivate',{uid:user.uid});
         res.send({
             "code": "Ok",
             "message": ""
@@ -300,6 +299,7 @@ exports.user_desync = function (user, req, res, next) {
         user.push.token_secret = "";
         user.push.device.phone_number = "";
         user.save( function () {
+            sockets.emitManager('userPushDeactivate',{uid:user.uid});
             res.send({
                 "code": "Ok",
                 "message": ""
