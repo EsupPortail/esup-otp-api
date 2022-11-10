@@ -258,6 +258,7 @@ exports.get_user = function (req, res, next) {
 exports.get_user_infos = function (req, res, next) {
     apiDb.find_user(req, res, function (user) {
         userDb_controller.get_available_transports(req, res, function (data) {
+	deactivateRandomCodeIfNoTransport(user,data);//nettoyage des random_code activés sans transport
             var response = {};
             response.code = 'Ok';
             response.message = '';
@@ -271,6 +272,29 @@ exports.get_user_infos = function (req, res, next) {
     });
 };
 
+/**
+ * Désactivation de la méthode random_code si aucun transport renseigné
+ * On ne doit pas avoir de random_code activé sans transport.
+**/
+
+function deactivateRandomCodeIfNoTransport(user,data){    		
+   if(user['random_code'] && user['random_code'].active){
+	deactivate=true;
+	randomCodeTransports=apiDb.parse_user(user).random_code.transports;
+        logger.debug("Active transports for randomCode:"+randomCodeTransports);
+        for(transport of randomCodeTransports){
+		logger.debug("check if transport is defined: data["+transport+"]="+data[transport]);
+		if(data[transport]) {deactivate=false;break;}
+     	}
+	
+	if(deactivate){
+		user.random_code.active = false;
+   		user.save( function() {
+        		logger.info('No transport is set. Auto deactivate random_code for '+user.uid);
+        	});
+	}
+    }
+}
 
 /**
  * Envoie un code à l'utilisateur avec l'uid == req.params.uid et via la method == req.params.method
