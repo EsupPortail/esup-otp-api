@@ -279,9 +279,10 @@ exports.get_user_infos = function (req, res, next) {
 
 function deactivateRandomCodeIfNoTransport(user,data){    		
    if(user['random_code'] && user['random_code'].active){
-	deactivate=true;
-	randomCodeTransports=apiDb.parse_user(user).random_code.transports;
+	var deactivate=true;
+	var randomCodeTransports=apiDb.parse_user(user).random_code.transports;
         logger.debug("Active transports for randomCode:"+randomCodeTransports);
+        var transport
         for(transport of randomCodeTransports){
 		logger.debug("check if transport is defined: data["+transport+"]="+data[transport]);
 		if(data[transport]) {deactivate=false;break;}
