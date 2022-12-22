@@ -17,6 +17,14 @@ exports.schema = {
             type: Array,
         }
     },
+   "random_code_mail": {
+        "activate": {
+            type: Boolean,
+        },
+        "transports": {
+            type: Array,
+        }
+    },
     "bypass": {
         "activate": {
             type: Boolean,

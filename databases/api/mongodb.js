@@ -180,6 +180,13 @@ exports.parse_user = function (user) {
             transports: available_transports(user.random_code.transports, 'random_code')
         };
     }
+   if (properties.getMethod('random_code_mail').activate) {
+        if(user.random_code_mail.active)parsed_user.codeRequired = true;
+        parsed_user.random_code_mail = {
+            active: user.random_code_mail.active,
+            transports: available_transports(user.random_code_mail.transports, 'random_code_mail')
+        };
+    }
     if (properties.getMethod('bypass').activate) {
         if(user.bypass.active)parsed_user.codeRequired = true;
         parsed_user.bypass = {

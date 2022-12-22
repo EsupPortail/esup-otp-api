@@ -52,7 +52,14 @@
             "mail_validity": 30,
             "code_type": "digit",
             "code_length": 6,
-            "transports" : ["mail","sms"]
+            "transports" : ["sms"]
+        },
+ 	"random_code_mail": {
+            "activate": true,
+            "mail_validity": 30,
+            "code_type": "digit",
+            "code_length": 6,
+            "transports" : ["mail"]
         },
         "bypass": {
             "activate": true,

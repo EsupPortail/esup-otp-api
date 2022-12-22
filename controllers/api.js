@@ -258,7 +258,8 @@ exports.get_user = function (req, res, next) {
 exports.get_user_infos = function (req, res, next) {
     apiDb.find_user(req, res, function (user) {
         userDb_controller.get_available_transports(req, res, function (data) {
-	deactivateRandomCodeIfNoTransport(user,data);//nettoyage des random_code activés sans transport
+	deactivateRandomCodeIfNoTransport(user,data,"");//nettoyage des random_code activés sans transport
+	deactivateRandomCodeIfNoTransport(user,data,"_mail"); // pour random_code_mail
             var response = {};
             response.code = 'Ok';
             response.message = '';
@@ -277,21 +278,21 @@ exports.get_user_infos = function (req, res, next) {
  * On ne doit pas avoir de random_code activé sans transport.
 **/
 
-function deactivateRandomCodeIfNoTransport(user,data){    		
-   if(user['random_code'] && user['random_code'].active){
+function deactivateRandomCodeIfNoTransport(user,data,suffixe){    		
+   if(user['random_code'+suffixe] && user['random_code'+suffixe].active){
 	var deactivate=true;
-	var randomCodeTransports=apiDb.parse_user(user).random_code.transports;
-        logger.debug("Active transports for randomCode:"+randomCodeTransports);
-        var transport
+	var randomCodeTransports=apiDb.parse_user(user)["random_code"+suffixe].transports;
+        logger.debug("Active transports for randomCode"+suffixe+":"+randomCodeTransports);
+        var transport;
         for(transport of randomCodeTransports){
 		logger.debug("check if transport is defined: data["+transport+"]="+data[transport]);
 		if(data[transport]) {deactivate=false;break;}
      	}
 	
 	if(deactivate){
-		user.random_code.active = false;
+		user["random_code"+suffixe].active = false;
    		user.save( function() {
-        		logger.info('No transport is set. Auto deactivate random_code for '+user.uid);
+        		logger.info('No transport is set. Auto deactivate random_code'+suffixe+' for '+user.uid);
         	});
 	}
     }

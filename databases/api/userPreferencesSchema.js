@@ -18,6 +18,18 @@ exports.schema = {
             default: properties.getEsupProperty('transports')
         }
     },
+    random_code_mail: {
+        code: String,
+        validity_time: Number,
+        active: {
+            type: Boolean,
+            default: false
+        },
+        transports: {
+            type: Array,
+            default: properties.getEsupProperty('transports')
+        }
+    },
     bypass: {
         codes: {
             type: Array,
