@@ -15,6 +15,7 @@ exports.schema = {
         },
         "transports": {
             type: Array,
+	    default: ["sms"]
         }
     },
    "random_code_mail": {
@@ -23,6 +24,7 @@ exports.schema = {
         },
         "transports": {
             type: Array,
+      	    default: ["mail"]
         }
     },
     "bypass": {
