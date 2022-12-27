@@ -281,13 +281,14 @@ exports.get_user_infos = function (req, res, next) {
 function deactivateRandomCodeIfNoTransport(user,data,suffixe){    		
    if(user['random_code'+suffixe] && user['random_code'+suffixe].active){
 	var deactivate=true;
-	var randomCodeTransports=apiDb.parse_user(user)["random_code"+suffixe].transports;
-        logger.debug("Active transports for randomCode"+suffixe+":"+randomCodeTransports);
+	logger.debug("Active transports for randomCode"+suffixe);
+	var randomCodeTransports=apiDb.parse_user(user)["random_code"+suffixe].transports;        
         var transport;
-        for(transport of randomCodeTransports){
+        if(randomCodeTransports !== null && randomCodeTransports !== undefined && typeof randomCodeTransports[Symbol.iterator] === 'function')
+          for(transport of randomCodeTransports){
 		logger.debug("check if transport is defined: data["+transport+"]="+data[transport]);
 		if(data[transport]) {deactivate=false;break;}
-     	}
+     	  }
 	
 	if(deactivate){
 		user["random_code"+suffixe].active = false;
