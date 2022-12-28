@@ -282,7 +282,9 @@ function deactivateRandomCodeIfNoTransport(user,data,suffixe){
    if(user['random_code'+suffixe] && user['random_code'+suffixe].active){
 	var deactivate=true;
 	logger.debug("Active transports for randomCode"+suffixe);
-	var randomCodeTransports=apiDb.parse_user(user)["random_code"+suffixe].transports;        
+        var randomCode = apiDb.parse_user(user)["random_code"+suffixe];
+	var randomCodeTransports=null;
+        if(randomCode!==null && randomCode!==undefined) randomCodeTransports=randomCode.transports;      
         var transport;
         if(randomCodeTransports !== null && randomCodeTransports !== undefined && typeof randomCodeTransports[Symbol.iterator] === 'function')
           for(transport of randomCodeTransports){
