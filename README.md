@@ -24,7 +24,6 @@ sudo service mongod start
 - npm start
 
 esup-otp-api runs in http, if you want a secure mode you will need a reverse proxy.
-Check https://github.com/Hakall/esup-node-proxy if you want a simple NodeJS reverse proxy.
 
 ### behind Apache
 - https 
