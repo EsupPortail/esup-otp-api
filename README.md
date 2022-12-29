@@ -54,6 +54,7 @@ Simply execute "mocha" in root directory of the project, the server must be laun
 ### See also
 - [esup-otp-manager](https://github.com/EsupPortail/esup-otp-manager)
 - [esup-otp-cas](https://github.com/EsupPortail/esup-otp-cas)
+- [esup-otp-cas-server](https://github.com/EsupPortail/esup-otp-cas-server)
 
 License
 ----
