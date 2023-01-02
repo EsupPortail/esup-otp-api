@@ -83,6 +83,10 @@ exports.schema = {
             type: String,
             default: null
         },
+        activation_fail:{
+            type: String,
+            default: null
+        },
         active: {
             type: Boolean,
             default: false

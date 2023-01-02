@@ -128,6 +128,7 @@ exports.get_method_secret = function (user, req, res, next) {
 exports.user_activate = function (user, req, res, next) {
     var activation_code = utils.generate_digit_code(6);
     user.push.activation_code = activation_code;
+    user.push.activation_fail=null;
     user.push.active=false;
     var qr = qrCode.qrcode(10, 'M');
     var http = 'http://';
@@ -152,8 +153,7 @@ exports.user_activate = function (user, req, res, next) {
 // generation of tokenSecret sent to the client, edited by mbdeme on June 2020
 
 exports.confirm_user_activate = function (user, req, res, next) {
-
-    if (!user.push.active && req.params.activation_code == user.push.activation_code) {
+    if (user.push.activation_fail<properties.getMethod('push').nbMaxFails && !user.push.active && req.params.activation_code == user.push.activation_code) {
         var token_secret = utils.generate_string_code(128);
         user.push.token_secret = token_secret;
         user.push.active = true;
@@ -162,6 +162,7 @@ exports.confirm_user_activate = function (user, req, res, next) {
         user.push.device.manufacturer = req.params.manufacturer || "DevCorp";
         user.push.device.model = req.params.model || "DevDevice";
         user.push.activation_code = null;
+	user.push.activation_fail = null;
         user.save( function () {
             sockets.emitManager('userPushActivate',{uid:user.uid});
             sockets.emitToManagers('userPushActivateManager', user.uid);
@@ -171,10 +172,20 @@ exports.confirm_user_activate = function (user, req, res, next) {
                 "tokenSecret": token_secret
             });
         });
-    } else res.send({
-        "code": "Error",
-        "message": properties.getMessage('error', 'invalid_credentials')
-    });
+    } else{
+        let nbfail=user.push.activation_fail;
+	if(nbfail!=null && nbfail!=undefined)
+            nbfail++;
+        else nbfail=1;
+        user.push.activation_fail = nbfail;
+	logger.info(utils.getFileName(__filename) + ' ' +"App confirm activation fails for "+user.uid+" ("+nbfail+")");
+	user.save (function(){
+	    res.send({
+	        "code": "Error",
+        	"message": properties.getMessage('error', 'invalid_credentials')
+            });
+          });
+         }
 }
 
 // refresh gcm_id when it is regenerated

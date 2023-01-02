@@ -75,6 +75,7 @@
 	    "body" :"Demande de connexion à votre compte",
 	    "text1":"Demande de connexion à votre compte",
             "text2":" à proximité de $city",
+	    "nbMaxFails" : 3,
             "transports" : ["push"]
         },
         "esupnfc": {
