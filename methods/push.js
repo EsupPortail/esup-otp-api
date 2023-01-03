@@ -153,7 +153,7 @@ exports.user_activate = function (user, req, res, next) {
 // generation of tokenSecret sent to the client, edited by mbdeme on June 2020
 
 exports.confirm_user_activate = function (user, req, res, next) {
-    if (user.push.activation_fail<properties.getMethod('push').nbMaxFails && !user.push.active && req.params.activation_code == user.push.activation_code) {
+    if (user.push.activation_code!=null && user.push.activation_fail<properties.getMethod('push').nbMaxFails && !user.push.active && req.params.activation_code == user.push.activation_code) {
         var token_secret = utils.generate_string_code(128);
         user.push.token_secret = token_secret;
         user.push.active = true;
