@@ -53,7 +53,7 @@ exports.send_message = function (user, req, res, next) {
 	logger.debug("send gsm push ...");
         sender.send(message, {registrationTokens: regTokens}, function (err, response) {
             if (err) {
-                logger.info(err);
+                logger.error("Problem to send a notification: "+err);
                 res.send({
                     "code": "Error",
                     "message": JSON.stringify(err)
