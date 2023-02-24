@@ -15,7 +15,7 @@
     "ldapjs": "^1.0.0",
     "mongoose": "^6.6.0",
     "mysql": "^2.10.2",
-    "node-gcm": "^1.0.5",
+    "fcm-node": "^1.6.1",
     "nodemailer": "^6.7.8",
     "nodemailer-smtp-transport": "^2.4.1",
     "qrcode-npm": "0.0.3",

@@ -6,7 +6,7 @@ var properties = require(__dirname + '/../properties/properties');
 var restify = require('restify');
 var utils = require(__dirname + '/../services/utils');
 var logger = require(__dirname + '/../services/logger').getInstance();
-var gcm = require('node-gcm');
+var fcm = require('fcm-node');
 var qrCode = require('qrcode-npm');
 var sockets = require('../server/sockets');
 var geoip = require('geoip-lite');
@@ -14,8 +14,8 @@ var geoip = require('geoip-lite');
 // Set up the sender with you API key, prepare your recipients' registration tokens.
 var opts={};
 if(properties.getEsupProperty('proxyUrl'))opts={'proxy': properties.getEsupProperty('proxyUrl')};
-var sender = new gcm.Sender(properties.getMethodProperty('push', 'serverKey'), opts);
 
+var fcm = new fcm(properties.getMethodProperty('push', 'serverKey'));
 exports.name = "push";
 
 exports.send_message = function (user, req, res, next) {
@@ -34,24 +34,25 @@ exports.send_message = function (user, req, res, next) {
     if(city!=null)
 	text+=properties.getMethod('push').text2.replace('$city',city);
 
-    var message = new gcm.Message({
-        priority: "high",
-        data: {
+    var content = {
+        notification: {
             title: properties.getMethod('push').title,
             body: properties.getMethod('push').body,
-	    text: text,
+            "click_action": "com.adobe.phonegap.push.background.MESSAGING_EVENT"
+        },
+        data: {
+            message: text,
+            text: text,
             action: 'auth',
             uid: user.uid,
             lt: lt
         },
         to: user.push.device.gcm_id
-    });
-
-    var regTokens = [user.push.device.gcm_id];
+    };
 
     user.save( function () {
 	logger.debug("send gsm push ...");
-        sender.send(message, {registrationTokens: regTokens}, function (err, response) {
+        fcm.send(content, function (err, response) {
             if (err) {
                 logger.error("Problem to send a notification: "+err);
                 res.send({
@@ -284,20 +285,22 @@ function user_unactivate(user, req, res, next) {
 };
 
 function alert_deactivate(user) {
-    var message = new gcm.Message({
-        priority: "high",
-        data: {
+    var content = {
+        notification: {
             title: "Esup Auth",
             body: "Les notifications push ont été désactivées pour votre compte",
+            "click_action": "com.adobe.phonegap.push.background.MESSAGING_EVENT"
+        },
+        data: {
+            message: "Les notifications push ont été désactivées pour votre compte",
             text: "Les notifications push ont été désactivées pour votre compte",
-            action: "desync"
+            action: 'desync'
         },
         to: user.push.device.gcm_id
-    });
-    var regTokens = [user.push.device.gcm_id];
-    sender.send(message, {registrationTokens: regTokens}, function (err, response) {
+    };
+    fcm.send(content, function (err, response) {
         if (err) {
-            logger.info(err);
+            logger.err("Problem to send a notification for deactivate push: "+err);
         }
     });
 }
