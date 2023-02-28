@@ -70,11 +70,11 @@ describe('Esup otp api', function () {
             })
         })
 
-        it('get test_user totp method secret, qrCode must be empty', function (done) {
+        it('get test_user totp method secret response must be an error message', function (done) {
                 var url = server_url + '/protected/users/'+test_user+'/methods/totp/secret/' +properties.getEsupProperty('api_password')
                 request({url: url}, function (error, response, body) {
                     if (error) throw error;
-                    assert(JSON.parse(body).qrCode == '');
+                    assert(JSON.parse(body).message == properties.getMessage('error','unvailable_method_operation'));
                     done();
                 });
         })
