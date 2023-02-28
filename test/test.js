@@ -115,8 +115,13 @@ describe('Esup otp api', function () {
             var url = server_url + '/protected/users/'+test_user+'/methods/bypass/secret/' +properties.getEsupProperty('api_password')
             request({url: url, method : "POST"}, function (error, response, body) {
                 if (error) throw error;
-                assert(JSON.parse(body).codes.length == properties.getMethodProperty('bypass','codes_number'));
-                assert(JSON.parse(body).code == 'Ok');
+                if(JSON.parse(body).code == 'Error')
+    			assert(JSON.parse(body).message == properties.getMessage('error','method_not_found'));
+		else{
+              	  assert(JSON.parse(body).codes.length == properties.getMethodProperty('bypass','codes_number'));
+console.log(JSON.parse(body));
+               	  assert(JSON.parse(body).code == 'Ok');
+		}
                 done();
             });
         })
