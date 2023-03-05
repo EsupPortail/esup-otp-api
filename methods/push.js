@@ -300,7 +300,7 @@ function alert_deactivate(user) {
     };
     fcm.send(content, function (err, response) {
         if (err) {
-            logger.err("Problem to send a notification for deactivate push: "+err);
+            logger.error("Problem to send a notification for deactivate push: "+err);
         }
     });
 }
