@@ -49,7 +49,6 @@
         "random_code": {
             "activate": true,
             "sms_validity": 15,
-            "mail_validity": 30,
             "code_type": "digit",
             "code_length": 6,
             "transports" : ["sms"]

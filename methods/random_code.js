@@ -19,7 +19,7 @@ exports.send_message = function(user, req, res, next) {
             new_otp.code = utils.generate_string_code(properties.getMethod('random_code').code_length);
             break;
     }
-    validity_time = properties.getMethod('random_code').mail_validity * 60 * 1000;
+    validity_time = properties.getMethod('random_code').sms_validity * 60 * 1000;
     validity_time += new Date().getTime();
     new_otp.validity_time = validity_time;
     user.random_code = new_otp;
