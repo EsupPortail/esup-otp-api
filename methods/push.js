@@ -89,7 +89,7 @@ exports.send_message = function (user, req, res, next) {
 exports.verify_code = function (user, req, res, callbacks) {
     logger.debug(utils.getFileName(__filename) + ' ' + "verify_code: " + user.uid);
     if (user.push.code == req.params.otp) {
-        delete user.push.code;
+        user.push.code=null;
         user.save( function () {
             logger.info(utils.getFileName(__filename)+" Valid credentials by " + user.uid);
             res.send({

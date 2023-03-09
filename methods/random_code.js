@@ -38,8 +38,8 @@ exports.send_message = function(user, req, res, next) {
 exports.verify_code = function(user, req, res, callbacks) {
     logger.debug(utils.getFileName(__filename)+' '+"verify_code: "+user.uid);
     if (user.random_code.code == req.params.otp && Date.now() < user.random_code.validity_time) {
-        delete user.random_code.code;
-        delete user.random_code.validity_time;
+        user.random_code.code=null;
+        user.random_code.validity_time=null;
         user.save( function() {
             logger.info(utils.getFileName(__filename)+" Valid credentials by "+user.uid);
             res.send({

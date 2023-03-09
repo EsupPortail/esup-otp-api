@@ -115,7 +115,7 @@ exports.user_desync = function (user, req, res, next) {
 exports.verify_code = function (user, req, res, callbacks) {
     logger.debug(utils.getFileName(__filename) + ' ' + "verify_code: " + user.uid);
     if (user.esupnfc.code == req.params.otp) {
-        delete user.esupnfc.code;
+        user.esupnfc.code=null;
         user.save( function () {
             logger.info(utils.getFileName(__filename)+" valid credentials by " + user.uid);
             res.send({
