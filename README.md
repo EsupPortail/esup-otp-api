@@ -1,16 +1,15 @@
 # esup-otp-api
 
-esup-otp-api is restful api using NodeJS for generate, send and verify one-time codes for [EsupPortail]
+esup-otp-api is a RESTful api using NodeJS to generate, send and verify one-time codes for [EsupPortail]
 
 ### Version
 1.1
 
-
-Run on Node v17.8.O and npm v8.5.5
+Runs on Node v17.8.O and npm v8.5.5
 
 ### Requirement
 
-Require [Mongodb](https://docs.mongodb.com/manual/tutorial/install-mongodb-on-ubuntu)
+Requires [Mongodb](https://docs.mongodb.com/manual/tutorial/install-mongodb-on-ubuntu)
 
 ```bash
 sudo service mongod start
@@ -20,12 +19,12 @@ sudo service mongod start
 - git clone https://github.com/EsupPortail/esup-otp-api.git
 - npm install
 - change the fields values in properties/esup.json to your installation, some explanations are in #how_to attributes
-- in properties/esup.json, hostname of smtp server needs to be setted to work
+- in properties/esup.json, hostname of smtp server needs to be set to work
 - npm start
 
 esup-otp-api runs in http, if you want a secure mode you will need a reverse proxy.
 
-### behind Apache
+### Behind Apache
 - https 
 
 ```
@@ -48,7 +47,7 @@ RewriteRule /(.*) ws://127.0.0.1:3000/$1 [P]
 
 ### Tests
 Install mocha : npm install -g mocha .
-Simply execute "mocha" in root directory of the project, the server must be launch before execute the tests
+Simply execute "mocha" in the root directory of the project, the server must be launched before executing the tests
 
 
 ### See also
