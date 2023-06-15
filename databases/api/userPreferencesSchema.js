@@ -117,6 +117,46 @@ export const schema = {
             default: properties.getEsupProperty('transports')
         }
     },
+    webauthn: {
+        active: {
+            type: Boolean,
+            default: false
+        },
+        transports: {
+            type: Array,
+            default: properties.getEsupProperty('transports')
+        },
+        registration: {
+            nonce: {
+              type: String,
+              default: null,
+            },
+            nonce_date: {
+              type: Number,
+              default: null
+            },
+            logged_in_otp: {
+              type: String,
+              default: null,
+            },
+            logged_in_otp_validity_time: Number,
+        },
+        authenticators: {
+          type: [{
+            credentialID: String,
+            credentialPublicKey: String,
+            counter: {
+              type: Number,
+              default: 0,
+            },
+            name: {
+              type: String,
+              default: "Authenticator",
+            },
+          }],
+          default: []
+        }
+    },
     last_send_message: { 
         method: { type: String },
         time: { type: Number }, 

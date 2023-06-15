@@ -18,6 +18,7 @@ export function initialize(server, version) {
     return Promise.all([
         initializeUnprotectedRoutes(server, version),
         initializeUserRoutes(server),
+        initializeWebAuthnRoutes(server),
         initializeNfcRoutes(server),
         initializeProtectedRoutes(server),
         initializeAdminRoutes(server),
@@ -100,6 +101,24 @@ async function initializeNfcRoutes(server) {
     server.post("/esupnfc/isTagable", validator.esupnfc_check_server_ip, api_controller.esupnfc_check_accept_authentication);
     server.post("/esupnfc/validateTag", validator.esupnfc_check_server_ip, api_controller.esupnfc_accept_authentication);
     server.post("/esupnfc/display", validator.esupnfc_check_server_ip, api_controller.esupnfc_send_message);
+}
+
+/**
+ * @param { restify.Server } server
+ */
+async function initializeWebAuthnRoutes(server) {
+    // USER
+    server.post("/users/:uid/methods/:method/confirm_activate/:hash", validator.check_hash, api_controller.confirm_activate_method);
+    server.post("/users/:uid/methods/:method/auth/:authenticator_id/:hash", validator.check_hash, api_controller.change_method_special);
+    server.del("/users/:uid/methods/:method/auth/:authenticator_id/:hash", validator.check_hash, api_controller.delete_method_special);
+    
+    // MANAGER
+    server.post("/protected/users/:uid/methods/:method/confirm_activate", validator.check_api_password, api_controller.confirm_activate_method);
+    server.post("/protected/users/:uid/methods/:method/auth/:authenticator_id", validator.check_api_password, api_controller.change_method_special);
+    server.del("/protected/users/:uid/methods/:method/auth/:authenticator_id", validator.check_api_password, api_controller.delete_method_special);
+    
+    // CAS-OTP
+    server.post("/users/:uid/webauthn/login/:hash", validator.check_hash, api_controller.verify_webauthn_auth);
 }
 
 /**

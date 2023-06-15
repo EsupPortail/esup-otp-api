@@ -7,6 +7,15 @@
     "users_secret":"changeit",
     "apiDb": "mongodb",
     "userDb": "mongodb",
+    "webauthn": {
+        "#how_to_relying_party": "The 'id' is a domain, identifying the 'server', the party that manages the authentication. It's value is important, unlike the name, which is just a displayable string.",
+        "relying_party": {
+            "name": "Univ",
+            "id": "univ.fr"
+        },
+        "#how_to_allowed_origins": "List of subdomains where webauthn can be used. Keep in mind it can't be multiple different domains.",
+        "allowed_origins": ["https://cas.univ.fr", "https://esup-otp-manager.univ.fr"]
+    },
     "mongodb": {
         "address": "localhost",
         "db": "test-otp",
@@ -97,7 +106,11 @@
            "activate": false,
            "validity_time": 3,
            "transports" : []
-	  }
+        },
+       "webauthn": {
+           "activate": true,
+           "transports" : []
+        }
     },
     "transports":["sms","mail","push"],
     "mailer": {

@@ -139,6 +139,13 @@ export function parse_user(user) {
             transports: available_transports(user.totp.transports, "totp")
         };
     }
+
+    if (properties.getMethod('webauthn').activate) {
+        parsed_user.webauthn = {
+            active: user.webauthn.active,
+            transports: available_transports(user.webauthn.transports, "webauthn")
+        };
+    }
     if (properties.getMethod('random_code').activate) {
         if (user.random_code.active) parsed_user.codeRequired = true;
         parsed_user.random_code = {

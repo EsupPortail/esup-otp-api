@@ -262,6 +262,11 @@ export async function get_user_infos(req, res) {
     await deactivateRandomCodeIfNoTransport(user, data, ""); //nettoyage des random_code activés sans transport
     await deactivateRandomCodeIfNoTransport(user, data, "_mail"); // pour random_code_mail
 
+    // turn off webauthn if no authenticator is present (?)
+    if (user.webauthn.authenticators.length === 0) {
+        user.webauthn.active = false;
+    }
+
     data.push = user.push.device.manufacturer + ' ' + user.push.device.model;
     res.status(200);
     res.send({
@@ -389,6 +394,15 @@ export async function generate_method_secret(req, res) {
     return method.generate_method_secret(user, req, res);
 }
 
+export async function change_method_special(req, res) {
+    const { user, method } = await getUserAndMethodModule(req, { checkMethodPropertiesExists: true });
+    return method.change_method_special(user, req, res);
+}
+
+export async function delete_method_special(req, res) {
+    const { user, method } = await getUserAndMethodModule(req, { checkMethodPropertiesExists: true });
+    return method.delete_method_special(user, req, res);
+}
 
 /**
  * Supprime l'attribut d'auth (secret key ou matrice ou bypass codes)
@@ -399,6 +413,12 @@ export async function generate_method_secret(req, res) {
 export async function delete_method_secret(req, res) {
     const { user, method } = await getUserAndMethodModule(req, { checkMethodPropertiesExists: true });
     return method.delete_method_secret(user, req, res);
+}
+
+export async function verify_webauthn_auth(req, res) {
+    req.params.method = "webauthn";
+    const { user, method } = await getUserAndMethodModule(req);
+    return method.verify_webauthn_auth(user, req, res);
 }
 
 /**

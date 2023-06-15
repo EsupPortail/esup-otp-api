@@ -4,6 +4,7 @@ import * as push from './push.js';
 import * as random_code_mail from './random_code_mail.js';
 import * as random_code from './random_code.js';
 import * as totp from './totp.js';
+import * as webauthn from './webauthn.js';
 
 
 /**
@@ -27,7 +28,7 @@ import * as totp from './totp.js';
  */
 const methods = {};
 
-for (const method of [bypass, esupnfc, push, random_code_mail, random_code, totp]) {
+for (const method of [bypass, esupnfc, push, random_code_mail, random_code, totp, webauthn]) {
     methods[method.name] = method;
 }
 

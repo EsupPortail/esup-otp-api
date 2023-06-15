@@ -10,6 +10,7 @@
   "license": "MIT",
   "type": "module",
   "dependencies": {
+    "@simplewebauthn/server": "^9.0.3",
     "crypto-js": "~4.2.0",
     "eta": "^3.4.0",
     "fcm-node": "github:renatocron/fcm-node-but-no-firebaseadmin",
