@@ -268,6 +268,7 @@ exports.get_user_infos = function (req, res, next) {
             data.push = user.push.device.manufacturer+' '+user.push.device.model;
             response.user.transports = data;
             response.user.last_send_message = user.last_send_message
+            res.status(200);
             res.send(response);
         })
     });
@@ -315,17 +316,13 @@ exports.send_message = function (req, res, next) {
                 user.last_send_message = { method: req.params.method, time: Date.now(), auto: "auto" in req.query }
                 methods[req.params.method].send_message(user, req, res, next);
             } else {
-                res.send({
-                    code: 'Error',
-                    message: properties.getMessage('error', 'method_not_found')
-                });
+                res.status(404);
+                res.send({code: "Error", message: properties.getMessage('error', 'method_not_found')});
             }
         });
     } else {
-        res.send({
-            code: 'Error',
-            message: properties.getMessage('error', 'method_not_found')
-        });
+        res.status(404);
+        res.send({code: "Error", message: properties.getMessage('error', 'method_not_found')});
     }
 };
 
@@ -337,17 +334,13 @@ exports.send_message_push = function (req, res, next) {
                 user.last_send_message = { method: req.params.method, time: Date.now(), auto: "auto" in req.query }
                 methods[req.params.method].send_message(user, req, res, next);
             } else {
-                res.send({
-                    code: 'Error',
-                    message: properties.getMessage('error', 'method_not_found')
-                });
+                res.status(404);
+                res.send({code: "Error", message: properties.getMessage('error', 'method_not_found')});
             }
         });
     } else {
-        res.send({
-            code: 'Error',
-            message: properties.getMessage('error', 'method_not_found')
-        });
+        res.status(404);
+        res.send({code: "Error", message: properties.getMessage('error', 'method_not_found')});
     }
 };
 
@@ -357,17 +350,13 @@ exports.accept_authentication = function (req, res, next) {
             if (user[req.params.method].active && properties.getMethodProperty(req.params.method, 'activate') && methods[req.params.method]) {
                 methods[req.params.method].accept_authentication(user, req, res, next);
             } else {
-                res.send({
-                    code: 'Error',
-                    message: properties.getMessage('error', 'method_not_found')
-                });
+                res.status(404);
+                res.send({code: "Error", message: properties.getMessage('error', 'method_not_found')});
             }
         });
     } else {
-        res.send({
-            code: 'Error',
-            message: properties.getMessage('error', 'method_not_found')
-        });
+        res.status(404);
+        res.send({code: "Error", message: properties.getMessage('error', 'method_not_found')});
     }
 };
 
@@ -377,17 +366,13 @@ exports.check_accept_authentication = function (req, res, next) {
             if (user[req.params.method].active && properties.getMethodProperty(req.params.method, 'activate') && methods[req.params.method]) {
                 methods[req.params.method].check_accept_authentication(user, req, res, next);
             } else {
-                res.send({
-                    code: 'Error',
-                    message: properties.getMessage('error', 'method_not_found')
-                });
+                res.status(404);
+                res.send({code: "Error", message: properties.getMessage('error', 'method_not_found')});
             }
         });
     } else {
-        res.send({
-            code: 'Error',
-            message: properties.getMessage('error', 'method_not_found')
-        });
+        res.status(404);
+        res.send({code: "Error", message: properties.getMessage('error', 'method_not_found')});
     }
 };
 
@@ -443,17 +428,13 @@ exports.generate_method_secret = function (req, res, next) {
             if (methods[req.params.method] && properties.getMethodProperty(req.params.method, 'activate')) {
                 methods[req.params.method].generate_method_secret(user, req, res, next);
             } else {
-                res.send({
-                    code: 'Error',
-                    message: properties.getMessage('error', 'method_not_found')
-                });
+                res.status(404);
+                res.send({code: "Error", message: properties.getMessage('error', 'method_not_found')});
             }
         });
     } else {
-        res.send({
-            code: 'Error',
-            message: properties.getMessage('error', 'method_not_found')
-        });
+        res.status(404);
+        res.send({code: "Error", message: properties.getMessage('error', 'method_not_found')});
     }
 };
 
@@ -471,10 +452,8 @@ exports.delete_method_secret = function (req, res, next) {
             methods[req.params.method].delete_method_secret(user, req, res, next);
         });
     } else {
-        res.send({
-            code: 'Error',
-            message: properties.getMessage('error', 'method_not_found')
-        });
+        res.status(404);
+        res.send({code: "Error", message: properties.getMessage('error', 'method_not_found')});
     }
 };
 
@@ -491,10 +470,8 @@ exports.get_method_secret = function (req, res, next) {
             methods[req.params.method].get_method_secret(user, req, res, next);
         });
     } else {
-        res.send({
-            code: 'Error',
-            message: properties.getMessage('error', 'method_not_found')
-        });
+        res.status(404);
+        res.send({code: "Error", message: properties.getMessage('error', 'method_not_found')});
     }
 };
 
@@ -547,10 +524,12 @@ exports.activate_method = function (req, res, next) {
         apiDb.find_user(req, res, function (user) {
             methods[req.params.method].user_activate(user, req, res, next);
         });
-    } else res.send({
-        "code": "Error",
+    } else {
+      res.status(404);
+      res.send({
         "message": properties.getMessage('error', 'method_not_found')
-    });
+      });
+    }
 };
 
 /**
