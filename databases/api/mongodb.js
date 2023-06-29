@@ -3,9 +3,9 @@ var properties = require(__dirname + '/../../properties/properties');
 var utils = require(__dirname + '/../../services/utils');
 var methods;
 var mongoose = require('mongoose');
-var connection;
+let connection;
 
-var logger = require(__dirname + '/../../services/logger').getInstance();
+const logger = require(__dirname + '/../../services/logger').getInstance();
 
 exports.initialize = function (callback) {
     connection = mongoose.createConnection('mongodb://' + properties.getEsupProperty('mongodb').address + '/' + properties.getEsupProperty('mongodb').db, function (error) {
@@ -26,19 +26,23 @@ var Schema = mongoose.Schema;
 var ApiPreferences;
 
 function initiatilize_api_preferences() {
-    var ApiPreferencesSchema = new Schema(require(__dirname + '/apiPreferencesSchema').schema);
+    const ApiPreferencesSchema = new Schema(require(__dirname + '/apiPreferencesSchema').schema);
+
     connection.model('ApiPreferences', ApiPreferencesSchema, 'ApiPreferences');
+
     ApiPreferences = connection.model('ApiPreferences');
     ApiPreferences.find({}).exec(function (err, data) {
         if (data[0]) {
-            var prefs = properties.getEsupProperty('methods');
-            for(p in prefs){
+            const prefs = properties.getEsupProperty('methods');
+            for(const p in prefs){
                 prefs[p].activate = data[0][p].activate;
                 prefs[p].transports = data[0][p].transports;
             }
-            properties.setEsupProperty('methods',prefs);
+            properties.setEsupProperty('methods', prefs);
             update_api_preferences();
-        }else{
+        }
+        else{
+            logger.info(utils.getFileName(__filename)+' '+`No existing api prefs data : creating.`);
             create_api_preferences();
         }
     });
@@ -57,7 +61,7 @@ function update_api_preferences() {
     ApiPreferences.find({}).exec(function (err, data) {
         if (data[0]) {
             var prefs = properties.getEsupProperty('methods');
-            for(p in prefs){
+            for(const p in prefs){
                 data[0][p]=prefs[p];
             }
             var api_preferences = data[0];
@@ -232,9 +236,11 @@ exports.parse_user = function (user) {
 }
 
 function available_transports(userTransports, method) {
-    var available_transports = [];
-    for (t in userTransports) {
-        if (properties.getMethod(method).transports.indexOf(userTransports[t]) >= 0) available_transports.push(userTransports[t]);
+    const available_transports = [];
+    for (const t in userTransports) {
+        if (properties.getMethod(method).transports.indexOf(userTransports[t]) >= 0) {
+            available_transports.push(userTransports[t]);
+        }
     }
     return available_transports;
 }
@@ -261,7 +267,9 @@ exports.get_uids = function (req, res, next) {
  */
 exports.drop = function (req, res, next) {
     UserPreferences.remove({}, function (err, data) {
-        if (err) logger.error(utils.getFileName(__filename)+' '+err);
+        if (err) {
+            logger.error(utils.getFileName(__filename)+' '+err);
+        }
         logger.debug('users removed');
         res.send(data);
     });
