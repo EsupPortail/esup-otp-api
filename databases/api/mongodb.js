@@ -8,14 +8,24 @@ let connection;
 const logger = require(__dirname + '/../../services/logger').getInstance();
 
 exports.initialize = function (callback) {
-    connection = mongoose.createConnection('mongodb://' + properties.getEsupProperty('mongodb').address + '/' + properties.getEsupProperty('mongodb').db, function (error) {
+    const db_url = 'mongodb://' + properties.getEsupProperty('mongodb').address + '/' + properties.getEsupProperty('mongodb').db;
+
+    connection = mongoose.createConnection(db_url, function (error) {
         if (error) {
             logger.error(utils.getFileName(__filename)+' '+error);
-        } else {
-            initiatilize_api_preferences();
-            initiatilize_user_model();
-            methods = require(__dirname + '/../../methods/methods');
-            if (typeof(callback) === "function") callback();
+            return;
+        }
+
+        initiatilize_api_preferences();
+        initiatilize_user_model();
+
+        methods = require(__dirname + '/../../methods/methods');
+
+        if (typeof(callback) === "function") {
+            callback();
+        }
+        else {
+            logger.error(utils.getFileName(__filename)+' '+`Type of provided callback is not 'function' ; got '${typeof(callback)}'`);
         }
     });
 }
