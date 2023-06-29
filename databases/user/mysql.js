@@ -16,10 +16,13 @@ function find_user(req, res, callback) {
         if (err) throw err;
         if (rows[0]) {
             if (typeof(callback) === "function") callback(rows[0]);
-        } else res.send({
-            "code": "Error",
-            "message": properties.getMessage('error','user_not_found')
-        });
+        } else {
+            res.status(404);
+            res.send({
+                "code": "Error",
+                "message": properties.getMessage('error','user_not_found')
+            });
+        }
     });
 }
 

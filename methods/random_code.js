@@ -42,6 +42,8 @@ exports.verify_code = function(user, req, res, callbacks) {
         user.random_code.validity_time=null;
         user.save( function() {
             logger.info(utils.getFileName(__filename)+" Valid credentials by "+user.uid);
+
+            res.status(200);
             res.send({
                 "code": "Ok",
                 "message": properties.getMessage('success','valid_credentials')
@@ -54,6 +56,7 @@ exports.verify_code = function(user, req, res, callbacks) {
 }
 
 exports.generate_method_secret = function(user, req, res, next) {
+    res.status(404);
     res.send({
         "code": "Error",
         "message": properties.getMessage('error','unvailable_method_operation')
@@ -61,6 +64,7 @@ exports.generate_method_secret = function(user, req, res, next) {
 }
 
 exports.delete_method_secret = function(user, req, res, next) {
+    res.status(404);
     res.send({
         "code": "Error",
         "message": properties.getMessage('error','unvailable_method_operation')
@@ -68,6 +72,7 @@ exports.delete_method_secret = function(user, req, res, next) {
 }
 
 exports.get_method_secret = function(user, req, res, next) {
+    res.status(404);
     res.send({
         "code": "Error",
         "message": properties.getMessage('error','unvailable_method_operation')
@@ -77,6 +82,7 @@ exports.get_method_secret = function(user, req, res, next) {
 exports.user_activate = function(user, req, res, next) {
     user.random_code.active = true;
     user.save( function() {
+        res.status(200);
         res.send({
             "code": "Ok",
             "message": ""
@@ -85,6 +91,7 @@ exports.user_activate = function(user, req, res, next) {
 }
 
 exports.confirm_user_activate = function(user, req, res, next) {
+    res.status(404);
     res.send({
         "code": "Error",
         "message": properties.getMessage('error','unvailable_method_operation')
@@ -94,6 +101,7 @@ exports.confirm_user_activate = function(user, req, res, next) {
 exports.user_deactivate = function(user, req, res, next) {
     user.random_code.active = false;
     user.save( function() {
+        res.status(200);
         res.send({
             "code": "Ok",
             "message": ""
@@ -102,6 +110,7 @@ exports.user_deactivate = function(user, req, res, next) {
 }
 
 exports.admin_activate = function(req, res, next) {
+    res.status(404);
     res.send({
         "code": "Error",
         "message": properties.getMessage('error','unvailable_method_operation')
@@ -109,6 +118,7 @@ exports.admin_activate = function(req, res, next) {
 }
 
 exports.user_desync = function (user, req, res, next) {
+    res.status(404);
     res.send({
         "code": "Error",
         "message": properties.getMessage('error','unvailable_method_operation')

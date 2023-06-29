@@ -265,6 +265,8 @@ exports.get_uids = function (req, res, next) {
         for(up in data){
             result.push(data[up].uid);
         }
+
+        res.status(200);
         res.send({
             code:"Ok",
             uids:result
@@ -281,6 +283,8 @@ exports.drop = function (req, res, next) {
             logger.error(utils.getFileName(__filename)+' '+err);
         }
         logger.debug('users removed');
+
+        res.status(200);
         res.send(data);
     });
 };

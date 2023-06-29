@@ -29,6 +29,7 @@ exports.get_methods = function (req, res, next) {
         response.code = "Ok";
         response.message = "Method(s) found";
     }
+    res.status(response.code === "Ok" ? 200 : 404);
     res.send(response);
 }
 
@@ -43,14 +44,18 @@ exports.activate_method_admin = function (req, res, next) {
     if (properties.getMethod(req.params.method)) {
         properties.setMethodProperty(req.params.method, 'activate', true);
         apiDb.update_api_preferences();
+        res.status(200);
         res.send({
             code: 'Ok',
             message: ''
         });
-    } else res.send({
-        "code": "Error",
-        "message": properties.getMessage('error', 'method_not_found')
-    });
+    } else {
+        res.status(404);
+        res.send({
+            "code": "Error",
+            "message": properties.getMessage('error', 'method_not_found')
+        });
+    }
 };
 
 /**
@@ -64,14 +69,18 @@ exports.deactivate_method_admin = function (req, res, next) {
     if (properties.getMethod(req.params.method)) {
         properties.setMethodProperty(req.params.method, 'activate', false);
         apiDb.update_api_preferences();
+        res.status(200);
         res.send({
             code: 'Ok',
             message: ''
         });
-    } else res.send({
-        "code": "Error",
-        "message": properties.getMessage('error', 'method_not_found')
-    });
+    } else {
+        res.status(404);
+        res.send({
+            "code": "Error",
+            "message": properties.getMessage('error', 'method_not_found')
+        });
+    }
 };
 
 /**
@@ -85,14 +94,18 @@ exports.activate_method_transport = function (req, res, next) {
     if (properties.getMethod(req.params.method)) {
         properties.addMethodTransport(req.params.method, req.params.transport);
         apiDb.update_api_preferences();
+        res.status(200);
         res.send({
             code: 'Ok',
             message: ''
         });
-    } else res.send({
-        "code": "Error",
-        "message": properties.getMessage('error', 'method_not_found')
-    });
+    } else {
+        res.status(404);
+        res.send({
+            "code": "Error",
+            "message": properties.getMessage('error', 'method_not_found')
+        });
+    }
 };
 
 /**
@@ -106,14 +119,18 @@ exports.deactivate_method_transport = function (req, res, next) {
     if (properties.getMethod(req.params.method)) {
         properties.removeMethodTransport(req.params.method, req.params.transport);
         apiDb.update_api_preferences();
+        res.status(200);
         res.send({
             code: 'Ok',
             message: ''
         });
-    } else res.send({
-        "code": "Error",
-        "message": properties.getMessage('error', 'method_not_found')
-    });
+    } else {
+        res.status(404);
+        res.send({
+            "code": "Error",
+            "message": properties.getMessage('error', 'method_not_found')
+        });
+    }
 };
 
 /**
@@ -222,6 +239,7 @@ function transport(opts, req, res, next) {
             });
             break;
         default:
+            res.status(404);
             res.send({
                 code: 'Error',
                 message: properties.getMessage('error', 'unvailable_method_transport')
@@ -244,6 +262,8 @@ exports.get_user = function (req, res, next) {
         response.code = 'Ok';
         response.message = '';
         response.user = apiDb.parse_user(user);
+
+        res.status(200);
         res.send(response);
     });
 };
@@ -494,6 +514,8 @@ exports.get_activate_methods = function (req, res, next) {
         response.code = "Ok";
         response.message = properties.getMessage('success', 'methods_found');
         response.methods = result;
+
+        res.status(200);
         res.send(response);
     });
 
@@ -562,10 +584,13 @@ exports.confirm_activate_method = function (req, res, next) {
         apiDb.find_user(req, res, function (user) {
             methods[req.params.method].confirm_user_activate(user, req, res, next);
         });
-    } else res.send({
-        "code": "Error",
-        "message": properties.getMessage('error', 'method_not_found')
-    });
+    } else {
+        res.status(404);
+        res.send({
+            "code": "Error",
+            "message": properties.getMessage('error', 'method_not_found')
+        });
+    }
 };
 exports.refresh_gcm_id_method = function (req, res, next) {
     logger.info(utils.getFileName(__filename) + ' ' + req.params.uid + " refresh_push " + req.params.method);
@@ -584,10 +609,13 @@ exports.refresh_gcm_id_method = function (req, res, next) {
         apiDb.find_user(req, res, function (user) {
             methods[req.params.method].refresh_user_gcm_id(user, req, res, next);
         });
-    } else res.send({
-        "code": "Error",
-        "message": properties.getMessage('error', 'method_not_found')
-    });
+    } else {
+        res.status(404);
+        res.send({
+            "code": "Error",
+            "message": properties.getMessage('error', 'method_not_found')
+        });
+    }
 };
 
 /**
@@ -614,10 +642,13 @@ exports.deactivate_method = function (req, res, next) {
         apiDb.find_user(req, res, function (user) {
             methods[req.params.method].user_deactivate(user, req, res, next);
         });
-    } else res.send({
-        "code": "Error",
-        "message": properties.getMessage('error', 'method_not_found')
-    });
+    } else {
+        res.status(404);
+        res.send({
+            "code": "Error",
+            "message": properties.getMessage('error', 'method_not_found')
+        });
+    }
 };
 
 /**
@@ -644,10 +675,13 @@ exports.desync = function (req, res, next) {
         apiDb.find_user(req, res, function (user) {
             methods[req.params.method].user_desync(user, req, res, next);
         });
-    } else res.send({
-        "code": "Error",
-        "message": properties.getMessage('error', 'method_not_found')
-    });
+    } else {
+        res.status(404);
+        res.send({
+            "code": "Error",
+            "message": properties.getMessage('error', 'method_not_found')
+        });
+    }
 };
 
 /**
