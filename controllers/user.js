@@ -68,6 +68,7 @@ exports.update_transport = function(req, res, next) {
                     }
                 ]
             });
+            res.status(200);
             res.send({
                 code: 'Ok',
                 message: properties.getMessage('success','update')
