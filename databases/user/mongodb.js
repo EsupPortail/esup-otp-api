@@ -5,6 +5,8 @@ var connection;
 
 var logger = require(__dirname + '/../../services/logger').getInstance();
 
+const definedUserSchema = require(`./userSchema`);
+
 exports.initialize = function(callback) {
     connection = mongoose.createConnection('mongodb://' + properties.getEsupProperty('mongodb').address + '/' + properties.getEsupProperty('mongodb').db, function(error) {
         if (error) {
@@ -22,15 +24,7 @@ var User;
 function initiatilize_user_model() {
     var Schema = mongoose.Schema;
 
-    var UserSchema = new Schema({
-        uid: {
-            type: String,
-            required: true,
-            unique: true
-        },
-       mobile: String,
-       mail: String
-    });
+    var UserSchema = new Schema(definedUserSchema.schema);
 
     connection.model('User', UserSchema, 'User');
     User = connection.model('User');
