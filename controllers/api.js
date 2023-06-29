@@ -260,16 +260,18 @@ exports.get_user_infos = function (req, res, next) {
         userDb_controller.get_available_transports(req, res, function (data) {
             deactivateRandomCodeIfNoTransport(user,data,"");//nettoyage des random_code activés sans transport
             deactivateRandomCodeIfNoTransport(user,data,"_mail"); // pour random_code_mail
-            var response = {};
-            response.code = 'Ok';
-            response.message = '';
-            response.user = {};
-            response.user.methods = apiDb.parse_user(user);
+
             data.push = user.push.device.manufacturer+' '+user.push.device.model;
-            response.user.transports = data;
-            response.user.last_send_message = user.last_send_message
             res.status(200);
-            res.send(response);
+            res.send({
+                code: "Ok",
+                message: '',
+                user: {
+                    methods: apiDb.parse_user(user),
+                    transports: data,
+                    last_send_message: user.last_send_message,
+                }
+            })
         })
     });
 };
