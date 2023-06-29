@@ -258,8 +258,8 @@ exports.get_user = function (req, res, next) {
 exports.get_user_infos = function (req, res, next) {
     apiDb.find_user(req, res, function (user) {
         userDb_controller.get_available_transports(req, res, function (data) {
-	deactivateRandomCodeIfNoTransport(user,data,"");//nettoyage des random_code activés sans transport
-	deactivateRandomCodeIfNoTransport(user,data,"_mail"); // pour random_code_mail
+            deactivateRandomCodeIfNoTransport(user,data,"");//nettoyage des random_code activés sans transport
+            deactivateRandomCodeIfNoTransport(user,data,"_mail"); // pour random_code_mail
             var response = {};
             response.code = 'Ok';
             response.message = '';
@@ -404,20 +404,28 @@ exports.check_accept_authentication = function (req, res, next) {
 exports.verify_code = function (req, res, next) {
     apiDb.find_user(req, res, function (user) {
         if (user.last_send_message) user.last_send_message.verified = true
+
         logger.debug("verify_code: " + user.uid);
+
         var callbacks = [function () {
             logger.info(utils.getFileName(__filename) + ' ' + "Invalid credentials submit for user with uid : " + user.uid);
+
+            res.status(401);
             res.send({
                 "code": "Error",
                 "message": properties.getMessage('error', 'invalid_credentials')
             });
         }];
+
         for (method in methods){
-		if(user[method].active)	
-		         callbacks.push(methods[method].verify_code);
-	}
-	var next = callbacks.pop();
-        next(user, req, res, callbacks);	          
+            if(user[method].active) {
+                console.log(`User method ${methods[method].name} active, verify_code`)
+                callbacks.push(methods[method].verify_code);
+            }
+        }
+
+        var next = callbacks.pop();
+        next(user, req, res, callbacks);
     });
 };
 
