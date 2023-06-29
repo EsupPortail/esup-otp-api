@@ -81,8 +81,13 @@ exports.generate_method_secret = function(user, req, res, next) {
                 logger.error('Error with QR');
                 return;
             }
-            response.qrCode = "<img src='".concat(imageUrl,"'width='164' height='164'>");
-            res.send(response);
+
+            res.status(200);
+            res.send({
+                code: 'Ok',
+                message: user.totp.secret.base32,
+                qrCode: "<img src='".concat(imageUrl,"'width='164' height='164'>")
+            });
         });
     });
 }

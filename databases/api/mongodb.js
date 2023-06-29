@@ -108,10 +108,6 @@ function initiatilize_user_model() {
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
 exports.find_user = function (req, res, callback) {
-    var response = {
-        "code": "Error",
-        "message": properties.getMessage('error','user_not_found')
-    };
     UserPreferences.find({
         'uid': req.params.uid
     }).exec(function (err, data) {
@@ -121,7 +117,13 @@ exports.find_user = function (req, res, callback) {
             userDb_controller.user_exists(req, res, function (user) {
                 if (user) {
                     create_user(user.uid, callback);
-                } else res.send(response);
+                } else {
+                    res.status(404);
+                    res.send({
+                        "code": "Error",
+                        "message": properties.getMessage('error','user_not_found')
+                    });
+                }
             });
         }
     });

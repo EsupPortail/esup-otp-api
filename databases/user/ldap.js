@@ -21,11 +21,6 @@ exports.initialize = function(callback) {
 }
 
 function find_user(req, res, callback) {
-    var response = {
-        "code": "Error",
-        "message": properties.getMessage('error','user_not_found')
-    };
-
     var opts = {
         filter: 'uid=' + req.params.uid,
         scope: 'sub',
@@ -47,7 +42,13 @@ function find_user(req, res, callback) {
         });
 
         _res.on('end', function(err) {
-            if (!user_found) res.send(response);
+            if (!user_found) {
+                res.status(404);
+                res.send({
+                    "code": "Error",
+                    "message": properties.getMessage('error','user_not_found')
+                });
+            }
         });
 
     });

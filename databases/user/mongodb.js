@@ -31,18 +31,22 @@ function initiatilize_user_model() {
 }
 
 function find_user(req, res, callback) {
-    var response = {
-        "code": "Error",
-        "message": properties.getMessage('error', 'user_not_found')
-    };
     User.find({
         'uid': req.params.uid
     }).exec(function(err, data) {
         if (data[0]) {
             if (typeof(callback) === "function") callback(data[0]);
         } else {
-            if(properties.getEsupProperty('auto_create_user'))create_user(req.params.uid, callback);
-            else res.send(response);
+            if(properties.getEsupProperty('auto_create_user')) {
+                create_user(req.params.uid, callback);
+            }
+            else {
+                res.status(404);
+                res.send({
+                    "code": "Error",
+                    "message": properties.getMessage('error', 'user_not_found')
+                });
+            }
         }
     });
 }
