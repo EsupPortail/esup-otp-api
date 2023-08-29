@@ -26,7 +26,7 @@
             "object" : "Code d'authentification",
             "sms": {
                 "pre_test": "",
-                "post_test": "%20 est votre code d'authentification.%0Aesup-portail.org"
+                "post_test": " est votre code d'authentification.\nesup-portail.org"
             },
             "mail": {
                 "pre_test": "Bonjour, votre code d'authentification est ",
@@ -36,7 +36,7 @@
         "test": {
             "object" : "Message de test",
             "sms": {
-                "pre_test": "Ceci+est+un+message+de+test+%C3%A0+destination+de+l%27utilisateur+",
+                "pre_test": "Ceci est un message de test à destination de l'utilisateur ",
                 "post_test": "."
             },
             "mail": {

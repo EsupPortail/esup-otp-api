@@ -34,5 +34,5 @@ exports.send_message = function(num, opts, res) {
 }
 
 function urlBroker(num, message) {
-    return properties.getEsupProperty('sms').url.replace('$phoneNumber$',num).replace('$message$',message);
+    return properties.getEsupProperty('sms').url.replace('$phoneNumber$', encodeURIComponent(num)).replace('$message$', encodeURIComponent(message));
 }
