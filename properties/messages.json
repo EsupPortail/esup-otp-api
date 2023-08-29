@@ -25,23 +25,23 @@
         "code": {
             "object" : "Code d'authentification",
             "sms": {
-                "pre_test": "",
-                "post_test": " est votre code d'authentification.\nesup-portail.org"
+                "pre": "",
+                "post": " est votre code d'authentification.\nesup-portail.org"
             },
             "mail": {
-                "pre_test": "Bonjour, votre code d'authentification est ",
-                "post_test": ". Cordialement."
+                "pre": "Bonjour, votre code d'authentification est ",
+                "post": ". Cordialement."
             }
         },
         "test": {
             "object" : "Message de test",
             "sms": {
-                "pre_test": "Ceci est un message de test à destination de l'utilisateur ",
-                "post_test": "."
+                "pre": "Ceci est un message de test à destination de l'utilisateur ",
+                "post": "."
             },
             "mail": {
-                "pre_test": "Ceci est un message de test à destination de l'utilisateur ",
-                "post_test": "."
+                "pre": "Ceci est un message de test à destination de l'utilisateur ",
+                "post": "."
             }
         }
     }

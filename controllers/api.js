@@ -165,13 +165,13 @@ exports.transport_code = function (code, req, res, next) {
     opts.waitingFor = properties.getMethodProperty(req.params.method, 'waitingFor');
     switch (req.params.transport) {
         case 'mail':
-            opts.message = properties.getMessage('transport', 'code').mail.pre_test + code + properties.getMessage('transport', 'code').mail.post_test
+            opts.message = properties.getMessage('transport', 'code').mail.pre + code + properties.getMessage('transport', 'code').mail.post
             break;
         case 'sms':
-            opts.message = properties.getMessage('transport', 'code').sms.pre_test + code + properties.getMessage('transport', 'code').sms.post_test
+            opts.message = properties.getMessage('transport', 'code').sms.pre + code + properties.getMessage('transport', 'code').sms.post
             break;
         default:
-            opts.message = properties.getMessage('transport', 'code').mail.pre_test + code + properties.getMessage('transport', 'code').mail.post_test
+            opts.message = properties.getMessage('transport', 'code').mail.pre + code + properties.getMessage('transport', 'code').mail.post
             break;
     }
     transport(opts, req, res, next);
@@ -190,13 +190,13 @@ exports.transport_test = function (req, res, next) {
     opts.message = '';
     switch (req.params.transport) {
         case 'mail':
-            opts.message = properties.getMessage('transport', 'test').mail.pre_test + req.params.uid + properties.getMessage('transport', 'test').mail.post_test
+            opts.message = properties.getMessage('transport', 'test').mail.pre + req.params.uid + properties.getMessage('transport', 'test').mail.post
             break;
         case 'sms':
-            opts.message = properties.getMessage('transport', 'test').sms.pre_test + req.params.uid + properties.getMessage('transport', 'test').sms.post_test
+            opts.message = properties.getMessage('transport', 'test').sms.pre + req.params.uid + properties.getMessage('transport', 'test').sms.post
             break;
         default:
-            opts.message = properties.getMessage('transport', 'test').mail.pre_test + req.params.uid + properties.getMessage('transport', 'test').mail.post_test
+            opts.message = properties.getMessage('transport', 'test').mail.pre + req.params.uid + properties.getMessage('transport', 'test').mail.post
             break;
     }
     transport(opts, req, res, next);
