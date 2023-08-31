@@ -54,7 +54,7 @@ exports.send_message = function (user, req, res, next) {
 	logger.debug("send gsm push ...");
         fcm.send(content, function (err, response) {
             if (err) {
-                logger.error("Problem to send a notification: "+err);
+                logger.error("Problem to send a notification to " + user.uid + ": " + err);
                 res.send({
                     "code": "Error",
                     "message": JSON.stringify(err)
