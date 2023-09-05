@@ -243,7 +243,7 @@ function available_transports(userTransports, method) {
  * Drop Users
  */
 exports.get_uids = function (req, res, next) {
-    UserPreferences.find({}, function (err, data) {
+    UserPreferences.find({}, { uid: 1 }, function (err, data) {
         if (err) logger.error(utils.getFileName(__filename)+' '+err);
         var result = [];
         for(up in data){
