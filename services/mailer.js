@@ -1,11 +1,11 @@
-var properties = require(__dirname + '/../properties/properties');
-var  utils = require(__dirname + '/../services/utils');
-var nodemailer = require("nodemailer");
-var smtpTransport = require('nodemailer-smtp-transport');
-var logger = require(__dirname + '/../services/logger').getInstance();
+import * as properties from '../properties/properties.js';
+import * as utils from '../services/utils.js';
+import * as nodemailer from "nodemailer";
+import smtpTransport from 'nodemailer-smtp-transport';
+import { getInstance } from '../services/logger.js'; const logger = getInstance();
 
 // create reusable transport method (opens pool of SMTP connections)
-var options = {
+const options = {
     // service: properties.esup.mailer.service,
     // auth: {
     //     user: properties.esup.mailer.address,
@@ -17,13 +17,13 @@ var options = {
 };
 
 if(properties.getEsupProperty('proxyUrl'))options.proxy=properties.getEsupProperty('proxyUrl');
-var transporter = nodemailer.createTransport(smtpTransport(options))
+const transporter = nodemailer.createTransport(smtpTransport(options))
     // setup e-mail data with unicode symbols
-var mailOptions = {
+const mailOptions = {
     from: properties.getEsupProperty('mailer').sender_name+" <"+properties.getEsupProperty('mailer').sender_mail+">", // sender address
 }
 
-exports.send_message = function(mail, opts, res) {
+export function send_message(mail, opts, res) {
     if (utils.check_transport_validity('mail', mail)) {
         mailOptions.text = opts.message;
         mailOptions.to = mail;

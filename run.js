@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-var server = require('./server/server');
+import * as server from './server/server.js';
 
 server.start();
 

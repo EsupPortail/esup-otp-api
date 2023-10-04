@@ -1,72 +1,75 @@
-var fs = fs = require('fs');
+import fs from 'fs';
+import * as utils from '../services/utils.js';
 
-var properties = {};
+const properties = {};
+
+const __dirname = utils.__dirname(import.meta.url);
 
 fs.readdirSync(__dirname).forEach(function (file) {
-    var strFile = file.split('.');
+    const strFile = file.split('.');
     if (strFile[strFile.length - 1] == 'json') {
         properties[file.split('.')[0]] = JSON.parse(fs.readFileSync(__dirname + '/' + file));
     }
 })
 
-exports.getMessages = function () {
+export function getMessages () {
     return properties.messages;
 }
 
-exports.getMessage = function (type, message) {
+export function getMessage (type, message) {
     return properties.messages[type][message];
 }
 
-exports.setMessage = function (type, message, value) {
+export function setMessage (type, message, value) {
     properties.messages[type][message] = value;
 }
 
-exports.getEsup = function () {
+export function getEsup () {
     return properties.esup;
 }
 
-exports.setEsup = function (data) {
+export function setEsup (data) {
     properties.esup = data;
 }
 
-exports.getEsupProperty = function (property) {
+export function getEsupProperty (property) {
     return properties.esup[property];
 }
 
-exports.setEsupProperty = function (property, value) {
+export function setEsupProperty (property, value) {
     properties.esup[property] = value;
 }
 
-exports.getMethod = function (method) {
+export function getMethod (method) {
     return properties.esup.methods[method];
 }
 
-exports.getMethodProperty = function (method, property) {
+export function getMethodProperty (method, property) {
     return properties.esup.methods[method][property];
 }
 
-exports.setMethodProperty = function (method, property, value) {
+export function setMethodProperty (method, property, value) {
     properties.esup.methods[method][property] = value;
 }
 
-exports.addMethodTransport = function (method, transport) {
-    var index = properties.esup.methods[method].transports.indexOf(transport);
+export function addMethodTransport (method, transport) {
+    const index = properties.esup.methods[method].transports.indexOf(transport);
     if (index < 0) {
         properties.esup.methods[method].transports.push(transport);
     }
 }
 
-exports.removeMethodTransport = function (method, transport) {
-    var index = properties.esup.methods[method].transports.indexOf(transport);
+export function removeMethodTransport (method, transport) {
+    const index = properties.esup.methods[method].transports.indexOf(transport);
     if (index >= 0) {
         properties.esup.methods[method].transports.splice(index, 1);
     }
 }
 
-exports.getProperties = function () {
+export function getProperties () {
     return properties;
 }
 
-exports.getProperty = function (property) {
+export function getProperty (property) {
     return properties[property];
 }

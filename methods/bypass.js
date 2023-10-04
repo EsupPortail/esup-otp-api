@@ -1,12 +1,13 @@
-var properties = require(__dirname + '/../properties/properties');
-var api_controller = require(__dirname + '/../controllers/api');
-var utils = require(__dirname + '/../services/utils');
-var restify = require('restify');
-var logger = require(__dirname + '/../services/logger').getInstance();
+import * as properties from '../properties/properties.js';
+import * as utils from '../services/utils.js';
+import { apiDb } from '../controllers/api.js';
 
-exports.name = "bypass";
+import { getInstance } from '../services/logger.js';
+const logger = getInstance();
 
-exports.send_message = function(user, req, res, next) {
+export const name = "bypass";
+
+export function send_message(user, req, res, next) {
     res.status(404);
     res.send({
         "code": "Error",
@@ -21,12 +22,12 @@ exports.send_message = function(user, req, res, next) {
  * @param res response HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
-exports.verify_code = function(user, req, res, callbacks) {
-    logger.debug(utils.getFileName(__filename)+' '+"verify_code: "+user.uid);
+export function verify_code(user, req, res, callbacks) {
+    logger.debug(utils.getFileNameFromUrl(import.meta.url)+' '+"verify_code: "+user.uid);
     if (user.bypass.codes) {
-        var checkOtp = false;
-        var codes = user.bypass.codes;
-        for (code in codes) {
+        let checkOtp = false;
+        const codes = user.bypass.codes;
+        for (const code in codes) {
             if (user.bypass.codes[code] == req.params.otp) {
                 checkOtp = true;
                 codes.splice(code, 1);
@@ -35,8 +36,8 @@ exports.verify_code = function(user, req, res, callbacks) {
             }
         }
         if (checkOtp) {
-            user.save( function() {
-                logger.info(utils.getFileName(__filename)+" Valid credentials by "+user.uid);
+            apiDb.save_user(user, () => {
+                logger.info(utils.getFileNameFromUrl(import.meta.url)+" Valid credentials by "+user.uid);
                 res.status(200);
                 res.send({
                     "code": "Ok",
@@ -44,29 +45,23 @@ exports.verify_code = function(user, req, res, callbacks) {
                 });
             });
         } else {
-            var next = callbacks.pop();
+            const next = callbacks.pop();
             next(user, req, res, callbacks);
         }
     } else {
-        var next = callbacks.pop();
+        const next = callbacks.pop();
         next(user, req, res, callbacks);
     }
 }
 
-exports.generate_method_secret = function(user, req, res, next) {
-    var codes = new Array();
-    for (var it = 0; it < properties.getMethod('bypass').codes_number; it++) {
-        switch (properties.getMethod('bypass').code_type) {
-            case "string":
-                codes.push(utils.generate_string_code(properties.getMethod('bypass').code_length));
-                break;
-            case "digit":
-                codes.push(utils.generate_digit_code(properties.getMethod('bypass').code_length));
-                break;
-            default:
-                codes.push(utils.generate_string_code(properties.getMethod('bypass').code_length));
-                break;
-        }
+export function generate_method_secret(user, req, res, next) {
+    const codes = new Array();
+    
+    const bypassProperties = properties.getMethod('bypass');
+    const code_length = bypassProperties.code_length;
+    // on emplit `codes` avec `codes_number` codes différents
+    for (let it = 0; it < bypassProperties.codes_number; it++) {
+		codes.push(utils.generate_code_of_type(code_length, bypassProperties.code_type));
     }
     user.bypass.codes = codes;
     logger.log('archive', {
@@ -79,7 +74,7 @@ exports.generate_method_secret = function(user, req, res, next) {
             }
         ]
     });
-    user.save( function() {
+    apiDb.save_user(user, () => {
         res.status(200);
         res.send({
             code: "Ok",
@@ -90,10 +85,10 @@ exports.generate_method_secret = function(user, req, res, next) {
     });
 }
 
-exports.delete_method_secret = function(user, req, res, next) {
+export function delete_method_secret(user, req, res, next) {
     user.bypass.active = false;
     user.bypass.codes = [];
-    user.save( function() {
+    apiDb.save_user(user, () => {
         res.status(200);
         res.send({
             "code": "Ok",
@@ -102,7 +97,7 @@ exports.delete_method_secret = function(user, req, res, next) {
     });
 }
 
-exports.get_method_secret = function(user, req, res, next) {
+export function get_method_secret(user, req, res, next) {
     res.status(404);
     res.send({
         "code": "Error",
@@ -110,9 +105,9 @@ exports.get_method_secret = function(user, req, res, next) {
     });
 }
 
-exports.user_activate = function(user, req, res, next) {
+export function user_activate(user, req, res, next) {
     user.bypass.active = true;
-    user.save( function() {
+    apiDb.save_user(user, () => {
         res.status(200);
         res.send({
             "code": "Ok",
@@ -121,7 +116,7 @@ exports.user_activate = function(user, req, res, next) {
     });
 }
 
-exports.confirm_user_activate = function(user, req, res, next) {
+export function confirm_user_activate(user, req, res, next) {
     res.status(404);
     res.send({
         "code": "Error",
@@ -129,9 +124,9 @@ exports.confirm_user_activate = function(user, req, res, next) {
     });
 }
 
-exports.user_deactivate = function(user, req, res, next) {
+export function user_deactivate(user, req, res, next) {
     user.bypass.active = false;
-    user.save( function() {
+    apiDb.save_user(user, () => {
         res.status(200);
         res.send({
             "code": "Ok",
@@ -140,7 +135,7 @@ exports.user_deactivate = function(user, req, res, next) {
     });
 }
 
-exports.admin_activate = function(req, res, next) {
+export function admin_activate(req, res, next) {
     res.status(404);
     res.send({
         "code": "Error",
@@ -148,7 +143,7 @@ exports.admin_activate = function(req, res, next) {
     });
 }
 
-exports.user_desync = function (user, req, res, next) {
+export function user_desync(user, req, res, next) {
     res.status(404);
     res.send({
         "code": "Error",

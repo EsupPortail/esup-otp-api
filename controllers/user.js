@@ -1,28 +1,32 @@
-var properties = require(__dirname + '/../properties/properties');
-var utils = require(__dirname + '/../services/utils');
-var userDb;
+import * as properties from '../properties/properties.js';
+import * as utils from '../services/utils.js';
 
-var logger = require(__dirname + '/../services/logger').getInstance();
+import { getInstance } from '../services/logger.js';
+const logger = getInstance();
 
-exports.initialize= function(callback) {
-        if (properties.getEsupProperty('apiDb')) {
-        userDb = require(__dirname + '/../databases/user/' + properties.getEsupProperty('userDb'));
-        userDb.initialize(callback);
-        exports.userDb = userDb;
-    } else logger.error(utils.getFileName(__filename)+' '+"Unknown apiDb");
+export let userDb;
+
+export function initialize(callback) {
+    if (properties.getEsupProperty('userDb')) {
+        import('../databases/user/' + properties.getEsupProperty('userDb') + '.js')
+            .then((userDbModule) => {
+                userDb = userDbModule;
+                userDb.initialize(callback);
+            })
+    } else logger.error(utils.getFileNameFromUrl(import.meta.url) + ' ' + "Unknown userDb");
 }
 
-exports.user_exists= function(req, res, callback){
+export function user_exists(req, res, callback){
     userDb.find_user(req, res, function(user){
         if (typeof(callback) === "function") callback(user);
     })
 }
 
 
-exports.get_available_transports = function(req, res, callback) {
+export function get_available_transports (req, res, callback) {
     userDb.find_user(req, res, function(user) {
-        var response = {};
-        var result = {};
+        const response = {};
+        const result = {};
         if (user[properties.getEsupProperty(properties.getEsupProperty('userDb')).transport.mail]) result.mail = utils.cover_string(user[properties.getEsupProperty(properties.getEsupProperty('userDb')).transport.mail], 4, 5);
         if (user[properties.getEsupProperty(properties.getEsupProperty('userDb')).transport.sms]) result.sms = utils.cover_string(user[properties.getEsupProperty(properties.getEsupProperty('userDb')).transport.sms], 2, 2);
         if (typeof(callback) === "function") callback(result);
@@ -39,20 +43,20 @@ exports.get_available_transports = function(req, res, callback) {
 
 
 
-exports.send_sms = function(req, res, callback) {
+export function send_sms (req, res, callback) {
     userDb.find_user(req, res, function(user) {
         if (typeof(callback) === "function") callback(user[properties.getEsupProperty(properties.getEsupProperty('userDb')).transport.sms]);
     });
 }
 
 
-exports.send_mail = function(req, res, callback) {
+export function send_mail (req, res, callback) {
     userDb.find_user(req, res, function(user) {
         if (typeof(callback) === "function") callback(user[properties.getEsupProperty(properties.getEsupProperty('userDb')).transport.mail]);
     });
 }
 
-exports.update_transport = function(req, res, next) {
+export function update_transport (req, res, next) {
     userDb.find_user(req, res, function(user) {
         user[properties.getEsupProperty(properties.getEsupProperty('userDb')).transport[req.params.transport]]=req.params.new_transport;
         userDb.save_user(user, function(){
@@ -77,7 +81,7 @@ exports.update_transport = function(req, res, next) {
     });
 }
 
-exports.delete_transport = function(req, res, next) {
+export function delete_transport (req, res, next) {
     userDb.find_user(req, res, function(user) {
         user[properties.getEsupProperty(properties.getEsupProperty('userDb')).transport[req.params.transport]]="";
         logger.log('archive', {
@@ -108,7 +112,7 @@ exports.delete_transport = function(req, res, next) {
  * @param res response HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
-exports.remove_user=function(uid, callback) {
+export function remove_user(uid, callback) {
     userDb.remove_user(uid, callback);
 }
 
@@ -119,7 +123,7 @@ exports.remove_user=function(uid, callback) {
  * @param res response HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
-exports.create_user=function(uid, callback) {
+export function create_user(uid, callback) {
     userDb.create_user(uid, callback);
 }
 
@@ -130,6 +134,6 @@ exports.create_user=function(uid, callback) {
  * @param res response HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
-exports.save_user=function(user, callback) {
+export function save_user(user, callback) {
     userDb.save_user(user, callback);
 }

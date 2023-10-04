@@ -1,4 +1,4 @@
-exports.schema= {
+export const schema = {
     uid: {
         type: String,
         required: true,

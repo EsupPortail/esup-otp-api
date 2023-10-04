@@ -1,61 +1,64 @@
-var userDb_controller = require(__dirname + '/../../controllers/user');
-var properties = require(__dirname + '/../../properties/properties');
-var utils = require(__dirname + '/../../services/utils');
-var methods;
-var mongoose = require('mongoose');
-let connection;
+import * as userDb_controller from '../../controllers/user.js';
+import * as properties from '../../properties/properties.js';
+import * as utils from '../../services/utils.js';
+import * as mongoose from 'mongoose';
+import {schema as userPreferencesSchema} from './userPreferencesSchema.js';
+import {schema as apiPreferencesSchema} from './apiPreferencesSchema.js';
 
-const logger = require(__dirname + '/../../services/logger').getInstance();
+import { getInstance } from '../../services/logger.js';
+const logger = getInstance();
 
-exports.initialize = function (callback) {
-    const db_url = 'mongodb://' + properties.getEsupProperty('mongodb').address + '/' + properties.getEsupProperty('mongodb').db;
+export function initialize(callback) {
+	const db_url = 'mongodb://' + properties.getEsupProperty('mongodb').address + '/' + properties.getEsupProperty('mongodb').db;
+	mongoose.createConnection(db_url).asPromise()
+		.then((connection) => {
+			initiatilize_api_preferences(connection);
+			initiatilize_user_model(connection);
 
-    connection = mongoose.createConnection(db_url, function (error) {
-        if (error) {
-            logger.error(utils.getFileName(__filename)+' '+error);
-            return;
-        }
-
-        initiatilize_api_preferences();
-        initiatilize_user_model();
-
-        methods = require(__dirname + '/../../methods/methods');
-
-        if (typeof(callback) === "function") {
-            callback();
-        }
-        else {
-            logger.error(utils.getFileName(__filename)+' '+`Type of provided callback is not 'function' ; got '${typeof(callback)}'`);
-        }
-    });
+			if (typeof (callback) === "function") {
+				callback();
+			}
+			else {
+				logger.error(utils.getFileNameFromUrl(import.meta.url) + ' ' + `Type of provided callback is not 'function' ; got '${typeof (callback)}'`);
+			}
+		})
+		.catch((error) => {
+			logger.error(error);
+		});
 }
 
-var Schema = mongoose.Schema;
 
-/** Api Preferences **/
-var ApiPreferences;
+/** 
+ * Api Preferences
+ * @type mongoose.Model
+ */
+let ApiPreferences;
 
-function initiatilize_api_preferences() {
-    const ApiPreferencesSchema = new Schema(require(__dirname + '/apiPreferencesSchema').schema);
+/**
+ * @param { mongoose.Connection } connection
+ */
+function initiatilize_api_preferences(connection) {
+	const ApiPreferencesSchema = new mongoose.Schema(apiPreferencesSchema);
 
-    connection.model('ApiPreferences', ApiPreferencesSchema, 'ApiPreferences');
+	connection.model('ApiPreferences', ApiPreferencesSchema, 'ApiPreferences');
 
-    ApiPreferences = connection.model('ApiPreferences');
-    ApiPreferences.find({}).exec(function (err, data) {
-        if (data[0]) {
-            const prefs = properties.getEsupProperty('methods');
-            for(const p in prefs){
-                prefs[p].activate = data[0][p].activate;
-                prefs[p].transports = data[0][p].transports;
-            }
-            properties.setEsupProperty('methods', prefs);
-            update_api_preferences();
-        }
-        else{
-            logger.info(utils.getFileName(__filename)+' '+`No existing api prefs data : creating.`);
-            create_api_preferences();
-        }
-    });
+	ApiPreferences = connection.model('ApiPreferences');
+	ApiPreferences.findOne({}).exec()
+		.then((existingApiPrefsData) => {
+			if (existingApiPrefsData) {
+				const prefs = properties.getEsupProperty('methods');
+				for (const p in prefs) {
+					prefs[p].activate = existingApiPrefsData[p].activate;
+					prefs[p].transports = existingApiPrefsData[p].transports;
+				}
+				properties.setEsupProperty('methods', prefs);
+				update_api_preferences();
+			}
+			else {
+				logger.info(utils.getFileNameFromUrl(import.meta.url) + ' ' + 'No existing api prefs data : creating.');
+				create_api_preferences();
+			}
+		});
 }
 
 /**
@@ -65,37 +68,45 @@ function initiatilize_api_preferences() {
  * @param res response HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
-exports.update_api_preferences = update_api_preferences;
-
-function update_api_preferences() {
-    ApiPreferences.find({}).exec(function (err, data) {
-        if (data[0]) {
-            var prefs = properties.getEsupProperty('methods');
-            for(const p in prefs){
-                data[0][p]=prefs[p];
-            }
-            var api_preferences = data[0];
-            api_preferences.save(function () {
-                logger.info(utils.getFileName(__filename)+' '+"Api Preferences updated");
-            });
-        }
-    });
+export function update_api_preferences() {
+	ApiPreferences.findOne({}).exec()
+		.then((data) => {
+			if (data) {
+				const prefs = properties.getEsupProperty('methods');
+				for (const p in prefs) {
+					data[p] = prefs[p];
+				}
+				const api_preferences = data;
+				api_preferences.save().then(() => {
+					logger.info(utils.getFileNameFromUrl(import.meta.url) + ' ' + "Api Preferences updated");
+				});
+			}
+		});
 }
 
 function create_api_preferences() {
-    ApiPreferences.remove({}, function (err) {
-        if (err) logger.error(utils.getFileName(__filename)+' '+err);
-        var api_preferences = new ApiPreferences(properties.getEsupProperty('methods'));
-        api_preferences.save(function () {
-            logger.info(utils.getFileName(__filename)+' '+"Api Preferences created");
-        });
-    });
+	ApiPreferences.deleteMany({}).exec()
+		.catch((err) => {
+			logger.error(err);
+		})
+		.finally(() => {
+			const api_preferences = new ApiPreferences(properties.getEsupProperty('methods'));
+			api_preferences.save().then(() => {
+				logger.info(utils.getFileNameFromUrl(import.meta.url) + ' ' + "Api Preferences created");
+			});
+		});
 }
-/** User Model **/
-var UserPreferences;
+/** 
+ * User Model 
+ * @type mongoose.Model
+ */
+let UserPreferences;
 
-function initiatilize_user_model() {
-    var UserPreferencesSchema = new Schema(require(__dirname + '/userPreferencesSchema').schema);
+/**
+ * @param { mongoose.Connection } connection
+ */
+function initiatilize_user_model(connection) {
+    const UserPreferencesSchema = new mongoose.Schema(userPreferencesSchema);
     connection.model('UserPreferences', UserPreferencesSchema, 'UserPreferences');
     UserPreferences = connection.model('UserPreferences');
 }
@@ -107,59 +118,38 @@ function initiatilize_user_model() {
  * @param res response HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
-exports.find_user = function (req, res, callback) {
-    UserPreferences.find({
-        'uid': req.params.uid
-    }).exec(function (err, data) {
-        if (data[0]) {
-            if (typeof(callback) === "function") callback(data[0]);
-        } else {
-            userDb_controller.user_exists(req, res, function (user) {
-                if (user) {
-                    create_user(user.uid, callback);
-                } else {
-                    res.status(404);
-                    res.send({
-                        "code": "Error",
-                        "message": properties.getMessage('error','user_not_found')
-                    });
-                }
-            });
-        }
-    });
+export function find_user(req, res, callback) {
+	UserPreferences.findOne({ 'uid': req.params.uid }).exec()
+		.then((userPreferences) => {
+			if (userPreferences) {
+				if (typeof (callback) === "function") callback(userPreferences);
+			} else {
+				userDb_controller.user_exists(req, res, function(user) {
+					if (user) {
+						create_user(user.uid, callback);
+					} else {
+						res.status(404);
+						res.send({
+							"code": "Error",
+							"message": properties.getMessage('error', 'user_not_found')
+						});
+					}
+				});
+			}
+		});
 }
 
 /**
  * Sauve l'utilisateur
- *
- * @param req requete HTTP contenant le nom la personne recherchee
- * @param res response HTTP
- * @param next permet d'appeler le prochain gestionnaire (handler)
  */
-exports.save_user = function (user, callback) {
-    user.save(function () {
-        if (typeof(callback) === "function") callback();
-    })
+export function save_user(user, callback) {
+	user.save().then(() => {
+		if (typeof (callback) === "function") callback(user);
+	})
 }
 
-/**
- * Crée l'utilisateur
- *
- * @param req requete HTTP
- * @param res response HTTP
- * @param next permet d'appeler le prochain gestionnaire (handler)
- */
-exports.create_user = function (uid, callback) {
-    create_user(uid, callback);
-}
-
-function create_user(uid, callback) {
-    var new_user = new UserPreferences({
-        uid: uid
-    });
-    new_user.save(function () {
-        if (typeof(callback) === "function") callback(new_user);
-    })
+export function create_user(uid, callback) {
+	save_user(new UserPreferences({ uid: uid }), callback);
 }
 
 /**
@@ -169,15 +159,17 @@ function create_user(uid, callback) {
  * @param res response HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
-exports.remove_user = function (uid, callback) {
-    UserPreferences.remove({uid: uid}, function (err, data) {
-        if (err) logger.error(err);
-        if (typeof(callback) === "function") callback(data);
-    });
+export function remove_user(uid, callback) {
+	UserPreferences.deleteOne({ uid: uid }).exec()
+		.catch((err) => {
+			logger.error(err);
+		}).finally((data) => {
+			if (typeof (callback) === "function") callback(data);
+		});
 }
 
-exports.parse_user = function (user) {
-    var parsed_user = {};
+export function parse_user(user) {
+    const parsed_user = {};
     parsed_user.codeRequired = false;
     parsed_user.waitingFor = false;
     if (properties.getMethod('totp').activate) {
@@ -257,36 +249,35 @@ function available_transports(userTransports, method) {
     return available_transports;
 }
 
-/**
- * Drop Users
- */
-exports.get_uids = function (req, res, next) {
-    UserPreferences.find({}, { uid: 1 }, function (err, data) {
-        if (err) logger.error(utils.getFileName(__filename)+' '+err);
-        var result = [];
-        for(up in data){
-            result.push(data[up].uid);
-        }
 
-        res.status(200);
-        res.send({
-            code:"Ok",
-            uids:result
-        });
-    });
-};
+export function get_uids(req, res, next) {
+	UserPreferences.find({}, { uid: 1 }).exec()
+		.then((data) => {
+			const result = data.map((uid) => uid.uid);
+
+			res.status(200);
+			res.send({
+				code: "Ok",
+				uids: result
+			});
+		})
+		.catch((err) => {
+			logger.error(err);
+		});
+}
 
 /**
  * Drop Users
  */
-exports.drop = function (req, res, next) {
-    UserPreferences.remove({}, function (err, data) {
-        if (err) {
-            logger.error(utils.getFileName(__filename)+' '+err);
-        }
-        logger.debug('users removed');
+export function drop(req, res, next) {
+	UserPreferences.deleteMany({}).exec()
+		.then((data) => {
+			logger.debug('users removed');
 
-        res.status(200);
-        res.send(data);
-    });
-};
+			res.status(200);
+			res.send(data);
+		})
+		.catch((err) => {
+			logger.error(err);
+		});
+}

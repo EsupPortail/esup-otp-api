@@ -1,6 +1,6 @@
-var properties = require(__dirname + '/../../properties/properties');
+import * as properties from '../../properties/properties.js';
 
-exports.schema = {
+export const schema = {
     uid: {
         type: String,
         required: true,

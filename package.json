@@ -8,12 +8,12 @@
     "url": "git://github.com/EsupPortail/esup-otp-api.git"
   },
   "license": "MIT",
+  "type": "module",
   "dependencies": {
-    "chai": "^3.5.0",
-    "crypto-js": "^3.1.6",
+    "crypto-js": "^4.1.1",
     "geoip-lite": "^1.4.2",
     "ldapjs": "^1.0.0",
-    "mongoose": "^6.6.0",
+    "mongoose": "^7.6.1",
     "mysql": "^2.10.2",
     "fcm-node": "^1.6.1",
     "nodemailer": "^6.7.8",
@@ -22,12 +22,17 @@
     "otplib": "^12.0.1",
     "qrcode": "^1.5.1",
     "request": "^2.69.0",
-    "restify": "^4.3.4",
+    "restify-cors-middleware2": "2.2.1",
+    "restify": "^11.1.0",
     "socket.io": "^4.5.2",
     "socket.io-client": "^4.5.2",
     "winston": "^3.10.0"
   },
   "scripts": {
     "start": "nohup node run &"
+  },
+  "devDependencies": {
+    "eslint": "^8.50.0",
+    "mocha": "^10.2.0"
   }
 }

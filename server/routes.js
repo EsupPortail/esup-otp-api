@@ -1,29 +1,33 @@
-var properties = require(__dirname + '/../properties/properties');
-var utils = require(__dirname + '/../services/utils');
-var validator = require(__dirname + '/../services/validator');
-var api_controller = require(__dirname + '/../controllers/api');
-var userDb_controller = require(__dirname + '/../controllers/user');
+import * as properties from '../properties/properties.js';
+import * as utils from '../services/utils.js';
+import * as validator from '../services/validator.js';
+import * as api_controller from '../controllers/api.js';
+import * as userDb_controller from '../controllers/user.js';
+import restify from 'restify';
 
-var logger = require(__dirname + '/../services/logger').getInstance();
-var fs = require('fs');
+import { getInstance } from '../services/logger.js'; const logger = getInstance();
 
-exports.initialize = function (server, callback) {
-    logger.info(utils.getFileName(__filename)+' '+'Initializing Routes');
+/**
+ * @param { restify.Server } server
+ * @param { Function } callback 
+ */
+export function initialize(server, callback) {
+    logger.info(utils.getFileNameFromUrl(import.meta.url)+' '+'Initializing Routes');
 
-    logger.info(utils.getFileName(__filename)+' '+'Initializing "unprotected" routes');
+    logger.info(utils.getFileNameFromUrl(import.meta.url)+' '+'Initializing "unprotected" routes');
 
     // goal: simply let esup-otp-cas get /js/socket.io.js from esup-otp-api (avoid use of cdn)
-    server.get("/js/socket.io.js", function(req, res, next){ 
-       var file = __dirname + "/../node_modules/socket.io-client/dist/socket.io.min.js";
-        var filestream = fs.createReadStream(file);
-       filestream.pipe(res);
-    });
+    const socketIoAbsoluteDistDirectory = utils.relativeToAbsolutePath(import.meta.url, '../node_modules/socket.io-client/dist/');
+	server.get("/js/socket.io.js", restify.plugins.serveStatic({
+		directory: socketIoAbsoluteDistDirectory,
+		file: 'socket.io.min.js',
+	}));
     
     //app
     server.get("/users/:uid/methods/:method/:loginTicket/:hash", validator.check_hash, api_controller.check_accept_authentication);
     server.post("/users/:uid/methods/:method/:loginTicket/:tokenSecret", api_controller.accept_authentication);
-    server.post("/users/:uid/methods/:method/transports/push/:lt/:hash", validator.check_hash, api_controller.send_message_push);
-    server.post("/users/:uid/methods/:method/transports/push/:hash", validator.check_hash, api_controller.send_message_push);
+    server.post("/users/:uid/methods/:method/transports/push/:lt/:hash", validator.check_hash, api_controller.send_message);
+    server.post("/users/:uid/methods/:method/transports/push/:hash", validator.check_hash, api_controller.send_message);
     server.post("/users/:uid/methods/:method/activate/:activation_code/:gcm_id/:platform/:manufacturer/:model", api_controller.confirm_activate_method);
     server.post("/users/:uid/methods/:method/refresh/:tokenSecret/:gcm_id/:gcm_id_refreshed", api_controller.refresh_gcm_id_method);
     server.del("/users/:uid/methods/:method/:tokenSecret", api_controller.desync);
@@ -38,45 +42,45 @@ exports.initialize = function (server, callback) {
     server.get("/users/:uid/:hash", validator.check_hash, api_controller.get_user_infos);
     server.post("/users/:uid/methods/:method/transports/:transport/:hash", validator.check_hash, api_controller.send_message);
 
-    logger.info(utils.getFileName(__filename)+' '+'Initializing protected routes');
+    logger.info(utils.getFileNameFromUrl(import.meta.url)+' '+'Initializing protected routes');
     //api_api_password
-    server.get("/protected/methods/:api_password", validator.check_api_password, api_controller.get_methods);
-    server.get("/protected/users/:uid/transports/:transport/test/:api_password", validator.check_api_password, api_controller.transport_test);
-    server.get("/protected/users/:uid/methods/:method/secret/:api_password", validator.check_api_password, api_controller.get_method_secret);
-    server.put("/protected/users/:uid/methods/:method/deactivate/:api_password", validator.check_api_password, api_controller.deactivate_method);
-    server.put("/protected/users/:uid/methods/:method/activate/:api_password", validator.check_api_password, api_controller.activate_method);
-    server.put("/protected/users/:uid/transports/:transport/:new_transport/:api_password", validator.check_api_password, userDb_controller.update_transport);
-    server.post("/protected/users/:uid/methods/:method/secret/:api_password", validator.check_api_password, api_controller.generate_method_secret);
-    server.post("/protected/users/:uid/:otp/:api_password", validator.check_api_password, api_controller.verify_code);
-    server.del("/protected/users/:uid/transports/:transport/:api_password", validator.check_api_password, userDb_controller.delete_transport);
+    server.get("/protected/methods", validator.check_api_password, api_controller.get_methods);
+    server.get("/protected/users/:uid/transports/:transport/test", validator.check_api_password, api_controller.transport_test);
+    server.get("/protected/users/:uid/methods/:method/secret", validator.check_api_password, api_controller.get_method_secret);
+    server.put("/protected/users/:uid/methods/:method/deactivate", validator.check_api_password, api_controller.deactivate_method);
+    server.put("/protected/users/:uid/methods/:method/activate", validator.check_api_password, api_controller.activate_method);
+    server.put("/protected/users/:uid/transports/:transport/:new_transport", validator.check_api_password, userDb_controller.update_transport);
+    server.post("/protected/users/:uid/methods/:method/secret", validator.check_api_password, api_controller.generate_method_secret);
+    server.post("/protected/users/:uid/:otp/:api_password?", validator.check_api_password, api_controller.verify_code);
+    server.del("/protected/users/:uid/transports/:transport", validator.check_api_password, userDb_controller.delete_transport);
 
-    logger.info(utils.getFileName(__filename)+' '+'Initializing admin routes');
+    logger.info(utils.getFileNameFromUrl(import.meta.url)+' '+'Initializing admin routes');
     // routes DEV/ADMIN uniquement
     //api_api_password
-    server.get("/admin/users/:uid/:api_password", validator.check_api_password, api_controller.get_user);
-    server.get("/admin/users/:api_password",validator.check_api_password, api_controller.get_uids);
-    server.get("/admin/users/:uid/methods/:api_password", validator.check_api_password, api_controller.get_activate_methods);
-    server.put("/admin/methods/:method/transports/:transport/deactivate/:api_password", validator.check_api_password, api_controller.deactivate_method_transport);
-    server.put("/admin/methods/:method/transports/:transport/activate/:api_password", validator.check_api_password, api_controller.activate_method_transport);
-    server.put("/admin/methods/:method/deactivate/:api_password", validator.check_api_password, api_controller.deactivate_method_admin);
-    server.put("/admin/methods/:method/activate/:api_password", validator.check_api_password, api_controller.activate_method_admin);
-    server.del("/admin/users/:uid/methods/:method/secret/:api_password", validator.check_api_password, api_controller.delete_method_secret);
+    server.get("/admin/users/:uid", validator.check_api_password, api_controller.get_user);
+    server.get("/admin/users", validator.check_api_password, api_controller.get_uids);
+    server.get("/admin/users/:uid/methods", validator.check_api_password, api_controller.get_activate_methods);
+    server.put("/admin/methods/:method/transports/:transport/deactivate", validator.check_api_password, api_controller.deactivate_method_transport);
+    server.put("/admin/methods/:method/transports/:transport/activate", validator.check_api_password, api_controller.activate_method_transport);
+    server.put("/admin/methods/:method/deactivate", validator.check_api_password, api_controller.deactivate_method_admin);
+    server.put("/admin/methods/:method/activate", validator.check_api_password, api_controller.activate_method_admin);
+    server.del("/admin/users/:uid/methods/:method/secret", validator.check_api_password, api_controller.delete_method_secret);
 
-    logger.info(utils.getFileName(__filename)+' '+'Initializing test routes');
+    logger.info(utils.getFileNameFromUrl(import.meta.url)+' '+'Initializing test routes');
     //tests routes
-    server.put("/test/auto_create/activate/:api_password", validator.check_api_password, (req, res, next) => {
+    server.put("/test/auto_create/activate/", validator.check_api_password, (req, res, next) => {
         properties.setEsupProperty('auto_create_user', true);
         res.send({
             code: 'Ok'
         });
     });
-    server.put("/test/auto_create/deactivate/:api_password", validator.check_api_password, (req, res, next) => {
+    server.put("/test/auto_create/deactivate/", validator.check_api_password, (req, res, next) => {
         properties.setEsupProperty('auto_create_user', false);
         res.send({
             code: 'Ok'
         });
     });
-    server.post("/test/users/:uid/:api_password", validator.check_api_password, (req, res, next) => {
+    server.post("/test/users/:uid/", validator.check_api_password, (req, res, next) => {
         userDb_controller.create_user(req.params.uid, function () {
             api_controller.create_user(req.params.uid, function () {
                 res.send({
@@ -85,7 +89,7 @@ exports.initialize = function (server, callback) {
             })
         })
     });
-    server.del("/test/users/:uid/:api_password", validator.check_api_password, (req, res, next) => {
+    server.del("/test/users/:uid/", validator.check_api_password, (req, res, next) => {
         userDb_controller.remove_user(req.params.uid, function () {
             api_controller.remove_user(req.params.uid, function () {
                 res.send({
@@ -95,5 +99,5 @@ exports.initialize = function (server, callback) {
         })
     });
     if (typeof(callback) === "function") callback(server);
-    logger.info(utils.getFileName(__filename)+' '+'Routes initialized');
+    logger.info(utils.getFileNameFromUrl(import.meta.url)+' '+'Routes initialized');
 }

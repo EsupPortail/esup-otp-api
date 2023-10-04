@@ -1,28 +1,18 @@
-var properties = require(__dirname + '/../properties/properties');
-var api_controller = require(__dirname + '/../controllers/api');
-var qrcode = require('qrcode');
-var restify = require('restify');
-var utils = require(__dirname + '/../services/utils');
-var logger = require(__dirname + '/../services/logger').getInstance();
-const { authenticator } = require('otplib');
+import * as properties from '../properties/properties.js';
+import * as qrcode from 'qrcode';
+import * as utils from '../services/utils.js';
+import { apiDb } from '../controllers/api.js';
+import { getInstance } from '../services/logger.js'; const logger = getInstance();
+import { authenticator } from 'otplib';
 
-exports.name = "totp";
+export const name = "totp";
 
-exports.send_message = function(user, req, res, next) {
-    switch (req.params.transport) {
-        case 'mail':
-            user.totp.window = properties.getMethod('totp').mail_window;
-            break;
-        case 'sms':
-            user.totp.window = properties.getMethod('totp').sms_window;
-            break;
-        default:
-            user.totp.window = properties.getMethod('totp').default_window;
-            break;
-    }
-    user.save( function() {
-        api_controller.transport_code(authenticator.generate(user.totp.secret.base32), req, res, next);
-    })
+export function send_message(user, req, res, next) {
+	res.status(404);
+	res.send({
+		"code": "Error",
+		"message": properties.getMessage('error', 'unvailable_method_operation')
+	});
 }
 
 /**
@@ -34,33 +24,33 @@ exports.send_message = function(user, req, res, next) {
  * @param res response HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
-exports.verify_code = function(user, req, res, callbacks) {
-    logger.debug(utils.getFileName(__filename)+' '+"verify_code: "+user.uid);
+export function verify_code(user, req, res, callbacks) {
+    logger.debug(utils.getFileNameFromUrl(import.meta.url)+' '+"verify_code: "+user.uid);
     if (user.totp.secret.base32) {
-        var isValid = authenticator.verify({"token":req.params.otp, "secret":user.totp.secret.base32});
+        const isValid = authenticator.verify({"token":req.params.otp, "secret":user.totp.secret.base32});
         if (isValid) {
             user.totp.window = properties.getMethod('totp').default_window;
-            user.save( function() {
-                logger.info(utils.getFileName(__filename)+" Valid credentials by "+user.uid);
+            apiDb.save_user(user, () => {
+                logger.info(utils.getFileNameFromUrl(import.meta.url)+" Valid credentials by "+user.uid);
                 res.send({
                     "code": "Ok",
                     "message": properties.getMessage('success','valid_credentials')
                 });
             });
         } else {
-            var next = callbacks.pop();
+            const next = callbacks.pop();
             next(user, req, res, callbacks);
         }
     } else {
-        var next = callbacks.pop();
+        const next = callbacks.pop();
         next(user, req, res, callbacks);
     }
 }
 
 
-exports.generate_method_secret = function(user, req, res, next) {
-    var secret_base32 = authenticator.generateSecret(16);
-    var secret_otpauth_url=authenticator.keyuri(user.uid, properties.getMethod('totp').name, secret_base32);
+export function generate_method_secret(user, req, res, next) {
+    const secret_base32 = authenticator.generateSecret(16);
+    const secret_otpauth_url=authenticator.keyuri(user.uid, properties.getMethod('totp').name, secret_base32);
     user.totp.secret={base32:secret_base32,otpauth_url:secret_otpauth_url};
     logger.log('archive', {
         message: [
@@ -72,10 +62,7 @@ exports.generate_method_secret = function(user, req, res, next) {
             }
         ]
     });
-    user.save( function() {    
-	var response = {};
-        response.code = 'Ok';
-        response.message = user.totp.secret.base32;
+    apiDb.save_user(user, () => {
         qrcode.toDataURL(user.totp.secret.otpauth_url, (err, imageUrl) => {
             if (err) {
                 logger.error('Error with QR');
@@ -92,10 +79,10 @@ exports.generate_method_secret = function(user, req, res, next) {
     });
 }
 
-exports.delete_method_secret = function(user, req, res, next) {
+export function delete_method_secret(user, req, res, next) {
     user.totp.active = false;
     user.totp.secret = {};
-    user.save( function() {
+    apiDb.save_user(user, () => {
         res.status(200);
         res.send({
             "code": "Ok",
@@ -104,7 +91,7 @@ exports.delete_method_secret = function(user, req, res, next) {
     });
 }
 
-exports.get_method_secret = function(user, req, res, next) {
+export function get_method_secret(user, req, res, next) {
   res.status(404);
   res.send({
         "code": "Error",
@@ -114,9 +101,9 @@ exports.get_method_secret = function(user, req, res, next) {
 
 
 
-exports.user_activate = function(user, req, res, next) {
+export function user_activate(user, req, res, next) {
     user.totp.active = true;
-    user.save( function() {
+    apiDb.save_user(user, () => {
         res.status(200);
         res.send({
             "code": "Ok",
@@ -125,7 +112,7 @@ exports.user_activate = function(user, req, res, next) {
     });
 }
 
-exports.confirm_user_activate = function(user, req, res, next) {
+export function confirm_user_activate(user, req, res, next) {
     res.status(404);
     res.send({
         "code": "Error",
@@ -133,9 +120,9 @@ exports.confirm_user_activate = function(user, req, res, next) {
     });
 }
 
-exports.user_deactivate = function(user, req, res, next) {
+export function user_deactivate(user, req, res, next) {
     user.totp.active = false;
-    user.save( function() {
+    apiDb.save_user(user, () => {
         res.status(200);
         res.send({
             "code": "Ok",
@@ -144,7 +131,7 @@ exports.user_deactivate = function(user, req, res, next) {
     });
 }
 
-exports.admin_activate = function(req, res, next) {
+export function admin_activate(req, res, next) {
     res.status(404);
     res.send({
         "code": "Error",
@@ -152,7 +139,7 @@ exports.admin_activate = function(req, res, next) {
     });
 }
 
-exports.user_desync = function (user, req, res, next) {
+export function user_desync(user, req, res, next) {
     res.status(404);
     res.send({
         "code": "Error",

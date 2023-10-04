@@ -10,3 +10,5 @@ npm-debug.log
 .vscode/
 esup-otp-api.iml
 *.out
+/package-lock.json
+/.settings/

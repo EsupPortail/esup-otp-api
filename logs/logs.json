@@ -1,4 +1,4 @@
 {
-	"level": "debug",
+	"level": "info",
 	"#how_to":"add path and filename attributes if you want to change de logs location, for instance 'path' : '/var/logs', 'filename':'esup-otp-api.log'"
 }

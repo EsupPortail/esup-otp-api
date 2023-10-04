@@ -1,6 +1,4 @@
-var properties = require(__dirname + '/../../properties/properties');
-
-exports.schema = {
+export const schema = {
     "totp": {
         "activate": {
             type: Boolean,
@@ -15,7 +13,7 @@ exports.schema = {
         },
         "transports": {
             type: Array,
-	    default: ["sms"]
+        default: ["sms"]
         }
     },
    "random_code_mail": {
@@ -24,7 +22,7 @@ exports.schema = {
         },
         "transports": {
             type: Array,
-      	    default: ["mail"]
+            default: ["mail"]
         }
     },
     "bypass": {

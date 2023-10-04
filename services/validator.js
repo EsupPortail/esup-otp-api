@@ -1,40 +1,27 @@
-var restify = require('restify');
-var properties = require(__dirname + '/../properties/properties');
-var utils = require(__dirname + '/../services/utils');
-var logger = require(__dirname + '/../services/logger').getInstance();
+import errors from 'restify-errors';
+import * as properties from '../properties/properties.js';
+import * as utils from '../services/utils.js';
+import { getInstance } from '../services/logger.js'; const logger = getInstance();
 
-exports.check_hash = check_hash;
-
-function check_hash(req, res, next) {
-    var hashes = utils.get_hash(req.params.uid);
-    for (hash in hashes){
-        if (req.params.hash == hashes[hash]) return next();
-    }
-    return next(new restify.ForbiddenError());
+export function check_hash(req, res, next) {
+    if(check_hash_socket(req.params.uid, req.params.hash)){
+		return next();
+	}
+    return next(new errors.ForbiddenError());
 }
 
-exports.check_hash_socket = check_hash_socket;
-
-function check_hash_socket(uid, hash) {
-    var hashes = utils.get_hash(uid);
-    for (_hash in hashes){
-        if (hash == hashes[_hash]) return true;
-    }
-    return false;
+export function check_hash_socket(uid, hash) {
+    const hashes = utils.get_hash(uid);
+    return hashes.includes(hash);
 }
 
-exports.check_api_password = check_api_password;
-
-function check_api_password(req, res, next) {
-    let param = req.params.api_password
-    if (req.headers.authorization && param === '') {
-        param = utils.get_auth_bearer(req.headers)
-    }
-    if (param == properties.getEsupProperty('api_password')) return next();
-    else return next(new restify.ForbiddenError());
+export function check_api_password(req, res, next) {
+    const reqApiPwd = req.params.api_password || utils.get_auth_bearer(req.headers);
+    if (reqApiPwd == properties.getEsupProperty('api_password')) return next();
+    else return next(new errors.ForbiddenError());
 }
 
-exports.esupnfc_check_server_ip = function esupnfc_check_server_ip(req, res, next) {
+export function esupnfc_check_server_ip(req, res, next) {
     let ip = req.headers["x-forwarded-for"];
     //logger.debug(req.headers);
     if(ip == undefined) {
@@ -45,6 +32,6 @@ exports.esupnfc_check_server_ip = function esupnfc_check_server_ip(req, res, nex
     }
     else {
 	logger.info("remote ip : " + ip + " is not esupnfc server ip -> forbidden");
-	return next(new restify.ForbiddenError());
+	return next(new errors.ForbiddenError());
     }
-};
+}

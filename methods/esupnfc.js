@@ -1,12 +1,14 @@
-var properties = require(__dirname + '/../properties/properties');
-var restify = require('restify');
-var utils = require(__dirname + '/../services/utils');
-var logger = require(__dirname + '/../services/logger').getInstance();
-var sockets = require('../server/sockets');
+import * as properties from '../properties/properties.js';
+import * as utils from '../services/utils.js';
+import { apiDb } from '../controllers/api.js';
 
-exports.name = "esupnfc";
+import { getInstance } from '../services/logger.js';
+const logger = getInstance();
+import * as sockets from '../server/sockets.js';
 
-exports.locations = function (user, req, res, next) {
+export const name = "esupnfc";
+
+export function locations(user, req, res, next) {
     if(user.esupnfc.active) {
 	logger.debug("locations: [ESUP-OTP]");
 	res.send(["ESUP-OTP"]);
@@ -14,17 +16,17 @@ exports.locations = function (user, req, res, next) {
 	logger.debug("locations: []");
 	res.send([]);
     }
-};
+}
 
-exports.check_accept_authentication = function (req, res, next) {
+export function check_accept_authentication(req, res, next) {
     logger.debug("check_accept_authentication: ESUP-OTP");
     res.send("OK");
-};
+}
 
-exports.accept_authentication = function (user, req, res, next) {
+export function accept_authentication(user, req, res, next) {
     logger.debug("accept_authentication: ESUP-OTP");
     user.esupnfc.code = utils.generate_digit_code(properties.getMethod('random_code').code_length);
-    user.save( function () {
+    apiDb.save_user(user, () => {
 	sockets.emitCas(user.uid,'userAuth', {"code": "Ok", "otp": user.esupnfc.code});
 	logger.debug("sockets.emitCas OK : otp = " + user.esupnfc.code);    
 	res.send({
@@ -32,39 +34,39 @@ exports.accept_authentication = function (user, req, res, next) {
             "message": properties.getMessage('success', 'valid_credentials')
 	});
     });
-};
+}
 
-exports.send_message = function (user, req, res, next) {
+export function send_message(user, req, res, next) {
     logger.debug("send_message: ESUP-OTP");
     //res.send("<h1>Code :</h1><p>" + user.esupnfc.code + "</p>");
     // autologin
     res.send("");
-};
+}
 
-exports.generate_method_secret = function(user, req, res, next) {
+export function generate_method_secret(user, req, res, next) {
     res.send({
         "code": "Error",
         "message": properties.getMessage('error','unvailable_method_operation')
     });
 }
 
-exports.delete_method_secret = function(user, req, res, next) {
+export function delete_method_secret(user, req, res, next) {
     res.send({
         "code": "Error",
         "message": properties.getMessage('error','unvailable_method_operation')
     });
 }
 
-exports.get_method_secret = function(user, req, res, next) {
+export function get_method_secret(user, req, res, next) {
     res.send({
         "code": "Error",
         "message": properties.getMessage('error','unvailable_method_operation')
     });
 }
 
-exports.user_activate = function(user, req, res, next) {
+export function user_activate(user, req, res, next) {
     user.esupnfc.active = true;
-    user.save( function() {
+    apiDb.save_user(user, () => {
         res.send({
             "code": "Ok",
             "message": ""
@@ -72,16 +74,16 @@ exports.user_activate = function(user, req, res, next) {
     });
 }
 
-exports.confirm_user_activate = function(user, req, res, next) {
+export function confirm_user_activate(user, req, res, next) {
     res.send({
         "code": "Error",
         "message": properties.getMessage('error','unvailable_method_operation')
     });
 }
 
-exports.user_deactivate = function(user, req, res, next) {
+export function user_deactivate(user, req, res, next) {
     user.esupnfc.active = false;
-    user.save( function() {
+    apiDb.save_user(user, () => {
         res.send({
             "code": "Ok",
             "message": ""
@@ -89,14 +91,14 @@ exports.user_deactivate = function(user, req, res, next) {
     });
 }
 
-exports.admin_activate = function(req, res, next) {
+export function admin_activate(req, res, next) {
     res.send({
         "code": "Error",
         "message": properties.getMessage('error','unvailable_method_operation')
     });
 }
 
-exports.user_desync = function (user, req, res, next) {
+export function user_desync(user, req, res, next) {
     res.send({
         "code": "Error",
         "message": properties.getMessage('error','unvailable_method_operation')
@@ -112,19 +114,19 @@ exports.user_desync = function (user, req, res, next) {
  * @param res response HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
-exports.verify_code = function (user, req, res, callbacks) {
-    logger.debug(utils.getFileName(__filename) + ' ' + "verify_code: " + user.uid);
+export function verify_code(user, req, res, callbacks) {
+    logger.debug(utils.getFileNameFromUrl(import.meta.url) + ' ' + "verify_code: " + user.uid);
     if (user.esupnfc.code == req.params.otp) {
         user.esupnfc.code=null;
-        user.save( function () {
-            logger.info(utils.getFileName(__filename)+" valid credentials by " + user.uid);
+        apiDb.save_user(user, () => {
+            logger.info(utils.getFileNameFromUrl(import.meta.url)+" valid credentials by " + user.uid);
             res.send({
                 "code": "Ok",
                 "message": properties.getMessage('success', 'valid_credentials')
             });
         });
     } else {
-        var next = callbacks.pop();
+        const next = callbacks.pop();
         next(user, req, res, callbacks)
     }
 }

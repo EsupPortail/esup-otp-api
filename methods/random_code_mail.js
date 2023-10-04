@@ -1,29 +1,23 @@
-var properties = require(__dirname + '/../properties/properties');
-var api_controller = require(__dirname + '/../controllers/api');
-var utils = require(__dirname + '/../services/utils');
-var restify = require('restify');
-var logger = require(__dirname + '/../services/logger').getInstance();
+import * as properties from '../properties/properties.js';
+import * as api_controller from '../controllers/api.js';
+import * as utils from '../services/utils.js';
+import { apiDb } from '../controllers/api.js';
+import { getInstance } from '../services/logger.js'; const logger = getInstance();
 
-exports.name = "random_code_mail";
+export const name = "random_code_mail";
 
-exports.send_message = function(user, req, res, next) {
-    var new_otp = user.random_code_mail;
-    switch (properties.getMethod('random_code_mail').code_type) {
-        case "string":
-            new_otp.code = utils.generate_string_code(properties.getMethod('random_code_mail').code_length);
-            break;
-        case "digit":
-            new_otp.code = utils.generate_digit_code(properties.getMethod('random_code_mail').code_length);
-            break;
-        default:
-            new_otp.code = utils.generate_string_code(properties.getMethod('random_code_mail').code_length);
-            break;
-    }
-    validity_time = properties.getMethod('random_code_mail').mail_validity * 60 * 1000;
+export function send_message(user, req, res, next) {
+    const new_otp = user.random_code_mail;
+    
+    const code_length = properties.getMethod('random_code_mail').code_length;
+    const code_type = properties.getMethod('random_code_mail').code_type;
+    new_otp.code = utils.generate_code_of_type(code_length, code_type);
+    
+    let validity_time = properties.getMethod('random_code_mail').mail_validity * 60 * 1000;
     validity_time += new Date().getTime();
     new_otp.validity_time = validity_time;
     user.random_code_mail = new_otp;
-    user.save( function() {
+    apiDb.save_user(user, () => {
         api_controller.transport_code(new_otp.code, req, res, next);
     });
 }
@@ -35,13 +29,13 @@ exports.send_message = function(user, req, res, next) {
  * @param res response HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
-exports.verify_code = function(user, req, res, callbacks) {
-    logger.debug(utils.getFileName(__filename)+' '+"verify_code: "+user.uid);
+export function verify_code(user, req, res, callbacks) {
+    logger.debug(utils.getFileNameFromUrl(import.meta.url)+' '+"verify_code: "+user.uid);
     if (user.random_code_mail.code == req.params.otp && Date.now() < user.random_code_mail.validity_time) {
         user.random_code_mail.code=null;
         user.random_code_mail.validity_time=null;
-        user.save( function() {
-            logger.info(utils.getFileName(__filename)+" Valid credentials by "+user.uid);
+        apiDb.save_user(user, () => {
+            logger.info(utils.getFileNameFromUrl(import.meta.url)+" Valid credentials by "+user.uid);
             res.status(200);
             res.send({
                 "code": "Ok",
@@ -49,12 +43,12 @@ exports.verify_code = function(user, req, res, callbacks) {
             });
         });
     } else {
-        var next = callbacks.pop();
+        const next = callbacks.pop();
         next(user, req, res, callbacks)
     }
 }
 
-exports.generate_method_secret = function(user, req, res, next) {
+export function generate_method_secret(user, req, res, next) {
     res.status(404);
     res.send({
         "code": "Error",
@@ -62,7 +56,7 @@ exports.generate_method_secret = function(user, req, res, next) {
     });
 }
 
-exports.delete_method_secret = function(user, req, res, next) {
+export function delete_method_secret(user, req, res, next) {
     res.status(404);
     res.send({
         "code": "Error",
@@ -70,7 +64,7 @@ exports.delete_method_secret = function(user, req, res, next) {
     });
 }
 
-exports.get_method_secret = function(user, req, res, next) {
+export function get_method_secret(user, req, res, next) {
     res.status(404);
     res.send({
         "code": "Error",
@@ -78,9 +72,9 @@ exports.get_method_secret = function(user, req, res, next) {
     });
 }
 
-exports.user_activate = function(user, req, res, next) {
+export function user_activate(user, req, res, next) {
     user.random_code_mail.active = true;
-    user.save( function() {
+    apiDb.save_user(user, () => {
         res.status(200);
         res.send({
             "code": "Ok",
@@ -89,7 +83,7 @@ exports.user_activate = function(user, req, res, next) {
     });
 }
 
-exports.confirm_user_activate = function(user, req, res, next) {
+export function confirm_user_activate(user, req, res, next) {
     res.status(404);
     res.send({
         "code": "Error",
@@ -97,9 +91,9 @@ exports.confirm_user_activate = function(user, req, res, next) {
     });
 }
 
-exports.user_deactivate = function(user, req, res, next) {
+export function user_deactivate(user, req, res, next) {
     user.random_code_mail.active = false;
-    user.save( function() {
+    apiDb.save_user(user, () => {
         res.status(200);
         res.send({
             "code": "Ok",
@@ -108,7 +102,7 @@ exports.user_deactivate = function(user, req, res, next) {
     });
 }
 
-exports.admin_activate = function(req, res, next) {
+export function admin_activate(req, res, next) {
     res.status(404);
     res.send({
         "code": "Error",
@@ -116,7 +110,7 @@ exports.admin_activate = function(req, res, next) {
     });
 }
 
-exports.user_desync = function (user, req, res, next) {
+export function user_desync(user, req, res, next) {
     res.status(404);
     res.send({
         "code": "Error",

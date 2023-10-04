@@ -1,12 +1,13 @@
-const winston = require('winston');
-const { format } = winston;
-const properties = require(__dirname + '/../properties/properties');
-const logs_config = require(__dirname + '/../logs/logs.json');
-const utils = require('./utils');
+import winston, { format } from 'winston';
+import logs_config from '../logs/logs.json' assert { type: 'json' };
+//import logs_config from '../logs/logs.json' with { "type": "json" };
+import * as utils from '../services/utils.js';
 
-let filename = __dirname + '/../logs/esup-otp-api-info.log';
-let archiveFilename = __dirname+'/../logs/audit.log';
-if(logs_config.path && logs_config.filename)filename = logs_config.path + logs_config.filename;
+let filename = utils.relativeToAbsolutePath(import.meta.url, '../logs/esup-otp-api-info.log');
+let archiveFilename = utils.relativeToAbsolutePath(import.meta.url, '../logs/audit.log');
+if (logs_config.path && logs_config.filename) {
+	filename = logs_config.path + logs_config.filename;
+}
 
 const logLevels = {
     archive: 0,
@@ -65,6 +66,6 @@ const logger = winston.createLogger({
     ]
 });
 
-exports.getInstance= function(){
+export function getInstance(){
     return logger;
 }

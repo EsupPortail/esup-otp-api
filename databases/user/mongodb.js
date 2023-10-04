@@ -1,83 +1,78 @@
-var properties = require(__dirname + '/../../properties/properties');
-var utils = require(__dirname + '/../../services/utils');
-var mongoose = require('mongoose');
-var connection;
+import * as properties from '../../properties/properties.js';
+import * as mongoose from 'mongoose';
 
-var logger = require(__dirname + '/../../services/logger').getInstance();
+import { getInstance } from '../../services/logger.js';
+const logger = getInstance();
 
-const definedUserSchema = require(`./userSchema`);
+import * as definedUserSchema from './userSchema.js';
 
-exports.initialize = function(callback) {
-    connection = mongoose.createConnection('mongodb://' + properties.getEsupProperty('mongodb').address + '/' + properties.getEsupProperty('mongodb').db, function(error) {
-        if (error) {
-            logger.error(utils.getFileName(__filename)+' '+error);
-        } else {
-            initiatilize_user_model();
-            if (typeof(callback) === "function") callback();
-        }
-    });
+export function initialize(callback) {
+	const db_url = 'mongodb://' + properties.getEsupProperty('mongodb').address + '/' + properties.getEsupProperty('mongodb').db;
+	mongoose.createConnection(db_url).asPromise()
+		.then((connection) => {
+			initiatilize_user_model(connection);
+			if (typeof (callback) === "function") callback();
+		})
+		.catch((error) => {
+			logger.error(error);
+		});
 }
 
-/** User Model **/
-var User;
+/** 
+ * User Model
+ * @type mongoose.Model
+ */
+let User;
 
-function initiatilize_user_model() {
-    var Schema = mongoose.Schema;
+/**
+ * @param { mongoose.Connection } connection
+ */
+function initiatilize_user_model(connection) {
+    const Schema = mongoose.Schema;
 
-    var UserSchema = new Schema(definedUserSchema.schema);
+    const UserSchema = new Schema(definedUserSchema.schema);
 
     connection.model('User', UserSchema, 'User');
     User = connection.model('User');
 }
 
-function find_user(req, res, callback) {
-    User.find({
-        'uid': req.params.uid
-    }).exec(function(err, data) {
-        if (data[0]) {
-            if (typeof(callback) === "function") callback(data[0]);
-        } else {
-            if(properties.getEsupProperty('auto_create_user')) {
-                create_user(req.params.uid, callback);
-            }
-            else {
-                res.status(404);
-                res.send({
-                    "code": "Error",
-                    "message": properties.getMessage('error', 'user_not_found')
-                });
-            }
-        }
-    });
+export function find_user(req, res, callback) {
+	User.findOne({ 'uid': req.params.uid }).exec()
+		.then((user) => {
+			if (user) {
+				if (typeof (callback) === "function") callback(user);
+			} else {
+				if (properties.getEsupProperty('auto_create_user')) {
+					create_user(req.params.uid, callback);
+				}
+				else {
+					res.status(404);
+					res.send({
+						"code": "Error",
+						"message": properties.getMessage('error', 'user_not_found')
+					});
+				}
+			}
+		});
 }
-exports.find_user= find_user;
 
-function create_user(uid, callback) {
-    var new_user = new User({
-        uid : uid
-    });
-    new_user.save(function() {
-        if (typeof(callback) === "function") callback(new_user);
-    });
+export function create_user(uid, callback) {
+	save_user(new User({ uid: uid }), callback);
 }
-exports.create_user= create_user;
 
-exports.save_user=function(user, callback) {
-    user.save(function() {
-        if (typeof(callback) === "function") callback();
-    })
+export function save_user(user, callback) {
+	user.save().then(() => {
+		if (typeof (callback) === "function") callback(user);
+	});
 }
 
 /**
  * Supprime l'utilisateur
- *
- * @param req requete HTTP
- * @param res response HTTP
- * @param next permet d'appeler le prochain gestionnaire (handler)
  */
-exports.remove_user=function(uid, callback) {
-    User.remove({uid:uid}, function(err, data) {
-        if (err) logger.error(utils.getFileName(__filename)+' '+error);
-        if (typeof(callback) === "function") callback(data);
-    });
+export function remove_user(uid, callback) {
+	/**@type DeleteResult */
+	User.deleteOne({ uid: uid }).exec()
+		.then((/**@type mongoose.mongo.DeleteResult */ deleteResult) => {
+			if (typeof (callback) === "function") callback(deleteResult);
+		});
 }

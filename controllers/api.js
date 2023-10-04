@@ -1,30 +1,32 @@
-var userDb_controller = require(__dirname + '/user');
-var restify = require('restify');
-var utils = require(__dirname + '/../services/utils');
-var mailer = require(__dirname + '/../services/mailer');
-var sms = require(__dirname + '/../services/sms');
-var properties = require(__dirname + '/../properties/properties');
-var methods;
-var apiDb;
+import * as userDb_controller from './user.js';
+import * as utils from '../services/utils.js';
+import * as mailer from '../services/mailer.js';
+import * as sms from '../services/sms.js';
+import * as properties from '../properties/properties.js';
+import methods from '../methods/methods.js';
 
-var logger = require(__dirname + '/../services/logger').getInstance();
+import { getInstance } from '../services/logger.js';
+const logger = getInstance();
 
-exports.initialize = function (callback) {
+export let apiDb;
+
+export function initialize(callback) {
     if (properties.getEsupProperty('apiDb')) {
-        apiDb = require(__dirname + '/../databases/api/' + properties.getEsupProperty('apiDb'));
-        methods = require(__dirname + '/../methods/methods');
-        apiDb.initialize(callback);
-        exports.apiDb = apiDb;
-    } else logger.error(utils.getFileName(__filename) + ' ' + "Unknown apiDb");
+        import('../databases/api/' + properties.getEsupProperty('apiDb') + '.js')
+            .then((apiDbModule) => {
+                apiDb = apiDbModule;
+                apiDb.initialize(callback);
+            })
+    } else logger.error(utils.getFileNameFromUrl(import.meta.url) + ' ' + "Unknown apiDb");
 }
 
-exports.get_methods = function (req, res, next) {
-    var response = {
+export function get_methods(req, res, next) {
+    const response = {
         "code": "Error",
         "message": "No method found"
     };
     response.methods = {};
-    for (method in properties.getEsupProperty('methods')) {
+    for (const method in properties.getEsupProperty('methods')) {
         response.methods[method] = properties.getMethod(method);
         response.code = "Ok";
         response.message = "Method(s) found";
@@ -40,7 +42,7 @@ exports.get_methods = function (req, res, next) {
  * @param res response HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
-exports.activate_method_admin = function (req, res, next) {
+export function activate_method_admin(req, res, next) {
     if (properties.getMethod(req.params.method)) {
         properties.setMethodProperty(req.params.method, 'activate', true);
         apiDb.update_api_preferences();
@@ -56,7 +58,7 @@ exports.activate_method_admin = function (req, res, next) {
             "message": properties.getMessage('error', 'method_not_found')
         });
     }
-};
+}
 
 /**
  * Désctive la méthode req.params.method
@@ -65,7 +67,7 @@ exports.activate_method_admin = function (req, res, next) {
  * @param res response HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
-exports.deactivate_method_admin = function (req, res, next) {
+export function deactivate_method_admin(req, res, next) {
     if (properties.getMethod(req.params.method)) {
         properties.setMethodProperty(req.params.method, 'activate', false);
         apiDb.update_api_preferences();
@@ -81,7 +83,7 @@ exports.deactivate_method_admin = function (req, res, next) {
             "message": properties.getMessage('error', 'method_not_found')
         });
     }
-};
+}
 
 /**
  * Active le transport req.params.transport pour la  méthode req.params.method
@@ -90,7 +92,7 @@ exports.deactivate_method_admin = function (req, res, next) {
  * @param res response HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
-exports.activate_method_transport = function (req, res, next) {
+export function activate_method_transport(req, res, next) {
     if (properties.getMethod(req.params.method)) {
         properties.addMethodTransport(req.params.method, req.params.transport);
         apiDb.update_api_preferences();
@@ -106,7 +108,7 @@ exports.activate_method_transport = function (req, res, next) {
             "message": properties.getMessage('error', 'method_not_found')
         });
     }
-};
+}
 
 /**
  * Désctive le transport req.params.transport pour la  méthode req.params.method
@@ -115,7 +117,7 @@ exports.activate_method_transport = function (req, res, next) {
  * @param res response HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
-exports.deactivate_method_transport = function (req, res, next) {
+export function deactivate_method_transport(req, res, next) {
     if (properties.getMethod(req.params.method)) {
         properties.removeMethodTransport(req.params.method, req.params.transport);
         apiDb.update_api_preferences();
@@ -131,7 +133,7 @@ exports.deactivate_method_transport = function (req, res, next) {
             "message": properties.getMessage('error', 'method_not_found')
         });
     }
-};
+}
 
 /**
  * Crée l'utilisateur
@@ -140,7 +142,7 @@ exports.deactivate_method_transport = function (req, res, next) {
  * @param res response HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
-exports.create_user = function (uid, callback) {
+export function create_user(uid, callback) {
     apiDb.create_user(uid, callback);
 }
 
@@ -151,7 +153,7 @@ exports.create_user = function (uid, callback) {
  * @param res response HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
-exports.save_user = function (user, callback) {
+export function save_user(user, callback) {
     apiDb.save_user(user, callback);
 }
 
@@ -162,7 +164,7 @@ exports.save_user = function (user, callback) {
  * @param res response HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
-exports.remove_user = function (uid, callback) {
+export function remove_user(uid, callback) {
     apiDb.remove_user(uid, callback);
 }
 
@@ -174,21 +176,21 @@ exports.remove_user = function (uid, callback) {
  * @param res response HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
-exports.transport_code = function (code, req, res, next) {
-    var opts = {};
+export function transport_code(code, req, res, next) {
+    const opts = {};
     opts.object = properties.getMessage('transport', 'code').object;
     opts.message = code;
     opts.codeRequired = properties.getMethodProperty(req.params.method, 'codeRequired');
     opts.waitingFor = properties.getMethodProperty(req.params.method, 'waitingFor');
     switch (req.params.transport) {
         case 'mail':
-            opts.message = properties.getMessage('transport', 'code').mail.pre + code + properties.getMessage('transport', 'code').mail.post
+            opts.message = properties.getMessage('transport', 'code').mail.pre + code + properties.getMessage('transport', 'code').mail.post;
             break;
         case 'sms':
-            opts.message = properties.getMessage('transport', 'code').sms.pre + code + properties.getMessage('transport', 'code').sms.post
+            opts.message = properties.getMessage('transport', 'code').sms.pre + code + properties.getMessage('transport', 'code').sms.post;
             break;
         default:
-            opts.message = properties.getMessage('transport', 'code').mail.pre + code + properties.getMessage('transport', 'code').mail.post
+            opts.message = properties.getMessage('transport', 'code').mail.pre + code + properties.getMessage('transport', 'code').mail.post;
             break;
     }
     transport(opts, req, res, next);
@@ -201,23 +203,23 @@ exports.transport_code = function (code, req, res, next) {
  * @param res response HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
-exports.transport_test = function (req, res, next) {
-    var opts = {}
+export function transport_test(req, res, next) {
+    const opts = {};
     opts.object = properties.getMessage('transport', 'test').object;
     opts.message = '';
     switch (req.params.transport) {
         case 'mail':
-            opts.message = properties.getMessage('transport', 'test').mail.pre + req.params.uid + properties.getMessage('transport', 'test').mail.post
+            opts.message = properties.getMessage('transport', 'test').mail.pre + req.params.uid + properties.getMessage('transport', 'test').mail.post;
             break;
         case 'sms':
-            opts.message = properties.getMessage('transport', 'test').sms.pre + req.params.uid + properties.getMessage('transport', 'test').sms.post
+            opts.message = properties.getMessage('transport', 'test').sms.pre + req.params.uid + properties.getMessage('transport', 'test').sms.post;
             break;
         default:
-            opts.message = properties.getMessage('transport', 'test').mail.pre + req.params.uid + properties.getMessage('transport', 'test').mail.post
+            opts.message = properties.getMessage('transport', 'test').mail.pre + req.params.uid + properties.getMessage('transport', 'test').mail.post;
             break;
     }
     transport(opts, req, res, next);
-};
+}
 
 /**
  * Envoie un message
@@ -256,9 +258,9 @@ function transport(opts, req, res, next) {
  * @param res response HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
-exports.get_user = function (req, res, next) {
+export function get_user(req, res, next) {
     apiDb.find_user(req, res, function (user) {
-        var response = {};
+        const response = {};
         response.code = 'Ok';
         response.message = '';
         response.user = apiDb.parse_user(user);
@@ -266,7 +268,7 @@ exports.get_user = function (req, res, next) {
         res.status(200);
         res.send(response);
     });
-};
+}
 
 /**
  * Renvoie les infos (methodes activees, transports) de utilisateur avec l'uid == req.params.uid
@@ -275,7 +277,7 @@ exports.get_user = function (req, res, next) {
  * @param res response HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
-exports.get_user_infos = function (req, res, next) {
+export function get_user_infos(req, res, next) {
     apiDb.find_user(req, res, function (user) {
         userDb_controller.get_available_transports(req, res, function (data) {
             deactivateRandomCodeIfNoTransport(user,data,"");//nettoyage des random_code activés sans transport
@@ -291,37 +293,38 @@ exports.get_user_infos = function (req, res, next) {
                     transports: data,
                     last_send_message: user.last_send_message,
                 }
-            })
-        })
+            });
+        });
     });
-};
+}
 
 /**
  * Désactivation de la méthode random_code si aucun transport renseigné
  * On ne doit pas avoir de random_code activé sans transport.
 **/
 
-function deactivateRandomCodeIfNoTransport(user,data,suffixe){    		
-   if(user['random_code'+suffixe] && user['random_code'+suffixe].active){
-	var deactivate=true;
-	logger.debug("Active transports for randomCode"+suffixe);
-        var randomCode = apiDb.parse_user(user)["random_code"+suffixe];
-	var randomCodeTransports=null;
-        if(randomCode!==null && randomCode!==undefined) randomCodeTransports=randomCode.transports;      
-        var transport;
-        if(randomCodeTransports !== null && randomCodeTransports !== undefined && typeof randomCodeTransports[Symbol.iterator] === 'function')
-          for(transport of randomCodeTransports){
-		logger.debug("check if transport is defined: data["+transport+"]="+data[transport]);
-		if(data[transport]) {deactivate=false;break;}
-     	  }
-	
-	if(deactivate){
-		user["random_code"+suffixe].active = false;
-   		user.save( function() {
-        		logger.info('No transport is set. Auto deactivate random_code'+suffixe+' for '+user.uid);
-        	});
+function deactivateRandomCodeIfNoTransport(user, data, suffixe) {
+	if (user['random_code' + suffixe]?.active) {
+		let deactivate = true;
+		logger.debug("Active transports for randomCode" + suffixe);
+		const randomCode = apiDb.parse_user(user)["random_code" + suffixe];
+		const randomCodeTransports = randomCode?.transports;
+		if (randomCodeTransports && typeof randomCodeTransports[Symbol.iterator] === 'function')
+			transportLoop: for (const transport of randomCodeTransports) {
+				logger.debug("check if transport is defined: data[" + transport + "]=" + data[transport]);
+				if (data[transport]) {
+					deactivate = false;
+					break transportLoop;
+				}
+			}
+
+		if (deactivate) {
+			user["random_code" + suffixe].active = false;
+			user.save(() => {
+				logger.info('No transport is set. Auto deactivate random_code' + suffixe + ' for ' + user.uid);
+			});
+		}
 	}
-    }
 }
 
 /**
@@ -331,11 +334,14 @@ function deactivateRandomCodeIfNoTransport(user,data,suffixe){
  * @param res response HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
-exports.send_message = function (req, res, next) {
-    if (properties.getMethod(req.params.method) && req.params.method!='push') {
+export function send_message(req, res, next) {
+	if (req.params.method == 'push') {
+		logger.debug("send_message_push : " + req.params.method + " - " + properties.getMethod(req.params.method));
+	}
+    if (properties.getMethod(req.params.method)) {
         apiDb.find_user(req, res, function (user) {
             if (user[req.params.method].active && properties.getMethodProperty(req.params.method, 'activate') && methods[req.params.method]) {
-                user.last_send_message = { method: req.params.method, time: Date.now(), auto: "auto" in req.query }
+                user.last_send_message = { method: req.params.method, time: Date.now(), auto: "auto" in req.query };
                 methods[req.params.method].send_message(user, req, res, next);
             } else {
                 res.status(404);
@@ -346,27 +352,9 @@ exports.send_message = function (req, res, next) {
         res.status(404);
         res.send({code: "Error", message: properties.getMessage('error', 'method_not_found')});
     }
-};
+}
 
-exports.send_message_push = function (req, res, next) {
-    logger.debug("send_message_push : " + req.params.method + " - " + properties.getMethod(req.params.method));
-    if (properties.getMethod(req.params.method) && req.params.method=='push') {
-        apiDb.find_user(req, res, function (user) {
-            if (user[req.params.method].active && properties.getMethodProperty(req.params.method, 'activate') && methods[req.params.method]) {
-                user.last_send_message = { method: req.params.method, time: Date.now(), auto: "auto" in req.query }
-                methods[req.params.method].send_message(user, req, res, next);
-            } else {
-                res.status(404);
-                res.send({code: "Error", message: properties.getMessage('error', 'method_not_found')});
-            }
-        });
-    } else {
-        res.status(404);
-        res.send({code: "Error", message: properties.getMessage('error', 'method_not_found')});
-    }
-};
-
-exports.accept_authentication = function (req, res, next) {
+export function accept_authentication(req, res, next) {
     if (properties.getMethod(req.params.method) && req.params.method=='push') {
         apiDb.find_user(req, res, function (user) {
             if (user[req.params.method].active && properties.getMethodProperty(req.params.method, 'activate') && methods[req.params.method]) {
@@ -380,9 +368,9 @@ exports.accept_authentication = function (req, res, next) {
         res.status(404);
         res.send({code: "Error", message: properties.getMessage('error', 'method_not_found')});
     }
-};
+}
 
-exports.check_accept_authentication = function (req, res, next) {
+export function check_accept_authentication(req, res, next) {
     if (properties.getMethod(req.params.method) && req.params.method=='push') {
         apiDb.find_user(req, res, function (user) {
             if (user[req.params.method].active && properties.getMethodProperty(req.params.method, 'activate') && methods[req.params.method]) {
@@ -396,7 +384,7 @@ exports.check_accept_authentication = function (req, res, next) {
         res.status(404);
         res.send({code: "Error", message: properties.getMessage('error', 'method_not_found')});
     }
-};
+}
 
 
 /**
@@ -408,14 +396,14 @@ exports.check_accept_authentication = function (req, res, next) {
  * @param res response HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
-exports.verify_code = function (req, res, next) {
+export function verify_code(req, res, next) {
     apiDb.find_user(req, res, function (user) {
-        if (user.last_send_message) user.last_send_message.verified = true
+        if (user.last_send_message) user.last_send_message.verified = true;
 
         logger.debug("verify_code: " + user.uid);
 
-        var callbacks = [function () {
-            logger.info(utils.getFileName(__filename) + ' ' + "Invalid credentials submit for user with uid : " + user.uid);
+        const callbacks = [function () {
+            logger.info(utils.getFileNameFromUrl(import.meta.url) + ' ' + "Invalid credentials submit for user with uid : " + user.uid);
 
             res.status(401);
             res.send({
@@ -424,17 +412,16 @@ exports.verify_code = function (req, res, next) {
             });
         }];
 
-        for (method in methods){
+        for (const method in methods){
             if(user[method].active) {
-                console.log(`User method ${methods[method].name} active, verify_code`)
                 callbacks.push(methods[method].verify_code);
             }
         }
 
-        var next = callbacks.pop();
+        const next = callbacks.pop();
         next(user, req, res, callbacks);
     });
-};
+}
 
 
 /**
@@ -444,7 +431,7 @@ exports.verify_code = function (req, res, next) {
  * @param res response HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
-exports.generate_method_secret = function (req, res, next) {
+export function generate_method_secret(req, res, next) {
     if (properties.getMethod(req.params.method)) {
         apiDb.find_user(req, res, function (user) {
             if (methods[req.params.method] && properties.getMethodProperty(req.params.method, 'activate')) {
@@ -458,7 +445,7 @@ exports.generate_method_secret = function (req, res, next) {
         res.status(404);
         res.send({code: "Error", message: properties.getMessage('error', 'method_not_found')});
     }
-};
+}
 
 
 /**
@@ -468,7 +455,7 @@ exports.generate_method_secret = function (req, res, next) {
  * @param res response HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
-exports.delete_method_secret = function (req, res, next) {
+export function delete_method_secret(req, res, next) {
     if (properties.getMethod(req.params.method)) {
         apiDb.find_user(req, res, function (user) {
             methods[req.params.method].delete_method_secret(user, req, res, next);
@@ -477,7 +464,7 @@ exports.delete_method_secret = function (req, res, next) {
         res.status(404);
         res.send({code: "Error", message: properties.getMessage('error', 'method_not_found')});
     }
-};
+}
 
 /**
  * Renvoie le secret de l'utilisateur afin qu'il puisse l'entrer dans son appli smartphone
@@ -486,7 +473,7 @@ exports.delete_method_secret = function (req, res, next) {
  * @param res response HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
-exports.get_method_secret = function (req, res, next) {
+export function get_method_secret(req, res, next) {
     if (properties.getMethod(req.params.method)) {
         apiDb.find_user(req, res, function (user) {
             methods[req.params.method].get_method_secret(user, req, res, next);
@@ -495,7 +482,7 @@ exports.get_method_secret = function (req, res, next) {
         res.status(404);
         res.send({code: "Error", message: properties.getMessage('error', 'method_not_found')});
     }
-};
+}
 
 /**
  * Renvoie les méthodes activées de l'utilisateur
@@ -504,11 +491,11 @@ exports.get_method_secret = function (req, res, next) {
  * @param res response HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
-exports.get_activate_methods = function (req, res, next) {
+export function get_activate_methods(req, res, next) {
     apiDb.find_user(req, res, function (user) {
-        var response = {};
-        var result = {};
-        for (method in properties.getEsupProperty('methods')) {
+        const response = {};
+        const result = {};
+        for (const method in properties.getEsupProperty('methods')) {
             result[method] = user[method].active;
         }
         response.code = "Ok";
@@ -519,7 +506,7 @@ exports.get_activate_methods = function (req, res, next) {
         res.send(response);
     });
 
-};
+}
 
 
 /**
@@ -529,8 +516,8 @@ exports.get_activate_methods = function (req, res, next) {
  * @param res response HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
-exports.activate_method = function (req, res, next) {
-    logger.info(utils.getFileName(__filename) + ' ' + req.params.uid + " activate_method " + req.params.method);
+export function activate_method(req, res, next) {
+    logger.info(utils.getFileNameFromUrl(import.meta.url) + ' ' + req.params.uid + " activate_method " + req.params.method);
     if (req.params.method !== 'push') {
         logger.log('archive', {
             message: [
@@ -546,7 +533,8 @@ exports.activate_method = function (req, res, next) {
     }
     if (methods[req.params.method]) {
         apiDb.find_user(req, res, function (user) {
-            methods[req.params.method].user_activate(user, req, res, next);
+			const method = methods[req.params.method]
+            method.user_activate(user, req, res, next);
         });
     } else {
       res.status(404);
@@ -554,7 +542,7 @@ exports.activate_method = function (req, res, next) {
         "message": properties.getMessage('error', 'method_not_found')
       });
     }
-};
+}
 
 /**
  * Certaine méthode (push) nécessite une activation en deux étapes
@@ -564,8 +552,8 @@ exports.activate_method = function (req, res, next) {
  * @param res response HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
-exports.confirm_activate_method = function (req, res, next) {
-    logger.info(utils.getFileName(__filename) + ' ' + req.params.uid + " activate_method " + req.params.method);
+export function confirm_activate_method(req, res, next) {
+    logger.info(utils.getFileNameFromUrl(import.meta.url) + ' ' + req.params.uid + " activate_method " + req.params.method);
     if (req.params.method === 'push') {
         logger.log('archive', {
             message: [
@@ -591,9 +579,10 @@ exports.confirm_activate_method = function (req, res, next) {
             "message": properties.getMessage('error', 'method_not_found')
         });
     }
-};
-exports.refresh_gcm_id_method = function (req, res, next) {
-    logger.info(utils.getFileName(__filename) + ' ' + req.params.uid + " refresh_push " + req.params.method);
+}
+
+export function refresh_gcm_id_method(req, res, next) {
+    logger.info(utils.getFileNameFromUrl(import.meta.url) + ' ' + req.params.uid + " refresh_push " + req.params.method);
     logger.log('archive', {
         message: [
             {
@@ -616,7 +605,7 @@ exports.refresh_gcm_id_method = function (req, res, next) {
             "message": properties.getMessage('error', 'method_not_found')
         });
     }
-};
+}
 
 /**
  * Désctive la méthode l'utilisateur ayant l'uid req.params.uid
@@ -625,8 +614,8 @@ exports.refresh_gcm_id_method = function (req, res, next) {
  * @param res response HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
-exports.deactivate_method = function (req, res, next) {
-    logger.info(utils.getFileName(__filename) + ' ' + req.params.uid + " deactivate_method " + req.params.method);
+export function deactivate_method(req, res, next) {
+    logger.info(utils.getFileNameFromUrl(import.meta.url) + ' ' + req.params.uid + " deactivate_method " + req.params.method);
     logger.log('archive', {
         message: [
             {
@@ -649,7 +638,7 @@ exports.deactivate_method = function (req, res, next) {
             "message": properties.getMessage('error', 'method_not_found')
         });
     }
-};
+}
 
 /**
  * Certaine méthode (push) peuvent être désactiver sans passer par le manager
@@ -658,8 +647,8 @@ exports.deactivate_method = function (req, res, next) {
  * @param res response HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
-exports.desync = function (req, res, next) {
-    logger.info(utils.getFileName(__filename) + ' ' + req.params.uid + " desync " + req.params.method);
+export function desync(req, res, next) {
+    logger.info(utils.getFileNameFromUrl(import.meta.url) + ' ' + req.params.uid + " desync " + req.params.method);
     logger.log('archive', {
         message: [
             {
@@ -682,53 +671,53 @@ exports.desync = function (req, res, next) {
             "message": properties.getMessage('error', 'method_not_found')
         });
     }
-};
+}
 
 /**
  * Get all UserPreferences, list of uid
  */
-exports.get_uids = function (req, res, next) {
+export function get_uids(req, res, next) {
     apiDb.get_uids(req, res, next);
-};
+}
 
 /**
  * Drop Users
  */
-exports.drop = function (req, res, next) {
+export function drop(req, res, next) {
     apiDb.drop(req, res, next);
-};
+}
 
 /**
  * ESUPNFC
  */
-exports.esupnfc_locations = function (req, res, next) {
+export function esupnfc_locations(req, res, next) {
     req.params.uid = req.params.eppn.split('@').shift();
     apiDb.find_user(req, res, function (user) {
 	methods['esupnfc'].locations(user, req, res, next);
     });
-};
+}
 
-exports.esupnfc_check_accept_authentication = function (req, res, next) {
+export function esupnfc_check_accept_authentication(req, res, next) {
     methods['esupnfc'].check_accept_authentication(req, res, next);
-};
+}
 
-exports.esupnfc_accept_authentication = function (req, res, next) {
-    var eppn = req.body.eppn;
-    var uid = eppn.replace(/@.*/,'');
+export function esupnfc_accept_authentication(req, res, next) {
+    const eppn = req.body.eppn;
+    const uid = eppn.replace(/@.*/,'');
     logger.debug("user uid: " + uid);
     req.params.uid = uid;
     apiDb.find_user(req, res, function (user) {
 	methods['esupnfc'].accept_authentication(user, req, res, next);
     });
-};
+}
 
-exports.esupnfc_send_message = function (req, res, next) {
-    var eppn = req.body.eppn;
-    var uid = eppn.replace(/@.*/,'');
+export function esupnfc_send_message(req, res, next) {
+    const eppn = req.body.eppn;
+    const uid = eppn.replace(/@.*/,'');
     logger.debug("user uid: " + uid);
     req.params.uid = uid;
     apiDb.find_user(req, res, function (user) {
 	methods['esupnfc'].send_message(user, req, res, next);
     });
-};
+}
 

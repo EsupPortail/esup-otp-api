@@ -1,40 +1,38 @@
 /**
  * Created by abousk01 on 20/07/2016.
  */
-var api_controller = require(__dirname + '/../controllers/api');
-var properties = require(__dirname + '/../properties/properties');
-var restify = require('restify');
-var utils = require(__dirname + '/../services/utils');
-var logger = require(__dirname + '/../services/logger').getInstance();
-var fcm = require('fcm-node');
-var qrCode = require('qrcode-npm');
-var sockets = require('../server/sockets');
-var geoip = require('geoip-lite');
+import * as properties from '../properties/properties.js';
+import * as utils from '../services/utils.js';
+import { apiDb } from '../controllers/api.js';
+
+import { getInstance } from '../services/logger.js';
+const logger = getInstance();
+import FCM from 'fcm-node';
+import qrCode from 'qrcode-npm';
+import * as sockets from '../server/sockets.js';
+import geoip from "geoip-lite";
 
 // Set up the sender with you API key, prepare your recipients' registration tokens.
-var opts={};
-if(properties.getEsupProperty('proxyUrl'))opts={'proxy': properties.getEsupProperty('proxyUrl')};
+const proxyUrl = properties.getEsupProperty('proxyUrl');
+const fcm = new FCM(properties.getMethodProperty('push', 'serverKey'), proxyUrl);
+export const name = "push";
 
-var fcm = new fcm(properties.getMethodProperty('push', 'serverKey'));
-exports.name = "push";
+export function send_message(user, req, res, next) {
+	user.push.code = utils.generate_digit_code(properties.getMethod('random_code').code_length);
+	const lt = req.params.lt != undefined ? req.params.lt : utils.generate_string_code(30);
+	logger.debug("gcm.Message with 'lt' as secret : " + lt);
+	const ip = req.headers['x-real-ip'] || req.connection.remoteAddress;
+	logger.debug("x-real-ip :" + req.headers['x-real-ip']);
+	logger.debug("Client ip is :" + ip);
+	const geo = geoip.lookup(ip);
+	logger.debug("Client geoip is :" + JSON.stringify(geo));
+	const city = geo != null ? geo.city : null;
 
-exports.send_message = function (user, req, res, next) {
-    user.push.code = utils.generate_digit_code(properties.getMethod('random_code').code_length);
-    var lt = req.params.lt != undefined ? req.params.lt : utils.generate_string_code(30);
-    logger.debug("gcm.Message with 'lt' as secret : " + lt);    
-    var ip=req.headers['x-real-ip']||req.connection.remoteAddress;
-    logger.debug("x-real-ip :"+req.headers['x-real-ip']);
-    logger.debug("Client ip is :"+ip);
-    var geo = geoip.lookup(ip);
-    logger.debug("Client geoip is :"+JSON.stringify(geo));
-    var city=null;
-    if(geo!=null) city=geo.city;
-   
-    var text=properties.getMethod('push').text1;
-    if(city!=null)
-	text+=properties.getMethod('push').text2.replace('$city',city);
+	let text = properties.getMethod('push').text1;
+	if (city != null)
+		text += properties.getMethod('push').text2.replace('$city', city);
 
-    var content = {
+	const content = {
         notification: {
             title: properties.getMethod('push').title,
             body: properties.getMethod('push').body,
@@ -49,8 +47,8 @@ exports.send_message = function (user, req, res, next) {
         },
         to: user.push.device.gcm_id
     };
-
-    user.save( function () {
+	
+	apiDb.save_user(user, () => {
 	logger.debug("send gsm push ...");
         fcm.send(content, function (err, response) {
             if (err) {
@@ -64,18 +62,18 @@ exports.send_message = function (user, req, res, next) {
                     logger.debug(response);
                     if(response.results[0].error == "NotRegistered"){
                         user_unactivate(user, req, res, next);
-                    };
+                    }
                 }else {
-		    logger.debug("send gsm push ok : " + response);
-		    res.send({
-			"code": "Ok",
-			"message": response
-		    });
+            logger.debug("send gsm push ok : " + response);
+            res.send({
+                "code": "Ok",
+                "message": response
+            });
 		}
             }
         });
     });
-};
+}
 
 /**
  * Vérifie si l'otp fourni correspond à celui généré
@@ -86,39 +84,39 @@ exports.send_message = function (user, req, res, next) {
  * @param res response HTTP
  * @param next permet d'appeler le prochain gestionnaire (handler)
  */
-exports.verify_code = function (user, req, res, callbacks) {
-    logger.debug(utils.getFileName(__filename) + ' ' + "verify_code: " + user.uid);
+export function verify_code(user, req, res, callbacks) {
+    logger.debug(utils.getFileNameFromUrl(import.meta.url) + ' ' + "verify_code: " + user.uid);
     if (user.push.code == req.params.otp) {
         user.push.code=null;
-        user.save( function () {
-            logger.info(utils.getFileName(__filename)+" Valid credentials by " + user.uid);
+        apiDb.save_user(user, () => {
+            logger.info(utils.getFileNameFromUrl(import.meta.url)+" Valid credentials by " + user.uid);
             res.send({
                 "code": "Ok",
                 "message": properties.getMessage('success', 'valid_credentials')
             });
         });
     } else {
-        var next = callbacks.pop();
+        const next = callbacks.pop();
         next(user, req, res, callbacks)
     }
 }
 
 
-exports.generate_method_secret = function (user, req, res, next) {
+export function generate_method_secret(user, req, res, next) {
     res.send({
         "code": "Error",
         "message": properties.getMessage('error', 'unvailable_method_operation')
     });
 }
 
-exports.delete_method_secret = function (user, req, res, next) {
+export function delete_method_secret(user, req, res, next) {
     res.send({
         "code": "Error",
         "message": properties.getMessage('error', 'unvailable_method_operation')
     });
 }
 
-exports.get_method_secret = function (user, req, res, next) {
+export function get_method_secret(user, req, res, next) {
     res.send({
         "code": "Error",
         "message": properties.getMessage('error', 'unvailable_method_operation')
@@ -126,19 +124,19 @@ exports.get_method_secret = function (user, req, res, next) {
 }
 
 
-exports.user_activate = function (user, req, res, next) {
-    var activation_code = utils.generate_digit_code(6);
+export function user_activate(user, req, res, next) {
+    const activation_code = utils.generate_digit_code(6);
     user.push.activation_code = activation_code;
     user.push.activation_fail=null;
     user.push.active=false;
-    var qr = qrCode.qrcode(10, 'M');
-    var http = 'http://';
+    const qr = qrCode.qrcode(10, 'M');
+    let http = 'http://';
     if(req.headers["x-forwarded-proto"])http=req.headers["x-forwarded-proto"]+"://";
-    var host = req.headers.host;
+    let host = req.headers.host;
     if(req.headers["x-forwarded-host"])host=req.headers["x-forwarded-host"].replace(/,.*/,'');
     qr.addData(http+host+'/users/'+user.uid+'/methods/push/'+activation_code);
     qr.make();
-    user.save( function () {
+    apiDb.save_user(user, () => {
         res.send({
             "code": "Ok",
             "message1": properties.getMessage('success', 'push_confirmation1'),
@@ -153,9 +151,9 @@ exports.user_activate = function (user, req, res, next) {
 }
 // generation of tokenSecret sent to the client, edited by mbdeme on June 2020
 
-exports.confirm_user_activate = function (user, req, res, next) {
+export function confirm_user_activate(user, req, res, next) {
     if (user.push.activation_code!=null && user.push.activation_fail<properties.getMethod('push').nbMaxFails && !user.push.active && req.params.activation_code == user.push.activation_code) {
-        var token_secret = utils.generate_string_code(128);
+        const token_secret = utils.generate_string_code(128);
         user.push.token_secret = token_secret;
         user.push.active = true;
         user.push.device.platform = req.params.platform || "AndroidDev";
@@ -164,7 +162,7 @@ exports.confirm_user_activate = function (user, req, res, next) {
         user.push.device.model = req.params.model || "DevDevice";
         user.push.activation_code = null;
 	user.push.activation_fail = null;
-        user.save( function () {
+        apiDb.save_user(user, () => {
             sockets.emitManager('userPushActivate',{uid:user.uid});
             sockets.emitToManagers('userPushActivateManager', user.uid);
             res.send({
@@ -175,27 +173,27 @@ exports.confirm_user_activate = function (user, req, res, next) {
         });
     } else{
         let nbfail=user.push.activation_fail;
-	if(nbfail!=null && nbfail!=undefined)
-            nbfail++;
-        else nbfail=1;
-        user.push.activation_fail = nbfail;
-	logger.info(utils.getFileName(__filename) + ' ' +"App confirm activation fails for "+user.uid+" ("+nbfail+")");
-	user.save (function(){
-	    res.send({
-	        "code": "Error",
-        	"message": properties.getMessage('error', 'invalid_credentials')
+        if(nbfail!=null && nbfail!=undefined)
+                nbfail++;
+            else nbfail=1;
+            user.push.activation_fail = nbfail;
+        logger.info(utils.getFileNameFromUrl(import.meta.url) + ' ' +"App confirm activation fails for "+user.uid+" ("+nbfail+")");
+        apiDb.save_user(user, () => {
+            res.send({
+                "code": "Error",
+                "message": properties.getMessage('error', 'invalid_credentials')
             });
-          });
-         }
+        });
+    }
 }
 
 // refresh gcm_id when it is regenerated
-exports.refresh_user_gcm_id = function (user, req, res, next) {
+export function refresh_user_gcm_id(user, req, res, next) {
  if (req.params.tokenSecret == user.push.token_secret && req.params.gcm_id==user.push.device.gcm_id)
     {
         logger.debug("refresh old gcm_id : " + user.push.device.gcm_id + " with "+req.params.gcm_id_refreshed);
         user.push.device.gcm_id = req.params.gcm_id_refreshed;
-        user.save( function () {
+        apiDb.save_user(user, () => {
             res.send({
                 "code": "Ok",
                 "message": ""
@@ -209,18 +207,18 @@ exports.refresh_user_gcm_id = function (user, req, res, next) {
 
 // Checks whether the tokenSecret received is equal to the one generated, changed by mbdeme on June 2020
 
-exports.accept_authentication = function (user, req, res, next) {
+export function accept_authentication(user, req, res, next) {
     logger.debug("accept_authentication ? " + user.push.token_secret + " VS " + req.params.tokenSecret);
     if (user.push.token_secret == req.params.tokenSecret) {
-        var lt = req.params.loginTicket;
+        const lt = req.params.loginTicket;
         user.push.lt = lt;
 	logger.debug("accept_authentication OK : lt = " + lt);
-        user.save(function () {
+        apiDb.save_user(user, () => {
             sockets.emitCas(user.uid,'userAuth', {"code": "Ok", "otp": user.push.code});
             res.send({
                 "code": "Ok"
             });
-	    logger.debug("sockets.emitCas OK : otp = " + user.push.code);
+            logger.debug("sockets.emitCas OK : otp = " + user.push.code);
         });
     } else {
 	logger.error("token secret doesn't match : " + user.push.token_secret + " != " + req.params.tokenSecret); 
@@ -231,11 +229,10 @@ exports.accept_authentication = function (user, req, res, next) {
     }
 }
 
-exports.check_accept_authentication = function (user, req, res, next) {
+export function check_accept_authentication(user, req, res, next) {
     if (user.push.lt.indexOf(req.params.loginTicket)>-1) {
-        code = user.push.code;
         user.push.lt = "";
-        user.save( function () {
+        apiDb.save_user(user, () => {
             res.send({
                 "code": "Ok",
                 "otp": user.push.code
@@ -250,9 +247,7 @@ exports.check_accept_authentication = function (user, req, res, next) {
     }
 }
 
-exports.user_deactivate = user_deactivate;
-
-function user_deactivate(user, req, res, next) {
+export function user_deactivate(user, req, res, next) {
     alert_deactivate(user);
     user.push.active = false;
     user.push.activation_code = null;
@@ -261,13 +256,13 @@ function user_deactivate(user, req, res, next) {
     user.push.device.manufacturer = "";
     user.push.device.model = "";
     user.push.device.phone_number = "";
-    user.save( function () {
+    apiDb.save_user(user, () => {
         res.send({
             "code": "Ok",
             "message": ""
         });
     });
-};
+}
 
 function user_unactivate(user, req, res, next) {
     user.push.active = false;
@@ -276,16 +271,16 @@ function user_unactivate(user, req, res, next) {
     user.push.device.manufacturer = "";
     user.push.device.model = ""
     user.push.device.phone_number = "";
-    user.save( function () {
+    apiDb.save_user(user, () => {
         res.send({
             "code": "Error",
             "message": properties.getMessage('error', 'push_not_registered')
         });
     });
-};
+}
 
 function alert_deactivate(user) {
-    var content = {
+    const content = {
         notification: {
             title: "Esup Auth",
             body: "Les notifications push ont été désactivées pour votre compte",
@@ -305,14 +300,14 @@ function alert_deactivate(user) {
     });
 }
 
-exports.user_desync = function (user, req, res, next) {
-    logger.debug(utils.getFileName(__filename) + ' ' + "user_desync: " + user.uid);
+export function user_desync(user, req, res, next) {
+    logger.debug(utils.getFileNameFromUrl(import.meta.url) + ' ' + "user_desync: " + user.uid);
     if(req.params.tokenSecret == user.push.token_secret){
         user.push.active = false;
         user.push.device.platform = "";
         user.push.token_secret = "";
         user.push.device.phone_number = "";
-        user.save( function () {
+        apiDb.save_user(user, () => {
             res.send({
                 "code": "Ok",
                 "message": ""
@@ -328,7 +323,7 @@ exports.user_desync = function (user, req, res, next) {
     }
 }
 
-exports.admin_activate = function (req, res, next) {
+export function admin_activate(req, res, next) {
     res.send({
         "code": "Error",
         "message": properties.getMessage('error', 'unvailable_method_operation')

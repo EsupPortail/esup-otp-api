@@ -1,14 +1,14 @@
-var properties = require(__dirname + '/../properties/properties');
-var utils = require(__dirname + '/../services/utils');
-var request = require('request');
+import * as properties from '../properties/properties.js';
+import * as utils from '../services/utils.js';
+import request from 'request';
 
-var proxyUrl = properties.getEsupProperty('proxyUrl') || '';
+const proxyUrl = properties.getEsupProperty('proxyUrl') || '';
 
-exports.send_message = function(num, opts, res) {
+export function send_message(num, opts, res) {
     if (utils.check_transport_validity('sms', num)) {
-        var tel = num;
-        var url = urlBroker(tel, opts.message);
-        var options = {
+        const tel = num;
+        const url = urlBroker(tel, opts.message);
+        const options = {
             url: url
         };
         if (proxyUrl != '') opts.proxy = proxyUrl;
