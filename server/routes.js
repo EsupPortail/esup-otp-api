@@ -55,7 +55,6 @@ exports.initialize = function (server, callback) {
     //api_api_password
     server.get("/admin/users/:uid/:api_password", validator.check_api_password, api_controller.get_user);
     server.get("/admin/users/:api_password",validator.check_api_password, api_controller.get_uids);
-    server.del("/admin/users/:api_password", api_controller.drop); //dev
     server.get("/admin/users/:uid/methods/:api_password", validator.check_api_password, api_controller.get_activate_methods);
     server.put("/admin/methods/:method/transports/:transport/deactivate/:api_password", validator.check_api_password, api_controller.deactivate_method_transport);
     server.put("/admin/methods/:method/transports/:transport/activate/:api_password", validator.check_api_password, api_controller.activate_method_transport);
@@ -65,19 +64,19 @@ exports.initialize = function (server, callback) {
 
     logger.info(utils.getFileName(__filename)+' '+'Initializing test routes');
     //tests routes
-    server.put("/test/auto_create/activate/:api_password", function (req, res, next) {
+    server.put("/test/auto_create/activate/:api_password", validator.check_api_password, (req, res, next) => {
         properties.setEsupProperty('auto_create_user', true);
         res.send({
             code: 'Ok'
         });
     });
-    server.put("/test/auto_create/deactivate/:api_password", function (req, res, next) {
+    server.put("/test/auto_create/deactivate/:api_password", validator.check_api_password, (req, res, next) => {
         properties.setEsupProperty('auto_create_user', false);
         res.send({
             code: 'Ok'
         });
     });
-    server.post("/test/users/:uid/:api_password", function (req, res, next) {
+    server.post("/test/users/:uid/:api_password", validator.check_api_password, (req, res, next) => {
         userDb_controller.create_user(req.params.uid, function () {
             api_controller.create_user(req.params.uid, function () {
                 res.send({
@@ -86,7 +85,7 @@ exports.initialize = function (server, callback) {
             })
         })
     });
-    server.del("/test/users/:uid/:api_password", function (req, res, next) {
+    server.del("/test/users/:uid/:api_password", validator.check_api_password, (req, res, next) => {
         userDb_controller.remove_user(req.params.uid, function () {
             api_controller.remove_user(req.params.uid, function () {
                 res.send({
