@@ -1,0 +1,48 @@
+{
+  "success": {
+    "valid_credentials": "Přihlašovací údaje souhlasí",
+    "transports_found": "Přenosový protokol připraven...",
+    "methods_found": "Metody ověření připraveny...",
+    "update": "Aktualizace byla úspěšně provedena",
+    "push_confirmation1" : "<p><p>Tento kód naskenujte pomocí aplikace ve Vašem telefonu</p>",
+    "push_confirmation2" : "<p>Pokud Váš telefon nemá funkční fotoaparát, nebo se Vám nedaří naskenovat předchozí kód, </p><div style=\"padding:15px; \"><p>Přejděte do nabídky \"Nastavení\" a klikněte na možnost \"Aktivovat bez skenování.\"</p><p>Zadejte název účtu : <b>",
+    "push_confirmation3" : "</b></p><p>Aktivační kód : <b>",
+    "push_confirmation4" : "</b></p><p>Adresa : <b>",
+    "push_confirmation5" : "</b></p><p>Pak klepněte na tlačítko \"Ok\"</p></div></p>"
+  },
+  "error": {
+    "invalid_credentials": "Přihlašovací údaje nesouhlasí",
+    "invalid_sms": "Telefonní číslo není správné",
+    "invalid_mail": "Emailová adresa není správná",
+    "user_not_found": "Uživatel nebyl nalezen",
+    "transport_not_found": "Přenosový protokol nebyl nalezen",
+    "method_not_found": "Přihlašovací metoda nebyla nalezena",
+    "unvailable_method_operation": "Nedostupná metoda operace",
+    "unvailable_method_transport": "Nedostupná metoda přenosu",
+    "push_not_registered": "Váš telefon není nastaven pro využití push oznámení. Prosím, načtěte znovu tuto stránku pomocí klávesy F5."
+  },
+  "transport": {
+    "code": {
+      "object" : "Autorizační kód",
+      "sms": {
+        "pre_test": "",
+        "post_test": "Autorizacni kod pro prihlaseni je %20"
+      },
+      "mail": {
+        "pre_test": "Váš autorizační kód pro přihlášení je ",
+        "post_test": "."
+      }
+    },
+    "test": {
+      "object" : "Testovací zpráva",
+      "sms": {
+        "pre_test": "Vase telefonní číslo bylo prirazeno k uctu",
+        "post_test": "."
+      },
+      "mail": {
+        "pre_test": "Toto je testovací zpráva pro uživatele ",
+        "post_test": "."
+      }
+    }
+  }
+}
