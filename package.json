@@ -25,7 +25,7 @@
     "restify": "^4.3.4",
     "socket.io": "^4.5.2",
     "socket.io-client": "^4.5.2",
-    "winston": "^2.2.0"
+    "winston": "^3.10.0"
   },
   "scripts": {
     "start": "nohup node run &"
