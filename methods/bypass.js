@@ -67,6 +67,16 @@ exports.generate_method_secret = function(user, req, res, next) {
         }
     }
     user.bypass.codes = codes;
+    logger.log('archive', {
+        message: [
+            {
+                uid: req.params.uid,
+                clientIp: req.headers['x-client-ip'],
+                clientUserAgent: req.headers['client-user-agent'],
+                action: 'generate codes'
+            }
+        ]
+    });
     user.save( function() {
         res.send({
             code: "Ok",

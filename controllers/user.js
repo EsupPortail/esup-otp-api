@@ -54,6 +54,18 @@ exports.update_transport = function(req, res, next) {
     userDb.find_user(req, res, function(user) {
         user[properties.getEsupProperty(properties.getEsupProperty('userDb')).transport[req.params.transport]]=req.params.new_transport;
         userDb.save_user(user, function(){
+            logger.log('archive', {
+                message: [
+                    {
+                        uid: req.params.uid,
+                        clientIp: req.headers['x-client-ip'],
+                        clientUserAgent: req.headers['client-user-agent'],
+                        action: 'save',
+                        method: req.params.transport,
+                        [req.params.transport === 'sms' ? 'phoneNumber' : 'Email']: req.params.new_transport
+                    }
+                ]
+            });
             res.send({
                 code: 'Ok',
                 message: properties.getMessage('success','update')
@@ -65,6 +77,17 @@ exports.update_transport = function(req, res, next) {
 exports.delete_transport = function(req, res, next) {
     userDb.find_user(req, res, function(user) {
         user[properties.getEsupProperty(properties.getEsupProperty('userDb')).transport[req.params.transport]]="";
+        logger.log('archive', {
+            message: [
+                {
+                    uid: req.params.uid,
+                    clientIp: req.headers['x-client-ip'],
+                    clientUserAgent: req.headers['client-user-agent'],
+                    action: 'delete',
+                    method: req.params.transport
+                }
+            ]
+        });
         userDb.save_user(user, function(){
             res.send({
                 code: 'Ok',

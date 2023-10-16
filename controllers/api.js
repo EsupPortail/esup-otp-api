@@ -522,6 +522,19 @@ exports.get_activate_methods = function (req, res, next) {
  */
 exports.activate_method = function (req, res, next) {
     logger.info(utils.getFileName(__filename) + ' ' + req.params.uid + " activate_method " + req.params.method);
+    if (req.params.method !== 'push') {
+        logger.log('archive', {
+            message: [
+                {
+                    uid: req.params.uid,
+                    clientIp: req.headers['x-client-ip'],
+                    clientUserAgent: req.headers['client-user-agent'],
+                    action: 'activate_method',
+                    method: req.params.method
+                }
+            ]
+        });
+    }
     if (methods[req.params.method]) {
         apiDb.find_user(req, res, function (user) {
             methods[req.params.method].user_activate(user, req, res, next);
@@ -542,6 +555,20 @@ exports.activate_method = function (req, res, next) {
  */
 exports.confirm_activate_method = function (req, res, next) {
     logger.info(utils.getFileName(__filename) + ' ' + req.params.uid + " activate_method " + req.params.method);
+    if (req.params.method === 'push') {
+        logger.log('archive', {
+            message: [
+                {
+                    uid: req.params.uid,
+                    clientIp: req.headers['x-real-ip'] || req.connection.remoteAddress,
+                    clientUserAgent: req.headers['user-agent'],
+                    action: 'activate_method',
+                    method: req.params.method,
+                    Phone: `${req.params.platform} ${req.params.manufacturer} ${req.params.model}`,
+                }
+            ]
+        });
+        }
     if (methods[req.params.method]) {
         apiDb.find_user(req, res, function (user) {
             methods[req.params.method].confirm_user_activate(user, req, res, next);
@@ -553,6 +580,17 @@ exports.confirm_activate_method = function (req, res, next) {
 };
 exports.refresh_gcm_id_method = function (req, res, next) {
     logger.info(utils.getFileName(__filename) + ' ' + req.params.uid + " refresh_push " + req.params.method);
+    logger.log('archive', {
+        message: [
+            {
+                uid: req.params.uid,
+                clientIp: req.headers['x-client-ip'],
+                clientUserAgent: req.headers['user-agent'],
+                action: 'refresh_push',
+                method: req.params.method
+            }
+        ]
+    });
     if (methods[req.params.method]) {
         apiDb.find_user(req, res, function (user) {
             methods[req.params.method].refresh_user_gcm_id(user, req, res, next);
@@ -572,6 +610,17 @@ exports.refresh_gcm_id_method = function (req, res, next) {
  */
 exports.deactivate_method = function (req, res, next) {
     logger.info(utils.getFileName(__filename) + ' ' + req.params.uid + " deactivate_method " + req.params.method);
+    logger.log('archive', {
+        message: [
+            {
+                uid: req.params.uid,
+                clientIp: req.headers['x-client-ip'],
+                clientUserAgent: req.headers['client-user-agent'],
+                action: 'deactivate_method',
+                method: req.params.method
+            }
+        ]
+    });
     if (methods[req.params.method]) {
         apiDb.find_user(req, res, function (user) {
             methods[req.params.method].user_deactivate(user, req, res, next);
@@ -591,6 +640,17 @@ exports.deactivate_method = function (req, res, next) {
  */
 exports.desync = function (req, res, next) {
     logger.info(utils.getFileName(__filename) + ' ' + req.params.uid + " desync " + req.params.method);
+    logger.log('archive', {
+        message: [
+            {
+                uid: req.params.uid,
+                clientIp: req.headers['x-real-ip'] || req.connection.remoteAddress,
+                clientUserAgent: req.headers['user-agent'],
+                action: 'desync',
+                method: req.params.method
+            }
+        ]
+    });
     if (methods[req.params.method]) {
         apiDb.find_user(req, res, function (user) {
             methods[req.params.method].user_desync(user, req, res, next);

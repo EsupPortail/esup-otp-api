@@ -62,6 +62,16 @@ exports.generate_method_secret = function(user, req, res, next) {
     var secret_base32 = authenticator.generateSecret(16);
     var secret_otpauth_url=authenticator.keyuri(user.uid, properties.getMethod('totp').name, secret_base32);
     user.totp.secret={base32:secret_base32,otpauth_url:secret_otpauth_url};
+    logger.log('archive', {
+        message: [
+            {
+                uid: req.params.uid,
+                clientIp: req.headers['x-client-ip'],
+                clientUserAgent: req.headers['client-user-agent'],
+                action: 'generate_secret'
+            }
+        ]
+    });
     user.save( function() {    
 	var response = {};
         response.code = 'Ok';
