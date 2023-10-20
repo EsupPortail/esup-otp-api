@@ -59,8 +59,8 @@ export function generate_method_secret(user, req, res, next) {
     
     const bypassProperties = properties.getMethod('bypass');
     const code_length = bypassProperties.code_length;
-    // on emplit `codes` avec `codes_number` codes différents
-    for (let it = 0; it < bypassProperties.codes_number; it++) {
+    const codes_number = req.query.codes_number || bypassProperties.codes_number;
+    for (let it = 0; it < codes_number; it++) {
 		codes.push(utils.generate_code_of_type(code_length, bypassProperties.code_type));
     }
     user.bypass.codes = codes;
