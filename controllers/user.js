@@ -99,7 +99,6 @@ export function delete_transport (req, res, next) {
             res.status(200);
             res.send({
                 code: 'Ok',
-                message: properties.getMessage('success','method_not_found')
             });
         });
     });
