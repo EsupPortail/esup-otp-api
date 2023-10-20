@@ -45,6 +45,7 @@ export function initialize(server, callback) {
     logger.info(utils.getFileNameFromUrl(import.meta.url)+' '+'Initializing protected routes');
     //api_api_password
     server.get("/protected/methods", validator.check_api_password, api_controller.get_methods);
+    server.get("/protected/users/:uid", validator.check_api_password, api_controller.get_user_infos);
     server.get("/protected/users/:uid/transports/:transport/test", validator.check_api_password, api_controller.transport_test);
     server.get("/protected/users/:uid/methods/:method/secret", validator.check_api_password, api_controller.get_method_secret);
     server.put("/protected/users/:uid/methods/:method/deactivate", validator.check_api_password, api_controller.deactivate_method);
