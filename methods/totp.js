@@ -73,7 +73,7 @@ export function generate_method_secret(user, req, res, next) {
             res.send({
                 code: 'Ok',
                 message: user.totp.secret.base32,
-                qrCode: "<img src='".concat(imageUrl,"'width='164' height='164'>")
+                qrCode: "<img src='".concat(imageUrl," 'width='164' height='164'>")
             });
         });
     });
