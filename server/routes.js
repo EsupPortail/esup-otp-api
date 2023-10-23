@@ -4,6 +4,8 @@ import * as validator from '../services/validator.js';
 import * as api_controller from '../controllers/api.js';
 import * as userDb_controller from '../controllers/user.js';
 import restify from 'restify';
+import swaggerUi from 'swagger-ui-restify'
+import openapiDocument from './openapi.js'
 
 import { getInstance } from '../services/logger.js'; const logger = getInstance();
 
@@ -23,6 +25,11 @@ export function initialize(server, callback) {
 		file: 'socket.io.min.js',
 	}));
     
+    const swaggerUiBaseURL = 'api-docs';
+    server.get("/openapi.json", (req, res, next) => res.json(openapiDocument));
+    server.get("/" + swaggerUiBaseURL + "/*", ...swaggerUi.serve);
+    server.get('/' + swaggerUiBaseURL, swaggerUi.setup(openapiDocument, { baseURL: swaggerUiBaseURL }));
+
     //app
     server.get("/users/:uid/methods/:method/:loginTicket/:hash", validator.check_hash, api_controller.check_accept_authentication);
     server.post("/users/:uid/methods/:method/:loginTicket/:tokenSecret", api_controller.accept_authentication);

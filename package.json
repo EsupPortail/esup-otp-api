@@ -26,6 +26,7 @@
     "restify": "^11.1.0",
     "socket.io": "^4.5.2",
     "socket.io-client": "^4.5.2",
+    "swagger-ui-restify": "github:jamidon/swagger-ui-restify#bcaca4172c57b7df111f718ccd425707a6209b0f",
     "winston": "^3.10.0"
   },
   "scripts": {
