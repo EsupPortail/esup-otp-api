@@ -12,6 +12,8 @@ import qrCode from 'qrcode-npm';
 import * as sockets from '../server/sockets.js';
 import geoip from "geoip-lite";
 
+const trustGcm_id=properties.getMethod('push').trustGcm_id;
+
 // Set up the sender with you API key, prepare your recipients' registration tokens.
 const proxyUrl = properties.getEsupProperty('proxyUrl');
 const fcm = new FCM(properties.getMethodProperty('push', 'serverKey'), proxyUrl);
@@ -42,6 +44,8 @@ export function send_message(user, req, res, next) {
             message: text,
             text: text,
             action: 'auth',
+            trustGcm_id: trustGcm_id,
+            url:getUrl(req),
             uid: user.uid,
             lt: lt
         },
@@ -130,11 +134,7 @@ export function user_activate(user, req, res, next) {
     user.push.activation_fail=null;
     user.push.active=false;
     const qr = qrCode.qrcode(10, 'M');
-    let http = 'http://';
-    if(req.headers["x-forwarded-proto"])http=req.headers["x-forwarded-proto"]+"://";
-    let host = req.headers.host;
-    if(req.headers["x-forwarded-host"])host=req.headers["x-forwarded-host"].replace(/,.*/,'');
-    qr.addData(http+host+'/users/'+user.uid+'/methods/push/'+activation_code);
+    qr.addData(getUrl(req)+'/users/'+user.uid+'/methods/push/'+activation_code);
     qr.make();
     apiDb.save_user(user, () => {
         res.send({
@@ -148,6 +148,12 @@ export function user_activate(user, req, res, next) {
             "activationCode" : activation_code
         });
     });
+}
+
+function getUrl(req) {
+	const http = req.headers["x-forwarded-proto"] || 'http';
+	const host = req.headers["x-forwarded-host"]?.replace(/,.*/, '') || req.headers.host;
+	return http + '://' + host;
 }
 // generation of tokenSecret sent to the client, edited by mbdeme on June 2020
 
@@ -209,14 +215,18 @@ export function refresh_user_gcm_id(user, req, res, next) {
 
 export function accept_authentication(user, req, res, next) {
     logger.debug("accept_authentication ? " + user.push.token_secret + " VS " + req.params.tokenSecret);
-    if (user.push.token_secret == req.params.tokenSecret) {
+    let tokenSecret = null;
+    if(trustGcm_id==true && user.push.device.gcm_id==req.params.tokenSecret)
+        tokenSecret=user.push.token_secret;
+    if (user.push.token_secret == req.params.tokenSecret || tokenSecret!=null) {
         const lt = req.params.loginTicket;
         user.push.lt = lt;
 	logger.debug("accept_authentication OK : lt = " + lt);
         apiDb.save_user(user, () => {
             sockets.emitCas(user.uid,'userAuth', {"code": "Ok", "otp": user.push.code});
             res.send({
-                "code": "Ok"
+                "code": "Ok",
+                "tokenSecret": tokenSecret
             });
             logger.debug("sockets.emitCas OK : otp = " + user.push.code);
         });

@@ -70,6 +70,7 @@
         "push": {
             "serverKey" : "Contact us to obtain a server key",
             "activate": true,
+            "trustGcm_id":false,
 	    "title":"Esup Auth",
 	    "body" :"Demande de connexion à votre compte",
 	    "text1":"Demande de connexion à votre compte",
