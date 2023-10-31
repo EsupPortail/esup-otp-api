@@ -145,7 +145,7 @@ export function find_user(req, res, callback) {
 export function save_user(user, callback) {
 	user.save().then(() => {
 		if (typeof (callback) === "function") callback(user);
-	})
+	});
 }
 
 export function create_user(uid, callback) {
@@ -264,6 +264,13 @@ export function get_uids(req, res, next) {
 		.catch((err) => {
 			logger.error(err);
 		});
+}
+
+export async function forEachPushUser(callbackForEach) {
+	const users = UserPreferences.find({ 'push.active': true });
+	for await (const user of users) {
+		callbackForEach(user);
+	}
 }
 
 /**

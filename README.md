@@ -3,7 +3,7 @@
 esup-otp-api is a RESTful api using NodeJS to generate, send and verify one-time codes for [EsupPortail]
 
 ### Version
-1.1
+1.2.1
 
 Runs on Node v17.8.O and npm v8.5.5
 
@@ -48,6 +48,23 @@ RewriteRule /(.*) ws://127.0.0.1:3000/$1 [P]
 ### Tests
 Install mocha : npm install -g mocha .
 Simply execute "mocha" in the root directory of the project, the server must be launched before executing the tests
+
+
+### Update to 1.2.1 (device commercial name)
+When a user enables push notifications, API now saves device's commercial name rather than device identifier.<br>
+For example, "iPhone SE (2020)" is now recorded and displayed instead of "iPhone12,8".
+
+To apply this update to users already in database before this update, follow the instructions below:<br>
+- Uncomment line 66 of [server/routes.js](https://github.com/EsupPortail/esup-otp-api/blob/master/server/routes.js#L66) ("`server.post("/protected/updateDeviceModelToUserFriendlyName", validator.check_api_password, api_controller.updateDeviceModelToUserFriendlyName);`").
+
+- Restart the server.
+
+- Run command `curl -X POST "http://localhost:3000/protected/updateDeviceModelToUserFriendlyName" -H 'Authorization: Bearer api_password'`<br>
+Replacing "api_password" with the password defined in your [esup.json](https://github.com/EsupPortail/esup-otp-api/blob/master/properties/esup.json#L6), and replacing "3000" with your API port if required.
+
+**Execute this command only once, and, if possible, before the first push enabling following update to 1.2.1.**
+
+- Recomment line 66 and restart the server.
 
 
 ### See also

@@ -11,6 +11,7 @@ import FCM from 'fcm-node';
 import qrCode from 'qrcode-npm';
 import * as sockets from '../server/sockets.js';
 import geoip from "geoip-lite";
+import DeviceDetector from "node-device-detector";
 
 const trustGcm_id=properties.getMethod('push').trustGcm_id;
 
@@ -18,6 +19,11 @@ const trustGcm_id=properties.getMethod('push').trustGcm_id;
 const proxyUrl = properties.getEsupProperty('proxyUrl');
 const fcm = new FCM(properties.getMethodProperty('push', 'serverKey'), proxyUrl);
 export const name = "push";
+
+// https://github.com/sanchezzzhak/node-device-detector#user-content-gettersetteroptions-
+const detector = new DeviceDetector({
+  deviceIndexes: true,
+});
 
 export function send_message(user, req, res, next) {
 	user.push.code = utils.generate_digit_code(properties.getMethod('random_code').code_length);
@@ -157,15 +163,33 @@ function getUrl(req) {
 }
 // generation of tokenSecret sent to the client, edited by mbdeme on June 2020
 
+export function updateDeviceModelToUserFriendlyName(user) {
+	const oldDeviceCode = user.push.device.model;
+	if (oldDeviceCode) {
+		const device = detector.parseDevice(oldDeviceCode, { device: { model: oldDeviceCode } });
+		const newDeviceName = device.model;
+		if (newDeviceName && newDeviceName != oldDeviceCode) {
+			user.push.device.model = newDeviceName;
+			apiDb.save_user(user, () => {
+				const data = { uid: user.uid, oldDeviceCode: oldDeviceCode, newDeviceName: newDeviceName };
+				logger.info('updateDeviceModelToUserFriendlyName ' + JSON.stringify(data));
+			});
+		}
+	}
+}
+
 export function confirm_user_activate(user, req, res, next) {
     if (user.push.activation_code!=null && user.push.activation_fail<properties.getMethod('push').nbMaxFails && !user.push.active && req.params.activation_code == user.push.activation_code) {
+        const userAgent = req.headers['user-agent'];
+        const deviceInfosFromUserAgent = detector.detect(userAgent);
+        
         const token_secret = utils.generate_string_code(128);
         user.push.token_secret = token_secret;
         user.push.active = true;
-        user.push.device.platform = req.params.platform || "AndroidDev";
+        user.push.device.platform = deviceInfosFromUserAgent.os.name || req.params.platform || "AndroidDev";
         user.push.device.gcm_id = req.params.gcm_id || "GCMIDDev";
-        user.push.device.manufacturer = req.params.manufacturer || "DevCorp";
-        user.push.device.model = req.params.model || "DevDevice";
+        user.push.device.manufacturer = deviceInfosFromUserAgent.device.brand || req.params.manufacturer || "DevCorp";
+        user.push.device.model = deviceInfosFromUserAgent.device.model || req.params.model || "DevDevice";
         user.push.activation_code = null;
 	user.push.activation_fail = null;
         apiDb.save_user(user, () => {

@@ -168,6 +168,14 @@ export function remove_user(uid, callback) {
     apiDb.remove_user(uid, callback);
 }
 
+export function updateDeviceModelToUserFriendlyName(req, res, next) {
+	apiDb.forEachPushUser(methods["push"].updateDeviceModelToUserFriendlyName)
+		.then(() => {
+			res.status(200);
+			res.send({ code: 'Ok' });
+		});
+}
+
 /**
  * Envoie le code via le transport == req.params.transport
  * Retourne la réponse du service mail
