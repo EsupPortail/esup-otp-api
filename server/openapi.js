@@ -3,7 +3,7 @@ export default {
   "info": {
     "title": "esup-otp-api",
     "description": "",
-    "version": "1.1.2"
+    "version": null
   },
   "tags": [
     {

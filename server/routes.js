@@ -13,7 +13,7 @@ import { getInstance } from '../services/logger.js'; const logger = getInstance(
  * @param { restify.Server } server
  * @param { Function } callback 
  */
-export function initialize(server, callback) {
+export function initialize(server, version, callback) {
     logger.info(utils.getFileNameFromUrl(import.meta.url)+' '+'Initializing Routes');
 
     logger.info(utils.getFileNameFromUrl(import.meta.url)+' '+'Initializing "unprotected" routes');
@@ -25,6 +25,7 @@ export function initialize(server, callback) {
 		file: 'socket.io.min.js',
 	}));
     
+    openapiDocument.info.version = version;
     const swaggerUiBaseURL = 'api-docs';
     server.get("/openapi.json", (req, res, next) => res.json(openapiDocument));
     server.get("/" + swaggerUiBaseURL + "/*", ...swaggerUi.serve);

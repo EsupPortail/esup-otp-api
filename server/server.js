@@ -7,6 +7,9 @@ import * as userDb_controller from '../controllers/user.js';
 import * as api_controller from '../controllers/api.js';
 import * as routes from '../server/routes.js';
 
+import packageJson from '../package.json' assert { type: 'json' };
+export const version = packageJson.version;
+
 /**
  * absolute path of project directory
  */
@@ -16,7 +19,7 @@ import { getInstance } from '../services/logger.js'; const logger = getInstance(
 
 let server = restify.createServer({
     name: 'esup-otp',
-    version: '0.0.1',
+    version: version,
     // accept all options of https://github.com/delvedor/find-my-way/#api
     ignoreTrailingSlash: true,
     ignoreDuplicateSlashes: true,
@@ -57,7 +60,7 @@ function initialize_apiController() {
 }
 
 function initialize_routes(callback) {
-    routes.initialize(server, function(routed_server) {
+    routes.initialize(server, version, function(routed_server) {
         server = routed_server;
         if (typeof(callback) === "function") callback();
     })
