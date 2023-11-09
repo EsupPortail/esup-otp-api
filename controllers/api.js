@@ -328,7 +328,7 @@ function deactivateRandomCodeIfNoTransport(user, data, suffixe) {
 
 		if (deactivate) {
 			user["random_code" + suffixe].active = false;
-			user.save(() => {
+			save_user(user, () => {
 				logger.info('No transport is set. Auto deactivate random_code' + suffixe + ' for ' + user.uid);
 			});
 		}
