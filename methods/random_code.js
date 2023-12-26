@@ -12,7 +12,7 @@ export function send_message(user, req, res, next) {
     const code_type = properties.getMethod('random_code').code_type;
     new_otp.code = utils.generate_code_of_type(code_length, code_type);
     
-    let validity_time = properties.getMethod('random_code').sms_validity * 60 * 1000;
+    let validity_time = properties.getMethod('random_code').validity_time * 60 * 1000;
     validity_time += new Date().getTime();
     new_otp.validity_time = validity_time;
     user.random_code = new_otp;

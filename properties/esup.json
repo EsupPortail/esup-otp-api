@@ -45,14 +45,14 @@
         },
         "random_code": {
             "activate": true,
-            "sms_validity": 15,
+            "validity_time": 15,
             "code_type": "digit",
             "code_length": 6,
             "transports" : ["sms"]
         },
  	"random_code_mail": {
             "activate": true,
-            "mail_validity": 30,
+            "validity_time": 30,
             "code_type": "digit",
             "code_length": 6,
             "transports" : ["mail"]
