@@ -39,9 +39,6 @@
     "methods": {
         "totp": {
             "activate": true,
-            "sms_window": 6,
-            "mail_window": 15,
-            "app_window": 2,
             "default_window": 2,
 	    "name": "Esup Auth",
             "transports" : []
