@@ -26,6 +26,9 @@ export function check_accept_authentication(req, res, next) {
 export function accept_authentication(user, req, res, next) {
     logger.debug("accept_authentication: ESUP-OTP");
     user.esupnfc.code = utils.generate_digit_code(properties.getMethod('random_code').code_length);
+    let validity_time = properties.getMethod('esupnfc').validity_time * 60 * 1000;
+    validity_time += new Date().getTime();
+    user.esupnfc.validity_time = validity_time;
     apiDb.save_user(user, () => {
 	sockets.emitCas(user.uid,'userAuth', {"code": "Ok", "otp": user.esupnfc.code});
 	logger.debug("sockets.emitCas OK : otp = " + user.esupnfc.code);    
@@ -116,8 +119,9 @@ export function user_desync(user, req, res, next) {
  */
 export function verify_code(user, req, res, callbacks) {
     logger.debug(utils.getFileNameFromUrl(import.meta.url) + ' ' + "verify_code: " + user.uid);
-    if (user.esupnfc.code == req.params.otp) {
+    if (user.esupnfc.code == req.params.otp && Date.now() < user.esupnfc.validity_time) {
         user.esupnfc.code=null;
+        user.esupnfc.validity_time=null;
         apiDb.save_user(user, () => {
             logger.info(utils.getFileNameFromUrl(import.meta.url)+" valid credentials by " + user.uid);
             res.send({

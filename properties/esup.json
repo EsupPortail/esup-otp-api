@@ -81,6 +81,7 @@
         },
         "esupnfc": {
            "activate": false,
+           "validity_time": 3,
            "transports" : []
 	  }
     },

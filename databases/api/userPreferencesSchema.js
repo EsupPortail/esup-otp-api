@@ -108,6 +108,7 @@ export const schema = {
     },
     esupnfc: {
         code : String,
+        validity_time: Number,
         active: {
             type: Boolean,
             default: false
