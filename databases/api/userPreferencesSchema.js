@@ -100,6 +100,7 @@ export const schema = {
             default: null
             },
         code : String,
+        validity_time: Number,
         lt:{
             type: String,
             default: null

@@ -27,6 +27,10 @@ const detector = new DeviceDetector({
 
 export function send_message(user, req, res, next) {
 	user.push.code = utils.generate_digit_code(properties.getMethod('random_code').code_length);
+    let validity_time = properties.getMethod('push').validity_time * 60 * 1000;
+    validity_time += new Date().getTime();
+    user.push.validity_time = validity_time;
+
 	const lt = req.params.lt != undefined ? req.params.lt : utils.generate_string_code(30);
 	logger.debug("gcm.Message with 'lt' as secret : " + lt);
 	const ip = req.headers['x-real-ip'] || req.connection.remoteAddress;
@@ -96,8 +100,9 @@ export function send_message(user, req, res, next) {
  */
 export function verify_code(user, req, res, callbacks) {
     logger.debug(utils.getFileNameFromUrl(import.meta.url) + ' ' + "verify_code: " + user.uid);
-    if (user.push.code == req.params.otp) {
+    if (user.push.code == req.params.otp && Date.now() < user.push.validity_time) {
         user.push.code=null;
+        user.push.validity_time=null;
         apiDb.save_user(user, () => {
             logger.info(utils.getFileNameFromUrl(import.meta.url)+" Valid credentials by " + user.uid);
             res.send({
