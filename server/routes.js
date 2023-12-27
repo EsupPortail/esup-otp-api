@@ -33,6 +33,7 @@ export function initialize(server, version, callback) {
 
     //app
     server.get("/users/:uid/methods/:method/:loginTicket/:hash", validator.check_hash, api_controller.check_accept_authentication);
+    server.get("/users/:uid/methods/:method/:tokenSecret", api_controller.pending);
     server.post("/users/:uid/methods/:method/:loginTicket/:tokenSecret", api_controller.accept_authentication);
     server.post("/users/:uid/methods/:method/transports/push/:lt/:hash", validator.check_hash, api_controller.send_message);
     server.post("/users/:uid/methods/:method/transports/push/:hash", validator.check_hash, api_controller.send_message);

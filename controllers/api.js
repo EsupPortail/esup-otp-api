@@ -378,6 +378,22 @@ export function accept_authentication(req, res, next) {
     }
 }
 
+export function pending(req, res, next) {
+    if (properties.getMethod(req.params.method) && req.params.method=='push') {
+        apiDb.find_user(req, res, function (user) {
+            if (user[req.params.method].active && properties.getMethodProperty(req.params.method, 'activate') && properties.getMethodProperty(req.params.method, 'pending')&& methods[req.params.method]) {
+                methods[req.params.method].pending(user, req, res, next);
+            } else {
+                res.status(404);
+                res.send({code: "Error", message: properties.getMessage('error', 'method_not_found')});
+            }
+        });
+    } else {
+        res.status(404);
+        res.send({code: "Error", message: properties.getMessage('error', 'method_not_found')});
+    }
+}
+
 export function check_accept_authentication(req, res, next) {
     if (properties.getMethod(req.params.method) && req.params.method=='push') {
         apiDb.find_user(req, res, function (user) {

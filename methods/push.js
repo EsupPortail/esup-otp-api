@@ -130,6 +130,21 @@ export function verify_code(user, req, res, callbacks) {
     }
 }
 
+export function pending(user, req, res, callbacks){
+    if (req.params.tokenSecret == user.push.token_secret && Date.now() < user.push.validity_time) {
+        res.send({
+            "code": "Ok",
+            "message": getText(req),
+            "text": getText(req),
+            "action": 'auth'
+        });
+    }
+    else {
+        res.send({
+            "code": "KO"
+        });
+    }
+}
 
 export function generate_method_secret(user, req, res, next) {
     res.send({
