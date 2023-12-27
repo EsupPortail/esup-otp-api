@@ -53,7 +53,8 @@ export function send_message(user, req, res, next) {
     };
 	
 	apiDb.save_user(user, () => {
-	logger.debug("send gsm push ...");
+      if(properties.getMethod('push').notification){
+	    logger.debug("send gsm push ...");
         fcm.send(content, function (err, response) {
             if (err) {
                 logger.error("Problem to send a notification to " + user.uid + ": " + err);
@@ -76,6 +77,15 @@ export function send_message(user, req, res, next) {
 		}
             }
         });
+    }
+    else{
+    logger.debug("Push notification is not activated. See properties/esup.json#methods.push.notification");
+    res.send({
+        "code": "Ok",
+        "message": "Notification is deactivated. Launch Esup Auth app to authenticate."
+    });
+    }
+
     });
 }
 

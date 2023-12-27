@@ -69,6 +69,7 @@
             "activate": true,
             "validity_time": 3,
             "trustGcm_id":false,
+            "notification": true,
 	    "title":"Esup Auth",
 	    "body" :"Demande de connexion à votre compte",
 	    "text1":"Demande de connexion à votre compte",
