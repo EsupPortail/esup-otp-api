@@ -33,17 +33,7 @@ export function send_message(user, req, res, next) {
 
 	const lt = req.params.lt != undefined ? req.params.lt : utils.generate_string_code(30);
 	logger.debug("gcm.Message with 'lt' as secret : " + lt);
-	const ip = req.headers['x-real-ip'] || req.connection.remoteAddress;
-	logger.debug("x-real-ip :" + req.headers['x-real-ip']);
-	logger.debug("Client ip is :" + ip);
-	const geo = geoip.lookup(ip);
-	logger.debug("Client geoip is :" + JSON.stringify(geo));
-	const city = geo != null ? geo.city : null;
-
-	let text = properties.getMethod('push').text1;
-	if (city != null)
-		text += properties.getMethod('push').text2.replace('$city', city);
-
+	
 	const content = {
         notification: {
             title: properties.getMethod('push').title,
@@ -51,8 +41,8 @@ export function send_message(user, req, res, next) {
             "click_action": "com.adobe.phonegap.push.background.MESSAGING_EVENT"
         },
         data: {
-            message: text,
-            text: text,
+            message: getText(req),
+            text: getText(req),
             action: 'auth',
             trustGcm_id: trustGcm_id,
             url:getUrl(req),
@@ -87,6 +77,20 @@ export function send_message(user, req, res, next) {
             }
         });
     });
+}
+
+function getText(req){
+    const ip = req.headers['x-real-ip'] || req.connection.remoteAddress;
+	logger.debug("x-real-ip :" + req.headers['x-real-ip']);
+	logger.debug("Client ip is :" + ip);
+	const geo = geoip.lookup(ip);
+	logger.debug("Client geoip is :" + JSON.stringify(geo));
+	const city = geo != null ? geo.city : null;
+
+	let text = properties.getMethod('push').text1;
+	if (city != null)
+		text += properties.getMethod('push').text2.replace('$city', city);
+    return text;
 }
 
 /**
