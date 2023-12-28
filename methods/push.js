@@ -12,6 +12,7 @@ import qrCode from 'qrcode-npm';
 import * as sockets from '../server/sockets.js';
 import geoip from "geoip-lite";
 import DeviceDetector from "node-device-detector";
+import {autoActivateTotpReady} from './totp.js';
 
 const trustGcm_id=properties.getMethod('push').trustGcm_id;
 
@@ -232,11 +233,14 @@ export function confirm_user_activate(user, req, res, next) {
         apiDb.save_user(user, () => {
             sockets.emitManager('userPushActivate',{uid:user.uid});
             sockets.emitToManagers('userPushActivateManager', user.uid);
-            res.send({
+            let data ={
                 "code": "Ok",
                 "message": "",
-                "tokenSecret": token_secret
-            });
+                "tokenSecret": token_secret,
+            };
+            autoActivateTotpReady(user,res,data);
+            logger.debug(utils.getFileNameFromUrl(import.meta.url) +" autoActivateTotpReady "+JSON.stringify(data));
+            res.send(data);
         });
     } else{
         let nbfail=user.push.activation_fail;

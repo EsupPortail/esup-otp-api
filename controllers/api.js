@@ -605,6 +605,21 @@ export function confirm_activate_method(req, res, next) {
     }
 }
 
+export function autoActivateTotp(req, res, next) {
+    logger.info(utils.getFileNameFromUrl(import.meta.url) + ' ' + req.params.uid + " autoActivateTotp " + req.params.method);
+    if (methods[req.params.method]) {
+        apiDb.find_user(req, res, function (user) {
+            methods[req.params.method].autoActivateTotp(user, req, res, next);
+        });
+    } else {
+        res.status(404);
+        res.send({
+            "code": "Error",
+            "message": properties.getMessage('error', 'method_not_found')
+        });
+    }
+}
+
 export function refresh_gcm_id_method(req, res, next) {
     logger.info(utils.getFileNameFromUrl(import.meta.url) + ' ' + req.params.uid + " refresh_push " + req.params.method);
     logger.log('archive', {

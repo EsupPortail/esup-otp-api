@@ -40,6 +40,7 @@
         "totp": {
             "activate": true,
             "default_window": 2,
+            "autoActivate": true,
 	    "name": "Esup Auth",
             "transports" : []
         },

@@ -47,11 +47,53 @@ export function verify_code(user, req, res, callbacks) {
     }
 }
 
-
-export function generate_method_secret(user, req, res, next) {
+function generateSecret(user){
     const secret_base32 = authenticator.generateSecret(16);
     const secret_otpauth_url=authenticator.keyuri(user.uid, properties.getMethod('totp').name, secret_base32);
-    user.totp.secret={base32:secret_base32,otpauth_url:secret_otpauth_url};
+    return {base32:secret_base32,otpauth_url:secret_otpauth_url};
+}
+
+export function autoActivateTotpReady(user,res,data){
+    if(!user.totp.active && properties.getMethodProperty('totp', 'activate') && properties.getMethodProperty('totp', 'autoActivate')){
+        user.totp.secret=generateSecret(user);
+        data.autoActivateTotp = true;
+        data.totpKey = user.totp.secret.base32;
+        data.totpName=properties.getMethod('totp').name;
+        logger.info(utils.getFileNameFromUrl(import.meta.url) +" autoActivateTotpReady "+user.uid);
+        apiDb.save_user(user);
+    }
+    else {
+        data.autoActivateTotp = false;
+        logger.info(utils.getFileNameFromUrl(import.meta.url) +" autoActivateTotpReady is false");
+    }
+}
+
+export function autoActivateTotp(user, req,res, next){
+    if(!user.totp.active && properties.getMethodProperty('totp', 'activate') && properties.getMethodProperty('totp', 'autoActivate') && user.totp.secret!=null){
+        user.totp.active = true;
+        apiDb.save_user(user, () => {
+            res.send({
+                "code":"Ok"
+            })
+            logger.log('archive', {
+                message: [
+                {
+                    uid: user.uid,
+                    clientIp: req.headers['x-real-ip'],
+                    clientUserAgent: req.headers['user-agent'],
+                    action: 'activate_totp_auto'
+                }
+                ]
+            });
+        });
+    }
+    else res.send({
+        "code":"Ko"
+    })
+}
+
+export function generate_method_secret(user, req, res, next) {
+    user.totp.secret=generateSecret(user);
     logger.log('archive', {
         message: [
             {
