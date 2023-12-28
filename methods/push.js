@@ -30,8 +30,8 @@ export function send_message(user, req, res, next) {
     let validity_time = properties.getMethod('push').validity_time * 60 * 1000;
     validity_time += new Date().getTime();
     user.push.validity_time = validity_time;
-
 	const lt = req.params.lt != undefined ? req.params.lt : utils.generate_string_code(30);
+    user.push.lt=lt;
 	logger.debug("gcm.Message with 'lt' as secret : " + lt);
 	
 	const content = {
@@ -136,7 +136,8 @@ export function pending(user, req, res, callbacks){
             "code": "Ok",
             "message": getText(req),
             "text": getText(req),
-            "action": 'auth'
+            "action": 'auth',
+            "lt": user.push.lt
         });
     }
     else {
@@ -276,10 +277,8 @@ export function accept_authentication(user, req, res, next) {
     let tokenSecret = null;
     if(trustGcm_id==true && user.push.device.gcm_id==req.params.tokenSecret)
         tokenSecret=user.push.token_secret;
-    if (user.push.token_secret == req.params.tokenSecret || tokenSecret!=null) {
-        const lt = req.params.loginTicket;
-        user.push.lt = lt;
-	logger.debug("accept_authentication OK : lt = " + lt);
+    if ((user.push.token_secret == req.params.tokenSecret || tokenSecret!=null) && req.params.loginTicket== user.push.lt) {
+	    logger.debug("accept_authentication OK : lt = " + req.params.loginTicket);
         apiDb.save_user(user, () => {
             sockets.emitCas(user.uid,'userAuth', {"code": "Ok", "otp": user.push.code});
             res.send({
@@ -289,7 +288,7 @@ export function accept_authentication(user, req, res, next) {
             logger.debug("sockets.emitCas OK : otp = " + user.push.code);
         });
     } else {
-	logger.error("token secret doesn't match : " + user.push.token_secret + " != " + req.params.tokenSecret); 
+	logger.error(user.uid+"'s token_secret or lt doesn't match. req.params.tokenSecret="+ req.params.tokenSecret+" and req.params.loginTicket="+ req.params.loginTicket); 
 	res.send({
             "code": "Error",
             "message": properties.getMessage('error', 'unvailable_method_operation')
