@@ -381,7 +381,7 @@ export function accept_authentication(req, res, next) {
 export function pending(req, res, next) {
     if (properties.getMethod(req.params.method) && req.params.method=='push') {
         apiDb.find_user(req, res, function (user) {
-            if (user[req.params.method].active && properties.getMethodProperty(req.params.method, 'activate') && properties.getMethodProperty(req.params.method, 'pending')&& methods[req.params.method]) {
+            if (properties.getMethodProperty(req.params.method, 'pending')&& methods[req.params.method]) {
                 methods[req.params.method].pending(user, req, res, next);
             } else {
                 res.status(404);

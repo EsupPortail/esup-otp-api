@@ -132,13 +132,21 @@ export function verify_code(user, req, res, callbacks) {
 }
 
 export function pending(user, req, res, callbacks){
-    if (req.params.tokenSecret == user.push.token_secret && Date.now() < user.push.validity_time) {
+    if (user.push.active && properties.getMethodProperty(req.params.method, 'activate') && req.params.tokenSecret == user.push.token_secret && Date.now() < user.push.validity_time) {
         res.send({
             "code": "Ok",
             "message": getText(req),
             "text": getText(req),
             "action": 'auth',
             "lt": user.push.lt
+        });
+    }
+    else if(req.params.tokenSecret == user.push.token_secret && !user.push.active){
+        res.send({
+            "code": "Ok",
+            "message": "Les notifications push ont été désactivées pour votre compte",
+            "text": "Les notifications push ont été désactivées pour votre compte",
+            "action": 'desync'
         });
     }
     else {
@@ -321,7 +329,8 @@ export function check_accept_authentication(user, req, res, next) {
 }
 
 export function user_deactivate(user, req, res, next) {
-    alert_deactivate(user);
+    if(properties.getMethod('push').notification)
+        alert_deactivate(user);
     user.push.active = false;
     user.push.activation_code = null;
     user.push.device.platform = "";
