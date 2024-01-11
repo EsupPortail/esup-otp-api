@@ -294,7 +294,7 @@ export function accept_authentication(user, req, res, next) {
             logger.debug("sockets.emitCas OK : otp = " + user.push.code);
         });
     } else {
-	logger.error(user.uid+"'s token_secret or lt doesn't match. req.params.tokenSecret="+ req.params.tokenSecret+" and req.params.loginTicket="+ req.params.loginTicket); 
+	logger.warn(user.uid+"'s token_secret or lt doesn't match. req.params.tokenSecret="+ req.params.tokenSecret+" and req.params.loginTicket="+ req.params.loginTicket); 
 	res.send({
             "code": "Error",
             "message": properties.getMessage('error', 'unvailable_method_operation')
