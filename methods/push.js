@@ -151,7 +151,7 @@ export function pending(user, req, res, callbacks){
     }
     else {
         if(req.params.tokenSecret != user.push.token_secret)
-            logger.info(utils.getFileNameFromUrl(import.meta.url)+" Bad token_secret provided by "+user.uid+" in pending action");
+            logger.warn(utils.getFileNameFromUrl(import.meta.url)+" Bad token_secret provided by "+user.uid+" in pending action");
         res.send({
             "code": "KO"
         });
@@ -256,7 +256,7 @@ export function confirm_user_activate(user, req, res, next) {
                 nbfail++;
             else nbfail=1;
             user.push.activation_fail = nbfail;
-        logger.info(utils.getFileNameFromUrl(import.meta.url) + ' ' +"App confirm activation fails for "+user.uid+" ("+nbfail+")");
+        logger.warn(utils.getFileNameFromUrl(import.meta.url) + ' ' +"App confirm activation fails for "+user.uid+" ("+nbfail+")");
         apiDb.save_user(user, () => {
             res.send({
                 "code": "Error",
@@ -320,7 +320,7 @@ export function check_accept_authentication(user, req, res, next) {
             });
         })
     } else {
-	logger.error("CAS Login Ticket doesn't match : " + user.push.lt + " != " + req.params.loginTicket); 
+	logger.warn("CAS Login Ticket doesn't match : " + user.push.lt + " != " + req.params.loginTicket); 
 	res.send({
             "code": "Error",
             "message": "CAS Login Ticket doesn't match"
