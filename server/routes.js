@@ -37,7 +37,10 @@ export function initialize(server, version, callback) {
     server.post("/users/:uid/methods/:method/:loginTicket/:tokenSecret", api_controller.accept_authentication);
     server.post("/users/:uid/methods/:method/autoActivateTotp/:tokenSecret", api_controller.autoActivateTotp);
     server.post("/users/:uid/methods/:method/transports/push/:lt/:hash", validator.check_hash, api_controller.send_message);
-    server.post("/users/:uid/methods/:method/transports/push/:hash", validator.check_hash, api_controller.send_message);
+    server.get("/users/:uid/transports/:transport/test/:hash", validator.check_hash, api_controller.transport_test);
+    server.put("/users/:uid/transports/:transport/:new_transport/:hash", validator.check_hash, userDb_controller.update_transport);
+    server.del("/users/:uid/transports/:transport/:hash", validator.check_hash, userDb_controller.delete_transport);
+    server.post("/users/:uid/methods/:method/secret/:hash", validator.check_hash, api_controller.generate_method_secret);
     server.post("/users/:uid/methods/:method/activate/:activation_code/:gcm_id/:platform/:manufacturer/:model", api_controller.confirm_activate_method);
     server.post("/users/:uid/methods/:method/refresh/:tokenSecret/:gcm_id/:gcm_id_refreshed", api_controller.refresh_gcm_id_method);
     server.del("/users/:uid/methods/:method/:tokenSecret", api_controller.desync);
