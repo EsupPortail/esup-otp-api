@@ -437,7 +437,7 @@ export function verify_code(req, res, next) {
         }];
 
         for (const method in methods){
-            if(user[method].active) {
+            if(user[method].active && properties.getMethodProperty(method, 'activate')) {
                 callbacks.push(methods[method].verify_code);
             }
         }
