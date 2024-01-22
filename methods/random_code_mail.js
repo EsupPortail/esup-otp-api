@@ -64,14 +64,6 @@ export function delete_method_secret(user, req, res, next) {
     });
 }
 
-export function get_method_secret(user, req, res, next) {
-    res.status(404);
-    res.send({
-        "code": "Error",
-        "message": properties.getMessage('error','unvailable_method_operation')
-    });
-}
-
 export function user_activate(user, req, res, next) {
     user.random_code_mail.active = true;
     apiDb.save_user(user, () => {

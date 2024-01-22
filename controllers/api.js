@@ -491,24 +491,6 @@ export function delete_method_secret(req, res, next) {
 }
 
 /**
- * Renvoie le secret de l'utilisateur afin qu'il puisse l'entrer dans son appli smartphone
- *
- * @param req requete HTTP contenant le nom la personne recherchee
- * @param res response HTTP
- * @param next permet d'appeler le prochain gestionnaire (handler)
- */
-export function get_method_secret(req, res, next) {
-    if (properties.getMethod(req.params.method)) {
-        apiDb.find_user(req, res, function (user) {
-            methods[req.params.method].get_method_secret(user, req, res, next);
-        });
-    } else {
-        res.status(404);
-        res.send({code: "Error", message: properties.getMessage('error', 'method_not_found')});
-    }
-}
-
-/**
  * Renvoie les méthodes activées de l'utilisateur
  *
  * @param req requete HTTP contenant le nom la personne recherchee

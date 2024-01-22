@@ -12,7 +12,6 @@ import * as utils from '../services/utils.js';
  * @property {(user: any, req: Request, res: Response, callbacks: Function) => void} verify_code
  * @property {(user: any, req: Request, res: Response, next: Next) => void} generate_method_secret
  * @property {(user: any, req: Request, res: Response, next: Next) => void} delete_method_secret
- * @property {(user: any, req: Request, res: Response, next: Next) => void} get_method_secret
  * @property {(user: any, req: Request, res: Response, next: Next) => void} user_activate
  * @property {(user: any, req: Request, res: Response, next: Next) => void} confirm_user_activate
  * @property {(user: any, req: Request, res: Response, next: Next) => void} user_deactivate

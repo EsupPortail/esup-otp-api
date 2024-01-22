@@ -172,14 +172,6 @@ export function delete_method_secret(user, req, res, next) {
     });
 }
 
-export function get_method_secret(user, req, res, next) {
-    res.send({
-        "code": "Error",
-        "message": properties.getMessage('error', 'unvailable_method_operation')
-    });
-}
-
-
 export function user_activate(user, req, res, next) {
     const activation_code = utils.generate_digit_code(6);
     user.push.activation_code = activation_code;
