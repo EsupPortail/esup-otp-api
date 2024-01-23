@@ -35,3 +35,7 @@ export function esupnfc_check_server_ip(req, res, next) {
 	return next(new errors.ForbiddenError());
     }
 }
+
+export function dumbValidator(req, res, next) {
+    next();
+}

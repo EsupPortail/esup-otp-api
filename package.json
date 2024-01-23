@@ -12,9 +12,10 @@
   "dependencies": {
     "crypto-js": "^4.1.1",
     "geoip-lite": "^1.4.2",
-    "ldapjs": "^1.0.0",
+    "ldapjs-promise": "^3.0.6",
+    "lodash": "4.17.21",
     "mongoose": "^7.6.1",
-    "mysql": "^2.10.2",
+    "mysql2": "^3.6.3",
     "fcm-node": "^1.6.1",
     "nodemailer": "^6.7.8",
     "nodemailer-smtp-transport": "^2.4.1",
@@ -23,7 +24,8 @@
     "otplib": "^12.0.1",
     "qrcode": "^1.5.1",
     "request": "^2.69.0",
-    "restify-cors-middleware2": "2.2.1",
+    "request-promise-native": "^1.0.9",
+    "restify-cors-middleware2": "^2.2.1",
     "restify": "^11.1.0",
     "socket.io": "^4.5.2",
     "socket.io-client": "^4.5.2",
@@ -31,10 +33,14 @@
     "winston": "^3.10.0"
   },
   "scripts": {
-    "start": "nohup node run &"
+    "start": "nohup node run &",
+    "test": "node --test ./test/test.js",
+    "coverage": "node --test --experimental-test-coverage ./test/test.js",
+    "lcov": "node --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=lcov.info ./test/test.js # only works with node v21.2.0 or higher"
   },
   "devDependencies": {
-    "eslint": "^8.50.0",
-    "mocha": "^10.2.0"
+    "eslint": "^8.55.0",
+    "mongodb-memory-server": "^9.1.1",
+    "supertest": "^6.3.3"
   }
 }

@@ -2,105 +2,94 @@ import * as properties from '../properties/properties.js';
 import * as utils from '../services/utils.js';
 
 import { getInstance } from '../services/logger.js';
+import * as userUtils from '../databases/user/userUtils.js';
 const logger = getInstance();
 
 export let userDb;
 
-export function initialize(callback) {
-    if (properties.getEsupProperty('userDb')) {
-        import('../databases/user/' + properties.getEsupProperty('userDb') + '.js')
-            .then((userDbModule) => {
-                userDb = userDbModule;
-                userDb.initialize(callback);
-            })
-    } else logger.error(utils.getFileNameFromUrl(import.meta.url) + ' ' + "Unknown userDb");
-}
-
-export function user_exists(req, res, callback){
-    userDb.find_user(req, res, function(user){
-        if (typeof(callback) === "function") callback(user);
-    })
-}
-
-
-export function get_available_transports (req, res, callback) {
-    userDb.find_user(req, res, function(user) {
-        const response = {};
-        const result = {};
-        if (user[properties.getEsupProperty(properties.getEsupProperty('userDb')).transport.mail]) result.mail = utils.cover_string(user[properties.getEsupProperty(properties.getEsupProperty('userDb')).transport.mail], 4, 5);
-        if (user[properties.getEsupProperty(properties.getEsupProperty('userDb')).transport.sms]) result.sms = utils.cover_string(user[properties.getEsupProperty(properties.getEsupProperty('userDb')).transport.sms], 2, 2);
-        if (typeof(callback) === "function") callback(result);
-        else {
-            response.code = "Ok";
-            response.message = properties.getMessage('success','transports_found');
-            response.transports_list = result;
-
-            res.status(200);
-            res.send(response);
+export async function initialize(initializedUserDb) {
+    if (initializedUserDb) {
+        userDb = initializedUserDb;
+    } else {
+        const userDbName = properties.getEsupProperty('userDb');
+        if (userDbName) {
+            userDb = await import('../databases/user/' + userDbName + '.js');
+            return userDb.initialize();
+        } else {
+            throw new Error('Unknown userDb');
         }
+    }
+}
+
+export function find_user(req) {
+    return userDb.find_user(req.params.uid);
+}
+
+export async function get_available_transports(req) {
+    const user = await find_user(req);
+    const result = {};
+    const mail = userUtils.getMail(user);
+    const sms = userUtils.getSms(user);
+    if (mail) {
+        result.mail = utils.cover_string(mail, 4, 5);
+    }
+    if (sms) {
+        result.sms = utils.cover_string(sms, 2, 2);
+    }
+    return result;
+}
+
+export async function get_phone_number(req) {
+    const user = await find_user(req);
+    return userUtils.getSms(user);
+}
+
+export async function get_mail_address(req) {
+    const user = await find_user(req);
+    return userUtils.getMail(user);
+}
+
+export async function update_transport(req, res) {
+    const user = await find_user(req);
+    userUtils.setTransport(user, req.params.transport, req.params.new_transport);
+    await userDb.save_user(user);
+    logger.log('archive', {
+        message: [
+            {
+                uid: req.params.uid,
+                clientIp: req.headers['x-client-ip'],
+                clientUserAgent: req.headers['client-user-agent'],
+                action: 'save',
+                method: req.params.transport,
+                [req.params.transport === 'sms' ? 'phoneNumber' : 'Email']: req.params.new_transport
+            }
+        ]
+    });
+    res.status(200);
+    res.send({
+        code: 'Ok',
+        message: properties.getMessage('success', 'update')
     });
 }
 
-
-
-export function send_sms (req, res, callback) {
-    userDb.find_user(req, res, function(user) {
-        if (typeof(callback) === "function") callback(user[properties.getEsupProperty(properties.getEsupProperty('userDb')).transport.sms]);
+export async function delete_transport(req, res) {
+    const user = await find_user(req);
+    userUtils.setTransport(user, req.params.transport, "");
+    logger.log('archive', {
+        message: [
+            {
+                uid: req.params.uid,
+                clientIp: req.headers['x-client-ip'],
+                clientUserAgent: req.headers['client-user-agent'],
+                action: 'delete',
+                method: req.params.transport
+            }
+        ]
     });
-}
-
-
-export function send_mail (req, res, callback) {
-    userDb.find_user(req, res, function(user) {
-        if (typeof(callback) === "function") callback(user[properties.getEsupProperty(properties.getEsupProperty('userDb')).transport.mail]);
-    });
-}
-
-export function update_transport (req, res, next) {
-    userDb.find_user(req, res, function(user) {
-        user[properties.getEsupProperty(properties.getEsupProperty('userDb')).transport[req.params.transport]]=req.params.new_transport;
-        userDb.save_user(user, function(){
-            logger.log('archive', {
-                message: [
-                    {
-                        uid: req.params.uid,
-                        clientIp: req.headers['x-client-ip'],
-                        clientUserAgent: req.headers['client-user-agent'],
-                        action: 'save',
-                        method: req.params.transport,
-                        [req.params.transport === 'sms' ? 'phoneNumber' : 'Email']: req.params.new_transport
-                    }
-                ]
-            });
-            res.status(200);
-            res.send({
-                code: 'Ok',
-                message: properties.getMessage('success','update')
-            });
-        });
-    });
-}
-
-export function delete_transport (req, res, next) {
-    userDb.find_user(req, res, function(user) {
-        user[properties.getEsupProperty(properties.getEsupProperty('userDb')).transport[req.params.transport]]="";
-        logger.log('archive', {
-            message: [
-                {
-                    uid: req.params.uid,
-                    clientIp: req.headers['x-client-ip'],
-                    clientUserAgent: req.headers['client-user-agent'],
-                    action: 'delete',
-                    method: req.params.transport
-                }
-            ]
-        });
-        userDb.save_user(user, function(){
-            res.status(200);
-            res.send({
-                code: 'Ok',
-            });
-        });
+    await userDb.save_user(user);
+    res.status(200);
+    res.send({
+        code: 'Ok',
     });
 }
 
@@ -109,10 +98,9 @@ export function delete_transport (req, res, next) {
  *
  * @param req requete HTTP contenant le nom la personne recherchee
  * @param res response HTTP
- * @param next permet d'appeler le prochain gestionnaire (handler)
  */
-export function remove_user(uid, callback) {
-    userDb.remove_user(uid, callback);
+export function remove_user(uid) {
+    return userDb.remove_user(uid);
 }
 
 /**
@@ -120,10 +108,9 @@ export function remove_user(uid, callback) {
  *
  * @param req requete HTTP contenant le nom la personne recherchee
  * @param res response HTTP
- * @param next permet d'appeler le prochain gestionnaire (handler)
  */
-export function create_user(uid, callback) {
-    userDb.create_user(uid, callback);
+export function create_user(uid) {
+    return userDb.create_user(uid);
 }
 
 /**
@@ -131,8 +118,7 @@ export function create_user(uid, callback) {
  *
  * @param req requete HTTP contenant le nom la personne recherchee
  * @param res response HTTP
- * @param next permet d'appeler le prochain gestionnaire (handler)
  */
-export function save_user(user, callback) {
-    userDb.save_user(user, callback);
+export function save_user(user) {
+    return userDb.save_user(user);
 }

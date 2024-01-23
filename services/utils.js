@@ -3,7 +3,7 @@ import CryptoJS from 'crypto-js';
 import crypto from 'crypto';
 import { getInstance } from '../services/logger.js'; const logger = getInstance();
 import { fileURLToPath } from 'url';
-import * as path from 'path';
+import * as path from 'node:path';
 
 export function get_hash(uid) {
     const d = new Date();
@@ -75,10 +75,15 @@ export function check_transport_validity(transport, value){
 }
 
 /**
+ * absolute path of project directory
+ */
+const base_dir = relativeToAbsolutePath(import.meta.url, '..');
+
+/**
  * relative path from project directory
  */
 export function getFileName(filename){
-	return path.relative(global.base_dir, filename);
+	return path.relative(base_dir, filename);
 }
 
 /**

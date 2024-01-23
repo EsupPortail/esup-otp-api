@@ -1,5 +1,6 @@
 import * as properties from '../properties/properties.js';
 import * as utils from '../services/utils.js';
+import * as errors from '../services/errors.js';
 import { apiDb } from '../controllers/api.js';
 
 import { getInstance } from '../services/logger.js';
@@ -7,23 +8,17 @@ const logger = getInstance();
 
 export const name = "bypass";
 
-export function send_message(user, req, res, next) {
-    res.status(404);
-    res.send({
-        "code": "Error",
-        "message": properties.getMessage('error','unvailable_method_operation')
-    });
+export function send_message(user, req, res) {
+    throw new errors.UnvailableMethodOperationError();
 }
 
 /**
- * Vérifie si le code fourni correspond à celui stocké en base de données
+ * Indique si le code fourni correspond à celui stocké en base de données
  *
  * @param req requete HTTP contenant le nom la personne recherchee
  * @param res response HTTP
- * @param next permet d'appeler le prochain gestionnaire (handler)
  */
-export function verify_code(user, req, res, callbacks) {
-    logger.debug(utils.getFileNameFromUrl(import.meta.url)+' '+"verify_code: "+user.uid);
+export async function verify_code(user, req) {
     if (user.bypass.codes) {
         let checkOtp = false;
         const codes = user.bypass.codes;
@@ -36,32 +31,24 @@ export function verify_code(user, req, res, callbacks) {
             }
         }
         if (checkOtp) {
-            apiDb.save_user(user, () => {
-                logger.info(utils.getFileNameFromUrl(import.meta.url)+" Valid credentials by "+user.uid);
-                res.status(200);
-                res.send({
-                    "code": "Ok",
-                    "message": properties.getMessage('success','valid_credentials')
-                });
-            });
+            await apiDb.save_user(user);
+            return true;
         } else {
-            const next = callbacks.pop();
-            next(user, req, res, callbacks);
+            return false;
         }
     } else {
-        const next = callbacks.pop();
-        next(user, req, res, callbacks);
+        return false;
     }
 }
 
-export function generate_method_secret(user, req, res, next) {
+export async function generate_method_secret(user, req, res) {
     const codes = new Array();
-    
+
     const bypassProperties = properties.getMethod('bypass');
     const code_length = bypassProperties.code_length;
     const codes_number = req.query.codes_number || bypassProperties.codes_number;
     for (let it = 0; it < codes_number; it++) {
-		codes.push(utils.generate_code_of_type(code_length, bypassProperties.code_type));
+        codes.push(utils.generate_code_of_type(code_length, bypassProperties.code_type));
     }
     user.bypass.codes = codes;
     logger.log('archive', {
@@ -74,71 +61,47 @@ export function generate_method_secret(user, req, res, next) {
             }
         ]
     });
-    apiDb.save_user(user, () => {
-        res.status(200);
-        res.send({
-            code: "Ok",
-            message: "",
-            codes: codes
-
-        });
+    await apiDb.save_user(user);
+    res.status(200);
+    res.send({
+        code: "Ok",
+        codes: codes
     });
 }
 
-export function delete_method_secret(user, req, res, next) {
+export async function delete_method_secret(user, req, res) {
     user.bypass.active = false;
     user.bypass.codes = [];
-    apiDb.save_user(user, () => {
-        res.status(200);
-        res.send({
-            "code": "Ok",
-            "message": 'Secret removed'
-        });
+    await apiDb.save_user(user);
+    res.status(200);
+    res.send({
+        "code": "Ok",
+        "message": 'Secret removed'
     });
 }
 
-export function user_activate(user, req, res, next) {
+export async function user_activate(user, req, res) {
     user.bypass.active = true;
-    apiDb.save_user(user, () => {
-        res.status(200);
-        res.send({
-            "code": "Ok",
-            "message": ""
-        });
-    });
-}
-
-export function confirm_user_activate(user, req, res, next) {
-    res.status(404);
+    await apiDb.save_user(user);
+    res.status(200);
     res.send({
-        "code": "Error",
-        "message": properties.getMessage('error','unvailable_method_operation')
+        "code": "Ok",
     });
 }
 
-export function user_deactivate(user, req, res, next) {
+export function confirm_user_activate(user, req, res) {
+    throw new errors.UnvailableMethodOperationError();
+}
+
+export async function user_deactivate(user, req, res) {
     user.bypass.active = false;
-    apiDb.save_user(user, () => {
-        res.status(200);
-        res.send({
-            "code": "Ok",
-            "message": ""
-        });
+    await apiDb.save_user(user);
+    res.status(200);
+    res.send({
+        "code": "Ok",
     });
 }
 
-export function admin_activate(req, res, next) {
-    res.status(404);
-    res.send({
-        "code": "Error",
-        "message": properties.getMessage('error','unvailable_method_operation')
-    });
-}
-
-export function user_desync(user, req, res, next) {
-    res.status(404);
-    res.send({
-        "code": "Error",
-        "message": properties.getMessage('error','unvailable_method_operation')
-    });
+export function user_desync(user, req, res) {
+    throw new errors.UnvailableMethodOperationError();
 }

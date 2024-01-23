@@ -1,67 +1,75 @@
 import * as utils from '../../services/utils.js';
 import * as properties from '../../properties/properties.js';
-import * as ldapjs from 'ldapjs';
+import * as errors from '../../services/errors.js';
+import ldapjs from 'ldapjs-promise';
 
 import { getInstance } from '../../services/logger.js';
 const logger = getInstance();
 
+/**
+ * @type ldapjs.Client
+ */
 let client;
 
-export function initialize(callback) {
-    logger.info(utils.getFileNameFromUrl(import.meta.url)+' '+"Initializing ldap connection");
+export async function initialize() {
+    logger.info(utils.getFileNameFromUrl(import.meta.url) + ' Initializing ldap connection');
     client = ldapjs.createClient({
-        url: properties.getEsupProperty('ldap').uri
+        url: getLdapProperties().uri
     });
-    client.bind(properties.getEsupProperty('ldap').adminDn, properties.getEsupProperty('ldap').password, function(err) {
-        if (err) logger.error(utils.getFileNameFromUrl(import.meta.url)+' bind error : ' + err);
-        else if (typeof(callback) === "function"){
-            logger.info(utils.getFileNameFromUrl(import.meta.url)+' '+"Ldap connection Initialized");
-            callback();
-     }
-    });
+    await client.bind(getLdapProperties().adminDn, getLdapProperties().password);
+    logger.info(utils.getFileNameFromUrl(import.meta.url) + ' Ldap connection Initialized');
 }
 
-export function find_user(req, res, callback) {
+export async function find_user(uid) {
+    let user;
+    try {
+        user = await find_user_internal(uid);
+    } catch (error) {
+        if (!(error instanceof ldapjs.NoSuchObjectError)) {
+            throw error;
+        }
+    }
+    return user || errors.UserNotFoundError.throw();
+}
+
+const modifiableAttributes = [getSmsAttribute(), getMailAttribute()];
+const allAttributes = modifiableAttributes.concat("uid");
+
+/**
+ * @returns the user, or undefined
+ */
+async function find_user_internal(uid) {
+    /** @type ldapjs.SearchOptions */
     const opts = {
-        filter: 'uid=' + req.params.uid,
+        filter: new ldapjs.EqualityFilter({ attribute: 'uid', value: uid }),
         scope: 'sub',
-        attributes: [properties.getEsupProperty('ldap').transport.sms, properties.getEsupProperty('ldap').transport.mail]
+        attributes: allAttributes
     };
 
-    let user_found = false;
-    client.search(properties.getEsupProperty('ldap').baseDn, opts, function(err, _res) {
-        if (err) logger.error(utils.getFileNameFromUrl(import.meta.url)+' search error : ' + err);
+    const searchResult = await client.searchReturnAll(getBaseDn(), opts);
+    const searchEntry = searchResult.entries[0];
 
-        _res.on('searchEntry', function(entry) {
-            user_found = true;
-            if (typeof(callback) === "function") callback(entry.object);
+    if (!searchEntry) {
+        return;
+    }
 
-        });
+    const user = {};
+    for (const attribute of searchEntry.attributes) {
+        const attributeName = attribute.type;
+        if (allAttributes.includes(attributeName)) {
+            user[attributeName] = attribute.values[0];
+        }
+    }
 
-        _res.on('error', function(err) {
-            logger.error(utils.getFileNameFromUrl(import.meta.url)+' bind error : ' + err);
-        });
-
-        _res.on('end', function(err) {
-            if (!user_found) {
-                res.status(404);
-                res.send({
-                    "code": "Error",
-                    "message": properties.getMessage('error','user_not_found')
-                });
-            }
-        });
-
-    });
+    return user;
 }
 
-function ldap_change(user, callback){
+function ldap_change(user) {
     const changes = [];
-    
-    for(const attr in user){
-        if(attr!='dn' && attr!='controls'){
-            const modif = {};
-            modif[attr]=user[attr];
+
+    for (const attr in user) {
+        if (modifiableAttributes.includes(attr)) {
+            const modif = new ldapjs.Attribute({ type: attr, values: user[attr] });
             const change = new ldapjs.Change({
                 operation: 'replace',
                 modification: modif
@@ -69,44 +77,50 @@ function ldap_change(user, callback){
             changes.push(change);
         }
     }
-    if (typeof(callback) === "function") callback(changes);
+    return changes;
 }
 
-export function save_user(user, callback) {
-    ldap_change(user, function (changes) {
-        client.modify(user.dn, changes, function (err) {
-            if (err) logger.error('modify error : ' + err);
-            if (typeof(callback) === "function") callback();
-        });
-    });
+export function save_user(user) {
+    const changes = ldap_change(user);
+    return client.modify(getDN(user.uid), changes);
 }
 
-export function create_user(uid, callback) {
-    const dn = 'uid=' + uid + ',' + properties.getEsupProperty('ldap').baseDn;
+function getDN(uid) {
+    return 'uid=' + uid + ',' + getBaseDn();
+}
+
+export function create_user(uid) {
     const entry = {
         cn: uid,
         uid: uid,
         sn: uid,
-        mail: uid + '@univ.org',
-        mobile: '0612345678',
+        [getMailAttribute()]: uid + '@univ.org',
+        [getSmsAttribute()]: '0612345678',
         objectclass: ['inetOrgPerson']
     };
-    client.add(dn, entry, function (err) {
-        if (err)logger.error(err);
-        if (typeof(callback) === "function") callback();
-    });
+    return client.add(getDN(uid), entry);
 }
 
-export function remove_user(uid, callback) {
-    find_user({params: {uid: uid}}, {
-        send: function () {
-            if(typeof(callback) === 'function')callback();
-        }
-    }, function () {
-        const dn = 'uid=' + uid + ',' + properties.getEsupProperty('ldap').baseDn;
-        client.del(dn, function (err) {
-            if (err)logger.error(utils.getFileNameFromUrl(import.meta.url)+' delete error : ' + err);
-            if (typeof(callback) === "function") callback();
-        });
-    })
+export async function remove_user(uid) {
+    return client.del(getDN(uid));
+}
+
+function getLdapProperties() {
+    return properties.getEsupProperty('ldap');
+}
+
+function getBaseDn() {
+    return getLdapProperties().baseDn;
+}
+
+function getTransportProperties() {
+    return getLdapProperties().transport;
+}
+
+function getSmsAttribute() {
+    return getTransportProperties().sms;
+}
+
+function getMailAttribute() {
+    return getTransportProperties().mail;
 }

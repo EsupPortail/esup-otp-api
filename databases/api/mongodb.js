@@ -2,29 +2,19 @@ import * as userDb_controller from '../../controllers/user.js';
 import * as properties from '../../properties/properties.js';
 import * as utils from '../../services/utils.js';
 import * as mongoose from 'mongoose';
-import {schema as userPreferencesSchema} from './userPreferencesSchema.js';
-import {schema as apiPreferencesSchema} from './apiPreferencesSchema.js';
+import { schema as userPreferencesSchema } from './userPreferencesSchema.js';
+import { schema as apiPreferencesSchema } from './apiPreferencesSchema.js';
 
 import { getInstance } from '../../services/logger.js';
 const logger = getInstance();
 
-export function initialize(callback) {
-	const db_url = 'mongodb://' + properties.getEsupProperty('mongodb').address + '/' + properties.getEsupProperty('mongodb').db;
-	mongoose.createConnection(db_url).asPromise()
-		.then((connection) => {
-			initiatilize_api_preferences(connection);
-			initiatilize_user_model(connection);
-
-			if (typeof (callback) === "function") {
-				callback();
-			}
-			else {
-				logger.error(utils.getFileNameFromUrl(import.meta.url) + ' ' + `Type of provided callback is not 'function' ; got '${typeof (callback)}'`);
-			}
-		})
-		.catch((error) => {
-			logger.error(error);
-		});
+export async function initialize(dbUrl) {
+    dbUrl ||= ('mongodb://' + properties.getEsupProperty('mongodb').address + '/' + properties.getEsupProperty('mongodb').db);
+    const connection = await mongoose.createConnection(dbUrl).asPromise();
+    return Promise.all([
+        initiatilize_api_preferences(connection),
+        initiatilize_user_model(connection),
+    ]);
 }
 
 
@@ -37,28 +27,26 @@ let ApiPreferences;
 /**
  * @param { mongoose.Connection } connection
  */
-function initiatilize_api_preferences(connection) {
-	const ApiPreferencesSchema = new mongoose.Schema(apiPreferencesSchema);
+async function initiatilize_api_preferences(connection) {
+    const ApiPreferencesSchema = new mongoose.Schema(apiPreferencesSchema);
 
-	connection.model('ApiPreferences', ApiPreferencesSchema, 'ApiPreferences');
+    connection.model('ApiPreferences', ApiPreferencesSchema, 'ApiPreferences');
 
-	ApiPreferences = connection.model('ApiPreferences');
-	ApiPreferences.findOne({}).exec()
-		.then((existingApiPrefsData) => {
-			if (existingApiPrefsData) {
-				const prefs = properties.getEsupProperty('methods');
-				for (const p in prefs) {
-					prefs[p].activate = existingApiPrefsData[p].activate;
-					prefs[p].transports = existingApiPrefsData[p].transports;
-				}
-				properties.setEsupProperty('methods', prefs);
-				update_api_preferences();
-			}
-			else {
-				logger.info(utils.getFileNameFromUrl(import.meta.url) + ' ' + 'No existing api prefs data : creating.');
-				create_api_preferences();
-			}
-		});
+    ApiPreferences = connection.model('ApiPreferences');
+    const existingApiPrefsData = await ApiPreferences.findOne({}).exec();
+    if (existingApiPrefsData) {
+        const prefs = properties.getEsupProperty('methods');
+        for (const p in prefs) {
+            prefs[p].activate = existingApiPrefsData[p].activate;
+            prefs[p].transports = existingApiPrefsData[p].transports;
+        }
+        properties.setEsupProperty('methods', prefs);
+        return update_api_preferences();
+    }
+    else {
+        logger.info(utils.getFileNameFromUrl(import.meta.url) + ' No existing api prefs data : creating.');
+        return create_api_preferences();
+    }
 }
 
 /**
@@ -66,35 +54,25 @@ function initiatilize_api_preferences(connection) {
  *
  * @param req requete HTTP
  * @param res response HTTP
- * @param next permet d'appeler le prochain gestionnaire (handler)
  */
-export function update_api_preferences() {
-	ApiPreferences.findOne({}).exec()
-		.then((data) => {
-			if (data) {
-				const prefs = properties.getEsupProperty('methods');
-				for (const p in prefs) {
-					data[p] = prefs[p];
-				}
-				const api_preferences = data;
-				api_preferences.save().then(() => {
-					logger.info(utils.getFileNameFromUrl(import.meta.url) + ' ' + "Api Preferences updated");
-				});
-			}
-		});
+export async function update_api_preferences() {
+    const data = await ApiPreferences.findOne({});
+    if (data) {
+        const prefs = properties.getEsupProperty('methods');
+        for (const p in prefs) {
+            data[p] = prefs[p];
+        }
+        const api_preferences = data;
+        await api_preferences.save();
+        logger.info(utils.getFileNameFromUrl(import.meta.url) + " Api Preferences updated");
+    }
 }
 
-function create_api_preferences() {
-	ApiPreferences.deleteMany({}).exec()
-		.catch((err) => {
-			logger.error(err);
-		})
-		.finally(() => {
-			const api_preferences = new ApiPreferences(properties.getEsupProperty('methods'));
-			api_preferences.save().then(() => {
-				logger.info(utils.getFileNameFromUrl(import.meta.url) + ' ' + "Api Preferences created");
-			});
-		});
+async function create_api_preferences() {
+    await ApiPreferences.deleteMany({});
+    const api_preferences = new ApiPreferences(properties.getEsupProperty('methods'));
+    await api_preferences.save();
+    logger.info(utils.getFileNameFromUrl(import.meta.url) + " Api Preferences created");
 }
 /** 
  * User Model 
@@ -105,7 +83,7 @@ let UserPreferences;
 /**
  * @param { mongoose.Connection } connection
  */
-function initiatilize_user_model(connection) {
+async function initiatilize_user_model(connection) {
     const UserPreferencesSchema = new mongoose.Schema(userPreferencesSchema);
     connection.model('UserPreferences', UserPreferencesSchema, 'UserPreferences');
     UserPreferences = connection.model('UserPreferences');
@@ -116,40 +94,26 @@ function initiatilize_user_model(connection) {
  *
  * @param req requete HTTP contenant le nom la personne recherchee
  * @param res response HTTP
- * @param next permet d'appeler le prochain gestionnaire (handler)
  */
-export function find_user(req, res, callback) {
-	UserPreferences.findOne({ 'uid': req.params.uid }).exec()
-		.then((userPreferences) => {
-			if (userPreferences) {
-				if (typeof (callback) === "function") callback(userPreferences);
-			} else {
-				userDb_controller.user_exists(req, res, function(user) {
-					if (user) {
-						create_user(user.uid, callback);
-					} else {
-						res.status(404);
-						res.send({
-							"code": "Error",
-							"message": properties.getMessage('error', 'user_not_found')
-						});
-					}
-				});
-			}
-		});
+export async function find_user(req, res) {
+    const userPreferences = await UserPreferences.findOne({ 'uid': req.params.uid });
+    if (userPreferences) {
+        return userPreferences;
+    } else {
+        const user = await userDb_controller.find_user(req, res);
+        return create_user(user.uid);
+    }
 }
 
 /**
  * Sauve l'utilisateur
  */
-export function save_user(user, callback) {
-	user.save().then(() => {
-		if (typeof (callback) === "function") callback(user);
-	});
+export function save_user(user) {
+    return user.save();
 }
 
-export function create_user(uid, callback) {
-	save_user(new UserPreferences({ uid: uid }), callback);
+export function create_user(uid) {
+    return save_user(new UserPreferences({ uid: uid }));
 }
 
 /**
@@ -157,15 +121,9 @@ export function create_user(uid, callback) {
  *
  * @param req requete HTTP
  * @param res response HTTP
- * @param next permet d'appeler le prochain gestionnaire (handler)
  */
-export function remove_user(uid, callback) {
-	UserPreferences.deleteOne({ uid: uid }).exec()
-		.catch((err) => {
-			logger.error(err);
-		}).finally((data) => {
-			if (typeof (callback) === "function") callback(data);
-		});
+export function remove_user(uid) {
+    return UserPreferences.deleteOne({ uid: uid });
 }
 
 export function parse_user(user) {
@@ -173,7 +131,7 @@ export function parse_user(user) {
     parsed_user.codeRequired = false;
     parsed_user.waitingFor = false;
     if (properties.getMethod('totp').activate) {
-        if(user.totp.active)parsed_user.codeRequired = true;
+        if (user.totp.active) parsed_user.codeRequired = true;
         parsed_user.totp = {
             active: user.totp.active,
             message: "",
@@ -182,21 +140,21 @@ export function parse_user(user) {
         };
     }
     if (properties.getMethod('random_code').activate) {
-        if(user.random_code.active)parsed_user.codeRequired = true;
+        if (user.random_code.active) parsed_user.codeRequired = true;
         parsed_user.random_code = {
             active: user.random_code.active,
             transports: available_transports(user.random_code.transports, 'random_code')
         };
     }
-   if (properties.getMethod('random_code_mail').activate) {
-        if(user.random_code_mail.active)parsed_user.codeRequired = true;
+    if (properties.getMethod('random_code_mail').activate) {
+        if (user.random_code_mail.active) parsed_user.codeRequired = true;
         parsed_user.random_code_mail = {
             active: user.random_code_mail.active,
             transports: available_transports(user.random_code_mail.transports, 'random_code_mail')
         };
     }
     if (properties.getMethod('bypass').activate) {
-        if(user.bypass.active)parsed_user.codeRequired = true;
+        if (user.bypass.active) parsed_user.codeRequired = true;
         parsed_user.bypass = {
             active: user.bypass.active,
             codes: [],
@@ -209,33 +167,33 @@ export function parse_user(user) {
     //  parsed_user.matrix = user.matrix;
     //}
     // parsed_user.matrix.active = user.matrix.active;
-    if(properties.getMethod('push').activate){
-        if(user.push.active)parsed_user.waitingFor = true;
+    if (properties.getMethod('push').activate) {
+        if (user.push.active) parsed_user.waitingFor = true;
         parsed_user.push = {
-            device : {
-                platform : user.push.device.platform,
-                phone_number : user.push.device.phone_number,
-                manufacturer : user.push.device.manufacturer,
-                model : user.push.device.model,
+            device: {
+                platform: user.push.device.platform,
+                phone_number: user.push.device.phone_number,
+                manufacturer: user.push.device.manufacturer,
+                model: user.push.device.model,
                 activationCode: {},
                 qrCode: {},
                 api_url: {}
             },
-            activationCode : '',
-            api_url : '',
-            qrCode : '',
-            active : user.push.active,
+            activationCode: '',
+            api_url: '',
+            qrCode: '',
+            active: user.push.active,
             transports: available_transports(user.push.transports, "push")
         };
     }
     if (properties.getMethod('esupnfc').activate) {
-	// autologin
-        if(user.esupnfc.active) parsed_user.waitingFor = true;
+        // autologin
+        if (user.esupnfc.active) parsed_user.waitingFor = true;
         parsed_user.esupnfc = {
             active: user.esupnfc.active,
             transports: available_transports(user.esupnfc.transports, 'esupnfc')
         };
-    }  
+    }
     return parsed_user;
 }
 
@@ -250,41 +208,20 @@ function available_transports(userTransports, method) {
 }
 
 
-export function get_uids(req, res, next) {
-	UserPreferences.find({}, { uid: 1 }).exec()
-		.then((data) => {
-			const result = data.map((uid) => uid.uid);
+export async function get_uids(req, res) {
+    const data = await UserPreferences.find({}, { uid: 1 });
+    const result = data.map((uid) => uid.uid);
 
-			res.status(200);
-			res.send({
-				code: "Ok",
-				uids: result
-			});
-		})
-		.catch((err) => {
-			logger.error(err);
-		});
+    res.status(200);
+    res.send({
+        code: "Ok",
+        uids: result
+    });
 }
 
 export async function forEachPushUser(callbackForEach) {
-	const users = UserPreferences.find({ 'push.active': true });
-	for await (const user of users) {
-		callbackForEach(user);
-	}
-}
-
-/**
- * Drop Users
- */
-export function drop(req, res, next) {
-	UserPreferences.deleteMany({}).exec()
-		.then((data) => {
-			logger.debug('users removed');
-
-			res.status(200);
-			res.send(data);
-		})
-		.catch((err) => {
-			logger.error(err);
-		});
+    const users = UserPreferences.find({ 'push.active': true });
+    for await (const user of users) {
+        await callbackForEach(user);
+    }
 }

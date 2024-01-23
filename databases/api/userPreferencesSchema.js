@@ -50,7 +50,6 @@ export const schema = {
             type: Object,
             default: {}
         },
-        window: Number,
         active: {
             type: Boolean,
             default: false

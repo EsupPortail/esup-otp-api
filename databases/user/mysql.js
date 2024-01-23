@@ -1,69 +1,53 @@
 import * as properties from '../../properties/properties.js';
-import * as mysql from 'mysql';
+import * as errors from '../../services/errors.js';
+import * as userUtils from './userUtils.js';
+import * as mysql from 'mysql2/promise';
 
-import { getInstance } from '../../services/logger.js';
-const logger = getInstance();
-
+/**
+ * @type mysql.Connection
+ */
 let connection;
 
-export function initialize(callback) {
-    connection = mysql.createConnection(properties.getEsupProperty('mysql'));
-    if (typeof(callback) === "function") callback();
+export async function initialize() {
+    connection = await mysql.createConnection(getMysqlProperty());
 }
 
-export function find_user(req, res, callback) {
-    connection.query("Select * From " + properties.getEsupProperty('mysql').userTable + " u Where u.uid = ?", [req.params.uid], function (err, rows, fields) {
-        if (err) throw err;
-        if (rows[0]) {
-            if (typeof(callback) === "function") callback(rows[0]);
-        } else {
-            res.status(404);
-            res.send({
-                "code": "Error",
-                "message": properties.getMessage('error','user_not_found')
-            });
-        }
-    });
+export async function find_user(uid) {
+    const query = "Select * From " + getUserTable() + " u Where u.uid = ?";
+    const [rows, fields] = await connection.execute(query, [uid]);
+    const user = rows[0];
+    return user || errors.UserNotFoundError.throw();
 }
 
-export function save_user(user, callback) {
-    connection.query("Select * From " + properties.getEsupProperty('mysql').userTable + " u Where u.uid = ?", [user.uid], function (err, rows, fields) {
-        if (err) {
-            logger.error('modify error : ' + err);
-            throw err;
-        }
-        if (rows[0]) {
-            const q = connection.query("Update "+properties.getEsupProperty('mysql').userTable+" SET "+ properties.getEsupProperty('mysql').transport.sms + " = ? , "+ properties.getEsupProperty('mysql').transport.mail +" = ?  Where uid = ?", [user[properties.getEsupProperty('mysql').transport.sms], user[properties.getEsupProperty('mysql').transport.mail], user.uid], function (err, rows, fields) {
-                if (err) {
-                    logger.error('modify error : ' + err);
-                    throw err;
-                }
-                if (typeof(callback) === "function") callback();
-            });
-            logger.debug(q.sql);
-        }
-    });
+export async function save_user(user) {
+    const selectQuery = "Select * From " + getUserTable() + " u Where u.uid = ?";
+    const [rows, fields] = await connection.execute(selectQuery, [user.uid]);
+    if (rows[0]) {
+        const updateQuery = "Update " + getUserTable() + " SET " + getMysqlProperty().transport.sms + " = ? , " + getMysqlProperty().transport.mail + " = ?  Where uid = ?";
+        const updateQueryParams = [userUtils.getSms(user), userUtils.getMail(user), user.uid];
+        await connection.execute(updateQuery, updateQueryParams);
+    }
 }
 
-export function create_user(uid, callback) {
+export async function create_user(uid) {
     const new_user = {
-        uid : uid
+        uid: uid
     };
-    connection.query("INSERT INTO " + properties.getEsupProperty('mysql').userTable + " SET ?", new_user, function (err, rows, fields) {
-        if (err) {
-            logger.error('insert error : ' + err);
-            throw err;
-        }
-        if (typeof(callback) === "function") callback();
-    });
+    const query = "INSERT INTO " + getUserTable() + " SET ?";
+    const [rows, fields] = await connection.execute(query, new_user)
+    return rows[0];
 }
 
-export function remove_user(uid, callback) {
-    connection.query("DELETE FROM " + properties.getEsupProperty('mysql').userTable + " WHERE uid=?", [uid], function (err, rows, fields) {
-        if (err) {
-            logger.error('insert error : ' + err);
-            throw err;
-        }
-        if (typeof(callback) === "function") callback();
-    });
+export function remove_user(uid) {
+    const query = "DELETE FROM " + getUserTable() + " WHERE uid=?";
+    return connection.query(query, [uid]);
+}
+
+
+function getMysqlProperty() {
+    return properties.getEsupProperty('mysql');
+}
+
+function getUserTable() {
+    return getMysqlProperty().userTable;
 }

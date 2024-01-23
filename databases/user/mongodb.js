@@ -1,21 +1,14 @@
 import * as properties from '../../properties/properties.js';
-import * as mongoose from 'mongoose';
+import * as errors from '../../services/errors.js';
 
-import { getInstance } from '../../services/logger.js';
-const logger = getInstance();
+import * as mongoose from 'mongoose';
 
 import * as definedUserSchema from './userSchema.js';
 
-export function initialize(callback) {
-	const db_url = 'mongodb://' + properties.getEsupProperty('mongodb').address + '/' + properties.getEsupProperty('mongodb').db;
-	mongoose.createConnection(db_url).asPromise()
-		.then((connection) => {
-			initiatilize_user_model(connection);
-			if (typeof (callback) === "function") callback();
-		})
-		.catch((error) => {
-			logger.error(error);
-		});
+export async function initialize(dbUrl) {
+    dbUrl ||= ('mongodb://' + properties.getEsupProperty('mongodb').address + '/' + properties.getEsupProperty('mongodb').db);
+    const connection = await mongoose.createConnection(dbUrl).asPromise();
+    initiatilize_user_model(connection);
 }
 
 /** 
@@ -28,51 +21,38 @@ let User;
  * @param { mongoose.Connection } connection
  */
 function initiatilize_user_model(connection) {
-    const Schema = mongoose.Schema;
-
-    const UserSchema = new Schema(definedUserSchema.schema);
+    const UserSchema = new mongoose.Schema(definedUserSchema.schema);
 
     connection.model('User', UserSchema, 'User');
     User = connection.model('User');
 }
 
-export function find_user(req, res, callback) {
-	User.findOne({ 'uid': req.params.uid }).exec()
-		.then((user) => {
-			if (user) {
-				if (typeof (callback) === "function") callback(user);
-			} else {
-				if (properties.getEsupProperty('auto_create_user')) {
-					create_user(req.params.uid, callback);
-				}
-				else {
-					res.status(404);
-					res.send({
-						"code": "Error",
-						"message": properties.getMessage('error', 'user_not_found')
-					});
-				}
-			}
-		});
+export async function find_user(uid) {
+    const user = await User.findOne({ 'uid': uid });
+
+    if (user) {
+        return user;
+    } else {
+        if (properties.getEsupProperty('auto_create_user')) {
+            return create_user(uid);
+        }
+        else {
+            throw new errors.UserNotFoundError();
+        }
+    }
 }
 
-export function create_user(uid, callback) {
-	save_user(new User({ uid: uid }), callback);
+export function create_user(uid) {
+    return save_user(new User({ uid: uid }));
 }
 
-export function save_user(user, callback) {
-	user.save().then(() => {
-		if (typeof (callback) === "function") callback(user);
-	});
+export function save_user(user) {
+    return user.save();
 }
 
 /**
  * Supprime l'utilisateur
  */
-export function remove_user(uid, callback) {
-	/**@type DeleteResult */
-	User.deleteOne({ uid: uid }).exec()
-		.then((/**@type mongoose.mongo.DeleteResult */ deleteResult) => {
-			if (typeof (callback) === "function") callback(deleteResult);
-		});
+export function remove_user(uid) {
+    return User.deleteOne({ uid: uid });
 }

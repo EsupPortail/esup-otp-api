@@ -1,5 +1,7 @@
 import restify from 'restify';
 import corsMiddleware from "restify-cors-middleware2";
+import { promisify } from 'util';
+
 import * as properties from '../properties/properties.js';
 import * as utils from '../services/utils.js';
 import * as sockets from './sockets.js';
@@ -10,14 +12,9 @@ import * as routes from '../server/routes.js';
 import packageJson from '../package.json' assert { type: 'json' };
 export const version = packageJson.version;
 
-/**
- * absolute path of project directory
- */
-global.base_dir = utils.relativeToAbsolutePath(import.meta.url, '..');
-
 import { getInstance } from '../services/logger.js'; const logger = getInstance();
 
-let server = restify.createServer({
+export const server = restify.createServer({
     name: 'esup-otp',
     version: version,
     // accept all options of https://github.com/delvedor/find-my-way/#api
@@ -32,53 +29,46 @@ server.use(restify.plugins.bodyParser({ mapParams: true }));
 
 //CORS middleware
 const cors = corsMiddleware({
-       origins: ["*"],
-       allowHeaders: ["X-Requested-With"],
+    origins: ["*"],
+    allowHeaders: ["X-Requested-With"],
 });
 server.pre(cors.preflight);
 server.use(cors.actual);
 
 server.use(
-    function logRequestUrl(req,res,next){
+    function logRequestUrl(req, res, next) {
         logger.debug(req.url);
         return next();
     }
 );
 
-function initialize_userDBController() {
-    logger.info(utils.getFileNameFromUrl(import.meta.url)+' '+'Initializing the userDB controller');
-    if (properties.getEsupProperty('userDb')) {
-        userDb_controller.initialize(initialize_apiController);
-    } else logger.error('Unknown userDb');
+export function initialize_userDBController() {
+    logger.info(utils.getFileNameFromUrl(import.meta.url) + ' Initializing the userDB controller');
+    return userDb_controller.initialize();
 }
 
-function initialize_apiController() {
-    logger.info(utils.getFileNameFromUrl(import.meta.url)+' '+'Initializing the api controller');
-    if (properties.getEsupProperty('apiDb')) {
-        api_controller.initialize(() => initialize_routes(launch_server));
-    } else logger.error(utils.getFileNameFromUrl(import.meta.url)+' '+'Unknown apiDb');
+export function initialize_apiController() {
+    logger.info(utils.getFileNameFromUrl(import.meta.url) + ' Initializing the api controller');
+    return api_controller.initialize();
 }
 
-function initialize_routes(callback) {
-    routes.initialize(server, version, function(routed_server) {
-        server = routed_server;
-        if (typeof(callback) === "function") callback();
-    })
+export function initialize_routes() {
+    return routes.initialize(server, version);
 }
 
-
-function launch_server() {
-    const port = process.env.PORT || 3000;
-    server.listen(port, function(err) {
-        if (err)
-            logger.error(utils.getFileNameFromUrl(import.meta.url)+' '+err);
-        else {
-            sockets.attach(server);
-            logger.info(utils.getFileNameFromUrl(import.meta.url)+' '+'App is ready at : ' + port);
-        }
-    });
+export async function launch_server(port) {
+    await promisify(server.listen).call(server, port);
 }
 
-export function start() {
-    initialize_userDBController();
+export async function attach_socket() {
+    sockets.attach(server);
+}
+
+export async function start() {
+    await initialize_userDBController();
+    await initialize_apiController();
+    await initialize_routes();
+    await launch_server(process.env.PORT || 3000);
+    await attach_socket();
+    logger.info(utils.getFileNameFromUrl(import.meta.url) + ' App is ready at : ' + server.address().port);
 }

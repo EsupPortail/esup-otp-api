@@ -5,7 +5,7 @@ esup-otp-api is a RESTful api using NodeJS to generate, send and verify one-time
 ### Version
 1.3.0
 
-Runs on Node v17.8.O and npm v8.5.5
+Runs on Node v20.10.0 and npm v10.2.3
 
 ### Requirement
 
@@ -65,8 +65,7 @@ WantedBy=multi-user.target
 ```
 
 ### Tests
-Install mocha : npm install -g mocha .
-Simply execute "mocha" in the root directory of the project, the server must be launched before executing the tests
+npm test
 
 
 ### Update to 1.2.1 (device commercial name)

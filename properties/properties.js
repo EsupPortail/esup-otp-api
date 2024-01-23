@@ -45,24 +45,36 @@ export function getMethod (method) {
 }
 
 export function getMethodProperty (method, property) {
-    return properties.esup.methods[method][property];
+    return properties.esup.methods[method]?.[property];
 }
 
 export function setMethodProperty (method, property, value) {
     properties.esup.methods[method][property] = value;
 }
 
-export function addMethodTransport (method, transport) {
-    const index = properties.esup.methods[method].transports.indexOf(transport);
-    if (index < 0) {
-        properties.esup.methods[method].transports.push(transport);
+/** @returns {Array<String>} */
+function getTransports(method) {
+    return getMethodProperty(method, 'transports');
+}
+
+function setTransports(method, transports) {
+    setMethodProperty(method, 'transports', transports);
+}
+
+export function containsMethodTransport(method, transport) {
+    return getTransports(method).includes(transport);
+}
+
+export function addMethodTransport(method, transport) {
+    if (!containsMethodTransport(method, transport)) {
+        getTransports(method).push(transport);
     }
 }
 
-export function removeMethodTransport (method, transport) {
-    const index = properties.esup.methods[method].transports.indexOf(transport);
-    if (index >= 0) {
-        properties.esup.methods[method].transports.splice(index, 1);
+export function removeMethodTransport(method, transport) {
+    if (containsMethodTransport(method, transport)) {
+        const newTransports = getTransports(method).filter(t => t != transport);
+        setTransports(method, newTransports);
     }
 }
 

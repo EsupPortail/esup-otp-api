@@ -1,13 +1,14 @@
 import winston, { format } from 'winston';
 import logs_config from '../logs/logs.json' assert { type: 'json' };
 //import logs_config from '../logs/logs.json' with { "type": "json" };
-import * as utils from '../services/utils.js';
 
-let filename = utils.relativeToAbsolutePath(import.meta.url, '../logs/esup-otp-api-info.log');
-let archiveFilename = utils.relativeToAbsolutePath(import.meta.url, '../logs/audit.log');
-if (logs_config.path && logs_config.filename) {
-	filename = logs_config.path + logs_config.filename;
-}
+import * as path from 'node:path';
+
+const mainLogFile = path.join(logs_config.path, logs_config.filename);
+const archiveLogFile = path.join(logs_config.path, logs_config.archiveFileName);
+
+console.log("log path:", path.resolve(mainLogFile));
+console.log("archive path:", path.resolve(archiveLogFile));
 
 const logLevels = {
     archive: 0,
@@ -32,7 +33,7 @@ const logger = winston.createLogger({
         }),
         new winston.transports.File({
             level: 'info',
-            filename: filename,
+            filename: mainLogFile,
             format: format.combine(
                 format((info) => {
                     // Filtrer les messages de niveau "ARCHIVE" pour ne pas les écrire dans le fichier "esup-otp-api-info.log"
@@ -50,7 +51,7 @@ const logger = winston.createLogger({
         }),
         new winston.transports.File({
             level: 'archive',
-            filename: archiveFilename,
+            filename: archiveLogFile,
             format: format.combine(
                 format.timestamp(),
                 format.printf(options => {
