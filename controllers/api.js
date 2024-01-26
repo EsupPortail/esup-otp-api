@@ -426,6 +426,11 @@ export async function activate_method(req, res) {
     return method.user_activate(user, req, res);
 }
 
+export async function confirm_activate_push(req, res) {
+    req.params.method = 'push';
+    return confirm_activate_method(req, res);
+}
+
 /**
  * Certaine méthode (push) nécessite une activation en deux étapes
  * Confirme l'activation de la méthode l'utilisateur ayant l'uid req.params.uid

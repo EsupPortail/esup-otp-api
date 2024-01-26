@@ -76,7 +76,8 @@ async function initializeUserRoutes(server) {
     server.post("/users/:uid/methods/:method/secret/:hash", validator.check_hash, api_controller.generate_method_secret);
     server.put("/users/:uid/methods/:method/deactivate/:hash", validator.check_hash, api_controller.deactivate_method);
     server.put("/users/:uid/methods/:method/activate/:hash", validator.check_hash, api_controller.activate_method);
-    server.post("/users/:uid/methods/:method/activate/:activation_code/:gcm_id/:platform/:manufacturer/:model", api_controller.confirm_activate_method);
+    server.post("/users/:uid/methods/push/activate/:activation_code/:gcm_id/:platform/:manufacturer/:model", api_controller.confirm_activate_push);
+    server.post("/users/:uid/methods/:method/activate/:activation_code/:hash", validator.check_hash, api_controller.confirm_activate_method);
     server.post("/users/:uid/methods/:method/refresh/:tokenSecret/:gcm_id/:gcm_id_refreshed", api_controller.refresh_gcm_id_method);
     server.del("/users/:uid/methods/:method/:tokenSecret", api_controller.desync);
 
@@ -106,6 +107,7 @@ async function initializeProtectedRoutes(server) {
     server.get("/protected/users/:uid/transports/:transport/test", validator.check_api_password, api_controller.transport_test);
     server.put("/protected/users/:uid/methods/:method/deactivate", validator.check_api_password, api_controller.deactivate_method);
     server.put("/protected/users/:uid/methods/:method/activate", validator.check_api_password, api_controller.activate_method);
+    server.post("/protected/users/:uid/methods/:method/activate/:activation_code", validator.check_api_password, api_controller.confirm_activate_method);
     server.put("/protected/users/:uid/transports/:transport/:new_transport", validator.check_api_password, userDb_controller.update_transport);
     server.post("/protected/users/:uid/methods/:method/secret", validator.check_api_password, api_controller.generate_method_secret);
     server.post("/protected/users/:uid/:otp/:api_password?", validator.check_api_password, api_controller.verify_code);

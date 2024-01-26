@@ -19,7 +19,11 @@ export function send_message(user, req, res) {
  * @param res response HTTP
  */
 export function verify_code(user, req) {
-    return user.totp.secret.base32 && authenticator.verify({ "token": req.params.otp, "secret": user.totp.secret.base32 });
+    return verify_token(req.params.otp, user.totp.secret.base32);
+}
+
+function verify_token(token, base32_secret) {
+    return base32_secret && authenticator.check(token, base32_secret);
 }
 
 function generateSecret(user) {
@@ -67,6 +71,9 @@ export async function autoActivateTotp(user, req, res) {
 }
 
 export async function generate_method_secret(user, req, res) {
+    if(req.query.require_method_validation === 'true') {
+        user.totp.active = false;
+    }
     user.totp.secret = generateSecret(user);
     logger.log('archive', {
         message: [
@@ -101,6 +108,8 @@ export async function delete_method_secret(user, req, res) {
 }
 
 export async function user_activate(user, req, res) {
+    // used only by manager <= v1.1.6
+    // more recent versions directly use generate_method_secret (with req.query.require_method_validation)
     user.totp.active = true;
     await apiDb.save_user(user);
     res.status(200);
@@ -109,8 +118,17 @@ export async function user_activate(user, req, res) {
     });
 }
 
-export function confirm_user_activate(user, req, res) {
-    throw new errors.UnvailableMethodOperationError();
+export async function confirm_user_activate(user, req, res) {
+    if (!user.totp.active && req.params.activation_code && verify_token(req.params.activation_code, user.totp.secret.base32)) {
+        user.totp.active = true;
+        await apiDb.save_user(user);
+        res.status(200);
+        res.send({
+            "code": "Ok",
+        });
+    } else {
+        throw new errors.InvalidCredentialsError();
+    }
 }
 
 export async function user_deactivate(user, req, res) {
