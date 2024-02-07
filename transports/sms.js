@@ -3,13 +3,14 @@ import * as utils from '../services/utils.js';
 import request from 'request-promise-native';
 import * as userDb_controller from '../controllers/user.js';
 import { getInstance } from '../services/logger.js'; const logger = getInstance();
+import * as errors from '../services/errors.js';
 
 export const name = "sms";
 
 const proxyUrl = properties.getEsupProperty('proxyUrl');
 
 export async function send_message(req, opts, res) {
-    const num = await userDb_controller.get_phone_number(req, res);
+    const num = opts.userTransport || await userDb_controller.get_phone_number(req);
     if (utils.check_transport_validity('sms', num)) {
         const tel = num;
         const url = urlBroker(tel, opts.message);
@@ -22,7 +23,7 @@ export async function send_message(req, opts, res) {
         return request(requestOptions)
             .then((body) => {
                 console.log("Message will be sent to " + tel + ", with the message: " + opts.message);
-                res.send({
+                res?.send({
                     "code": "Ok",
                     "message": body,
                     "codeRequired": opts.codeRequired,
@@ -31,15 +32,11 @@ export async function send_message(req, opts, res) {
             })
             .catch((error) => {
                 logger.error(error);
-                res.send({
-                    "code": "Error",
-                    "message": error
-                });
+                throw new errors.EsupOtpApiError(200, error);
             });
-    } else res.send({
-        "code": "Error",
-        "message": properties.getMessage('error', 'invalid_sms')
-    });
+    } else {
+        throw new errors.InvalidSmsError();
+    }
 }
 
 function urlBroker(num, message) {

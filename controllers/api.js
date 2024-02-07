@@ -152,22 +152,31 @@ export async function updateDeviceModelToUserFriendlyName(req, res) {
  * @param res response HTTP
  */
 export function transport_code(code, req, res) {
+    const { object, message } = getTransportObjectAndMessage(req.params.transport, code);
+
     const opts = {
-        object: properties.getMessage('transport', 'code').object,
+        object: object,
+        message: message,
         code: code,
         codeRequired: properties.getMethodProperty(req.params.method, 'codeRequired'),
         waitingFor: properties.getMethodProperty(req.params.method, 'waitingFor'),
     };
 
-    let transportMessageProperty = properties.getMessage('transport', 'code')[req.params.transport];
+    return transport(opts, req, res);
+}
+
+function getTransportObjectAndMessage(transport, code) {
+    let transportMessageProperty = properties.getMessage('transport', 'code')[transport];
 
     // default : mail message if not exaclty match
     if (!transportMessageProperty) {
         transportMessageProperty = properties.getMessage('transport', 'code').mail;
     }
 
-    opts.message = transportMessageProperty.pre + code + transportMessageProperty.post;
-    return transport(opts, req, res);
+    const message = transportMessageProperty.pre + code + transportMessageProperty.post;
+    const object = properties.getMessage('transport', 'code').object;
+
+    return { object: object, message: message };
 }
 
 /**
@@ -191,6 +200,25 @@ export async function transport_test(req, res) {
     opts.message = transportMessageProperty.pre + req.params.uid + transportMessageProperty.post;
 
     return transport(opts, req, res);
+}
+
+/**
+ * génère un code et l'envoie au nouveau transport ET en réponse à la requête
+ * (ne modifie pas l'utilisateur. Le manager devra appeler userDb_controller.update_transport pour cela)
+ * (cette fonction permet au manager de valider un nouveau transport avant de l'enregistrer)
+ */
+export async function new_transport_test(req, res) {
+    const code = utils.generate_digit_code(6);
+    const opts = getTransportObjectAndMessage(req.params.transport, code);
+    opts.code = code;
+    opts.userTransport = req.params.new_transport;
+
+    await transport(opts, req);
+
+    res.send({
+        code: 'Ok',
+        otp: code
+    });
 }
 
 /**

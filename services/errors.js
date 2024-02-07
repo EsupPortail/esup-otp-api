@@ -55,3 +55,15 @@ export class PushNotRegisteredError extends ApiErrorsWithMessageFromProperties {
         super(200, 'push_not_registered');
     }
 }
+
+export class InvalidMailError extends ApiErrorsWithMessageFromProperties {
+    constructor() {
+        super(200, 'invalid_mail');
+    }
+}
+
+export class InvalidSmsError extends ApiErrorsWithMessageFromProperties {
+    constructor() {
+        super(200, 'invalid_sms');
+    }
+}

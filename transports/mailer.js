@@ -4,6 +4,7 @@ import * as nodemailer from "nodemailer";
 import smtpTransport from 'nodemailer-smtp-transport';
 import * as userDb_controller from '../controllers/user.js';
 import { getInstance } from '../services/logger.js'; const logger = getInstance();
+import * as errors from '../services/errors.js';
 
 export const name = "mail";
 
@@ -25,7 +26,7 @@ const transporter = nodemailer.createTransport(smtpTransport(options))
 const senderAddress = properties.getEsupProperty('mailer').sender_name + " <" + properties.getEsupProperty('mailer').sender_mail + ">";
 
 export async function send_message(req, opts, res) {
-    const mail = await userDb_controller.get_mail_address(req, res);
+    const mail = opts.userTransport || await userDb_controller.get_mail_address(req);
 
     if (utils.check_transport_validity('mail', mail)) {
         const mailOptions = {
@@ -39,7 +40,7 @@ export async function send_message(req, opts, res) {
         return transporter.sendMail(mailOptions)
             .then(() => {
                 console.log("Message sent to " + mail + " with the message: " + opts.message);
-                res.send({
+                res?.send({
                     "code": "Ok",
                     "message": "Message sent",
                     "codeRequired": opts.codeRequired,
@@ -48,13 +49,9 @@ export async function send_message(req, opts, res) {
             })
             .catch((error) => {
                 logger.error(error);
-                res.send({
-                    "code": "Error",
-                    "message": error.message
-                });
+                throw new errors.EsupOtpApiError(200, error.message);
             });
-    } else res.send({
-        "code": "Error",
-        "message": properties.getMessages('error', 'invalid_mail')
-    });
+    } else {
+        throw new errors.InvalidMailError();
+    }
 }

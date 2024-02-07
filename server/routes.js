@@ -72,6 +72,7 @@ async function initializeUserRoutes(server) {
     server.post("/users/:uid/methods/:method/transports/push/:lt/:hash", validator.check_hash, api_controller.send_message);
     server.get("/users/:uid/transports/:transport/test/:hash", validator.check_hash, api_controller.transport_test);
     server.put("/users/:uid/transports/:transport/:new_transport/:hash", validator.check_hash, userDb_controller.update_transport);
+    server.get("/users/:uid/transports/:transport/:new_transport/test/:hash", validator.check_hash, api_controller.new_transport_test);
     server.del("/users/:uid/transports/:transport/:hash", validator.check_hash, userDb_controller.delete_transport);
     server.post("/users/:uid/methods/:method/secret/:hash", validator.check_hash, api_controller.generate_method_secret);
     server.put("/users/:uid/methods/:method/deactivate/:hash", validator.check_hash, api_controller.deactivate_method);
@@ -109,6 +110,7 @@ async function initializeProtectedRoutes(server) {
     server.put("/protected/users/:uid/methods/:method/activate", validator.check_api_password, api_controller.activate_method);
     server.post("/protected/users/:uid/methods/:method/activate/:activation_code", validator.check_api_password, api_controller.confirm_activate_method);
     server.put("/protected/users/:uid/transports/:transport/:new_transport", validator.check_api_password, userDb_controller.update_transport);
+    server.get("/protected/users/:uid/transports/:transport/:new_transport/test", validator.check_api_password, api_controller.new_transport_test);
     server.post("/protected/users/:uid/methods/:method/secret", validator.check_api_password, api_controller.generate_method_secret);
     server.post("/protected/users/:uid/:otp/:api_password?", validator.check_api_password, api_controller.verify_code);
     server.del("/protected/users/:uid/transports/:transport", validator.check_api_password, userDb_controller.delete_transport);
