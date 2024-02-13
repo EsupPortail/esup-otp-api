@@ -1,4 +1,5 @@
 import restify from 'restify';
+import errors from 'restify-errors';
 import corsMiddleware from "restify-cors-middleware2";
 import { promisify } from 'util';
 
@@ -41,6 +42,18 @@ server.use(
         return next();
     }
 );
+
+server.on('restifyError', (req, res, err, callback) => {
+    if (err instanceof errors.HttpError) { // e.g.: 404 error, or errors difined in ../services/errors.js
+        if (err.message !== '/ does not exist') {
+            logger.info('HttpError: ' + err);
+        }
+    } else {
+        logger.error(err.stack);
+    }
+
+    return callback();
+});
 
 export function initialize_userDBController() {
     logger.info(utils.getFileNameFromUrl(import.meta.url) + ' Initializing the userDB controller');
