@@ -31,8 +31,7 @@ export function send_message(user, req, res, next) {
     let validity_time = properties.getMethod('push').validity_time * 60 * 1000;
     validity_time += new Date().getTime();
     user.push.validity_time = validity_time;
-	const lt = req.params.lt != undefined ? req.params.lt : utils.generate_string_code(30);
-    user.push.lt=lt;
+    user.push.lt= utils.generate_string_code(30);
 	logger.debug("gcm.Message with 'lt' as secret : " + lt);
 	
 	const content = {
