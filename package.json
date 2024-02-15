@@ -17,6 +17,7 @@
     "mongoose": "^7.6.1",
     "mysql2": "^3.6.3",
     "fcm-node": "^1.6.1",
+    "firebase-admin": "^12.0.0",
     "nodemailer": "^6.7.8",
     "nodemailer-smtp-transport": "^2.4.1",
     "node-device-detector": "^2.0.17",

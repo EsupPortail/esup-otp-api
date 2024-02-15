@@ -9,19 +9,59 @@ import { apiDb } from '../controllers/api.js';
 import { getInstance } from '../services/logger.js';
 const logger = getInstance();
 import FCM from 'fcm-node';
+import admin from "firebase-admin";
+import HttpsProxyAgent from "https-proxy-agent";
 import qrCode from 'qrcode-npm';
 import * as sockets from '../server/sockets.js';
 import geoip from "geoip-lite";
 import DeviceDetector from "node-device-detector";
 import { promisify } from 'util';
 import { autoActivateTotpReady } from './totp.js';
+import isString from 'lodash/isString.js';
 
 const trustGcm_id = properties.getMethod('push').trustGcm_id;
 
 // Set up the sender with you API key, prepare your recipients' registration tokens.
 const proxyUrl = properties.getEsupProperty('proxyUrl');
-const fcm = new FCM(properties.getMethodProperty('push', 'serverKey'), proxyUrl);
-const send = promisify(fcm.send).bind(fcm);
+
+/**
+ * @type {(content: admin.messaging.TokenMessage) => Promise<string>}
+ */
+const send = properties.getMethod('push').serviceAccount?.private_key ?
+    initFirebaseAdmin() : initFcmNode();
+
+
+function initFirebaseAdmin() {
+    admin.initializeApp({
+        credential: admin.credential.cert(properties.getMethod('push').serviceAccount),
+        httpAgent: proxyUrl ? new HttpsProxyAgent(proxyUrl) : undefined,
+    });
+
+    logger.info("firebase-admin initialized");
+
+    return function sendWithFirebaseAdmin(content) {
+        return admin.messaging().send(content);
+    }
+}
+
+function initFcmNode() {
+    logger.warn(`Sending messages with this FCM legacy APIs will no longer be possible as of June 2024.
+    Please contact us as soon as possible to obtain a serviceAccount.`);
+    
+    const fcm = new FCM(properties.getMethodProperty('push', 'serverKey'), proxyUrl);
+    const fcm_send = promisify(fcm.send).bind(fcm);
+
+    return function sendWithFcmNode(content) {
+        // convert to old API
+        content.to = content.token;
+        delete content.token;
+
+        content.notification.click_action = content.android.notification.clickAction;
+        delete content.android.notification.clickAction;
+
+        return fcm_send(content);
+    }
+}
 
 export const name = "push";
 
@@ -39,49 +79,60 @@ export async function send_message(user, req, res) {
     user.push.lt = lt;
     logger.debug("gcm.Message with 'lt' as secret : " + lt);
 
+    /**
+     * @type {admin.messaging.TokenMessage}
+     */
     const content = {
         notification: {
             title: properties.getMethod('push').title,
             body: properties.getMethod('push').body,
-            "click_action": "com.adobe.phonegap.push.background.MESSAGING_EVENT"
+        },
+        android: {
+            notification: {
+                clickAction: "com.adobe.phonegap.push.background.MESSAGING_EVENT"
+            }
         },
         data: {
             message: getText(req),
             text: getText(req),
             action: 'auth',
-            trustGcm_id: trustGcm_id,
+            trustGcm_id: trustGcm_id?.toString(),
             url: getUrl(req),
             uid: user.uid,
             lt: lt
         },
-        to: user.push.device.gcm_id
+        token: user.push.device.gcm_id
     };
 
 
     await apiDb.save_user(user);
     if (properties.getMethod('push').notification) {
         logger.debug("send gsm push ...");
-        return send(content)
-            .catch((err) => {
-                logger.error("Problem to send a notification to " + user.uid + ": " + err);
-                res.send({
-                    "code": "Error",
-                    "message": JSON.stringify(err)
-                });
-            }).then((response) => {
-                if (response.failure > 0) {
-                    logger.debug(response);
-                    if (response.results[0].error == "NotRegistered") {
-                        return user_unactivate(user, req, res);
-                    }
-                } else {
-                    logger.debug("send gsm push ok : " + response);
-                    res.send({
-                        "code": "Ok",
-                        "message": response
-                    });
-                }
-            });
+
+        let response;
+        try {
+            response = await send(content);
+        } catch (err) {
+            if (isString(err)) { // for FCM-node
+                const str_err = err;
+                err = JSON.parse(str_err);
+                err.toString = () => str_err;
+            }
+
+            if (err.code == "messaging/registration-token-not-registered" // firebase-admin
+                || err.results?.[0]?.error == "NotRegistered") { // FCM-node
+                logger.info("user " + user.uid + " push method deactivation because of 'token not registered' error");
+                return user_unactivate(user, req, res);
+            }
+            logger.error("Problem to send a notification to " + user.uid + ": " + err);
+            throw new errors.EsupOtpApiError(200, JSON.stringify(err));
+        }
+
+        logger.debug("send gsm push ok : " + response);
+        res.send({
+            "code": "Ok",
+            "message": response
+        });
     } else {
         logger.debug("Push notification is not activated. See properties/esup.json#methods.push.notification");
         res.send({
@@ -320,18 +371,25 @@ async function user_unactivate(user, req, res) {
 }
 
 function alert_deactivate(user) {
+    /**
+     * @type {admin.messaging.TokenMessage}
+     */
     const content = {
         notification: {
             title: "Esup Auth",
             body: "Les notifications push ont été désactivées pour votre compte",
-            "click_action": "com.adobe.phonegap.push.background.MESSAGING_EVENT"
+        },
+        android: {
+            notification: {
+                clickAction: "com.adobe.phonegap.push.background.MESSAGING_EVENT"
+            }
         },
         data: {
             message: "Les notifications push ont été désactivées pour votre compte",
             text: "Les notifications push ont été désactivées pour votre compte",
             action: 'desync'
         },
-        to: user.push.device.gcm_id
+        token: user.push.device.gcm_id
     };
     return send(content)
         .catch((err) => {
