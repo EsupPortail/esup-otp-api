@@ -45,6 +45,25 @@ RewriteCond %{QUERY_STRING} transport=websocket [NC]
 RewriteRule /(.*) ws://127.0.0.1:3000/$1 [P]
 ```
 
+### Systemd
+
+```
+[Unit]
+Description=esup-otp-api nodejs app
+Documentation=https://github.com/EsupPortail/esup-otp-api
+After=network.target
+
+[Service]
+Type=simple
+User=esup
+WorkingDirectory=/opt/esup-otp-api
+ExecStart=/usr/bin/node run
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+```
+
 ### Tests
 Install mocha : npm install -g mocha .
 Simply execute "mocha" in the root directory of the project, the server must be launched before executing the tests
