@@ -3,9 +3,9 @@
 esup-otp-api is a RESTful api using NodeJS to generate, send and verify one-time codes for [EsupPortail]
 
 ### Version
-1.3.0
+1.4.0
 
-Runs on Node v20.10.0 and npm v10.2.3
+Runs on Node v20.11.1 and npm v10.2.4
 
 ### Requirement
 
