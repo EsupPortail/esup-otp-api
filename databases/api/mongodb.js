@@ -218,10 +218,3 @@ export async function get_uids(req, res) {
         uids: result
     });
 }
-
-export async function forEachPushUser(callbackForEach) {
-    const users = UserPreferences.find({ 'push.active': true });
-    for await (const user of users) {
-        await callbackForEach(user);
-    }
-}

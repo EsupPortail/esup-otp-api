@@ -138,12 +138,6 @@ export function remove_user(uid) {
     return apiDb.remove_user(uid);
 }
 
-export async function updateDeviceModelToUserFriendlyName(req, res) {
-    await apiDb.forEachPushUser(methods["push"].updateDeviceModelToUserFriendlyName)
-    res.status(200);
-    res.send({ code: 'Ok' });
-}
-
 /**
  * Envoie le code via le transport == req.params.transport
  * Retourne la réponse du service mail

@@ -114,8 +114,6 @@ async function initializeProtectedRoutes(server) {
     server.post("/protected/users/:uid/methods/:method/secret", validator.check_api_password, api_controller.generate_method_secret);
     server.post("/protected/users/:uid/:otp/:api_password?", validator.check_api_password, api_controller.verify_code);
     server.del("/protected/users/:uid/transports/:transport", validator.check_api_password, userDb_controller.delete_transport);
-    // updates older device.model
-    // server.post("/protected/updateDeviceModelToUserFriendlyName", validator.check_api_password, api_controller.updateDeviceModelToUserFriendlyName);
 }
 
 /**

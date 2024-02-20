@@ -236,20 +236,6 @@ function getUrl(req) {
 }
 // generation of tokenSecret sent to the client, edited by mbdeme on June 2020
 
-export async function updateDeviceModelToUserFriendlyName(user) {
-    const oldDeviceCode = user.push.device.model;
-    if (oldDeviceCode) {
-        const device = detector.parseDevice(oldDeviceCode, { device: { model: oldDeviceCode } });
-        const newDeviceName = device.model;
-        if (newDeviceName && newDeviceName != oldDeviceCode) {
-            user.push.device.model = newDeviceName;
-            await apiDb.save_user(user);
-            const data = { uid: user.uid, oldDeviceCode: oldDeviceCode, newDeviceName: newDeviceName };
-            logger.info('updateDeviceModelToUserFriendlyName ' + JSON.stringify(data));
-        }
-    }
-}
-
 export async function confirm_user_activate(user, req, res) {
     if (user.push.activation_code != null && user.push.activation_fail < properties.getMethod('push').nbMaxFails && !user.push.active && req.params.activation_code == user.push.activation_code) {
         const userAgent = req.headers['user-agent'];
