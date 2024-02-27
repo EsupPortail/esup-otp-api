@@ -4,6 +4,7 @@ import crypto from 'crypto';
 import { getInstance } from '../services/logger.js'; const logger = getInstance();
 import { fileURLToPath } from 'url';
 import * as path from 'node:path';
+import * as qrcode from 'qrcode';
 
 export function get_hash(uid) {
     const d = new Date();
@@ -64,6 +65,15 @@ export function generate_digit_code(code_length) {
 	const max = Math.pow(10, code_length);
 	const intValue = crypto.randomInt(max);
     return intValue.toString().padStart(code_length, '0');
+}
+
+/**
+ * @type {String} url
+ * @returns image with html tag
+ */
+export async function generateQrCode(url, size = 164) {
+    const imageUrl = await qrcode.toDataURL(url, { width: size });
+    return `<img src='${imageUrl}' width='${size}' height='${size}'>`;
 }
 
 const smsRegex = new RegExp("^((0[67](([.]|[-]|[ ])?[0-9]){8})|((00|[+])(([.]|[-]|[ ])?[0-9]){7,15}))$");

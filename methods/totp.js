@@ -1,6 +1,5 @@
 import * as properties from '../properties/properties.js';
 import * as utils from '../services/utils.js';
-import * as qrcode from 'qrcode';
 import { apiDb } from '../controllers/api.js';
 import { getInstance } from '../services/logger.js'; const logger = getInstance();
 import { authenticator } from 'otplib';
@@ -86,13 +85,12 @@ export async function generate_method_secret(user, req, res) {
         ]
     });
     await apiDb.save_user(user);
-    const imageUrl = await qrcode.toDataURL(user.totp.secret.otpauth_url);
 
     res.status(200);
     res.send({
         code: 'Ok',
         message: user.totp.secret.base32,
-        qrCode: "<img src='".concat(imageUrl, " 'width='164' height='164'>")
+        qrCode: await utils.generateQrCode(user.totp.secret.otpauth_url, 164)
     });
 }
 

@@ -11,7 +11,6 @@ const logger = getInstance();
 import FCM from 'fcm-node';
 import admin from "firebase-admin";
 import HttpsProxyAgent from "https-proxy-agent";
-import qrCode from 'qrcode-npm';
 import * as sockets from '../server/sockets.js';
 import geoip from "geoip-lite";
 import DeviceDetector from "node-device-detector";
@@ -213,9 +212,8 @@ export async function user_activate(user, req, res) {
     user.push.activation_code = activation_code;
     user.push.activation_fail = null;
     user.push.active = false;
-    const qr = qrCode.qrcode(10, 'M');
-    qr.addData(getUrl(req) + '/users/' + user.uid + '/methods/push/' + activation_code);
-    qr.make();
+    const qrCodeUri = getUrl(req) + '/users/' + user.uid + '/methods/push/' + activation_code;
+
     await apiDb.save_user(user);
     res.send({
         "code": "Ok",
@@ -224,7 +222,7 @@ export async function user_activate(user, req, res) {
         "message3": properties.getMessage('success', 'push_confirmation3'),
         "message4": properties.getMessage('success', 'push_confirmation4'),
         "message5": properties.getMessage('success', 'push_confirmation5'),
-        "qrCode": qr.createImgTag(4),
+        "qrCode": await utils.generateQrCode(qrCodeUri, 260),
         "activationCode": activation_code
     });
 }
