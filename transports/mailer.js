@@ -1,7 +1,6 @@
 import * as properties from '../properties/properties.js';
 import * as utils from '../services/utils.js';
 import * as nodemailer from "nodemailer";
-import smtpTransport from 'nodemailer-smtp-transport';
 import * as userDb_controller from '../controllers/user.js';
 import { getInstance } from '../services/logger.js'; const logger = getInstance();
 import * as errors from '../services/errors.js';
@@ -20,8 +19,9 @@ const options = {
     secure: false
 };
 
-if (properties.getEsupProperty('proxyUrl')) options.proxy = properties.getEsupProperty('proxyUrl');
-const transporter = nodemailer.createTransport(smtpTransport(options))
+if (properties.getEsupProperty('proxyUrl') && properties.getEsupProperty('mailer').use_proxy) 
+    options.proxy = properties.getEsupProperty('proxyUrl');
+const transporter = nodemailer.createTransport(options);
 // setup e-mail data with unicode symbols
 const senderAddress = properties.getEsupProperty('mailer').sender_name + " <" + properties.getEsupProperty('mailer').sender_mail + ">";
 
