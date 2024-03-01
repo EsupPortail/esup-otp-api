@@ -76,7 +76,7 @@
                 "auth_uri": "https://accounts.google.com/o/oauth2/auth",
                 "token_uri": "https://oauth2.googleapis.com/token",
                 "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-                "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/esup-otp-api%40esup-otp-276500.iam.gserviceaccount.com",
+                "client_x509_cert_url": "",
                 "universe_domain": "googleapis.com"
             },
             "#how_to_serverKey": "DEPRECATED: serverKey is used to access legacy APIs, which will be removed in June 2024. Contact us to obtain a serviceAccount instead",
