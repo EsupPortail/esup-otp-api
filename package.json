@@ -1,6 +1,6 @@
 {
   "name": "esup-otp-api",
-  "version": "1.4.0",
+  "version": "1.4.2",
   "description": "One time passwords api for ESUP",
   "author": "Alex Bouskine <abouskine@gmail.com>",
   "repository": {
