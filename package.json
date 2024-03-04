@@ -30,6 +30,11 @@
     "undici": "^6.6.2",
     "winston": "^3.11.0"
   },
+  "overrides": {
+    "swagger-ui-restify": {
+      "swagger-ui-dist": "^5.11.9"
+    }
+  },
   "scripts": {
     "start": "nohup node run &",
     "test": "node --test ./test/test.js",
