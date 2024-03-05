@@ -106,6 +106,7 @@
         "port": 25,
         "hostname":"mail.univ.fr",
         "use_proxy": false,
+        "use_templates": false,
         "#how_to_mailer":"change hostname with your smtp server address"
     },
     "sms": {

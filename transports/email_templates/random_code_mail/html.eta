@@ -1,0 +1,4 @@
+<p>Bonjour,<br />
+Votre code d'authentification est <strong><%= it.code %></strong>.</p>
+
+<p>Cordialement.</p>

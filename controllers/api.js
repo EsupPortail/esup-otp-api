@@ -151,6 +151,7 @@ export function transport_code(code, req, res) {
     const opts = {
         object: object,
         message: message,
+        htmlTemplate: "random_code_mail",
         code: code,
         codeRequired: properties.getMethodProperty(req.params.method, 'codeRequired'),
         waitingFor: properties.getMethodProperty(req.params.method, 'waitingFor'),
