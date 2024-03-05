@@ -11,6 +11,7 @@
   "type": "module",
   "dependencies": {
     "crypto-js": "~4.2.0",
+    "email-templates": "^11.1.1",
     "eta": "^3.2.0",
     "fcm-node": "github:renatocron/fcm-node-but-no-firebaseadmin",
     "firebase-admin": "^12.0.0",

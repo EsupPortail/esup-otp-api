@@ -1,7 +1,7 @@
 import * as properties from '../properties/properties.js';
 import * as utils from '../services/utils.js';
 import * as nodemailer from "nodemailer";
-import { Eta } from "eta";
+import EmailTemplates from 'email-templates';
 import * as userDb_controller from '../controllers/user.js';
 import { getInstance } from '../services/logger.js'; const logger = getInstance();
 import * as errors from '../services/errors.js';
@@ -29,9 +29,16 @@ const transporter = nodemailer.createTransport(options);
 const senderAddress = mailerProperty.sender_name + " <" + mailerProperty.sender_mail + ">";
 
 /**
- * @type {Eta}
+ * @type {EmailTemplates}
  */
-const eta = mailerProperty.use_templates && new Eta({ views: utils.relativeToAbsolutePath(import.meta.url, "./email_templates") });
+const emailTemplates = mailerProperty.use_templates && new EmailTemplates({views: {
+        root: utils.relativeToAbsolutePath(import.meta.url, "./email_templates"),
+        options: {
+            extension: 'eta'
+        }
+    },
+    transport: transporter
+});
 
 export async function send_message(req, opts, res) {
     const mail = opts.userTransport || await userDb_controller.get_mail_address(req);
@@ -47,12 +54,11 @@ export async function send_message(req, opts, res) {
             subject: opts.object,
         }
         
-        if(mailerProperty.use_templates && opts.htmlTemplate) {
-            mailOptions.html = eta.render("./" + opts.htmlTemplate + "/html.eta", {code: opts.code})
-        }
+        const sendMail = mailerProperty.use_templates && opts.htmlTemplate ?
+            sendWithHtmlTemplate : sendPlainText;
 
         // send mail with defined transport object
-        return transporter.sendMail(mailOptions)
+        return sendMail(mailOptions, opts)
             .then(() => {
                 console.log("Message sent to " + mail + " with the message: " + opts.message);
                 res?.send({
@@ -69,4 +75,24 @@ export async function send_message(req, opts, res) {
     } else {
         throw new errors.InvalidMailError();
     }
+}
+
+/**
+ * @returns {Promise<any>}
+ */
+function sendWithHtmlTemplate(mailOptions, opts) {
+    return emailTemplates.send({
+        template: opts.htmlTemplate,
+        message: mailOptions,
+        locals: {
+            code: opts.code
+        },
+    })
+}
+
+/**
+ * @returns {Promise<any>}
+ */
+function sendPlainText(mailOptions) {
+    return transporter.sendMail(mailOptions);
 }
