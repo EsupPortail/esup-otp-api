@@ -47,6 +47,7 @@ server.on('restifyError', (req, res, err, callback) => {
     if (err instanceof errors.HttpError) { // e.g.: 404 error, or errors difined in ../services/errors.js
         if (err.message !== '/ does not exist') {
             logger.info('HttpError: ' + err);
+            logger.debug(err.stack);
         }
     } else {
         logger.error(err.stack);
