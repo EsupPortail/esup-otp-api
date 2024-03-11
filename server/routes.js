@@ -47,6 +47,11 @@ async function initializeSocketIoRoute(server) {
         directory: socketIoAbsoluteDistDirectory,
         file: 'socket.io.min.js',
     }));
+    
+    server.get("/js/socket.io.min.js.map", restify.plugins.serveStatic({
+        directory: socketIoAbsoluteDistDirectory,
+        file: 'socket.io.min.js.map',
+    }));
 }
 
 /**
