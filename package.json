@@ -11,14 +11,14 @@
   "type": "module",
   "dependencies": {
     "crypto-js": "~4.2.0",
-    "eta": "^3.2.0",
+    "eta": "^3.4.0",
     "fcm-node": "github:renatocron/fcm-node-but-no-firebaseadmin",
     "firebase-admin": "^12.0.0",
     "geoip-lite": "^1.4.10",
     "ldapjs-promise": "^3.0.6",
     "lodash": "4.17.21",
-    "mongoose": "^7.6.1",
-    "mysql2": "^3.6.3",
+    "mongoose": "^8.2.2",
+    "mysql2": "^3.9.2",
     "node-device-detector": "^2.0.18",
     "nodemailer": "~6.9.10",
     "otplib": "^12.0.1",
@@ -28,8 +28,8 @@
     "socket.io": "~4.7.4",
     "socket.io-client": "~4.7.4",
     "swagger-ui-restify": "github:jamidon/swagger-ui-restify#bcaca4172c57b7df111f718ccd425707a6209b0f",
-    "undici": "^6.6.2",
-    "winston": "^3.11.0"
+    "undici": "^6.10.1",
+    "winston": "^3.12.0"
   },
   "overrides": {
     "swagger-ui-restify": {
@@ -43,8 +43,8 @@
     "lcov": "node --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=lcov.info ./test/test.js # only works with node v21.2.0 or higher"
   },
   "devDependencies": {
-    "eslint": "^8.55.0",
-    "mongodb-memory-server": "^9.1.1",
-    "supertest": "^6.3.3"
+    "eslint": "^8.57.0",
+    "mongodb-memory-server": "^9.1.7",
+    "supertest": "^6.3.4"
   }
 }
