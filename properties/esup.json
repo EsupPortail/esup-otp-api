@@ -65,7 +65,7 @@
             "transports" : []
         },
         "push": {
-            "#how_to_serviceAccount": "Contact us to obtain full serviceAccount",
+            "#how_to_serviceAccount": "Contact us to obtain full serviceAccount https://www.esup-portail.org/content/contact",
             "serviceAccount": {
                 "type": "service_account",
                 "project_id": "esup-otp-276500",
