@@ -116,6 +116,7 @@ export default {
               "application/json": {
                 "example": {
                   "code": "Ok",
+                  "method": "totp",
                   "message": "..."
                 }
               }

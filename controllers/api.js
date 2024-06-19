@@ -370,6 +370,7 @@ export async function verify_code(req, res) {
 
                 res.send({
                     "code": "Ok",
+                    "method": method,
                     "message": properties.getMessage('success', 'valid_credentials')
                 });
 
