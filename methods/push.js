@@ -8,15 +8,12 @@ import { apiDb } from '../controllers/api.js';
 
 import { getInstance } from '../services/logger.js';
 const logger = getInstance();
-import FCM from 'fcm-node';
 import admin from "firebase-admin";
 import HttpsProxyAgent from "https-proxy-agent";
 import * as sockets from '../server/sockets.js';
 import geoip from "geoip-lite";
 import DeviceDetector from "node-device-detector";
-import { promisify } from 'util';
 import { autoActivateTotpReady } from './totp.js';
-import isString from 'lodash/isString.js';
 
 const trustGcm_id = properties.getMethod('push').trustGcm_id;
 
@@ -26,8 +23,8 @@ const proxyUrl = properties.getEsupProperty('proxyUrl');
 /**
  * @type {(content: admin.messaging.TokenMessage) => Promise<string>}
  */
-const send = properties.getMethod('push').serviceAccount?.private_key ?
-    initFirebaseAdmin() : initFcmNode();
+// initFirebaseAdmin() only if serviceAccount.private_key is defined
+const send = properties.getMethod('push').serviceAccount?.private_key && initFirebaseAdmin();
 
 
 function initFirebaseAdmin() {
@@ -40,25 +37,6 @@ function initFirebaseAdmin() {
 
     return function sendWithFirebaseAdmin(content) {
         return admin.messaging().send(content);
-    }
-}
-
-function initFcmNode() {
-    logger.warn(`Sending messages with this FCM legacy APIs will no longer be possible as of June 2024.
-    Please contact us as soon as possible to obtain a serviceAccount.`);
-    
-    const fcm = new FCM(properties.getMethodProperty('push', 'serverKey'), proxyUrl);
-    const fcm_send = promisify(fcm.send).bind(fcm);
-
-    return function sendWithFcmNode(content) {
-        // convert to old API
-        content.to = content.token;
-        delete content.token;
-
-        content.notification.click_action = content.android.notification.clickAction;
-        delete content.android.notification.clickAction;
-
-        return fcm_send(content);
     }
 }
 
@@ -112,14 +90,8 @@ export async function send_message(user, req, res) {
         try {
             response = await send(content);
         } catch (err) {
-            if (isString(err)) { // for FCM-node
-                const str_err = err;
-                err = JSON.parse(str_err);
-                err.toString = () => str_err;
-            }
 
-            if (err.code == "messaging/registration-token-not-registered" // firebase-admin
-                || err.results?.[0]?.error == "NotRegistered") { // FCM-node
+            if (err.code == "messaging/registration-token-not-registered") {
                 logger.info("user " + user.uid + " push method deactivation because of 'token not registered' error");
                 return user_unactivate(user, req, res);
             }

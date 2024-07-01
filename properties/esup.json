@@ -88,8 +88,6 @@
                 "client_x509_cert_url": "",
                 "universe_domain": "googleapis.com"
             },
-            "#how_to_serverKey": "DEPRECATED: serverKey is used to access legacy APIs, which will be removed in June 2024. Contact us to obtain a serviceAccount instead",
-            "serverKey" : "Contact us to obtain a server key",
             "activate": true,
             "validity_time": 3,
             "trustGcm_id":false,
