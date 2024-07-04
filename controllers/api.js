@@ -291,8 +291,6 @@ async function deactivateRandomCodeIfNoTransport(user, data, suffixe) {
 
         if (!hasTransport(randomCode, data)) {
             user["random_code" + suffixe].active = false;
-            await save_user(user);
-            logger.info('No transport is set. Auto deactivate random_code' + suffixe + ' for ' + user.uid);
         }
     }
 }
