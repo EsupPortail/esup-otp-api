@@ -115,7 +115,7 @@ export async function confirm_user_activate(user, req, res) {
         });
     }
     catch (error) {
-        //console.error(error);
+        logger.error(error);
         res.status(400);
         res.send({ error: error.message, isVerifyResponseFail: true });
         return;
@@ -241,9 +241,9 @@ export async function verify_webauthn_auth(user, req, res) {
             }
         });
     } catch (error) {
-        console.error(error);
-        console.error(error.cause);
-        console.error(error.message);
+        logger.error(error);
+        logger.error(error.cause);
+        logger.error(error.message);
 
         let error_payload = {
             message: error.message
@@ -261,15 +261,12 @@ export async function verify_webauthn_auth(user, req, res) {
             error_payload = {
                 message: {
                     title: "L'adresse de cette page est différente de celle attendue par le serveur",
-                    desc: `Vous vous trouvez actuellement sur le domaine <b>${got_host}</b>, alors que le serveur s'attendais à ce que vous soyez sur le domaine, <b>${expected_host}</b>.<br>Vous êtes peut-être en train de subir une tentative de <a href="https://fr.wikipedia.org/wiki/Hame%C3%A7onnage">phishing</a>. Pensez à changer votre mot de passe si vous avez un doute, et n'hésitez pas à contacter un administrateur réseau.`,
+                    desc: `Vous vous trouvez actuellement sur le domaine <b>${got_host}</b>, alors que le serveur s'attendait à ce que vous soyez sur le domaine, <b>${expected_host}</b>.<br>Vous êtes peut-être en train de subir une tentative de <a href="https://fr.wikipedia.org/wiki/Hame%C3%A7onnage">phishing</a>. Pensez à changer votre mot de passe si vous avez un doute, et n'hésitez pas à contacter un administrateur réseau.`,
                     // "unforgivable" means the UI should try to prevent the user from retrying
                     // unforgivable: true,
                 }
             }
         }
-
-        console.log(error.message.includes("Unexpected authentication response origin"));
-
 
         res.status(400);
         res.send(error_payload);
