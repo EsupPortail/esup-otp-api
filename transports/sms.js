@@ -33,7 +33,21 @@ if (proxyUrl) {
 export async function send_message(req, opts, res) {
     const num = opts.userTransport || await userDb_controller.get_phone_number(req);
     if (utils.check_transport_validity('sms', num)) {
-        const url = urlBroker(num, opts.message);
+        const url = replacePhoneNumberAndMessage(baseUrlBroker.href, num, opts.message);
+        if (properties.getEsupProperty('sms').method) {
+            requestOpts.method = properties.getEsupProperty('sms').method;
+        }
+        if (properties.getEsupProperty('sms').body) {
+            requestOpts.body = replacePhoneNumberAndMessage(properties.getEsupProperty('sms').body, num, opts.message);
+        }
+        if (properties.getEsupProperty('sms').headers) {
+            if (!requestOpts.headers) {
+                requestOpts.headers = {};
+            }
+            for (const k in properties.getEsupProperty('sms').headers) {
+                requestOpts.headers[k] = properties.getEsupProperty('sms').headers[k];
+            }
+        }
 
         let sms_response;
         try {
@@ -56,6 +70,6 @@ export async function send_message(req, opts, res) {
     }
 }
 
-function urlBroker(num, message) {
-    return baseUrlBroker.href.replace('$phoneNumber$', encodeURIComponent(num)).replace('$message$', encodeURIComponent(message));;
+function replacePhoneNumberAndMessage(str, phoneNumber, message) {
+    return str.replace('$phoneNumber$', encodeURIComponent(phoneNumber)).replace('$message$', encodeURIComponent(message));
 }

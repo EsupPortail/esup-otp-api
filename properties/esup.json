@@ -131,7 +131,10 @@
         "#how_to_mailer":"change hostname with your smtp server address"
     },
     "sms": {
-        "url": "https://user:mdp@sms.univ.fr/esup-smsuapi/?action=SendSms&phoneNumber=$phoneNumber$&message=$message$"
+        "url": "https://user:mdp@sms.univ.fr/esup-smsuapi/?action=SendSms&phoneNumber=$phoneNumber$&message=$message$",
+        "method": "GET",
+        "#body": "",
+        "#headers": {}
     },
 	"esupnfc": {
 	  "server_ip": "IP_ESUP-SGC-SERVER"
