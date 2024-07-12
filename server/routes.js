@@ -17,7 +17,8 @@ export function initialize(server, version) {
 
     return Promise.all([
         initializeUnprotectedRoutes(server, version),
-        initializeUserRoutes(server),
+        initializeEsupAuthRoutes(server),
+        initializeCasOtpClientRoutes(server),
         initializeWebAuthnRoutes(server),
         initializeNfcRoutes(server),
         initializeProtectedRoutes(server),
@@ -69,28 +70,28 @@ async function initializeOpenapiRoutes(server, version) {
 /**
  * @param { restify.Server } server
  */
-async function initializeUserRoutes(server) {
-    //app
+async function initializeCasOtpClientRoutes(server) {
+    server.get("/users/:uid/:hash", validator.check_hash, api_controller.get_user_infos);
+    server.post("/users/:uid/methods/:method/transports/:transport/:hash", validator.check_hash, api_controller.send_message);
+    // push
+    server.post("/users/:uid/methods/:method/transports/push/:lt/:hash", validator.check_hash, api_controller.send_message);
     server.get("/users/:uid/methods/:method/:loginTicket/:hash", validator.check_hash, api_controller.check_accept_authentication);
+    // WebAuthn
+    server.post("/users/:uid/webauthn/login/:hash", validator.check_hash, api_controller.verify_webauthn_auth);
+    server.post("/users/:uid/methods/webauthn/secret/:hash", validator.check_hash, api_controller.generate_webauthn_method_secret);
+}
+
+/**
+ * @param { restify.Server } server
+ */
+async function initializeEsupAuthRoutes(server) {
     server.get("/users/:uid/methods/:method/:tokenSecret", api_controller.pending);
     server.post("/users/:uid/methods/:method/:loginTicket/:tokenSecret", api_controller.accept_authentication);
     server.post("/users/:uid/methods/:method/autoActivateTotp/:tokenSecret", api_controller.autoActivateTotp);
-    server.post("/users/:uid/methods/:method/transports/push/:lt/:hash", validator.check_hash, api_controller.send_message);
-    server.get("/users/:uid/transports/:transport/test/:hash", validator.check_hash, api_controller.transport_test);
-    server.put("/users/:uid/transports/:transport/:new_transport/:hash", validator.check_hash, userDb_controller.update_transport);
-    server.get("/users/:uid/transports/:transport/:new_transport/test/:hash", validator.check_hash, api_controller.new_transport_test);
-    server.del("/users/:uid/transports/:transport/:hash", validator.check_hash, userDb_controller.delete_transport);
-    server.post("/users/:uid/methods/:method/secret/:hash", validator.check_hash, api_controller.generate_method_secret);
-    server.put("/users/:uid/methods/:method/deactivate/:hash", validator.check_hash, api_controller.deactivate_method);
-    server.put("/users/:uid/methods/:method/activate/:hash", validator.check_hash, api_controller.activate_method);
     server.post("/users/:uid/methods/push/activate/:activation_code/:gcm_id/:platform/:manufacturer/:model", api_controller.confirm_activate_push);
-    server.post("/users/:uid/methods/:method/activate/:activation_code/:hash", validator.check_hash, api_controller.confirm_activate_method);
     server.post("/users/:uid/methods/:method/refresh/:tokenSecret/:gcm_id/:gcm_id_refreshed", api_controller.refresh_gcm_id_method);
     server.del("/users/:uid/methods/:method/:tokenSecret", api_controller.desync);
 
-    //user_hash
-    server.get("/users/:uid/:hash", validator.check_hash, api_controller.get_user_infos);
-    server.post("/users/:uid/methods/:method/transports/:transport/:hash", validator.check_hash, api_controller.send_message);
 }
 
 /**
@@ -107,21 +108,14 @@ async function initializeNfcRoutes(server) {
  * @param { restify.Server } server
  */
 async function initializeWebAuthnRoutes(server) {
-    // USER
-    server.post("/users/:uid/methods/:method/confirm_activate/:hash", validator.check_hash, api_controller.confirm_activate_method);
-    server.post("/users/:uid/methods/:method/auth/:authenticator_id/:hash", validator.check_hash, api_controller.change_method_special);
-    server.del("/users/:uid/methods/:method/auth/:authenticator_id/:hash", validator.check_hash, api_controller.delete_method_special);
-    
     // MANAGER
     server.post("/protected/users/:uid/methods/:method/confirm_activate", validator.check_api_password, api_controller.confirm_activate_method);
     server.post("/protected/users/:uid/methods/:method/auth/:authenticator_id", validator.check_api_password, api_controller.change_method_special);
     server.del("/protected/users/:uid/methods/:method/auth/:authenticator_id", validator.check_api_password, api_controller.delete_method_special);
-    
-    // CAS-OTP
-    server.post("/users/:uid/webauthn/login/:hash", validator.check_hash, api_controller.verify_webauthn_auth);
 }
 
 /**
+ * routes used by manager or simple user in esup-otp-manager
  * @param { restify.Server } server
  */
 async function initializeProtectedRoutes(server) {

@@ -381,7 +381,6 @@ export async function verify_code(req, res) {
     throw new errors.InvalidCredentialsError();
 }
 
-
 /**
  * Génére un nouvel attribut d'auth (secret key ou matrice ou bypass codes)
  *
@@ -412,6 +411,11 @@ export async function delete_method_special(req, res) {
 export async function delete_method_secret(req, res) {
     const { user, method } = await getUserAndMethodModule(req, { checkMethodPropertiesExists: true });
     return method.delete_method_secret(user, req, res);
+}
+
+export async function generate_webauthn_method_secret(req, res) {
+    req.params.method = "webauthn";
+    return generate_method_secret(req, res);
 }
 
 export async function verify_webauthn_auth(req, res) {
