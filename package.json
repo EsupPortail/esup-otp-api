@@ -15,6 +15,7 @@
     "eta": "^3.4.0",
     "firebase-admin": "^12.2.0",
     "geoip-lite": "^1.4.10",
+    "https-proxy-agent": "^7.0.5",
     "ldapjs-promise": "^3.0.6",
     "lodash": "4.17.21",
     "mongoose": "^8.5.1",
