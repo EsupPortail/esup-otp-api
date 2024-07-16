@@ -9,7 +9,7 @@ import { apiDb } from '../controllers/api.js';
 import { getInstance } from '../services/logger.js';
 const logger = getInstance();
 import admin from "firebase-admin";
-import HttpsProxyAgent from "https-proxy-agent";
+import { HttpsProxyAgent } from "https-proxy-agent";
 import * as sockets from '../server/sockets.js';
 import geoip from "geoip-lite";
 import DeviceDetector from "node-device-detector";
