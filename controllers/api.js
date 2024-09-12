@@ -39,6 +39,7 @@ export async function get_methods(req, res) {
         response.code = "Ok";
         response.message = "Method(s) found";
     }
+    delete response.methods.push?.serviceAccount;
     res.status(response.code === "Ok" ? 200 : 404);
     res.send(response);
 }
