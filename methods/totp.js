@@ -2,7 +2,7 @@ import * as properties from '../properties/properties.js';
 import * as utils from '../services/utils.js';
 import { apiDb } from '../controllers/api.js';
 import { getInstance } from '../services/logger.js'; const logger = getInstance();
-import { authenticator } from 'otplib';
+import * as OTPAuth from "otpauth";
 import * as errors from '../services/errors.js';
 
 export const name = "totp";
@@ -22,13 +22,23 @@ export function verify_code(user, req) {
 }
 
 function verify_token(token, base32_secret) {
-    return base32_secret && authenticator.check(token, base32_secret);
+    return OTPAuth.TOTP.validate({
+        token: token,
+        secret: OTPAuth.Secret.fromBase32(base32_secret),
+        digits: 6,
+    }) !== null;
 }
 
 function generateSecret(user) {
-    const secret_base32 = authenticator.generateSecret(16);
-    const secret_otpauth_url = authenticator.keyuri(user.uid, properties.getMethod('totp').name, secret_base32);
-    return { base32: secret_base32, otpauth_url: secret_otpauth_url };
+    const totp = new OTPAuth.TOTP({
+      issuer: properties.getMethod('totp').name,
+      label: user.uid,
+    });
+    
+    return {
+        base32: totp.secret.base32,
+        otpauth_url: totp.toString(),
+    };
 }
 
 export async function autoActivateTotpReady(user, res, data) {
