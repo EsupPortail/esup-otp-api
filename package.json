@@ -10,32 +10,26 @@
   "license": "MIT",
   "type": "module",
   "dependencies": {
-    "@simplewebauthn/server": "^9.0.3",
-    "crypto-js": "~4.2.0",
-    "eta": "^3.4.0",
-    "firebase-admin": "^12.2.0",
-    "geoip-lite": "^1.4.10",
-    "https-proxy-agent": "^7.0.5",
-    "ldapjs-promise": "^3.0.6",
-    "lodash": "4.17.21",
-    "mongoose": "^8.5.1",
-    "mysql2": "^3.10.3",
-    "node-device-detector": "^2.1.2",
-    "nodemailer": "~6.9.10",
-    "otplib": "^12.0.1",
-    "qrcode": "^1.5.3",
-    "restify": "^11.1.0",
-    "restify-cors-middleware2": "^2.2.1",
-    "socket.io": "~4.7.4",
-    "socket.io-client": "~4.7.4",
-    "swagger-ui-restify": "github:jamidon/swagger-ui-restify#bcaca4172c57b7df111f718ccd425707a6209b0f",
-    "undici": "^6.19.4",
-    "winston": "^3.13.1"
-  },
-  "overrides": {
-    "swagger-ui-restify": {
-      "swagger-ui-dist": "^5.11.9"
-    }
+    "@simplewebauthn/server": "9.x",
+    "crypto-js": "4.x",
+    "eta": "3.x",
+    "firebase-admin": "12.x",
+    "geoip-lite": "1.x",
+    "https-proxy-agent": "7.x",
+    "ldapjs-promise": "3.x",
+    "mongoose": "8.x",
+    "mysql2": "3.x",
+    "node-device-detector": "2.x",
+    "nodemailer": "6.x",
+    "otplib": "12.x",
+    "qrcode": "1.x",
+    "restify": "github:restify/node-restify#v11.2.0",
+    "restify-cors-middleware2": "2.x",
+    "socket.io": "4.x",
+    "socket.io-client": "4.x",
+    "swagger-ui-restify": "github:jamidon/swagger-ui-restify#b0933f72980dd4124f61cfbd6bd914c40ba48d81",
+    "undici": "6.x",
+    "winston": "3.x"
   },
   "scripts": {
     "start": "nohup node run &",
@@ -44,8 +38,8 @@
     "lcov": "node --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=lcov.info ./test/test.js # only works with node v21.2.0 or higher"
   },
   "devDependencies": {
-    "eslint": "^8.57.0",
-    "mongodb-memory-server": "^9.4.1",
-    "supertest": "^6.3.4"
+    "eslint": "8.x",
+    "mongodb-memory-server": "10.x",
+    "supertest": "7.x"
   }
 }
