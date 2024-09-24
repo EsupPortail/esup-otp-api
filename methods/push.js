@@ -11,7 +11,7 @@ const logger = getInstance();
 import admin from "firebase-admin";
 import { HttpsProxyAgent } from "https-proxy-agent";
 import * as sockets from '../server/sockets.js';
-import geoip from "geoip-lite";
+import * as ip_location from 'ip-location-api'
 import DeviceDetector from "node-device-detector";
 import { autoActivateTotpReady } from './totp.js';
 
@@ -35,12 +35,22 @@ function initFirebaseAdmin() {
 
     logger.info("firebase-admin initialized");
 
+    initIpLocation();
+
     return function sendWithFirebaseAdmin(content) {
         return admin.messaging().send(content);
     }
 }
 
 export const name = "push";
+
+async function initIpLocation() {
+    ip_location.reload({
+        fields: "city",
+        language: "fr",
+        silent: true,
+    });
+}
 
 // https://github.com/sanchezzzhak/node-device-detector#user-content-gettersetteroptions-
 const detector = new DeviceDetector({
@@ -117,12 +127,12 @@ function getText(req) {
     const ip = req.headers['x-real-ip'] || req.connection.remoteAddress;
     logger.debug("x-real-ip :" + req.headers['x-real-ip']);
     logger.debug("Client ip is :" + ip);
-    const geo = geoip.lookup(ip);
+    const geo = ip_location.lookup(ip);
     logger.debug("Client geoip is :" + JSON.stringify(geo));
-    const city = geo != null ? geo.city : null;
+    const city = geo?.city;
 
     let text = properties.getMethod('push').text1;
-    if (city != null)
+    if (city)
         text += properties.getMethod('push').text2.replace('$city', city);
     return text;
 }
