@@ -121,9 +121,9 @@
         "#how_to_mailer":"change hostname with your smtp server address"
     },
     "sms": {
-        "url": "https://esup-otp-api:chat auto air@sms.univ-paris1.fr/esup-smsuapi/?action=SendSms&phoneNumber=$phoneNumber$&message=$message$"
+        "url": "https://user:mdp@sms.univ.fr/esup-smsuapi/?action=SendSms&phoneNumber=$phoneNumber$&message=$message$"
     },
 	"esupnfc": {
-	  "server_ip": "193.52.152.137"
+	  "server_ip": "IP_ESUP-SGC-SERVER"
 	}
 }
