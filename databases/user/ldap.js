@@ -1,19 +1,20 @@
 import * as utils from '../../services/utils.js';
 import * as properties from '../../properties/properties.js';
 import * as errors from '../../services/errors.js';
-import ldapjs from 'ldapjs-promise';
+import { Client, Change, Attribute, EqualityFilter } from 'ldapts';
+/** @import { SearchOptions } from 'ldapts' */
 
 import { getInstance } from '../../services/logger.js';
 const logger = getInstance();
 
 /**
- * @type ldapjs.Client
+ * @type Client
  */
 let client;
 
 export async function initialize() {
     logger.info(utils.getFileNameFromUrl(import.meta.url) + ' Initializing ldap connection');
-    client = ldapjs.createClient({
+    client = new Client({
         url: getLdapProperties().uri
     });
     await client.bind(getLdapProperties().adminDn, getLdapProperties().password);
@@ -25,7 +26,7 @@ export async function find_user(uid) {
     try {
         user = await find_user_internal(uid);
     } catch (error) {
-        if (!(error instanceof ldapjs.NoSuchObjectError)) {
+        if (error.name !== 'NoSuchObjectError') {
             throw error;
         }
     }
@@ -39,27 +40,25 @@ const allAttributes = modifiableAttributes.concat("uid");
  * @returns the user, or undefined
  */
 async function find_user_internal(uid) {
-    /** @type ldapjs.SearchOptions */
+    /** @type SearchOptions */
     const opts = {
-        filter: new ldapjs.EqualityFilter({ attribute: 'uid', value: uid }),
+        filter: new EqualityFilter({ attribute: 'uid', value: uid }),
         scope: 'sub',
         attributes: allAttributes
     };
 
-    const searchResult = await client.searchReturnAll(getBaseDn(), opts);
-    const searchEntry = searchResult.entries[0];
+    const { searchEntries } = await client.search(getBaseDn(), opts);
+    const searchEntry = searchEntries?.[0];
 
     if (!searchEntry) {
         return;
     }
 
-    const user = {};
-    for (const attribute of searchEntry.attributes) {
-        const attributeName = attribute.type;
-        if (allAttributes.includes(attributeName)) {
-            user[attributeName] = attribute.values[0];
-        }
-    }
+    const user = Object.fromEntries(
+        Object.entries(searchEntry)
+            .filter(([key]) => allAttributes.includes(key))
+            .map(([key, value]) => [key, Array.isArray(value) ? value[0] : value])
+    );
 
     return user;
 }
@@ -69,8 +68,8 @@ function ldap_change(user) {
 
     for (const attr in user) {
         if (modifiableAttributes.includes(attr)) {
-            const modif = new ldapjs.Attribute({ type: attr, values: user[attr] });
-            const change = new ldapjs.Change({
+            const modif = new Attribute({ type: attr, values: [user[attr]].filter(Boolean) });
+            const change = new Change({
                 operation: 'replace',
                 modification: modif
             });
@@ -86,7 +85,7 @@ export function save_user(user) {
 }
 
 function getDN(uid) {
-    return 'uid=' + uid + ',' + getBaseDn();
+    return `uid=${uid},${getBaseDn()}`;
 }
 
 export function create_user(uid) {
@@ -101,7 +100,7 @@ export function create_user(uid) {
     return client.add(getDN(uid), entry);
 }
 
-export async function remove_user(uid) {
+export function remove_user(uid) {
     return client.del(getDN(uid));
 }
 

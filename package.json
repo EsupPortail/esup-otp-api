@@ -16,7 +16,7 @@
     "firebase-admin": "12.x",
     "https-proxy-agent": "7.x",
     "ip-location-api": "2.x",
-    "ldapjs-promise": "3.x",
+    "ldapts": "7.x",
     "mongoose": "8.x",
     "mysql2": "3.x",
     "node-device-detector": "2.x",
