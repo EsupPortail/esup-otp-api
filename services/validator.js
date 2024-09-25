@@ -22,17 +22,13 @@ export function check_api_password(req, res, next) {
 }
 
 export function esupnfc_check_server_ip(req, res, next) {
-    let ip = req.headers["x-forwarded-for"];
-    //logger.debug(req.headers);
-    if(ip == undefined) {
-	ip = req.connection.remoteAddress;
-    }
-    if (ip == properties.getEsupProperty('esupnfc').server_ip) {
-	return next();
+    const ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
+    if (ip && ip == properties.getEsupProperty('esupnfc').server_ip) {
+        return next();
     }
     else {
-	logger.info("remote ip : " + ip + " is not esupnfc server ip -> forbidden");
-	return next(new errors.ForbiddenError());
+        logger.warn("remote ip : " + ip + " is not esupnfc server ip -> forbidden");
+        return next(new errors.ForbiddenError());
     }
 }
 
