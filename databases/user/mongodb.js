@@ -6,8 +6,7 @@ import * as mongoose from 'mongoose';
 import * as definedUserSchema from './userSchema.js';
 
 export async function initialize(dbUrl) {
-    dbUrl ||= ('mongodb://' + properties.getEsupProperty('mongodb').address + '/' + properties.getEsupProperty('mongodb').db);
-    const connection = await mongoose.createConnection(dbUrl).asPromise();
+    const connection = await mongoose.createConnection(dbUrl || properties.getMongoDbUrl()).asPromise();
     initiatilize_user_model(connection);
 }
 

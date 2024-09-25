@@ -85,3 +85,8 @@ export function getProperties () {
 export function getProperty (property) {
     return properties[property];
 }
+
+export function getMongoDbUrl() {
+    const { address, db } = getEsupProperty('mongodb');
+    return 'mongodb://' + [address, db].filter(Boolean).join('/');
+}

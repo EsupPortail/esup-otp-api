@@ -9,8 +9,7 @@ import { getInstance } from '../../services/logger.js';
 const logger = getInstance();
 
 export async function initialize(dbUrl) {
-    dbUrl ||= ('mongodb://' + properties.getEsupProperty('mongodb').address + '/' + properties.getEsupProperty('mongodb').db);
-    const connection = await mongoose.createConnection(dbUrl).asPromise();
+    const connection = await mongoose.createConnection(dbUrl || properties.getMongoDbUrl()).asPromise();
     return Promise.all([
         initiatilize_api_preferences(connection),
         initiatilize_user_model(connection),
