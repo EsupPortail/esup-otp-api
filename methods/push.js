@@ -66,6 +66,8 @@ export async function send_message(user, req, res) {
     user.push.lt = lt;
     logger.debug("gcm.Message with 'lt' as secret : " + lt);
 
+    user.push.text = getText(req);
+
     /**
      * @type {admin.messaging.TokenMessage}
      */
@@ -80,8 +82,8 @@ export async function send_message(user, req, res) {
             }
         },
         data: {
-            message: getText(req),
-            text: getText(req),
+            message: user.push.text,
+            text: user.push.text,
             action: 'auth',
             trustGcm_id: trustGcm_id?.toString(),
             url: getUrl(req),
@@ -158,8 +160,8 @@ export function pending(user, req, res) {
     if (user.push.active && properties.getMethodProperty(req.params.method, 'activate') && req.params.tokenSecret == user.push.token_secret && Date.now() < user.push.validity_time) {
         res.send({
             "code": "Ok",
-            "message": getText(req),
-            "text": getText(req),
+            "message": user.push.text,
+            "text": user.push.text,
             "action": 'auth',
             "lt": user.push.lt
         });
