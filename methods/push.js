@@ -338,7 +338,10 @@ async function user_unactivate(user, req, res) {
     throw new errors.PushNotRegisteredError();
 }
 
-function alert_deactivate(user) {
+async function alert_deactivate(user) {
+    if (!user.push.device.gcm_id) {
+        return;
+    }
     /**
      * @type {admin.messaging.TokenMessage}
      */
@@ -359,10 +362,12 @@ function alert_deactivate(user) {
         },
         token: user.push.device.gcm_id
     };
-    return send(content)
-        .catch((err) => {
-            logger.error("Problem to send a notification for deactivate push: " + err);
-        });
+
+    try {
+        await send(content);
+    } catch (err) {
+        logger.error("Problem to send a notification for deactivate push: " + err);
+    }
 }
 
 export async function user_desync(user, req, res) {
