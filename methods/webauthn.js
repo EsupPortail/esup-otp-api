@@ -277,10 +277,7 @@ export async function verify_webauthn_auth(user, req, res) {
 
     if (!verified) {
         logger.info(utils.getFileNameFromUrl(import.meta.url) + " Invalid credentials by " + user.uid);
-        res.status(400);
-        res.send({
-            message: "Failed to authenticate."
-        });
+        throw new errors.InvalidCredentialsError();
     }
 
     // update counter
