@@ -118,6 +118,7 @@
         "hostname":"mail.univ.fr",
         "use_proxy": false,
         "use_templates": false,
+        "accept_self_signed_certificate": false,
         "#how_to_mailer":"change hostname with your smtp server address"
     },
     "sms": {

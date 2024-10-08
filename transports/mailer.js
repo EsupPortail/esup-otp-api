@@ -19,7 +19,10 @@ const options = {
     // }
     host: mailerProperty.hostname,
     port: mailerProperty.port,
-    secure: false
+    secure: false,
+    tls: {
+        rejectUnauthorized: !mailerProperty.accept_self_signed_certificate,
+    },
 };
 
 if (properties.getEsupProperty('proxyUrl') && mailerProperty.use_proxy) 
