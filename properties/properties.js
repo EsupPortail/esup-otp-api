@@ -1,16 +1,22 @@
+import * as fileUtils from '../services/fileUtils.js';
 import fs from 'fs';
-import * as utils from '../services/utils.js';
 
 const properties = {};
 
-const __dirname = utils.__dirname(import.meta.url);
+const __dirname = fileUtils.__dirname(import.meta.url);
 
-fs.readdirSync(__dirname).forEach(function (file) {
-    const strFile = file.split('.');
-    if (strFile[strFile.length - 1] == 'json') {
-        properties[file.split('.')[0]] = JSON.parse(fs.readFileSync(__dirname + '/' + file));
-    }
+fs.readdirSync(__dirname).forEach(function(file) {
+    loadFile(__dirname, file);
 })
+
+export function loadFile(dirname, filename) {
+    const strFile = filename.split('.');
+    if (strFile[strFile.length - 1] == 'json') {
+        const jsonFile = fileUtils.readJsonSync(dirname + '/' + filename);
+        properties[filename.split('.')[0]] = jsonFile;
+        return jsonFile;
+    }
+}
 
 export function getMessages () {
     return properties.messages;

@@ -1,5 +1,6 @@
 import * as properties from '../properties/properties.js';
 import * as utils from '../services/utils.js';
+import * as fileUtils from '../services/fileUtils.js';
 import * as errors from '../services/errors.js';
 import { getInstance } from '../services/logger.js';
 import { apiDb } from '../controllers/api.js';
@@ -217,7 +218,7 @@ export async function verify_code(user, req) {
  * @param res response HTTP
  */
 export async function verify_webauthn_auth(user, req, res) {
-    logger.debug(utils.getFileNameFromUrl(import.meta.url) + " verify_code: " + user.uid);
+    logger.debug(fileUtils.getFileNameFromUrl(import.meta.url) + " verify_code: " + user.uid);
 
     const response = req.body.response;
     const credID = req.body.credID;
@@ -276,7 +277,7 @@ export async function verify_webauthn_auth(user, req, res) {
     const { verified } = verification;
 
     if (!verified) {
-        logger.info(utils.getFileNameFromUrl(import.meta.url) + " Invalid credentials by " + user.uid);
+        logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + " Invalid credentials by " + user.uid);
         throw new errors.InvalidCredentialsError();
     }
 
@@ -288,7 +289,7 @@ export async function verify_webauthn_auth(user, req, res) {
     user.webauthn.registration.logged_in_otp_validity_time = Date.now() + 30 * 1000;
 
     await apiDb.save_user(user);
-    logger.info(utils.getFileNameFromUrl(import.meta.url) + " Valid credentials by " + user.uid);
+    logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + " Valid credentials by " + user.uid);
     res.status(200);
     res.send({ token: user.webauthn.registration.logged_in_otp });
 }

@@ -4,20 +4,19 @@ import corsMiddleware from "restify-cors-middleware2";
 import { promisify } from 'util';
 
 import * as properties from '../properties/properties.js';
-import * as utils from '../services/utils.js';
+import * as fileUtils from '../services/fileUtils.js';
 import * as sockets from './sockets.js';
 import * as userDb_controller from '../controllers/user.js';
 import * as api_controller from '../controllers/api.js';
 import * as routes from '../server/routes.js';
 
-import packageJson from '../package.json' assert { type: 'json' };
-export const version = packageJson.version;
+properties.loadFile(fileUtils.relativeToAbsolutePath(import.meta.url, '..'), "package.json");
 
 import { getInstance } from '../services/logger.js'; const logger = getInstance();
 
 export const server = restify.createServer({
     name: 'esup-otp',
-    version: version,
+    version: properties.getProperty("package").version,
     // accept all options of https://github.com/delvedor/find-my-way/#api
     ignoreTrailingSlash: true,
     ignoreDuplicateSlashes: true,
@@ -57,17 +56,17 @@ server.on('restifyError', (req, res, err, callback) => {
 });
 
 export function initialize_userDBController() {
-    logger.info(utils.getFileNameFromUrl(import.meta.url) + ' Initializing the userDB controller');
+    logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ' Initializing the userDB controller');
     return userDb_controller.initialize();
 }
 
 export function initialize_apiController() {
-    logger.info(utils.getFileNameFromUrl(import.meta.url) + ' Initializing the api controller');
+    logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ' Initializing the api controller');
     return api_controller.initialize();
 }
 
 export function initialize_routes() {
-    return routes.initialize(server, version);
+    return routes.initialize(server);
 }
 
 export async function launch_server(port) {
@@ -84,5 +83,5 @@ export async function start() {
     await initialize_routes();
     await launch_server(process.env.PORT || 3000);
     await attach_socket();
-    logger.info(utils.getFileNameFromUrl(import.meta.url) + ' App is ready at : ' + server.address().port);
+    logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ' App is ready at : ' + server.address().port);
 }

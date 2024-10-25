@@ -1,5 +1,6 @@
 import * as userDb_controller from './user.js';
 import * as utils from '../services/utils.js';
+import * as fileUtils from '../services/fileUtils.js';
 import * as properties from '../properties/properties.js';
 import * as controllerUtils from './controllerUtils.js';
 import * as errors from '../services/errors.js';
@@ -378,7 +379,7 @@ export async function verify_code(req, res) {
         }
     }
 
-    logger.info(utils.getFileNameFromUrl(import.meta.url) + ' Invalid credentials submit for user with uid : ' + user.uid);
+    logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ' Invalid credentials submit for user with uid : ' + user.uid);
     throw new errors.InvalidCredentialsError();
 }
 
@@ -455,7 +456,7 @@ export async function get_activate_methods(req, res) {
  * @param res response HTTP
  */
 export async function activate_method(req, res) {
-    logger.info(utils.getFileNameFromUrl(import.meta.url) + ' ' + req.params.uid + " activate_method " + req.params.method);
+    logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ' ' + req.params.uid + " activate_method " + req.params.method);
     if (req.params.method !== 'push') {
         logger.log('archive', {
             message: [
@@ -486,7 +487,7 @@ export async function confirm_activate_push(req, res) {
  * @param res response HTTP
  */
 export async function confirm_activate_method(req, res) {
-    logger.info(utils.getFileNameFromUrl(import.meta.url) + ' ' + req.params.uid + " confirm_activate_method " + req.params.method);
+    logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ' ' + req.params.uid + " confirm_activate_method " + req.params.method);
     if (req.params.method === 'push') {
         logger.log('archive', {
             message: [
@@ -506,13 +507,13 @@ export async function confirm_activate_method(req, res) {
 }
 
 export async function autoActivateTotp(req, res) {
-    logger.info(utils.getFileNameFromUrl(import.meta.url) + ' ' + req.params.uid + " autoActivateTotp " + req.params.method);
+    logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ' ' + req.params.uid + " autoActivateTotp " + req.params.method);
     const { user, method } = await getUserAndMethodModule(req);
     return method.autoActivateTotp(user, req, res);
 }
 
 export async function refresh_gcm_id_method(req, res) {
-    logger.info(utils.getFileNameFromUrl(import.meta.url) + ' ' + req.params.uid + " refresh_push " + req.params.method);
+    logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ' ' + req.params.uid + " refresh_push " + req.params.method);
     logger.log('archive', {
         message: [
             {
@@ -536,7 +537,7 @@ export async function refresh_gcm_id_method(req, res) {
  * @param res response HTTP
  */
 export async function deactivate_method(req, res) {
-    logger.info(utils.getFileNameFromUrl(import.meta.url) + ' ' + req.params.uid + " deactivate_method " + req.params.method);
+    logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ' ' + req.params.uid + " deactivate_method " + req.params.method);
     logger.log('archive', {
         message: [
             {
@@ -559,7 +560,7 @@ export async function deactivate_method(req, res) {
  * @param res response HTTP
  */
 export async function desync(req, res) {
-    logger.info(utils.getFileNameFromUrl(import.meta.url) + ' ' + req.params.uid + " desync " + req.params.method);
+    logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ' ' + req.params.uid + " desync " + req.params.method);
     logger.log('archive', {
         message: [
             {

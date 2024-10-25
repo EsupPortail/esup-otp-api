@@ -1,7 +1,8 @@
-import * as utils from '../services/utils.js';
+import * as fileUtils from '../services/fileUtils.js';
 import * as validator from '../services/validator.js';
 import * as api_controller from '../controllers/api.js';
 import * as userDb_controller from '../controllers/user.js';
+import * as properties from '../properties/properties.js';
 import restify from 'restify';
 import swaggerUi from 'swagger-ui-restify'
 import openapiDocument from './openapi.js'
@@ -12,11 +13,11 @@ import { getInstance } from '../services/logger.js'; const logger = getInstance(
 /**
  * @param { restify.Server } server
  */
-export function initialize(server, version) {
-    logger.info(utils.getFileNameFromUrl(import.meta.url) + ' Initializing Routes');
+export function initialize(server) {
+    logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ' Initializing Routes');
 
     return Promise.all([
-        initializeUnprotectedRoutes(server, version),
+        initializeUnprotectedRoutes(server),
         initializeEsupAuthRoutes(server),
         initializeCasOtpClientRoutes(server),
         initializeWebAuthnRoutes(server),
@@ -24,18 +25,18 @@ export function initialize(server, version) {
         initializeProtectedRoutes(server),
         initializeAdminRoutes(server),
     ]).then(() => {
-        logger.info(utils.getFileNameFromUrl(import.meta.url) + ' Routes initialized');
+        logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ' Routes initialized');
     });
 }
 
 /**
  * @param { restify.Server } server
  */
-function initializeUnprotectedRoutes(server, version) {
-    logger.info(utils.getFileNameFromUrl(import.meta.url) + ' Initializing "unprotected" routes');
+function initializeUnprotectedRoutes(server) {
+    logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ' Initializing "unprotected" routes');
     return Promise.all([
         initializeSocketIoRoute(server),
-        initializeOpenapiRoutes(server, version)
+        initializeOpenapiRoutes(server)
     ]);
 }
 
@@ -44,7 +45,7 @@ function initializeUnprotectedRoutes(server, version) {
  */
 async function initializeSocketIoRoute(server) {
     // goal: simply let esup-otp-cas get /js/socket.io.js from esup-otp-api (avoid use of cdn)
-    const socketIoAbsoluteDistDirectory = utils.relativeToAbsolutePath(import.meta.url, '../node_modules/socket.io-client/dist/');
+    const socketIoAbsoluteDistDirectory = fileUtils.relativeToAbsolutePath(import.meta.url, '../node_modules/socket.io-client/dist/');
     server.get("/js/socket.io.js", restify.plugins.serveStatic({
         directory: socketIoAbsoluteDistDirectory,
         file: 'socket.io.min.js',
@@ -59,8 +60,8 @@ async function initializeSocketIoRoute(server) {
 /**
  * @param { restify.Server } server
  */
-async function initializeOpenapiRoutes(server, version) {
-    openapiDocument.info.version = version;
+async function initializeOpenapiRoutes(server) {
+    openapiDocument.info.version = properties.getProperty("package").version;
     const swaggerUiBaseURL = 'api-docs';
     server.get("/openapi.json", (req, res, next) => res.json(openapiDocument));
     server.get("/" + swaggerUiBaseURL + "/*", ...swaggerUi.serve);
@@ -119,7 +120,7 @@ async function initializeWebAuthnRoutes(server) {
  * @param { restify.Server } server
  */
 async function initializeProtectedRoutes(server) {
-    logger.info(utils.getFileNameFromUrl(import.meta.url) + ' Initializing protected routes');
+    logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ' Initializing protected routes');
     //api_api_password
     server.get("/protected/methods", validator.check_api_password, api_controller.get_methods);
     server.get("/protected/users/:uid", validator.check_api_password, api_controller.get_user_infos);
@@ -138,7 +139,7 @@ async function initializeProtectedRoutes(server) {
  * @param { restify.Server } server
  */
 async function initializeAdminRoutes(server) {
-    logger.info(utils.getFileNameFromUrl(import.meta.url) + ' Initializing admin routes');
+    logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ' Initializing admin routes');
     server.get("/admin/users/:uid", validator.check_api_password, api_controller.get_user);
     server.get("/admin/users", validator.check_api_password, api_controller.get_uids);
     server.get("/admin/users/:uid/methods", validator.check_api_password, api_controller.get_activate_methods);

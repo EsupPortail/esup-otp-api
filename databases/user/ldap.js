@@ -1,4 +1,4 @@
-import * as utils from '../../services/utils.js';
+import * as fileUtils from '../../services/fileUtils.js';
 import * as properties from '../../properties/properties.js';
 import * as errors from '../../services/errors.js';
 import { Client, Change, Attribute, EqualityFilter } from 'ldapts';
@@ -13,12 +13,12 @@ const logger = getInstance();
 let client;
 
 export async function initialize() {
-    logger.info(utils.getFileNameFromUrl(import.meta.url) + ' Initializing ldap connection');
+    logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ' Initializing ldap connection');
     client = new Client({
         url: getLdapProperties().uri
     });
     await bindLdapIfNeeded();
-    logger.info(utils.getFileNameFromUrl(import.meta.url) + ' Ldap connection Initialized');
+    logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ' Ldap connection Initialized');
 }
 
 async function bindLdapIfNeeded() {

@@ -1,6 +1,6 @@
 import * as userDb_controller from '../../controllers/user.js';
 import * as properties from '../../properties/properties.js';
-import * as utils from '../../services/utils.js';
+import * as fileUtils from '../../services/fileUtils.js';
 import * as mongoose from 'mongoose';
 import { schema as userPreferencesSchema } from './userPreferencesSchema.js';
 import { schema as apiPreferencesSchema } from './apiPreferencesSchema.js';
@@ -43,7 +43,7 @@ async function initiatilize_api_preferences(connection) {
         return update_api_preferences();
     }
     else {
-        logger.info(utils.getFileNameFromUrl(import.meta.url) + ' No existing api prefs data : creating.');
+        logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ' No existing api prefs data : creating.');
         return create_api_preferences();
     }
 }
@@ -63,7 +63,7 @@ export async function update_api_preferences() {
         }
         const api_preferences = data;
         await api_preferences.save();
-        logger.info(utils.getFileNameFromUrl(import.meta.url) + " Api Preferences updated");
+        logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + " Api Preferences updated");
     }
 }
 
@@ -71,7 +71,7 @@ async function create_api_preferences() {
     await ApiPreferences.deleteMany({});
     const api_preferences = new ApiPreferences(properties.getEsupProperty('methods'));
     await api_preferences.save();
-    logger.info(utils.getFileNameFromUrl(import.meta.url) + " Api Preferences created");
+    logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + " Api Preferences created");
 }
 /** 
  * User Model 

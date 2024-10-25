@@ -1,5 +1,6 @@
 import * as properties from '../properties/properties.js';
 import * as utils from '../services/utils.js';
+import * as fileUtils from '../services/fileUtils.js';
 import { apiDb } from '../controllers/api.js';
 import { getInstance } from '../services/logger.js'; const logger = getInstance();
 import * as OTPAuth from "otpauth";
@@ -47,12 +48,12 @@ export async function autoActivateTotpReady(user, res, data) {
         data.autoActivateTotp = true;
         data.totpKey = user.totp.secret.base32;
         data.totpName = properties.getMethod('totp').name;
-        logger.info(utils.getFileNameFromUrl(import.meta.url) + " autoActivateTotpReady " + user.uid);
+        logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + " autoActivateTotpReady " + user.uid);
         await apiDb.save_user(user);
     }
     else {
         data.autoActivateTotp = false;
-        logger.info(utils.getFileNameFromUrl(import.meta.url) + " autoActivateTotpReady is false");
+        logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + " autoActivateTotpReady is false");
     }
 }
 

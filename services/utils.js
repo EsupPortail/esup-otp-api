@@ -2,8 +2,6 @@ import * as properties from '../properties/properties.js';
 import CryptoJS from 'crypto-js';
 import crypto from 'crypto';
 import { getInstance } from '../services/logger.js'; const logger = getInstance();
-import { fileURLToPath } from 'url';
-import * as path from 'node:path';
 import * as qrcode from 'qrcode';
 
 export function get_hash(uid) {
@@ -86,46 +84,6 @@ const defaultRegex = new RegExp(/^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@
 export function check_transport_validity(transport, value){
 	const reg = (transport == 'sms') ? smsRegex : defaultRegex;
     return reg.test(value);
-}
-
-/**
- * absolute path of project directory
- */
-const base_dir = relativeToAbsolutePath(import.meta.url, '..');
-
-/**
- * relative path from project directory
- */
-export function getFileName(filename){
-	return path.relative(base_dir, filename);
-}
-
-/**
- * @param { string | URL } import_meta_url 
- */
-export function getFileNameFromUrl(import_meta_url){
-    return getFileName(__filename(import_meta_url));
-}
-
-/**
- * @param { string | URL } import_meta_url 
- */
-export function __filename(import_meta_url){
-    return fileURLToPath(import_meta_url);
-}
-
-/**
- * @param { string | URL } import_meta_url 
- */
-export function __dirname(import_meta_url){
-    return path.dirname(__filename(import_meta_url));
-}
-
-/**
- * @param { string | URL } import_meta_url
- */
-export function relativeToAbsolutePath(import_meta_url, relativePath) {
-	return path.join(__dirname(import_meta_url), relativePath);
 }
 
 export function get_auth_bearer(headers) {

@@ -1,5 +1,6 @@
 import * as properties from '../properties/properties.js';
 import * as utils from '../services/utils.js';
+import * as fileUtils from '../services/fileUtils.js';
 import * as nodemailer from "nodemailer";
 import { Eta } from "eta";
 import * as userDb_controller from '../controllers/user.js';
@@ -34,7 +35,7 @@ const senderAddress = mailerProperty.sender_name + " <" + mailerProperty.sender_
 /**
  * @type {Eta}
  */
-const eta = mailerProperty.use_templates && new Eta({ views: utils.relativeToAbsolutePath(import.meta.url, "./email_templates") });
+const eta = mailerProperty.use_templates && new Eta({ views: fileUtils.relativeToAbsolutePath(import.meta.url, "./email_templates") });
 
 export async function send_message(req, opts, res) {
     const mail = opts.userTransport || await userDb_controller.get_mail_address(req);

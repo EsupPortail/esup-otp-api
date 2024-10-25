@@ -3,6 +3,7 @@
  */
 import * as properties from '../properties/properties.js';
 import * as utils from '../services/utils.js';
+import * as fileUtils from '../services/fileUtils.js';
 import * as errors from '../services/errors.js';
 import { apiDb } from '../controllers/api.js';
 
@@ -183,7 +184,7 @@ export function pending(user, req, res) {
     }
     else {
         if (req.params.tokenSecret != user.push.token_secret)
-            logger.warn(utils.getFileNameFromUrl(import.meta.url) + " Bad token_secret provided by " + user.uid + " in pending action");
+            logger.warn(fileUtils.getFileNameFromUrl(import.meta.url) + " Bad token_secret provided by " + user.uid + " in pending action");
         res.send({
             "code": "KO"
         });
@@ -247,13 +248,13 @@ export async function confirm_user_activate(user, req, res) {
             "tokenSecret": token_secret,
         };
         await autoActivateTotpReady(user, res, data);
-        logger.debug(utils.getFileNameFromUrl(import.meta.url) + " autoActivateTotpReady " + JSON.stringify(data));
+        logger.debug(fileUtils.getFileNameFromUrl(import.meta.url) + " autoActivateTotpReady " + JSON.stringify(data));
         res.send(data);
     } else {
         let nbfail = user.push.activation_fail;
         nbfail = (nbfail || 0) + 1;
         user.push.activation_fail = nbfail;
-        logger.info(utils.getFileNameFromUrl(import.meta.url) + ' App confirm activation fails for ' + user.uid + " (" + nbfail + ")");
+        logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ' App confirm activation fails for ' + user.uid + " (" + nbfail + ")");
         await apiDb.save_user(user);
         throw new errors.InvalidCredentialsError();
     }
@@ -376,7 +377,7 @@ async function alert_deactivate(user) {
 }
 
 export async function user_desync(user, req, res) {
-    logger.debug(utils.getFileNameFromUrl(import.meta.url) + ' user_desync: ' + user.uid);
+    logger.debug(fileUtils.getFileNameFromUrl(import.meta.url) + ' user_desync: ' + user.uid);
     if (user.push.active && ifTokenSecretsMatch(user, req)) {
         await clearUserPush(user, req, res);
 

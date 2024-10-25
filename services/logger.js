@@ -1,5 +1,8 @@
 import winston, { format } from 'winston';
-import logs_config from '../logs/logs.json' assert { type: 'json' };
+import * as fileUtils from '../services/fileUtils.js';
+import * as properties from '../properties/properties.js';
+
+const logs_config = properties.loadFile(fileUtils.relativeToAbsolutePath(import.meta.url, '../logs'), "logs.json");
 //import logs_config from '../logs/logs.json' with { "type": "json" };
 
 import * as path from 'node:path';
