@@ -17,8 +17,19 @@ export async function initialize() {
     client = new Client({
         url: getLdapProperties().uri
     });
-    await client.bind(getLdapProperties().adminDn, getLdapProperties().password);
+    await bindLdapIfNeeded();
     logger.info(utils.getFileNameFromUrl(import.meta.url) + ' Ldap connection Initialized');
+}
+
+async function bindLdapIfNeeded() {
+    if (!client.isConnected) {
+        await client.bind(getLdapProperties().adminDn, getLdapProperties().password);
+    }
+}
+
+async function getClient() {
+    await bindLdapIfNeeded();
+    return client;
 }
 
 export async function find_user(uid) {
@@ -47,7 +58,7 @@ async function find_user_internal(uid) {
         attributes: allAttributes
     };
 
-    const { searchEntries } = await client.search(getBaseDn(), opts);
+    const { searchEntries } = await getClient().then(client => client.search(getBaseDn(), opts));
     const searchEntry = searchEntries?.[0];
 
     if (!searchEntry) {
@@ -81,7 +92,7 @@ function ldap_change(user) {
 
 export function save_user(user) {
     const changes = ldap_change(user);
-    return client.modify(getDN(user.uid), changes);
+    return getClient().then(client => client.modify(getDN(user.uid), changes));
 }
 
 function getDN(uid) {
@@ -97,11 +108,11 @@ export function create_user(uid) {
         [getSmsAttribute()]: '0612345678',
         objectclass: ['inetOrgPerson']
     };
-    return client.add(getDN(uid), entry);
+    return getClient().then(client => client.add(getDN(uid), entry));
 }
 
 export function remove_user(uid) {
-    return client.del(getDN(uid));
+    return getClient().then(client => client.del(getDN(uid)));
 }
 
 function getLdapProperties() {
