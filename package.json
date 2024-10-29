@@ -31,6 +31,9 @@
     "undici": "6.x",
     "winston": "3.x"
   },
+  "overrides": {
+    "@scarf/scarf": "npm:dry-uninstall"
+  },
   "scripts": {
     "start": "nohup node run &",
     "test": "node --test ./test/test.js",
@@ -41,5 +44,8 @@
     "eslint": "8.x",
     "mongodb-memory-server": "10.x",
     "supertest": "7.x"
+  },
+  "scarfSettings": {
+    "enabled": false
   }
 }
