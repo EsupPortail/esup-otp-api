@@ -32,7 +32,10 @@
     "winston": "3.x"
   },
   "overrides": {
-    "@scarf/scarf": "npm:dry-uninstall"
+    "@scarf/scarf": "npm:dry-uninstall",
+    "restify": {
+      "find-my-way": "8.x"
+    }
   },
   "scripts": {
     "start": "nohup node run &",
