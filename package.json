@@ -34,7 +34,8 @@
   "overrides": {
     "@scarf/scarf": "npm:dry-uninstall",
     "restify": {
-      "find-my-way": "8.x"
+      "find-my-way": "8.x",
+      "send": "0.x"
     }
   },
   "scripts": {
