@@ -83,8 +83,8 @@ export const schema = {
             default: null
         },
         activation_fail:{
-            type: String,
-            default: null
+            type: Number,
+            default: 0
         },
         active: {
             type: Boolean,

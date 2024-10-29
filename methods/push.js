@@ -156,8 +156,12 @@ export async function verify_code(user, req) {
     }
 }
 
+function ifTokenSecretsMatch(user, req) {
+    return utils.equalsAndtruthy(user.push.token_secret, req.params.tokenSecret);
+}
+
 export function pending(user, req, res) {
-    if (user.push.active && properties.getMethodProperty(req.params.method, 'activate') && req.params.tokenSecret == user.push.token_secret && Date.now() < user.push.validity_time) {
+    if (user.push.active && properties.getMethodProperty(req.params.method, 'activate') && ifTokenSecretsMatch(user, req) && Date.now() < user.push.validity_time) {
         res.send({
             "code": "Ok",
             "message": user.push.text,
@@ -166,7 +170,7 @@ export function pending(user, req, res) {
             "lt": user.push.lt
         });
     }
-    else if (req.params.tokenSecret == user.push.token_secret && !user.push.active) {
+    else if (!user.push.active || req.params.tokenSecret != user.push.token_secret) {
         res.send({
             "code": "Ok",
             "message": "Les notifications push ont été désactivées pour votre compte",
@@ -244,12 +248,7 @@ export async function confirm_user_activate(user, req, res) {
         res.send(data);
     } else {
         let nbfail = user.push.activation_fail;
-        if (nbfail != null && nbfail != undefined) {
-            nbfail++;
-        }
-        else {
-            nbfail = 1;
-        }
+        nbfail = (nbfail || 0) + 1;
         user.push.activation_fail = nbfail;
         logger.info(utils.getFileNameFromUrl(import.meta.url) + ' App confirm activation fails for ' + user.uid + " (" + nbfail + ")");
         await apiDb.save_user(user);
@@ -259,7 +258,7 @@ export async function confirm_user_activate(user, req, res) {
 
 // refresh gcm_id when it is regenerated
 export async function refresh_user_gcm_id(user, req, res) {
-    if (req.params.tokenSecret == user.push.token_secret && req.params.gcm_id == user.push.device.gcm_id) {
+    if (ifTokenSecretsMatch(user, req) && req.params.gcm_id == user.push.device.gcm_id) {
         logger.debug("refresh old gcm_id : " + user.push.device.gcm_id + " with " + req.params.gcm_id_refreshed);
         user.push.device.gcm_id = req.params.gcm_id_refreshed;
         await apiDb.save_user(user);
@@ -310,17 +309,26 @@ export async function check_accept_authentication(user, req, res) {
     }
 }
 
+async function clearUserPush(user, req, res) {
+    user.push.active = false;
+    user.push.device.platform = null;
+    user.push.device.gcm_id = null;
+    user.push.device.manufacturer = null;
+    user.push.device.model = null;
+    user.push.activation_code = null;
+    user.push.activation_fail = null;
+    user.push.token_secret = null;
+    user.push.code = null;
+    user.push.validity_time = null;
+    user.push.text = null;
+    user.push.lt = null;
+    await apiDb.save_user(user);
+}
+
 export async function user_deactivate(user, req, res) {
     if (properties.getMethod('push').notification)
         alert_deactivate(user);
-    user.push.active = false;
-    user.push.activation_code = null;
-    user.push.device.platform = "";
-    user.push.device.gcm_id = "";
-    user.push.device.manufacturer = "";
-    user.push.device.model = "";
-    user.push.device.phone_number = "";
-    await apiDb.save_user(user);
+    await clearUserPush(user, req, res);
     res.status(200);
     res.send({
         "code": "Ok",
@@ -328,13 +336,7 @@ export async function user_deactivate(user, req, res) {
 }
 
 async function user_unactivate(user, req, res) {
-    user.push.active = false;
-    user.push.device.platform = "";
-    user.push.device.gcm_id = "";
-    user.push.device.manufacturer = "";
-    user.push.device.model = ""
-    user.push.device.phone_number = "";
-    await apiDb.save_user(user);
+    await clearUserPush(user, req, res);
     throw new errors.PushNotRegisteredError();
 }
 
@@ -372,25 +374,16 @@ async function alert_deactivate(user) {
 
 export async function user_desync(user, req, res) {
     logger.debug(utils.getFileNameFromUrl(import.meta.url) + ' user_desync: ' + user.uid);
-    if (req.params.tokenSecret == user.push.token_secret) {
-        user.push.active = false;
-        user.push.device.platform = "";
-        user.push.token_secret = "";
-        user.push.device.phone_number = "";
+    if (user.push.active && ifTokenSecretsMatch(user, req)) {
+        await clearUserPush(user, req, res);
 
-        return Promise.all([
+        await Promise.all([
             apiDb.save_user(user),
             sockets.emitManager('userPushDeactivate', { uid: user.uid })
-        ]).then(() => {
-            res.status(200);
-            res.send({
-                "code": "Ok",
-            });
-        });
-    } else {
-        res.send({
-            "code": "Error",
-            "message": "tokenSecret"
-        });
+        ]);
     }
+    res.status(200);
+    res.send({
+        "code": "Ok",
+    });
 }

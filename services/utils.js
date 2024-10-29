@@ -168,6 +168,13 @@ export function base64URLStringToBuffer(base64URLString) {
   return buffer;
 }
 
+/**
+ * @returns if a and b are equals and truthy (i.e non null / empty / undefined)
+ */
+export function equalsAndtruthy(a, b) {
+    return a && a == b;
+}
+
 
 /**
  * Convert the given array buffer into a Base64URL-encoded string. Ideal for converting various
