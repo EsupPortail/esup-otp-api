@@ -68,34 +68,33 @@ export async function send_message(user, req, res) {
 
     user.push.text = getText(req);
 
-    /**
-     * @type {admin.messaging.TokenMessage}
-     */
-    const content = {
-        notification: {
-            title: properties.getMethod('push').title,
-            body: properties.getMethod('push').body,
-        },
-        android: {
-            notification: {
-                clickAction: "com.adobe.phonegap.push.background.MESSAGING_EVENT"
-            }
-        },
-        data: {
-            message: user.push.text,
-            text: user.push.text,
-            action: 'auth',
-            trustGcm_id: trustGcm_id?.toString(),
-            url: getUrl(req),
-            uid: user.uid,
-            lt: lt
-        },
-        token: user.push.device.gcm_id
-    };
-
-
     await apiDb.save_user(user);
-    if (properties.getMethod('push').notification) {
+    if (properties.getMethod('push').notification && user.push.device.gcm_id != "undefined") {
+        /**
+         * @type {admin.messaging.TokenMessage}
+         */
+        const content = {
+            notification: {
+                title: properties.getMethod('push').title,
+                body: properties.getMethod('push').body,
+            },
+            android: {
+                notification: {
+                    clickAction: "com.adobe.phonegap.push.background.MESSAGING_EVENT"
+                }
+            },
+            data: {
+                message: user.push.text,
+                text: user.push.text,
+                action: 'auth',
+                trustGcm_id: trustGcm_id?.toString(),
+                url: getUrl(req),
+                uid: user.uid,
+                lt: lt
+            },
+            token: user.push.device.gcm_id
+        };
+
         logger.debug("send gsm push ...");
 
         let response;
@@ -103,8 +102,8 @@ export async function send_message(user, req, res) {
             response = await send(content);
         } catch (err) {
 
-            if (err.code == "messaging/registration-token-not-registered") {
-                logger.info("user " + user.uid + " push method deactivation because of 'token not registered' error");
+            if (["messaging/registration-token-not-registered", "messaging/invalid-registration-token"].includes(err.code)) {
+                logger.info("user " + user.uid + " push method deactivation because of '" + err.code + "' error");
                 return user_unactivate(user, req, res);
             }
             logger.error("Problem to send a notification to " + user.uid + ": " + err);
@@ -116,8 +115,12 @@ export async function send_message(user, req, res) {
             "code": "Ok",
             "message": response
         });
+    } else if (user.push.device.gcm_id == "undefined" && !properties.getMethod('push').pending) {
+        return user_unactivate(user, req, res);
     } else {
-        logger.debug("Push notification is not activated. See properties/esup.json#methods.push.notification");
+        if (!properties.getMethod('push').notification) {
+            logger.debug("Push notification is not activated. See properties/esup.json#methods.push.notification");
+        }
         res.send({
             "code": "Ok",
             "message": "Notification is deactivated. Launch Esup Auth app to authenticate."
@@ -223,7 +226,7 @@ function getUrl(req) {
 // generation of tokenSecret sent to the client, edited by mbdeme on June 2020
 
 export async function confirm_user_activate(user, req, res) {
-    if (user.push.activation_code != null && user.push.activation_fail < properties.getMethod('push').nbMaxFails && !user.push.active && req.params.activation_code == user.push.activation_code) {
+    if (user.push.activation_code != null && user.push.activation_fail < properties.getMethod('push').nbMaxFails && !user.push.active && req.params.activation_code == user.push.activation_code && (req.params.gcm_id != "undefined" || properties.getMethod('push').pending)) {
         const userAgent = req.headers['user-agent'];
         const deviceInfosFromUserAgent = detector.detect(userAgent);
 
@@ -341,7 +344,7 @@ async function user_unactivate(user, req, res) {
 }
 
 async function alert_deactivate(user) {
-    if (!user.push.device.gcm_id) {
+    if (user.push.device.gcm_id == "undefined" || !user.push.device.gcm_id) {
         return;
     }
     /**
