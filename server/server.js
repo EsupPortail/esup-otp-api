@@ -38,7 +38,7 @@ server.use(cors.actual);
 
 server.use(
     function logRequestUrl(req, res, next) {
-        logger.debug(req.url);
+        logger.debug(req.method + " " + req.url);
         return next();
     }
 );
