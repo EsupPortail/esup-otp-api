@@ -90,6 +90,10 @@ export const schema = {
             type: Boolean,
             default: false
         },
+        gcm_id_not_registered: {
+            type: Boolean,
+            default: false
+        },
         transports: {
             type: Array,
             default: properties.getEsupProperty('transports')

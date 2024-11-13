@@ -74,6 +74,14 @@ export async function generateQrCode(url, size = 164) {
     return `<img src='${imageUrl}' width='${size}' height='${size}'>`;
 }
 
+export function isGcmIdWellFormed(gcm_id) {
+    return gcm_id && gcm_id != "undefined";
+}
+
+export function canReceiveNotifications(user) {
+    return properties.getMethod('push').notification && isGcmIdWellFormed(user.push.device.gcm_id) && !user.push.gcm_id_not_registered;
+}
+
 export function generate_u8array_code(nonce_length) {
     return crypto.randomBytes(nonce_length).buffer;
 }
