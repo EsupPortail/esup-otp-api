@@ -69,8 +69,8 @@ export async function send_message(user, req, res) {
 
     user.push.text = getText(req);
 
-    await apiDb.save_user(user);
-    if (properties.getMethod('push').notification && user.push.device.gcm_id != "undefined") {
+    let response = false;
+    if (utils.canReceiveNotifications(user)) {
         /**
          * @type {admin.messaging.TokenMessage}
          */
@@ -98,33 +98,36 @@ export async function send_message(user, req, res) {
 
         logger.debug("send gsm push ...");
 
-        let response;
         try {
             response = await send(content);
         } catch (err) {
-
-            if (["messaging/registration-token-not-registered", "messaging/invalid-registration-token"].includes(err.code)) {
-                logger.info("user " + user.uid + " push method deactivation because of '" + err.code + "' error");
-                return user_unactivate(user, req, res);
+            if (err.code == "messaging/registration-token-not-registered") {
+                logger.info(`user ${user.uid} gcm_id not registered (${user.push.device.gcm_id})`);
+                user.push.gcm_id_not_registered = true;
+            } else if (err.code == "messaging/invalid-registration-token" || err.message == "The registration token is not a valid FCM registration token") {
+                logger.info(`user ${user.uid} gcm_id invalid (${user.push.device.gcm_id})`);
+                user.push.device.gcm_id = null;
+            } else {
+                logger.error("Problem to send a notification to " + user.uid + ": " + err);
             }
-            logger.error("Problem to send a notification to " + user.uid + ": " + err);
-            throw new errors.EsupOtpApiError(200, JSON.stringify(err));
         }
 
+    }
+    await apiDb.save_user(user);
+
+    if (response) {
         logger.debug("send gsm push ok : " + response);
         res.send({
             "code": "Ok",
             "message": response
         });
-    } else if (user.push.device.gcm_id == "undefined" && !properties.getMethod('push').pending) {
-        return user_unactivate(user, req, res);
     } else {
         if (!properties.getMethod('push').notification) {
             logger.debug("Push notification is not activated. See properties/esup.json#methods.push.notification");
         }
         res.send({
             "code": "Ok",
-            "message": "Notification is deactivated. Launch Esup Auth app to authenticate."
+            "message": "Notification is deactivated." + (properties.getMethod('push').pending ? " Launch Esup Auth app to authenticate." : ""),
         });
     }
 }
@@ -227,7 +230,7 @@ function getUrl(req) {
 // generation of tokenSecret sent to the client, edited by mbdeme on June 2020
 
 export async function confirm_user_activate(user, req, res) {
-    if (user.push.activation_code != null && user.push.activation_fail < properties.getMethod('push').nbMaxFails && !user.push.active && req.params.activation_code == user.push.activation_code && (req.params.gcm_id != "undefined" || properties.getMethod('push').pending)) {
+    if (user.push.activation_code != null && user.push.activation_fail < properties.getMethod('push').nbMaxFails && !user.push.active && req.params.activation_code == user.push.activation_code && (utils.isGcmIdWellFormed(req.params.gcm_id) || properties.getMethod('push').pending)) {
         const userAgent = req.headers['user-agent'];
         const deviceInfosFromUserAgent = detector.detect(userAgent);
 
@@ -235,7 +238,8 @@ export async function confirm_user_activate(user, req, res) {
         user.push.token_secret = token_secret;
         user.push.active = true;
         user.push.device.platform = deviceInfosFromUserAgent.os.name || req.params.platform || "AndroidDev";
-        user.push.device.gcm_id = req.params.gcm_id || "GCMIDDev";
+        user.push.device.gcm_id = utils.isGcmIdWellFormed(req.params.gcm_id) ? req.params.gcm_id : null;
+        user.push.gcm_id_not_registered = false;
         user.push.device.manufacturer = deviceInfosFromUserAgent.device.brand || req.params.manufacturer || "DevCorp";
         user.push.device.model = deviceInfosFromUserAgent.device.model || req.params.model || "DevDevice";
         user.push.activation_code = null;
@@ -262,9 +266,10 @@ export async function confirm_user_activate(user, req, res) {
 
 // refresh gcm_id when it is regenerated
 export async function refresh_user_gcm_id(user, req, res) {
-    if (ifTokenSecretsMatch(user, req) && req.params.gcm_id == user.push.device.gcm_id) {
+    if (ifTokenSecretsMatch(user, req) && utils.isGcmIdWellFormed(user.push.device.gcm_id) && req.params.gcm_id == user.push.device.gcm_id) {
         logger.debug("refresh old gcm_id : " + user.push.device.gcm_id + " with " + req.params.gcm_id_refreshed);
         user.push.device.gcm_id = req.params.gcm_id_refreshed;
+        user.push.gcm_id_not_registered = false;
         await apiDb.save_user(user);
         res.send({
             "code": "Ok",
@@ -279,7 +284,7 @@ export async function refresh_user_gcm_id(user, req, res) {
 export async function accept_authentication(user, req, res) {
     logger.debug("accept_authentication ? " + user.push.token_secret + " VS " + req.params.tokenSecret);
     let tokenSecret = null;
-    if (trustGcm_id == true && user.push.device.gcm_id == req.params.tokenSecret)
+    if (trustGcm_id == true && utils.isGcmIdWellFormed(user.push.device.gcm_id) && user.push.device.gcm_id == req.params.tokenSecret)
         tokenSecret = user.push.token_secret;
     if ((user.push.token_secret == req.params.tokenSecret || tokenSecret != null) && req.params.loginTicket == user.push.lt) {
         logger.debug("accept_authentication OK : lt = " + req.params.loginTicket);
@@ -315,6 +320,7 @@ export async function check_accept_authentication(user, req, res) {
 
 async function clearUserPush(user, req, res) {
     user.push.active = false;
+    user.push.gcm_id_not_registered = false;
     user.push.device.platform = null;
     user.push.device.gcm_id = null;
     user.push.device.manufacturer = null;
@@ -339,13 +345,8 @@ export async function user_deactivate(user, req, res) {
     });
 }
 
-async function user_unactivate(user, req, res) {
-    await clearUserPush(user, req, res);
-    throw new errors.PushNotRegisteredError();
-}
-
 async function alert_deactivate(user) {
-    if (user.push.device.gcm_id == "undefined" || !user.push.device.gcm_id) {
+    if (!utils.canReceiveNotifications(user)) {
         return;
     }
     /**

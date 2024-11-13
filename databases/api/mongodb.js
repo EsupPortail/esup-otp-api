@@ -1,6 +1,7 @@
 import * as userDb_controller from '../../controllers/user.js';
 import * as properties from '../../properties/properties.js';
 import * as fileUtils from '../../services/fileUtils.js';
+import * as utils from '../../services/utils.js';
 import * as mongoose from 'mongoose';
 import { schema as userPreferencesSchema } from './userPreferencesSchema.js';
 import { schema as apiPreferencesSchema } from './apiPreferencesSchema.js';
@@ -181,6 +182,7 @@ export function parse_user(user) {
                 phone_number: user.push.device.phone_number,
                 manufacturer: user.push.device.manufacturer,
                 model: user.push.device.model,
+                canReceiveNotifications: utils.canReceiveNotifications(user),
                 activationCode: {},
                 qrCode: {},
                 api_url: {}
