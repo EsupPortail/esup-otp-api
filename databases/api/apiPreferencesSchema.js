@@ -33,6 +33,14 @@ export const schema = {
             type: Array,
         }
     },
+    "passcode_grid": {
+        "activate": {
+            type: Boolean,
+        },
+        "transports": {
+            type: Array,
+        }
+    },
     "push": {
         "activate": {
             type: Boolean,

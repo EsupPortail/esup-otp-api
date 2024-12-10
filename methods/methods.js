@@ -1,4 +1,5 @@
 import * as bypass from './bypass.js';
+import * as passcode_grid from './passcode_grid.js';
 import * as esupnfc from './esupnfc.js';
 import * as push from './push.js';
 import * as random_code_mail from './random_code_mail.js';
@@ -28,7 +29,7 @@ import * as webauthn from './webauthn.js';
  */
 const methods = {};
 
-for (const method of [bypass, esupnfc, push, random_code_mail, random_code, totp, webauthn]) {
+for (const method of [bypass, passcode_grid, esupnfc, push, random_code_mail, random_code, totp, webauthn]) {
     methods[method.name] = method;
 }
 

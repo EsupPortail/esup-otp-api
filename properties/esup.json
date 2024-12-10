@@ -73,6 +73,15 @@
             "code_length": 6,
             "transports" : []
         },
+        "passcode_grid": {
+            "activate": true,
+            "lines": 8,
+            "cols": 8,
+            "code_type": "digit",
+            "code_length": 6,
+            "validity_time": 3,
+            "transports" : []
+        },
         "push": {
             "#how_to_serviceAccount": "Contact us to obtain full serviceAccount https://www.esup-portail.org/content/contact",
             "serviceAccount": {

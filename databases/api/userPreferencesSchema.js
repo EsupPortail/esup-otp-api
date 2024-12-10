@@ -45,6 +45,20 @@ export const schema = {
             default: properties.getEsupProperty('transports')
         }
     },
+    passcode_grid: {
+        grid: {
+            type: [[String]],
+            default: null
+        },
+        active: {
+            type: Boolean,
+            default: false
+        },
+        transports: {
+            type: Array,
+            default: properties.getEsupProperty('transports')
+        }
+    },
     totp: {
         secret: {
             type: Object,
