@@ -170,6 +170,13 @@ export function parse_user(user) {
             transports: available_transports(user.bypass.transports, "bypass")
         };
     }
+    if (properties.getMethod('passcode_grid').activate) {
+        if (user.passcode_grid.active) parsed_user.codeRequired = true;
+        parsed_user.passcode_grid = {
+            active: user.passcode_grid.active,
+            transports: available_transports(user.passcode_grid.transports, "passcode_grid")
+        };
+    }
     //if(properties.getMethod('matrix').activate){
     //  parsed_user.matrix = user.matrix;
     //}
