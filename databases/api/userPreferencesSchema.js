@@ -50,6 +50,8 @@ export const schema = {
             type: [[String]],
             default: null
         },
+        validity_time: Number,
+        challenge: [Number, Number],
         active: {
             type: Boolean,
             default: false
