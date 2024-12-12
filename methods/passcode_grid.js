@@ -17,7 +17,7 @@ export async function send_message(user, req, res) {
     const { grid, challenge, validity_time } = user.passcode_grid;
 
     // Do not change the requested code if it is recent. In this way, an attacker who has only one code will not be able to regenerate the requested code until he finds the right one.
-    if (!challenge || Date.now() >= validity_time) {
+    if (!challenge?.length || Date.now() >= validity_time) {
         user.passcode_grid.challenge = getRandomChallenge(grid);
         user.passcode_grid.validity_time = properties.getMethod('passcode_grid').validity_time * 60 * 1000 + new Date().getTime();
         await apiDb.save_user(user);
