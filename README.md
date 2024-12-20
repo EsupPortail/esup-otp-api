@@ -45,6 +45,18 @@ RewriteCond %{QUERY_STRING} transport=websocket [NC]
 RewriteRule /(.*) ws://127.0.0.1:3000/$1 [P]
 ```
 
+### API routes to be opened
+esup-otp-api needs to be accessible.\
+More specifically:
+
+Open "/users/\*" to the outside. These APIs are used by the mobile application for the push method, and by the browser for authentication.
+
+Open "/sockets/\*" and "/js/\*" to the outside. These APIs are used by the browser for authentication.
+
+Open "/admin/\*" and "/protected/\*" to esup-otp-manager, and CAS. (And your applications using these APIs, if any).
+
+If you wish, you can also open "/openapi.json" and "/api-docs/\*" to benefit from a swagger describing the main APIs.
+
 ### Systemd
 
 ```
@@ -63,6 +75,20 @@ Restart=on-failure
 [Install]
 WantedBy=multi-user.target
 ```
+
+### "push" method
+#### "push" without Google Cloud serviceAccount (but without notification)
+To use the "push" method without Google Cloud serviceAccount, but therefore without notifications:\
+In esup.json, set "notification" to false, leave "pending" set to true, and leave "private_key" empty.
+
+The user will not receive a push notification. He will have to open the application (on his smartphone) to validate (or not) the authentication.
+
+#### Get Google Cloud serviceAccount
+To obtain Google cloud serviceAccount, so that the user receives a notification on his smartphone, send a request to https://www.esup-portail.org/content/contact
+
+Specify "ESUP AUTH: serviceAccount" in the subject line. And specify in the message that it's a request for a service key for mobile notifications with Esup Auth.
+
+Response in a few days (excluding weekends and school vacations).
 
 ### Tests
 npm test
