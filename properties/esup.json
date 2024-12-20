@@ -83,7 +83,7 @@
             "transports" : []
         },
         "push": {
-            "#how_to_serviceAccount": "Contact us to obtain full serviceAccount https://www.esup-portail.org/content/contact",
+            "#how_to_serviceAccount": "See https://github.com/EsupPortail/esup-otp-api#get-google-cloud-serviceAccount",
             "serviceAccount": {
                 "type": "service_account",
                 "project_id": "esup-otp-276500",
