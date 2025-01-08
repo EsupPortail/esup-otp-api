@@ -167,6 +167,7 @@ export function parse_user(user) {
             codes: [],
             available_code: user.bypass.codes.length,
             used_code: user.bypass.used_codes,
+            generation_date: user.bypass.generation_date,
             transports: available_transports(user.bypass.transports, "bypass")
         };
     }
@@ -174,6 +175,7 @@ export function parse_user(user) {
         if (user.passcode_grid.active) parsed_user.codeRequired = true;
         parsed_user.passcode_grid = {
             active: user.passcode_grid.active,
+            generation_date: user.passcode_grid.generation_date,
             transports: available_transports(user.passcode_grid.transports, "passcode_grid")
         };
     }

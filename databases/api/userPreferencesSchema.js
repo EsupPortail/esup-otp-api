@@ -35,6 +35,7 @@ export const schema = {
             type: Array,
             default: []
         },
+        generation_date: Number,
         used_codes: { type: Number, default: 0 },
         active: {
             type: Boolean,
@@ -50,6 +51,7 @@ export const schema = {
             type: [[String]],
             default: null
         },
+        generation_date: Number,
         validity_time: Number,
         challenge: [Number, Number],
         active: {
