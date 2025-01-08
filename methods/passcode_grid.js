@@ -66,6 +66,7 @@ export async function verify_code(user, req) {
 
 export async function generate_method_secret(user, req, res) {
     user.passcode_grid.grid = generateGrid();
+    user.passcode_grid.generation_date = Date.now();
     logger.log('archive', {
         message: [
             {
@@ -79,6 +80,7 @@ export async function generate_method_secret(user, req, res) {
     res.send({
         code: "Ok",
         grid: user.passcode_grid.grid,
+        generation_date: user.passcode_grid.generation_date,
     });
 }
 
