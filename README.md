@@ -67,6 +67,18 @@ WantedBy=multi-user.target
 ### Tests
 npm test
 
+### ip location
+
+Push method displays " à proximité de $city" on the mobile device.
+
+It uses [ip-location-api](https://github.com/sapics/ip-location-api) to get city location from browser IP.
+
+This nodejs module is downloading & computing files into node_modules/ip-location-api/data/1kw/ through an internal task ran twice weekly.
+
+Details:
+- to update manually those files, run `ILA_FIELDS=city npm run updatedb`
+- where `city` comes from [ip_location.reload](https://github.com/EsupPortail/esup-otp-api/blob/master/methods/push.js#L50)
+- the directory data/1kw is computed from those fields (cf ip-location-api [code](https://github.com/sapics/ip-location-api/blob/95b7329db402b5872473f48c90469c2d77de23e2/src/setting.mjs#L167))
 
 ### See also
 - [esup-otp-manager](https://github.com/EsupPortail/esup-otp-manager)
