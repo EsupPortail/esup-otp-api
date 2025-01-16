@@ -67,9 +67,7 @@ export async function autoActivateTotp(user, req, res) {
         logger.log('archive', {
             message: [
                 {
-                    uid: user.uid,
-                    clientIp: req.headers['x-real-ip'],
-                    clientUserAgent: req.headers['user-agent'],
+                    req,
                     action: 'activate_totp_auto'
                 }
             ]
@@ -88,9 +86,7 @@ export async function generate_method_secret(user, req, res) {
     logger.log('archive', {
         message: [
             {
-                uid: req.params.uid,
-                clientIp: req.headers['x-client-ip'],
-                clientUserAgent: req.headers['client-user-agent'],
+                req,
                 action: 'generate_secret'
             }
         ]

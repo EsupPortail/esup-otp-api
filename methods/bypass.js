@@ -54,9 +54,7 @@ export async function generate_method_secret(user, req, res) {
     logger.log('archive', {
         message: [
             {
-                uid: req.params.uid,
-                clientIp: req.headers['x-client-ip'],
-                clientUserAgent: req.headers['client-user-agent'],
+                req,
                 action: 'generate codes'
             }
         ]
