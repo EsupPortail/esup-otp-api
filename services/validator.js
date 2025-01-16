@@ -22,7 +22,7 @@ export function check_api_password(req, res, next) {
 }
 
 export function esupnfc_check_server_ip(req, res, next) {
-    const ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
+    const ip = utils.getIpAddr(req);
     if (ip && ip == properties.getEsupProperty('esupnfc').server_ip) {
         return next();
     }
