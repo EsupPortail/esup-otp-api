@@ -22,6 +22,7 @@
     "node-device-detector": "2.x",
     "nodemailer": "6.x",
     "otpauth": "9.x",
+    "proxy-addr": "2.x",
     "qrcode": "1.x",
     "restify": "github:restify/node-restify#v11.2.0",
     "restify-cors-middleware2": "2.x",

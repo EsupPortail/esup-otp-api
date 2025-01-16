@@ -3,6 +3,12 @@ import CryptoJS from 'crypto-js';
 import crypto from 'crypto';
 import { getInstance } from '../services/logger.js'; const logger = getInstance();
 import * as qrcode from 'qrcode';
+import proxyAddr from 'proxy-addr';
+
+
+export function getIpAddr(req) {
+    return proxyAddr(req, properties.getEsupProperty("trustedProxies"));
+}
 
 export function get_hash(uid) {
     const d = new Date();
