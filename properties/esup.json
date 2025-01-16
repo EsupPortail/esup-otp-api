@@ -126,5 +126,6 @@
     },
 	"esupnfc": {
 	  "server_ip": "IP_ESUP-SGC-SERVER"
-	}
+    },
+    "trustedProxies": ["127.0.0.1", "loopback", "::1"]
 }
