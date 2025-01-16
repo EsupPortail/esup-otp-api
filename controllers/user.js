@@ -56,9 +56,7 @@ export async function update_transport(req, res) {
     logger.log('archive', {
         message: [
             {
-                uid: req.params.uid,
-                clientIp: req.headers['x-client-ip'],
-                clientUserAgent: req.headers['client-user-agent'],
+                req,
                 action: 'save',
                 method: req.params.transport,
                 [req.params.transport === 'sms' ? 'phoneNumber' : 'Email']: req.params.new_transport
@@ -78,9 +76,7 @@ export async function delete_transport(req, res) {
     logger.log('archive', {
         message: [
             {
-                uid: req.params.uid,
-                clientIp: req.headers['x-client-ip'],
-                clientUserAgent: req.headers['client-user-agent'],
+                req,
                 action: 'delete',
                 method: req.params.transport
             }

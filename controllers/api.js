@@ -461,9 +461,7 @@ export async function activate_method(req, res) {
         logger.log('archive', {
             message: [
                 {
-                    uid: req.params.uid,
-                    clientIp: req.headers['x-client-ip'],
-                    clientUserAgent: req.headers['client-user-agent'],
+                    req,
                     action: 'activate_method',
                     method: req.params.method
                 }
@@ -492,9 +490,7 @@ export async function confirm_activate_method(req, res) {
         logger.log('archive', {
             message: [
                 {
-                    uid: req.params.uid,
-                    clientIp: req.headers['x-real-ip'] || req.connection.remoteAddress,
-                    clientUserAgent: req.headers['user-agent'],
+                    req,
                     action: 'activate_method',
                     method: req.params.method,
                     Phone: `${req.params.platform} ${req.params.manufacturer} ${req.params.model}`,
@@ -517,9 +513,7 @@ export async function refresh_gcm_id_method(req, res) {
     logger.log('archive', {
         message: [
             {
-                uid: req.params.uid,
-                clientIp: req.headers['x-client-ip'],
-                clientUserAgent: req.headers['user-agent'],
+                req,
                 action: 'refresh_push',
                 method: req.params.method
             }
@@ -541,9 +535,7 @@ export async function deactivate_method(req, res) {
     logger.log('archive', {
         message: [
             {
-                uid: req.params.uid,
-                clientIp: req.headers['x-client-ip'],
-                clientUserAgent: req.headers['client-user-agent'],
+                req,
                 action: 'deactivate_method',
                 method: req.params.method
             }
@@ -564,9 +556,7 @@ export async function desync(req, res) {
     logger.log('archive', {
         message: [
             {
-                uid: req.params.uid,
-                clientIp: req.headers['x-real-ip'] || req.connection.remoteAddress,
-                clientUserAgent: req.headers['user-agent'],
+                req,
                 action: 'desync',
                 method: req.params.method
             }
