@@ -7,6 +7,9 @@ const schema = {
         required: true,
         unique: true
     },
+    tenant: {
+        type: String
+    },
     random_code: {
         code: String,
         validity_time: Number,
@@ -172,5 +175,6 @@ const schema = {
 }
 
 const UserPreferencesSchema = new Schema(schema);
+UserPreferencesSchema.index({uid: 1, tenant: 1}, {name: "uid_tenant_index", unique: true});
 
 export default UserPreferencesSchema;

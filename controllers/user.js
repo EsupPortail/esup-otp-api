@@ -22,7 +22,7 @@ export async function initialize(initializedUserDb) {
 }
 
 export function find_user(req) {
-    return userDb.find_user(req.params.uid);
+    return userDb.find_user(req.params.uid, req.headers['x-tenant']);
 }
 
 export async function get_available_transports(req) {

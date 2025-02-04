@@ -23,23 +23,22 @@ function initiatilize_user_model(connection) {
     User = connection.model('User', UserSchema, 'User');
 }
 
-export async function find_user(uid) {
-    const user = await User.findOne({ 'uid': uid });
+export async function find_user(uid, tenant) {
+    const user = await User.findOne({ 'uid': uid, 'tenant': tenant });
 
     if (user) {
         return user;
     } else {
         if (properties.getEsupProperty('auto_create_user')) {
-            return create_user(uid);
-        }
-        else {
+            return create_user(uid, tenant);
+        } else {
             throw new errors.UserNotFoundError();
         }
     }
 }
 
-export function create_user(uid) {
-    return save_user(new User({ uid: uid }));
+export function create_user(uid, tenant) {
+    return save_user(new User({ uid: uid, tenant: tenant }));
 }
 
 export function save_user(user) {

@@ -1,0 +1,35 @@
+@baseUrl = http://localhost:3000
+@contentType = application/json
+@adminPassword = changeit
+
+# @name getTenants
+GET {{baseUrl}}/admin/tenants
+Authorization: Bearer {{adminPassword}}
+
+###
+
+@tenantId = {{getTenants.response.body.$.[0].id}}
+
+# @name getTenant
+GET {{baseUrl}}/admin/tenant/{{tenantId}}
+Authorization: Bearer {{adminPassword}}
+
+###
+
+@uid = afouque
+@apiPassword = {{getTenant.response.body.$.api_password}}
+@tenantName = {{getTenant.response.body.$.name}}
+
+GET {{baseUrl}}/protected/users/{{uid}}
+Authorization: Bearer {{apiPassword}}
+x-tenant: {{tenantName}}
+Content-Type: application/json
+
+###
+
+@badApiPassword = badApiPassword
+
+GET {{baseUrl}}/protected/users/{{uid}}
+Authorization: Bearer {{badApiPassword}}
+x-tenant: {{tenantName}}
+Content-Type: application/json

@@ -149,12 +149,13 @@ function generateSecret() {
  * @param res response HTTP
  */
 export async function find_user(req, res) {
-    const userPreferences = await UserPreferences.findOne({ 'uid': req.params.uid });
+    const tenant = req.headers['x-tenant'];
+    const userPreferences = await UserPreferences.findOne({ 'uid': req.params.uid, 'tenant': tenant });
     if (userPreferences) {
         return userPreferences;
     } else {
         const user = await userDb_controller.find_user(req, res);
-        return create_user(user.uid);
+        return create_user(user.uid, tenant);
     }
 }
 
@@ -165,8 +166,8 @@ export function save_user(user) {
     return user.save();
 }
 
-export function create_user(uid) {
-    return save_user(new UserPreferences({ uid: uid }));
+export function create_user(uid, tenant) {
+    return save_user(new UserPreferences({ uid: uid, tenant: tenant }));
 }
 
 /**
