@@ -16,6 +16,8 @@
         "#how_to_allowed_origins": "List of subdomains where webauthn can be used. Keep in mind it can't be multiple different domains.",
         "allowed_origins": ["https://cas.univ.fr", "https://esup-otp-manager.univ.fr"]
     },
+    "#how_to_tenants": "see Multi-tenants.md file for details",
+    "tenants": [],
     "mongodb": {
         "#how_to_uri": "see https://www.mongodb.com/docs/manual/reference/connection-string/#connection-string-formats",
         "#uri_example": "mongodb://user:password@mongodb.example.com:27017/esup-otp-db?authSource=admin",

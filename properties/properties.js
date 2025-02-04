@@ -13,6 +13,7 @@ export function loadFile(dirname, filename) {
     const strFile = filename.split('.');
     if (strFile[strFile.length - 1] == 'json') {
         const jsonFile = fileUtils.readJsonSync(dirname + '/' + filename);
+        cleanComments(jsonFile);
         if (filename == "esup.json") {
             sortMethods(jsonFile);
         }
@@ -21,10 +22,23 @@ export function loadFile(dirname, filename) {
     }
 }
 
+function cleanComments(obj) {
+    if (Array.isArray(obj)) {
+        obj.forEach(cleanComments);
+    } else if (obj !== null && typeof obj === 'object') {
+        for (const key of Object.keys(obj)) {
+            if (key.startsWith('#')) {
+                delete obj[key];
+            } else {
+                cleanComments(obj[key]);
+            }
+        }
+    }
+}
+
 function sortMethods(esup) {
     esup.methods = Object.fromEntries(
         Object.entries(esup.methods)
-            .filter(entry => !entry[0].startsWith("#"))
             .sort((a, b) => getPriority(b) - getPriority(a))
     );
 }

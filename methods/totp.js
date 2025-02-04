@@ -47,7 +47,7 @@ function generateSecret(user) {
       issuer: properties.getMethod('totp').name,
       label: user.uid,
     });
-    
+
     return {
         base32: totp.secret.base32,
         otpauth_url: totp.toString(),

@@ -1,6 +1,7 @@
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import * as mongoose from 'mongoose';
 import { promisify } from 'util';
+import assert from "node:assert/strict";
 
 import * as properties from '../properties/properties.js';
 import * as apiDb from '../databases/api/mongodb.js';
@@ -15,9 +16,8 @@ import * as server from '../server/server.js';
 let mongoMemoryServer;
 
 export async function initialise() {
-    // use in memory mongodb
-    properties.setEsupProperty("apiDb", "mongodb");
-    properties.setEsupProperty("userDb", "mongodb");
+    assert.equal(properties.getEsupProperty("apiDb"), "mongodb");
+    assert.equal(properties.getEsupProperty("userDb"), "mongodb");
 
     mongoMemoryServer = await MongoMemoryServer.create({ instance: { dbName: "test-otp" } });
     const mongoUri = mongoMemoryServer.getUri();

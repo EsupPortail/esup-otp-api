@@ -1,10 +1,12 @@
+import restifyErrors from 'restify-errors';
+
 import * as userDb_controller from './user.js';
 import * as utils from '../services/utils.js';
 import * as fileUtils from '../services/fileUtils.js';
 import * as properties from '../properties/properties.js';
 import * as controllerUtils from './controllerUtils.js';
 import * as errors from '../services/errors.js';
-import methods from '../methods/methods.js';
+import methods, { initialize as initializeMethods } from '../methods/methods.js';
 import * as transports from '../transports/transports.js';
 
 import { getInstance } from '../services/logger.js';
@@ -16,6 +18,8 @@ const logger = getInstance();
 export let apiDb;
 
 export async function initialize(initializedApiDb) {
+    await initializeMethods();
+
     if (initializedApiDb) {
         apiDb = initializedApiDb;
     } else {
@@ -233,25 +237,6 @@ function transport(opts, req, res) {
     }
 }
 
-
-/**
- * Renvoie l'utilisateur avec l'uid == req.params.uid
- *
- * @param req requete HTTP contenant le nom la personne recherchee
- * @param res response HTTP
- */
-export async function get_user(req, res) {
-    const user = await apiDb.find_user(req, res);
-
-    const response = {
-        code: 'Ok',
-        user: apiDb.parse_user(user)
-    };
-
-    res.status(200);
-    res.send(response);
-}
-
 /**
  * Renvoie les infos (methodes activees, transports) de utilisateur avec l'uid == req.params.uid
  *
@@ -434,29 +419,6 @@ export async function verify_webauthn_auth(req, res) {
 }
 
 /**
- * Renvoie les méthodes activées de l'utilisateur
- *
- * @param req requete HTTP contenant le nom la personne recherchee
- * @param res response HTTP
- */
-export async function get_activate_methods(req, res) {
-    const user = await apiDb.find_user(req, res);
-    const result = {};
-    for (const method in properties.getEsupProperty('methods')) {
-        result[method] = user[method].active;
-    }
-    const response = {
-        code: "Ok",
-        message: properties.getMessage('success', 'methods_found'),
-        methods: result
-    };
-
-    res.status(200);
-    res.send(response);
-}
-
-
-/**
  * Active la méthode l'utilisateur ayant l'uid req.params.uid
  *
  * @param req requete HTTP contenant le nom la personne recherchee
@@ -581,39 +543,67 @@ export async function get_uids(req, res) {
     return apiDb.get_uids(req, res);
 }
 
+export function isMultiTenantContext() {
+    return Boolean(properties.getEsupProperty('tenants')?.length);
+}
+
+export async function getCurrentTenantProperties(req) {
+    return getCurrentTenantPropertiesInternal(req.params.uid, req.header('x-tenant'));
+}
+
 /**
- * ESUPNFC
+ * constructs a fake "tenant" object if executed in a mono-tenant context
+ * @returns {Promise<{
+ *     id?: String,
+ *     name?: String,
+ *     scopes?: String[],
+ *     webauthn?: {
+ *         relying_party: {
+ *             name: String,
+ *             id: String,
+ *         },
+ *         allowed_origins: String[],
+ *     },
+ *     api_password: String,
+ *     users_secret: String,
+ * }>}
  */
-export async function esupnfc_locations(req, res) {
-    req.params.uid = req.params.eppn.split('@').shift();
-    const user = await apiDb.find_user(req, res);
-    return methods['esupnfc'].locations(user, req, res);
+export async function getCurrentTenantPropertiesInternal(uid, tenantHeader) {
+    if (isMultiTenantContext()) {
+        let dbTenant;
+        if (uid) {
+            dbTenant = await getTenantByUserUid(uid);
+        } else {
+            dbTenant = await getTenantByHeader(tenantHeader);
+        }
+
+        if (!dbTenant) {
+            throw new restifyErrors.BadRequestError();
+        }
+        return dbTenant;
+    } else {
+        return {
+            webauthn: properties.getEsupProperty("webauthn"),
+            api_password: properties.getEsupProperty('api_password'),
+            users_secret: properties.getEsupProperty('users_secret'),
+        };
+    }
 }
 
-export async function esupnfc_check_accept_authentication(req, res) {
-    return methods['esupnfc'].check_accept_authentication(req, res);
+function getTenantByUserUid(uid) {
+    const scope = uid.split("@")[1];
+    if (!scope) {
+        throw new restifyErrors.BadRequestError();
+    }
+    return apiDb.find_tenant_by_scope(scope);
 }
 
-export async function esupnfc_accept_authentication(req, res) {
-    const eppn = req.body.eppn;
-    const uid = eppn.replace(/@.*/, '');
-    logger.debug("[esupnfc_accept_authentication] user uid: " + uid);
-    req.params.uid = uid;
-    req.params.method = "esupnfc";
-
-    const { user, method } = await getUserAndMethodModule(req, { checkUserMethodActive: true, checkMethodPropertiesExists: true, checkMethodPropertyActivate: true });
-    return method.accept_authentication(user, req, res);
+function getTenantByHeader(tenantHeader) {
+    if (!tenantHeader) {
+        throw new restifyErrors.BadRequestError();
+    }
+    return apiDb.find_tenant_by_name(tenantHeader);
 }
-
-export async function esupnfc_send_message(req, res) {
-    const eppn = req.body.eppn;
-    const uid = eppn.replace(/@.*/, '');
-    logger.debug("[esupnfc_send_message] user uid: " + uid);
-    req.params.uid = uid;
-    const user = await apiDb.find_user(req, res);
-    return methods['esupnfc'].send_message(user, req, res);
-}
-
 
 function getMethodPropertiesIfExists(req) {
     return properties.getMethod(req.params.method) || errors.MethodNotFoundError.throw();
@@ -626,7 +616,7 @@ function errorIfNoMethodProperties(req) {
 /**
  * @returns {Promise<{user, method}>}
  */
-async function getUserAndMethodModule(req, { checkUserMethodActive, checkMethodPropertiesExists, checkMethodPropertyActivate, checkMethodPropertyPending } = {}) {
+export async function getUserAndMethodModule(req, { checkUserMethodActive, checkMethodPropertiesExists, checkMethodPropertyActivate, checkMethodPropertyPending } = {}) {
     const reqMethod = req.params.method;
     const methodModule = methods[reqMethod];
     const user = await apiDb.find_user(req);

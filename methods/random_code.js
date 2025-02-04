@@ -16,7 +16,7 @@ export async function send_message(user, req, res) {
         res.send({ code: 'Ok' });
         return;
     }
-    
+
     const new_otp = user.random_code;
 
     const code_length = properties.getMethod('random_code').code_length;

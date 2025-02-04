@@ -46,6 +46,7 @@
     "lcov": "node --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=lcov.info ./test/test.js # only works with node v21.2.0 or higher"
   },
   "devDependencies": {
+    "@types/supertest": "6.x",
     "eslint": "8.x",
     "mongodb-memory-server": "10.x",
     "supertest": "7.x"

@@ -1,4 +1,6 @@
-export const schema = {
+import { Schema } from 'mongoose';
+
+const schema = {
     uid: {
         type: String,
         required: true,
@@ -7,3 +9,7 @@ export const schema = {
     mobile: String,
     mail: String
 }
+
+const UserSchema = new Schema(schema);
+
+export default UserSchema;
