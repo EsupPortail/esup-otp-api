@@ -148,4 +148,9 @@ async function initializeAdminRoutes(server) {
     server.put("/admin/methods/:method/deactivate", validator.check_api_password, api_controller.deactivate_method_admin);
     server.put("/admin/methods/:method/activate", validator.check_api_password, api_controller.activate_method_admin);
     server.del("/admin/users/:uid/methods/:method/secret", validator.check_api_password, api_controller.delete_method_secret);
+    server.get("/admin/tenants", validator.check_admin_password, api_controller.get_tenants);
+    server.get("/admin/tenant/:id", validator.check_admin_password, api_controller.get_tenant);
+    server.post("/admin/tenant", validator.check_admin_password, api_controller.create_tenant);
+    server.put("/admin/tenant/:id", validator.check_admin_password, api_controller.update_tenant);
+    server.del("/admin/tenant/:id", validator.check_admin_password, api_controller.delete_tenant);
 }
