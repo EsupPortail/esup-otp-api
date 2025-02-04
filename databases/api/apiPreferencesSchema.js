@@ -1,4 +1,6 @@
-export const schema = {
+import { Schema } from 'mongoose';
+
+const schema = {
     "totp": {
         "activate": {
             type: Boolean,
@@ -58,3 +60,7 @@ export const schema = {
         }
     }
 }
+
+const ApiPreferencesSchema = new Schema(schema);
+
+export default ApiPreferencesSchema;

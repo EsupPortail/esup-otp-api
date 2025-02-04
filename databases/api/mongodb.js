@@ -3,8 +3,8 @@ import * as properties from '../../properties/properties.js';
 import * as fileUtils from '../../services/fileUtils.js';
 import * as utils from '../../services/utils.js';
 import * as mongoose from 'mongoose';
-import { schema as userPreferencesSchema } from './userPreferencesSchema.js';
-import { schema as apiPreferencesSchema } from './apiPreferencesSchema.js';
+import UserPreferencesSchema from './userPreferencesSchema.js';
+import ApiPreferencesSchema from './apiPreferencesSchema.js';
 import TenantSchema from './tenantSchema.js';
 
 import { getInstance } from '../../services/logger.js';
@@ -30,11 +30,8 @@ let ApiPreferences;
  * @param { mongoose.Connection } connection
  */
 async function initiatilize_api_preferences(connection) {
-    const ApiPreferencesSchema = new mongoose.Schema(apiPreferencesSchema);
+    ApiPreferences = connection.model('ApiPreferences', ApiPreferencesSchema, 'ApiPreferences');
 
-    connection.model('ApiPreferences', ApiPreferencesSchema, 'ApiPreferences');
-
-    ApiPreferences = connection.model('ApiPreferences');
     const existingApiPrefsData = await ApiPreferences.findOne({}).exec();
     if (existingApiPrefsData) {
         const prefs = properties.getEsupProperty('methods');
@@ -86,10 +83,7 @@ let UserPreferences;
  * @param { mongoose.Connection } connection
  */
 async function initiatilize_user_model(connection) {
-    const UserPreferencesSchema = new mongoose.Schema(userPreferencesSchema);
-    connection.model('UserPreferences', UserPreferencesSchema, 'UserPreferences');
-    UserPreferences = connection.model('UserPreferences');
-    //UserPreferences = connection.model('UserPreferences', UserPreferencesSchema, 'UserPreferences');
+    UserPreferences = connection.model('UserPreferences', UserPreferencesSchema, 'UserPreferences');
 }
 
 /** 
