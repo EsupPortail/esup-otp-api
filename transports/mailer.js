@@ -50,7 +50,7 @@ export async function send_message(req, opts, res) {
             to: mail,
             subject: opts.object,
         }
-        
+
         if(mailerProperty.use_templates && opts.htmlTemplate) {
             mailOptions.html = eta.render("./" + opts.htmlTemplate + "/html.eta", {code: opts.code})
         }

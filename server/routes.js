@@ -1,6 +1,8 @@
 import * as fileUtils from '../services/fileUtils.js';
 import * as validator from '../services/validator.js';
 import * as api_controller from '../controllers/api.js';
+import * as esupnfc_controller from '../controllers/esupnfc.js';
+import * as tenants_controller from '../controllers/tenants.js';
 import * as userDb_controller from '../controllers/user.js';
 import * as properties from '../properties/properties.js';
 import restify from 'restify';
@@ -20,7 +22,6 @@ export function initialize(server) {
         initializeUnprotectedRoutes(server),
         initializeEsupAuthRoutes(server),
         initializeCasOtpClientRoutes(server),
-        initializeWebAuthnRoutes(server),
         initializeNfcRoutes(server),
         initializeProtectedRoutes(server),
         initializeAdminRoutes(server),
@@ -33,7 +34,7 @@ export function initialize(server) {
  * @param { restify.Server } server
  */
 function initializeUnprotectedRoutes(server) {
-    logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ' Initializing "unprotected" routes');
+    logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ' Initializing unprotected routes');
     return Promise.all([
         initializeSocketIoRoute(server),
         initializeOpenapiRoutes(server),
@@ -51,7 +52,7 @@ async function initializeSocketIoRoute(server) {
         directory: socketIoAbsoluteDistDirectory,
         file: 'socket.io.min.js',
     }));
-    
+
     server.get("/js/socket.io.min.js.map", restify.plugins.serveStatic({
         directory: socketIoAbsoluteDistDirectory,
         file: 'socket.io.min.js.map',
@@ -64,7 +65,7 @@ async function initializeSocketIoRoute(server) {
 async function initializeOpenapiRoutes(server) {
     openapiDocument.info.version = properties.getProperty("package").version;
     const swaggerUiBaseURL = 'api-docs';
-    server.get("/openapi.json", (req, res, next) => res.json(openapiDocument));
+    server.get("/openapi.json", async (req, res) => res.json(openapiDocument));
     server.get("/" + swaggerUiBaseURL + "/*", ...swaggerUi.serve);
     server.get('/' + swaggerUiBaseURL, swaggerUi.setup(openapiDocument, { baseURL: swaggerUiBaseURL }));
 }
@@ -112,20 +113,10 @@ async function initializeEsupAuthRoutes(server) {
  * @param { restify.Server } server
  */
 async function initializeNfcRoutes(server) {
-    server.get("/esupnfc/locations", validator.esupnfc_check_server_ip, api_controller.esupnfc_locations);
-    server.post("/esupnfc/isTagable", validator.esupnfc_check_server_ip, api_controller.esupnfc_check_accept_authentication);
-    server.post("/esupnfc/validateTag", validator.esupnfc_check_server_ip, api_controller.esupnfc_accept_authentication);
-    server.post("/esupnfc/display", validator.esupnfc_check_server_ip, api_controller.esupnfc_send_message);
-}
-
-/**
- * @param { restify.Server } server
- */
-async function initializeWebAuthnRoutes(server) {
-    // MANAGER
-    server.post("/protected/users/:uid/methods/:method/confirm_activate", validator.check_api_password, api_controller.confirm_activate_method);
-    server.post("/protected/users/:uid/methods/:method/auth/:authenticator_id", validator.check_api_password, api_controller.change_method_special);
-    server.del("/protected/users/:uid/methods/:method/auth/:authenticator_id", validator.check_api_password, api_controller.delete_method_special);
+    server.get("/esupnfc/locations", validator.esupnfc_check_server_ip, esupnfc_controller.esupnfc_locations);
+    server.post("/esupnfc/isTagable", validator.esupnfc_check_server_ip, esupnfc_controller.esupnfc_check_accept_authentication);
+    server.post("/esupnfc/validateTag", validator.esupnfc_check_server_ip, esupnfc_controller.esupnfc_accept_authentication);
+    server.post("/esupnfc/display", validator.esupnfc_check_server_ip, esupnfc_controller.esupnfc_send_message);
 }
 
 /**
@@ -134,18 +125,23 @@ async function initializeWebAuthnRoutes(server) {
  */
 async function initializeProtectedRoutes(server) {
     logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ' Initializing protected routes');
-    //api_api_password
-    server.get("/protected/methods", validator.check_api_password, api_controller.get_methods);
-    server.get("/protected/users/:uid", validator.check_api_password, api_controller.get_user_infos);
-    server.get("/protected/users/:uid/transports/:transport/test", validator.check_api_password, api_controller.transport_test);
-    server.put("/protected/users/:uid/methods/:method/deactivate", validator.check_api_password, api_controller.deactivate_method);
-    server.put("/protected/users/:uid/methods/:method/activate", validator.check_api_password, api_controller.activate_method);
-    server.post("/protected/users/:uid/methods/:method/activate/:activation_code", validator.check_api_password, api_controller.confirm_activate_method);
-    server.put("/protected/users/:uid/transports/:transport/:new_transport", validator.check_api_password, userDb_controller.update_transport);
-    server.get("/protected/users/:uid/transports/:transport/:new_transport/test", validator.check_api_password, api_controller.new_transport_test);
-    server.post("/protected/users/:uid/methods/:method/secret", validator.check_api_password, api_controller.generate_method_secret);
-    server.post("/protected/users/:uid/:otp/:api_password?", validator.check_api_password, api_controller.verify_code);
-    server.del("/protected/users/:uid/transports/:transport", validator.check_api_password, userDb_controller.delete_transport);
+    server.get("/protected/methods", validator.check_protected_access, api_controller.get_methods);
+    server.get("/protected/users", validator.check_protected_access, api_controller.get_uids);
+    server.get("/protected/users/:uid", validator.check_protected_access, api_controller.get_user_infos);
+    server.get("/protected/users/:uid/transports/:transport/test", validator.check_protected_access, api_controller.transport_test);
+    server.put("/protected/users/:uid/methods/:method/deactivate", validator.check_protected_access, api_controller.deactivate_method);
+    server.put("/protected/users/:uid/methods/:method/activate", validator.check_protected_access, api_controller.activate_method);
+    server.post("/protected/users/:uid/methods/:method/activate/:activation_code", validator.check_protected_access, api_controller.confirm_activate_method);
+    server.put("/protected/users/:uid/transports/:transport/:new_transport", validator.check_protected_access, userDb_controller.update_transport);
+    server.get("/protected/users/:uid/transports/:transport/:new_transport/test", validator.check_protected_access, api_controller.new_transport_test);
+    server.post("/protected/users/:uid/methods/:method/secret", validator.check_protected_access, api_controller.generate_method_secret);
+    server.del("/protected/users/:uid/methods/:method/secret", validator.check_protected_access, api_controller.delete_method_secret);
+    server.post("/protected/users/:uid/:otp/:api_password?", validator.check_protected_access, api_controller.verify_code);
+    server.del("/protected/users/:uid/transports/:transport", validator.check_protected_access, userDb_controller.delete_transport);
+    // WebAuthn routes
+    server.post("/protected/users/:uid/methods/:method/confirm_activate", validator.check_protected_access, api_controller.confirm_activate_method);
+    server.post("/protected/users/:uid/methods/:method/auth/:authenticator_id", validator.check_protected_access, api_controller.change_method_special);
+    server.del("/protected/users/:uid/methods/:method/auth/:authenticator_id", validator.check_protected_access, api_controller.delete_method_special);
 }
 
 /**
@@ -153,12 +149,14 @@ async function initializeProtectedRoutes(server) {
  */
 async function initializeAdminRoutes(server) {
     logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ' Initializing admin routes');
-    server.get("/admin/users/:uid", validator.check_api_password, api_controller.get_user);
-    server.get("/admin/users", validator.check_api_password, api_controller.get_uids);
-    server.get("/admin/users/:uid/methods", validator.check_api_password, api_controller.get_activate_methods);
-    server.put("/admin/methods/:method/transports/:transport/deactivate", validator.check_api_password, api_controller.deactivate_method_transport);
-    server.put("/admin/methods/:method/transports/:transport/activate", validator.check_api_password, api_controller.activate_method_transport);
-    server.put("/admin/methods/:method/deactivate", validator.check_api_password, api_controller.deactivate_method_admin);
-    server.put("/admin/methods/:method/activate", validator.check_api_password, api_controller.activate_method_admin);
-    server.del("/admin/users/:uid/methods/:method/secret", validator.check_api_password, api_controller.delete_method_secret);
+    server.get("/admin/users", validator.check_admin_access, api_controller.get_uids);
+    server.put("/admin/methods/:method/transports/:transport/deactivate", validator.check_admin_access, api_controller.deactivate_method_transport);
+    server.put("/admin/methods/:method/transports/:transport/activate", validator.check_admin_access, api_controller.activate_method_transport);
+    server.put("/admin/methods/:method/deactivate", validator.check_admin_access, api_controller.deactivate_method_admin);
+    server.put("/admin/methods/:method/activate", validator.check_admin_access, api_controller.activate_method_admin);
+    server.get("/admin/tenants", validator.check_admin_access, tenants_controller.get_tenants);
+    server.get("/admin/tenants/:id", validator.check_admin_access, tenants_controller.get_tenant);
+    server.post("/admin/tenants", validator.check_admin_access, tenants_controller.create_tenant);
+    server.put("/admin/tenants/:id", validator.check_admin_access, tenants_controller.update_tenant);
+    server.del("/admin/tenants/:id", validator.check_admin_access, tenants_controller.delete_tenant);
 }

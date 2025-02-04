@@ -1,6 +1,7 @@
 import * as properties from '../../properties/properties.js';
+import { Schema } from 'mongoose';
 
-export const schema = {
+const schema = {
     uid: {
         type: String,
         required: true,
@@ -195,3 +196,7 @@ export const schema = {
         time: { type: Number },
     },
 }
+
+const UserPreferencesSchema = new Schema(schema);
+
+export default UserPreferencesSchema;

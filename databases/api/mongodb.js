@@ -1,19 +1,24 @@
 import * as userDb_controller from '../../controllers/user.js';
+import { getCurrentTenantProperties, isMultiTenantContext } from '../../controllers/api.js';
 import * as properties from '../../properties/properties.js';
 import * as fileUtils from '../../services/fileUtils.js';
 import * as utils from '../../services/utils.js';
 import * as mongoose from 'mongoose';
-import { schema as userPreferencesSchema } from './userPreferencesSchema.js';
-import { schema as apiPreferencesSchema } from './apiPreferencesSchema.js';
+import UserPreferencesSchema from './userPreferencesSchema.js';
+import ApiPreferencesSchema from './apiPreferencesSchema.js';
+import TenantSchema from './tenantSchema.js';
 
 import { getInstance } from '../../services/logger.js';
 const logger = getInstance();
 
 export async function initialize(dbUrl) {
     const connection = await mongoose.createConnection(dbUrl || properties.getMongoDbUrl()).asPromise();
+    if (isMultiTenantContext()) {
+        await initialize_tenant_model(connection);
+    }
     return Promise.all([
-        initiatilize_api_preferences(connection),
-        initiatilize_user_model(connection),
+        initialize_api_preferences(connection),
+        initialize_user_model(connection),
     ]);
 }
 
@@ -27,12 +32,9 @@ let ApiPreferences;
 /**
  * @param { mongoose.Connection } connection
  */
-async function initiatilize_api_preferences(connection) {
-    const ApiPreferencesSchema = new mongoose.Schema(apiPreferencesSchema);
+async function initialize_api_preferences(connection) {
+    ApiPreferences = connection.model('ApiPreferences', ApiPreferencesSchema, 'ApiPreferences');
 
-    connection.model('ApiPreferences', ApiPreferencesSchema, 'ApiPreferences');
-
-    ApiPreferences = connection.model('ApiPreferences');
     const existingApiPrefsData = await ApiPreferences.findOne({}).exec();
     if (existingApiPrefsData) {
         const prefs = properties.getEsupProperty('methods');
@@ -83,10 +85,40 @@ let UserPreferences;
 /**
  * @param { mongoose.Connection } connection
  */
-async function initiatilize_user_model(connection) {
-    const UserPreferencesSchema = new mongoose.Schema(userPreferencesSchema);
-    connection.model('UserPreferences', UserPreferencesSchema, 'UserPreferences');
-    UserPreferences = connection.model('UserPreferences');
+async function initialize_user_model(connection) {
+    UserPreferences = connection.model('UserPreferences', UserPreferencesSchema, 'UserPreferences');
+}
+
+/** 
+ * Tenant Model 
+ * @type mongoose.Model
+ */
+let Tenants;
+
+/**
+ * @param { mongoose.Connection } connection
+ */
+async function initialize_tenant_model(connection) {
+    Tenants = connection.model('Tenants', TenantSchema, 'Tenants');
+
+    logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + " Start initializing tenants");
+    for (const tenant of properties.getEsupProperty('tenants')) {
+        logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ` Check tenant configuration ${tenant['name']}`)
+        const existingTenant = await find_tenant_by_name(tenant.name);
+        if (existingTenant === undefined || existingTenant === null) {
+            logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ` Start configuration of tenant ${tenant.name}`);
+            // Generate api_password secret
+            tenant.api_password ??= utils.generate_base64url_code(30);
+
+            // Generate users_secret secret
+            tenant.users_secret ??= utils.generate_base64url_code(30);
+
+            const created_tenant = await init_tenant(tenant);
+            logger.debug(fileUtils.getFileNameFromUrl(import.meta.url) + ` Tenant ${created_tenant.name} created`);
+            logger.trace(fileUtils.getFileNameFromUrl(import.meta.url) + ` Tenant ${created_tenant.name} api_password : ${created_tenant.api_password}`);
+            logger.trace(fileUtils.getFileNameFromUrl(import.meta.url) + ` Tenant ${created_tenant.name} users_secret : ${created_tenant.users_secret}`);
+        }
+    }
 }
 
 /**
@@ -226,7 +258,17 @@ function available_transports(userTransports, method) {
 
 
 export async function get_uids(req, res) {
-    const data = await UserPreferences.find({}, { uid: 1 });
+    let filter;
+    if (isMultiTenantContext()) {
+        const { scopes } = getCurrentTenantProperties(req);
+        // Only get uids ending with the scope (prefixed with "@")
+        const regex = new RegExp(`@(${scopes.join('|')})$`);
+        filter = { uid: regex };
+    } else {
+        filter = {};
+    }
+
+    const data = await UserPreferences.find(filter, { uid: 1 });
     const result = data.map((uid) => uid.uid);
 
     res.status(200);
@@ -234,4 +276,89 @@ export async function get_uids(req, res) {
         code: "Ok",
         uids: result
     });
+}
+
+export async function find_tenant_by_id(req, res) {
+    return await Tenants.findOne({ 'id': req.params.id });
+}
+
+/**
+ * Retourne le tenant mongo
+ * 
+ * @param {*} name nom du tenant
+ */
+export async function find_tenant_by_name(name) {
+    return await Tenants.findOne({ 'name': name });
+}
+
+export async function find_tenant_by_scope(scope) {
+    return await Tenants.findOne({ 'scopes': scope });
+}
+
+/**
+ * Sauve le tenant
+ */
+export function save_tenant(tenant) {
+    return tenant.save();
+}
+
+async function init_tenant(tenant) {
+    return save_tenant(new Tenants({
+        id: new mongoose.mongo.ObjectId(),
+        name: tenant.name,
+        scopes: tenant.scopes,
+        webauthn: tenant.webauthn,
+        api_password: tenant.api_password,
+        users_secret: tenant.users_secret
+    }));
+}
+
+export async function update_tenant(req, res) {
+    const tenant = await find_tenant_by_id(req, res);
+    if (tenant) {
+        tenant.name = req.body.name;
+        tenant.scopes = req.body.scopes;
+        tenant.webauthn = req.body.webauthn;
+        tenant.api_password = req.body.api_password;
+        tenant.users_secret = req.body.users_secret;
+        return await save_tenant(tenant);
+    }
+}
+
+/**
+ * Crée le tenant
+ */
+export async function create_tenant(req, res) {
+    /*const tenantDb = await find_tenant_by_name(req.body.name);
+    if(tenantDb) {
+        const response = {
+            code: 'KO',
+            message: "Tenant already exist"
+        };
+        res.status(400);
+        res.send(response);
+        return;
+    }*/
+    const tenant = req.body;
+    save_tenant(new Tenants({
+        id: new mongoose.mongo.ObjectId(),
+        name: tenant.name,
+        scopes: tenant.scopes,
+        webauthn: tenant.webauthn,
+        api_password: btoa(tenant.api_password),
+        users_secret: btoa(tenant.users_secret)
+    }));
+}
+
+/**
+ * Retourne les tenants sauvegardés dans mongo
+ */
+export async function get_tenants(req, res) {
+    const data = await Tenants.find({});
+    const result = data.map(t => ({ id: t.id, name: t.name }));
+    return result;
+}
+
+export async function delete_tenant(req, res) {
+    await Tenants.deleteOne({ 'id': req.params.id });
 }

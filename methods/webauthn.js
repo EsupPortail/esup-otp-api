@@ -1,9 +1,8 @@
-import * as properties from '../properties/properties.js';
 import * as utils from '../services/utils.js';
 import * as fileUtils from '../services/fileUtils.js';
 import * as errors from '../services/errors.js';
 import { getInstance } from '../services/logger.js';
-import { apiDb } from '../controllers/api.js';
+import { apiDb, getCurrentTenantProperties } from '../controllers/api.js';
 const logger = getInstance();
 
 import * as SimpleWebAuthnServer from '@simplewebauthn/server';
@@ -19,12 +18,6 @@ export async function user_activate(user, req, res) {
         "code": "Ok",
     });
 }
-
-const webauthnConfig = properties.getEsupProperty("webauthn");
-
-const rpID = webauthnConfig.relying_party.id;
-// The URL at which registrations and authentications should occur
-const allowedOrigins = webauthnConfig.allowed_origins;
 
 const pubkeyTypes = [ // https://www.iana.org/assignments/cose/cose.xhtml#algorithms
     { "type": "public-key", "alg": -  7 }, // ES256
@@ -48,7 +41,7 @@ const pubkeyTypes = [ // https://www.iana.org/assignments/cose/cose.xhtml#algori
     *
     */
 export async function generate_method_secret(user, req, res) {
-
+    const { relying_party } = await getWebauthnProperties(user);
     const nonce = utils.bufferToBase64URLString(utils.generate_u8array_code(128));
 
     user.webauthn.registration.nonce = nonce;
@@ -60,7 +53,7 @@ export async function generate_method_secret(user, req, res) {
         nonce: nonce,
         auths: user.webauthn.authenticators,
         user_id: user.uid,
-        rp: webauthnConfig.relying_party,
+        rp: relying_party,
         pubKeyTypes: pubkeyTypes,
     });
 }
@@ -105,13 +98,15 @@ export async function confirm_user_activate(user, req, res) {
         return;
     }
 
+    const { relying_party, allowed_origins } = await getWebauthnProperties(user);
+
     let verification;
     try {
         verification = await SimpleWebAuthnServer.verifyRegistrationResponse({
             response: req.body.cred,
             expectedChallenge: user.webauthn.registration.nonce,
-            expectedOrigin: allowedOrigins,
-            expectedRPID: rpID,
+            expectedOrigin: allowed_origins,
+            expectedRPID: relying_party.id,
             requireUserVerification: false,
         });
     }
@@ -198,7 +193,7 @@ function findAuthenticatorsById(user, id, throwExceptionIfNotFound, errorMessage
 
     if (ret.index !== -1) {
         ret.authenticator = user.webauthn.authenticators[ret.index];
-    } else if(throwExceptionIfNotFound === true) {
+    } else if (throwExceptionIfNotFound === true) {
         throw new errors.EsupOtpApiError(404, errorMessage || "Unknown credential id");
     }
 
@@ -257,18 +252,20 @@ export async function verify_webauthn_auth(user, req, res) {
 
     const response = req.body.response;
     const credID = req.body.credID;
-    
+
     const { index, authenticator } = findAuthenticatorsById(user, credID, true, "Please use a valid, previously-registered authenticator.");
 
     const uint8a = (base64url_of_buffer) => new Uint8Array(utils.base64URLStringToBuffer(base64url_of_buffer));
+
+    const { relying_party, allowed_origins } = await getWebauthnProperties(user);
 
     let verification;
     try {
         verification = await SimpleWebAuthnServer.verifyAuthenticationResponse({
             response,
             expectedChallenge: user.webauthn.registration.nonce,
-            expectedOrigin: allowedOrigins,
-            expectedRPID: rpID,
+            expectedOrigin: allowed_origins,
+            expectedRPID: relying_party.id,
             requireUserVerification: false, //?
             authenticator: {
                 counter: authenticator.counter,
@@ -339,4 +336,7 @@ export async function user_deactivate(user, req, res) {
     });
 }
 
-
+async function getWebauthnProperties(req) {
+    const tenant = await getCurrentTenantProperties(req);
+    return tenant.webauthn;
+}

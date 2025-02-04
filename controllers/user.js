@@ -5,6 +5,9 @@ import { getInstance } from '../services/logger.js';
 import * as userUtils from '../databases/user/userUtils.js';
 const logger = getInstance();
 
+/**
+ * @type {import('../databases/user/mongodb.js')} apiDb
+ */
 export let userDb;
 
 export async function initialize(initializedUserDb) {

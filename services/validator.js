@@ -1,24 +1,39 @@
 import errors from 'restify-errors';
 import * as properties from '../properties/properties.js';
 import * as utils from '../services/utils.js';
-import { getInstance } from '../services/logger.js'; const logger = getInstance();
+import { getCurrentTenantProperties, getCurrentTenantPropertiesInternal } from '../controllers/api.js';
+import { getInstance } from '../services/logger.js';
 
-export function check_hash(req, res, next) {
-    if(check_hash_socket(req.params.uid, req.params.hash)){
-		return next();
-	}
-    return next(new errors.ForbiddenError());
+const logger = getInstance();
+
+export async function check_hash(req, res) {
+    if (!check_hash_internal(req.params.uid, req.params.hash)) {
+        throw new errors.ForbiddenError();
+    }
 }
 
-export function check_hash_socket(uid, hash) {
-    const hashes = utils.get_hash(uid);
+/**
+ * @returns { Promise<Boolean> }
+ */
+export async function check_hash_internal(uid, hash) {
+    const tenant = await getCurrentTenantPropertiesInternal(uid);
+    const hashes = utils.get_hash(uid, tenant.users_secret);
     return hashes.includes(hash);
 }
 
-export function check_api_password(req, res, next) {
+export async function check_protected_access(req, res) {
+    const tenant = await getCurrentTenantProperties(req);
     const reqApiPwd = req.params.api_password || utils.get_auth_bearer(req.headers);
-    if (reqApiPwd == properties.getEsupProperty('api_password')) return next();
-    else return next(new errors.ForbiddenError());
+    if (reqApiPwd != tenant.api_password) {
+        throw new errors.ForbiddenError();
+    }
+}
+
+export async function check_admin_access(req, res) {
+    const reqApiPwd = utils.get_auth_bearer(req.headers);
+    if (reqApiPwd != properties.getEsupProperty('api_password')) {
+        throw new errors.ForbiddenError();
+    }
 }
 
 export function esupnfc_check_server_ip(req, res, next) {
