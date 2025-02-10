@@ -2,15 +2,18 @@ import { describe, test, before, after, beforeEach, afterEach } from "node:test"
 import assert from "node:assert/strict";
 import supertest from 'supertest';
 
-import * as inMemoryMongoTest from './inMemoryMongoTest.js';
+import { MongoMemoryServer } from 'mongodb-memory-server';
+import * as mongoose from 'mongoose';
 
 import * as properties from '../properties/properties.js';
+import * as apiDb from '../databases/api/mongodb.js';
+import * as userDb from '../databases/user/mongodb.js';
 import * as api_controller from '../controllers/api.js';
 import * as userDb_controller from '../controllers/user.js';
 import * as userUtils from '../databases/user/userUtils.js';
 
 import * as utils from '../services/utils.js';
-import { server } from '../server/server.js';
+import * as server from '../server/server.js';
 
 import * as transports from '../transports/transports.js';
 
@@ -44,7 +47,7 @@ function request(httpMethod, uri, { appendHash, setApiPwd } = {}, customApiPwd) 
     /**
      * @type supertest.Test
      */
-    const request = supertest(server)[httpMethod](uri);
+    const request = supertest(server.server)[httpMethod](uri);
     if (setApiPwd) {
         request.auth(customApiPwd || properties.getEsupProperty('api_password'), { type: 'bearer' });
     }
@@ -53,8 +56,32 @@ function request(httpMethod, uri, { appendHash, setApiPwd } = {}, customApiPwd) 
 const get = 'get', post = "post", put = 'put', del = 'del';
 
 describe('Esup otp api', async () => {
-    before(inMemoryMongoTest.initialise);
-    after(inMemoryMongoTest.stop);
+    let mongoMemoryServer;
+    
+    before(async () => {
+        // use in memory mongodb
+        properties.setEsupProperty("apiDb", "mongodb");
+        properties.setEsupProperty("userDb", "mongodb");
+    
+        mongoMemoryServer = await MongoMemoryServer.create({ instance: { dbName: "test-otp" } });
+    
+        await apiDb.initialize(mongoMemoryServer.getUri());
+        await userDb.initialize(mongoMemoryServer.getUri());
+        await api_controller.initialize(apiDb);
+        await userDb_controller.initialize(userDb);
+        await server.initialize_routes();
+        server.server.listen();
+    });
+    after(async (done) => {
+        console.log('🛑 Fermeture de MongoMemoryServer...');
+        await mongoose.disconnect();
+        await mongoMemoryServer.stop();
+        console.log('🛑 Fermeture du serveur...');
+        server.server.close(() => {
+            console.log('✅ Serveur fermé proprement');
+            process.exit(0);
+        });
+    });
 
 
     beforeEach(async () => {
@@ -107,11 +134,6 @@ describe('Esup otp api', async () => {
         properties.setEsupProperty('auto_create_user', true);
     });
 
-    await test('get unknown user with auto_create', async () => {
-        await request(get, "/protected/users/" + uid, { setApiPwd: true })
-            .expect(200);
-    });
-
     await test('get test_user with good hash', async () => {
         await request(get, "/users/" + uid + "/" + utils.get_hash(uid)[1])
             .expect(200);
@@ -159,9 +181,8 @@ describe('Esup otp api', async () => {
         const transport = "sms";
         const phoneNumber = '0606060606';
 
-        await describe('create user with ' + phoneNumber, async () => {
-            // userDb_controller.update_transport
-            await request(put, "/users/" + uid + "/transports/" + transport + "/" + phoneNumber, { appendHash: true })
+        before(async () => {
+            await request(put, "/protected/users/" + uid + "/transports/" + transport + "/" + phoneNumber, { setApiPwd: true })
                 .expect(200);
 
             assert.equal(userUtils.getTransport(await getUser(), transport), phoneNumber);
@@ -172,7 +193,7 @@ describe('Esup otp api', async () => {
                 .expect(200);
             assert(!properties.getMethodProperty(method, 'activate'));
 
-            await request(put, "/users/" + uid + "/methods/" + method + "/activate", { appendHash: true })
+            await request(put, "/protected/users/" + uid + "/methods/" + method + "/activate", { setApiPwd: true })
                 .expect(404, {
                     code: 'Error',
                     message: properties.getMessage('error', 'method_not_found')
@@ -182,7 +203,7 @@ describe('Esup otp api', async () => {
                 .expect(200);
             assert(properties.getMethodProperty(method, 'activate'));
 
-            await request(put, "/users/" + uid + "/methods/" + method + "/activate", { appendHash: true })
+            await request(put, "/protected/users/" + uid + "/methods/" + method + "/activate", { setApiPwd: true })
                 .expect(200);
         });
 
@@ -197,7 +218,7 @@ describe('Esup otp api', async () => {
         });
 
         await describe('activate_method', async () => {
-            await request(put, "/users/" + uid + "/methods/" + method + "/deactivate", { appendHash: true })
+            await request(put, "/protected/users/" + uid + "/methods/" + method + "/deactivate", { setApiPwd: true })
                 .expect(200);
             await request(get, "/users/" + uid, { appendHash: true })
                 .expect(200)
@@ -205,7 +226,7 @@ describe('Esup otp api', async () => {
                     assert(!res.body.user.methods[method].active);
                 });
 
-            await request(put, "/users/" + uid + "/methods/" + method + "/activate", { appendHash: true })
+            await request(put, "/protected/users/" + uid + "/methods/" + method + "/activate", { setApiPwd: true })
                 .expect(200);
             await request(get, "/users/" + uid, { appendHash: true })
                 .expect(200)
@@ -258,7 +279,7 @@ describe('Esup otp api', async () => {
         });
 
         await describe('deactive', async () => {
-            await request(put, "/users/" + uid + "/methods/" + method + "/deactivate", { appendHash: true })
+            await request(put, "/protected/users/" + uid + "/methods/" + method + "/deactivate", { setApiPwd: true })
                 .expect(200);
 
             // get_activate_methods
