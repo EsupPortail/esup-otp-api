@@ -271,7 +271,8 @@ function available_transports(userTransports, method) {
 
 
 export async function get_uids(req, res) {
-    const data = await UserPreferences.find({}, { uid: 1 });
+    const tenant = req.headers['x-tenant'];
+    const data = await UserPreferences.find({ 'tenant': tenant }, { uid: 1 });
     const result = data.map((uid) => uid.uid);
 
     res.status(200);
