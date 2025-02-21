@@ -34,7 +34,7 @@ export function check_api_password_for_tenant(req, res, next) {
         return next(new errors.BadRequestError());
     }
     const reqApiPwd = req.params.api_password || utils.get_auth_bearer(req.headers);
-    return apiDb.find_tenant_by_name(tenant).then(dbTenant => {
+    apiDb.find_tenant_by_name(tenant).then(dbTenant => {
         if (!dbTenant) {
             return next(new errors.InternalError());
         }
