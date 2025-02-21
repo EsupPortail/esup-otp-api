@@ -7,14 +7,33 @@ import { getInstance } from '../services/logger.js';
 const logger = getInstance();
 
 export function check_hash(req, res, next) {
-    if(check_hash_socket(req.params.uid, req.params.hash)){
+    const tenant = req.headers['x-tenant'];
+    if(tenant) {
+        apiDb.find_tenant_by_name(tenant).then(dbTenant => {
+            if (!dbTenant) {
+                return next(new errors.InternalError());
+            }
+            if (check_hash_socket(req.params.uid, req.params.hash, dbTenant.users_secret)) {
+                return next();
+            } else {
+                return next(new errors.ForbiddenError());
+            }
+        }).catch(e => {
+            logger.error(e);
+            logger.error(e.cause);
+            logger.error(e.message);
+            
+            return next(new errors.InternalError());
+        });
+        return next();
+    } else if(check_hash_socket(req.params.uid, req.params.hash, properties.getEsupProperty('users_secret'))){
 		return next();
 	}
     return next(new errors.ForbiddenError());
 }
 
-export function check_hash_socket(uid, hash) {
-    const hashes = utils.get_hash(uid);
+export function check_hash_socket(uid, hash, users_secret) {
+    const hashes = utils.get_hash(uid, users_secret);
     return hashes.includes(hash);
 }
 

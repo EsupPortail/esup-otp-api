@@ -4,7 +4,7 @@ import crypto from 'crypto';
 import { getInstance } from '../services/logger.js'; const logger = getInstance();
 import * as qrcode from 'qrcode';
 
-export function get_hash(uid) {
+export function get_hash(uid, users_secret) {
     const d = new Date();
     const d2 = new Date();
     
@@ -19,10 +19,9 @@ export function get_hash(uid) {
 
     logger.debug("past_salt,present_salt,next_salt :"+past_salt+","+present_salt+","+next_salt);
 
-
-    const present_hash = CryptoJS.SHA256(CryptoJS.MD5(properties.getEsupProperty('users_secret')).toString()+uid+present_salt).toString();
-    const next_hash = CryptoJS.SHA256(CryptoJS.MD5(properties.getEsupProperty('users_secret')).toString()+uid+next_salt).toString();
-    const past_hash = CryptoJS.SHA256(CryptoJS.MD5(properties.getEsupProperty('users_secret')).toString()+uid+past_salt).toString();
+    const present_hash = CryptoJS.SHA256(CryptoJS.MD5(users_secret).toString()+uid+present_salt).toString();
+    const next_hash = CryptoJS.SHA256(CryptoJS.MD5(users_secret).toString()+uid+next_salt).toString();
+    const past_hash = CryptoJS.SHA256(CryptoJS.MD5(users_secret).toString()+uid+past_salt).toString();
 
     const hashes = [past_hash, present_hash, next_hash];
 
