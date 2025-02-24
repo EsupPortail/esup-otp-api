@@ -27,7 +27,7 @@ function initialize() {
     io.on("connection", function(socket) {
         if(socket.handshake.query.app=="manager"){
             const secret = socket.handshake.query.secret || utils.get_auth_bearer(socket.handshake.headers)
-            if(secret != properties.getEsupProperty('api_password')) { 
+            if(secret != properties.getEsupProperty('admin_password')) { 
                 logger.error("denying manager app with wrong password");
                 socket.disconnect('Forbidden');
             }
