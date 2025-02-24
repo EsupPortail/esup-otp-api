@@ -11,7 +11,7 @@ export function check_hash(req, res, next) {
     if(tenant) {
         apiDb.find_tenant_by_name(tenant).then(dbTenant => {
             if (!dbTenant) {
-                return next(new errors.InternalError());
+                return next(new errors.BadRequestError());
             }
             if (check_hash_socket(req.params.uid, req.params.hash, dbTenant.users_secret)) {
                 return next();
@@ -55,7 +55,7 @@ export function check_api_password_for_tenant(req, res, next) {
     const reqApiPwd = req.params.api_password || utils.get_auth_bearer(req.headers);
     apiDb.find_tenant_by_name(tenant).then(dbTenant => {
         if (!dbTenant) {
-            return next(new errors.InternalError());
+            return next(new errors.BadRequestError());
         }
         if (reqApiPwd == dbTenant.api_password) {
             return next();
