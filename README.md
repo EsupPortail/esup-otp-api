@@ -18,6 +18,7 @@ sudo service mongod start
 ### Installation
 - git clone https://github.com/EsupPortail/esup-otp-api.git
 - npm install
+- copy or rename sample configuration file properties/esup.json.dist as properties/esup.json
 - change the fields values in properties/esup.json to your installation, some explanations are in #how_to attributes
 - in properties/esup.json, hostname of smtp server needs to be set to work
 - npm start
