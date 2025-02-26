@@ -20,12 +20,6 @@ export async function user_activate(user, req, res) {
     });
 }
 
-const webauthnConfig = properties.getEsupProperty("webauthn");
-
-const rpID = webauthnConfig.relying_party.id;
-// The URL at which registrations and authentications should occur
-const allowedOrigins = webauthnConfig.allowed_origins;
-
 const pubkeyTypes = [ // https://www.iana.org/assignments/cose/cose.xhtml#algorithms
     { "type": "public-key", "alg": -  7 }, // ES256
     { "type": "public-key", "alg": -  8 }, // EdDSA
@@ -48,7 +42,7 @@ const pubkeyTypes = [ // https://www.iana.org/assignments/cose/cose.xhtml#algori
     *
     */
 export async function generate_method_secret(user, req, res) {
-
+    const { rp } = await get_tenant(user);
     const nonce = utils.bufferToBase64URLString(utils.generate_u8array_code(128));
 
     user.webauthn.registration.nonce = nonce;
@@ -60,7 +54,7 @@ export async function generate_method_secret(user, req, res) {
         nonce: nonce,
         auths: user.webauthn.authenticators,
         user_id: user.uid,
-        rp: webauthnConfig.relying_party,
+        rp: rp,
         pubKeyTypes: pubkeyTypes,
     });
 }
@@ -105,13 +99,15 @@ export async function confirm_user_activate(user, req, res) {
         return;
     }
 
+    const { rp, allowedOrigins } = await get_tenant(user);
+
     let verification;
     try {
         verification = await SimpleWebAuthnServer.verifyRegistrationResponse({
             response: req.body.cred,
             expectedChallenge: user.webauthn.registration.nonce,
             expectedOrigin: allowedOrigins,
-            expectedRPID: rpID,
+            expectedRPID: rp.id,
             requireUserVerification: false,
         });
     }
@@ -227,13 +223,15 @@ export async function verify_webauthn_auth(user, req, res) {
 
     const uint8a = (base64url_of_buffer) => new Uint8Array(utils.base64URLStringToBuffer(base64url_of_buffer));
 
+    const { rp, allowedOrigins } = await get_tenant(user);
+
     let verification;
     try {
         verification = await SimpleWebAuthnServer.verifyAuthenticationResponse({
             response,
             expectedChallenge: user.webauthn.registration.nonce,
             expectedOrigin: allowedOrigins,
-            expectedRPID: rpID,
+            expectedRPID: rp.id,
             requireUserVerification: false, //?
             authenticator: {
                 counter: authenticator.counter,
@@ -304,4 +302,17 @@ export async function user_deactivate(user, req, res) {
     });
 }
 
+
+async function get_tenant(user) {
+    const tenant = await apiDb.find_tenant_by_name(user.tenant);
+    if(!tenant) {
+        res.status(400);
+        res.send({
+            message: "Unable to find tenant setted for user."
+        });
+        return;
+    }
+
+    return  { rp: tenant.webauthn.relying_party, allowedOrigins: tenant.webauthn.allowed_origins};
+}
 

@@ -1,0 +1,60 @@
+@baseUrl = http://localhost:3000
+@contentType = application/json
+@adminPassword = changeit
+
+# @name getTenants
+GET {{baseUrl}}/admin/tenants
+Authorization: Bearer {{adminPassword}}
+
+###
+
+@tenantId = {{getTenants.response.body.$.[0].id}}
+
+GET {{baseUrl}}/admin/tenant/{{tenantId}}
+Authorization: Bearer {{adminPassword}}
+
+###
+
+# @name updateTenant
+PUT {{baseUrl}}/admin/tenant/{{tenantId}}
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminPassword}}
+
+{
+  "name": "https://dev-idp-dedie.renater.fr",
+  "webauthn": {
+    "relying_party": {
+      "name": "Univ2",
+      "id": "univ2.fr"
+    },
+    "allowed_origins": [
+      "https://cas.univ2.fr",
+      "https://esup-otp-manager.univ2.fr"
+    ]
+  },
+  "api_password": "0w2N86mQL54batws6FT00k9Wv2jCmg",
+  "users_secret": "G944Yo9lJ89501SV9QHeUT0t1H1Tlt"
+}
+
+###
+
+PUT {{baseUrl}}/admin/tenant/12345
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminPassword}}
+
+{
+  "name": "https://dev-idp-dedie.renater.fr",
+  "webauthn": {
+    "relying_party": {
+      "name": "Univ2",
+      "id": "univ2.fr"
+    },
+    "allowed_origins": [
+      "https://cas.univ2.fr",
+      "https://esup-otp-manager.univ2.fr"
+    ]
+  },
+  "api_password": "0w2N86mQL54batws6FT00k9Wv2jCmg",
+  "users_secret": "G944Yo9lJ89501SV9QHeUT0t1H1Tlt"
+}
+
