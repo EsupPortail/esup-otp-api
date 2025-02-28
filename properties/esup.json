@@ -17,7 +17,7 @@
         "allowed_origins": ["https://cas.univ.fr", "https://esup-otp-manager.univ.fr"]
     },
     "mongodb": {
-        "address": "localhost",
+        "host": "localhost",
         "db": "test-otp",
         "user": "test-otp",
         "password": "s3cr37",
