@@ -93,6 +93,10 @@ export function getProperty (property) {
 }
 
 export function getMongoDbUrl() {
-    const { address, db } = getEsupProperty('mongodb');
-    return 'mongodb://' + [address, db].filter(Boolean).join('/');
+    const { user, password, address = '127.0.0.1', port = '27017', db } = getEsupProperty('mongodb');
+    let url = (user && password) ?
+        `mongodb://${encodeURI(user)}:${encodeURI(password)}@${address}:${port}/${db}` :
+        `mongodb://${address}:${port}/${db}`;
+
+    return url;
 }

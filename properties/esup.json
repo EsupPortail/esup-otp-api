@@ -19,6 +19,9 @@
     "mongodb": {
         "address": "localhost",
         "db": "test-otp",
+        "user": "test-otp",
+        "password": "s3cr37",
+        "port": "27017",
         "transport": {
             "mail": "mail",
             "sms": "mobile"
