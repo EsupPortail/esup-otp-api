@@ -142,6 +142,17 @@ export async function confirm_user_activate(user, req, res) {
 
         status = 200;
         registered = true;
+
+        logger.log('archive', {
+            message: [
+                {
+                    req,
+                    action: 'authenticator_created',
+                    method: req.params.method,
+                    name: req.body.cred_name,
+                }
+            ]
+        });
     }
 
     await apiDb.save_user(user);
@@ -150,13 +161,24 @@ export async function confirm_user_activate(user, req, res) {
 }
 
 export async function delete_method_special(user, req, res) {
-    const { index } = findAuthenticatorsById(user, req.params.authenticator_id, true);
-    
+    const { index, authenticator } = findAuthenticatorsById(user, req.params.authenticator_id, true);
+
     user.webauthn.authenticators.splice(index, 1);
 
     /*if(user.webauthn.authenticators.length === 0) {
         user.webauthn.active = false;
     }*/
+
+    logger.log('archive', {
+        message: [
+            {
+                req,
+                action: 'authenticator_deleted',
+                method: req.params.method,
+                name: authenticator.name,
+            }
+        ]
+    });
 
     await apiDb.save_user(user);
     res.status(200);
@@ -187,10 +209,23 @@ function findAuthenticatorsById(user, id, throwExceptionIfNotFound, errorMessage
  * rename the given factor
  */
 export async function change_method_special(user, req, res) {
-    
     const { authenticator } = findAuthenticatorsById(user, req.params.authenticator_id, true);
 
+    const old_name = authenticator.name;
+
     authenticator.name = req.body.name.trim();
+
+    logger.log('archive', {
+        message: [
+            {
+                req,
+                action: 'authenticator_renamed',
+                method: req.params.method,
+                old_name,
+                new_name: authenticator.name,
+            }
+        ]
+    });
 
     await apiDb.save_user(user);
     res.status(200);
