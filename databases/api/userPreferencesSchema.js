@@ -186,4 +186,8 @@ export const schema = {
         auto: { type: Boolean },
         verified: { type: Boolean },
     },
+    last_validated: {
+        method: { type: String },
+        time: { type: Number },
+    },
 }

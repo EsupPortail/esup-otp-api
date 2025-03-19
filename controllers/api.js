@@ -277,6 +277,7 @@ export async function get_user_infos(req, res) {
             methods: apiDb.parse_user(user),
             transports: data,
             last_send_message: user.last_send_message,
+            last_validated: user.last_validated,
         }
     });
 }
@@ -373,6 +374,12 @@ export async function verify_code(req, res) {
                     "method": method,
                     "message": properties.getMessage('success', 'valid_credentials')
                 });
+
+                user.last_validated = {
+                    method: method,
+                    time: Date.now(),
+                }
+                await apiDb.save_user(user);
 
                 return;
             }
