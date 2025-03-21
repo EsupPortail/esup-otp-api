@@ -48,12 +48,14 @@
     "methods": {
         "totp": {
             "activate": true,
+            "priority": 5,
             "autoActivate": true,
 	    "name": "Esup Auth",
             "transports" : []
         },
         "random_code": {
             "activate": true,
+            "priority": 5,
             "validity_time": 15,
             "code_type": "digit",
             "code_length": 6,
@@ -61,6 +63,7 @@
         },
  	"random_code_mail": {
             "activate": true,
+            "priority": 5,
             "validity_time": 30,
             "code_type": "digit",
             "code_length": 6,
@@ -68,6 +71,7 @@
         },
         "bypass": {
             "activate": true,
+            "priority": 5,
             "codes_number": 10,
             "code_type": "digit",
             "code_length": 6,
@@ -75,6 +79,7 @@
         },
         "passcode_grid": {
             "activate": true,
+            "priority": 5,
             "lines": 8,
             "cols": 8,
             "code_type": "digit",
@@ -98,6 +103,7 @@
                 "universe_domain": "googleapis.com"
             },
             "activate": true,
+            "priority": 5,
             "validity_time": 3,
             "trustGcm_id":false,
             "notification": true,
@@ -111,11 +117,13 @@
         },
         "esupnfc": {
            "activate": false,
+           "priority": 5,
            "validity_time": 3,
            "transports" : []
         },
        "webauthn": {
            "activate": true,
+           "priority": 5,
            "transports" : []
         }
     },
