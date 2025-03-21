@@ -13,9 +13,23 @@ export function loadFile(dirname, filename) {
     const strFile = filename.split('.');
     if (strFile[strFile.length - 1] == 'json') {
         const jsonFile = fileUtils.readJsonSync(dirname + '/' + filename);
-        properties[filename.split('.')[0]] = jsonFile;
+        if (filename == "esup.json") {
+            sortMethods(jsonFile);
+        }
+        properties[strFile[0]] = jsonFile;
         return jsonFile;
     }
+}
+
+function sortMethods(esup) {
+    esup.methods = Object.fromEntries(
+        Object.entries(esup.methods)
+            .sort((a, b) => getPriority(b) - getPriority(a))
+    );
+}
+
+function getPriority(entry) {
+    return entry[1].priority ?? 5;
 }
 
 export function getMessages () {
