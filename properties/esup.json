@@ -1,10 +1,10 @@
-{   
+{
     "auto_create_user": true,
     "casVhost": "cas.univ.fr",
     "proxyUrl": "",
     "#how_to_proxyUrl": "If set, API will use this proxy configurations, usually proxyURl must be like : http://username:password@univ.fr:port may be necessary for sms and mailer services",
-    "api_password":"changeit",
-    "users_secret":"changeit",
+    "api_password": "changeit",
+    "users_secret": "changeit",
     "apiDb": "mongodb",
     "userDb": "mongodb",
     "webauthn": {
@@ -50,8 +50,8 @@
             "activate": true,
             "priority": 5,
             "autoActivate": true,
-	    "name": "Esup Auth",
-            "transports" : []
+            "name": "Esup Auth",
+            "transports": []
         },
         "random_code": {
             "activate": true,
@@ -59,15 +59,15 @@
             "validity_time": 15,
             "code_type": "digit",
             "code_length": 6,
-            "transports" : ["sms"]
+            "transports": ["sms"]
         },
- 	"random_code_mail": {
+        "random_code_mail": {
             "activate": true,
             "priority": 5,
             "validity_time": 30,
             "code_type": "digit",
             "code_length": 6,
-            "transports" : ["mail"]
+            "transports": ["mail"]
         },
         "bypass": {
             "activate": true,
@@ -75,7 +75,7 @@
             "codes_number": 10,
             "code_type": "digit",
             "code_length": 6,
-            "transports" : []
+            "transports": []
         },
         "passcode_grid": {
             "activate": true,
@@ -85,7 +85,7 @@
             "code_type": "digit",
             "code_length": 6,
             "validity_time": 3,
-            "transports" : []
+            "transports": []
         },
         "push": {
             "#how_to_serviceAccount": "See https://github.com/EsupPortail/esup-otp-api#get-google-cloud-serviceAccount",
@@ -105,38 +105,38 @@
             "activate": true,
             "priority": 5,
             "validity_time": 3,
-            "trustGcm_id":false,
+            "trustGcm_id": false,
             "notification": true,
-            "pending" : true,
-	    "title":"Esup Auth",
-	    "body" :"Demande de connexion à votre compte",
-	    "text1":"Demande de connexion à votre compte",
-            "text2":" à proximité de $city",
-	    "nbMaxFails" : 3,
-            "transports" : ["push"]
+            "pending": true,
+            "title": "Esup Auth",
+            "body": "Demande de connexion à votre compte",
+            "text1": "Demande de connexion à votre compte",
+            "text2": " à proximité de $city",
+            "nbMaxFails": 3,
+            "transports": ["push"]
         },
         "esupnfc": {
-           "activate": false,
-           "priority": 5,
-           "validity_time": 3,
-           "transports" : []
+            "activate": false,
+            "priority": 5,
+            "validity_time": 3,
+            "transports": []
         },
-       "webauthn": {
-           "activate": true,
-           "priority": 5,
-           "transports" : []
+        "webauthn": {
+            "activate": true,
+            "priority": 5,
+            "transports": []
         }
     },
-    "transports":["sms","mail","push"],
+    "transports": ["sms", "mail", "push"],
     "mailer": {
         "sender_mail": "auth-api",
         "sender_name": "Université",
         "port": 25,
-        "hostname":"mail.univ.fr",
+        "hostname": "mail.univ.fr",
         "use_proxy": false,
         "use_templates": false,
         "accept_self_signed_certificate": false,
-        "#how_to_mailer":"change hostname with your smtp server address"
+        "#how_to_mailer": "change hostname with your smtp server address"
     },
     "sms": {
         "url": "https://user:mdp@sms.univ.fr/esup-smsuapi/?action=SendSms&phoneNumber=$phoneNumber$&message=$message$",
@@ -144,8 +144,8 @@
         "#body": "",
         "#headers": {}
     },
-	"esupnfc": {
-	  "server_ip": "IP_ESUP-SGC-SERVER"
+    "esupnfc": {
+        "server_ip": "IP_ESUP-SGC-SERVER"
     },
     "trustedProxies": ["127.0.0.1", "loopback", "::1"]
 }
