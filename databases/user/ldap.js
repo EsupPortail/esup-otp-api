@@ -15,7 +15,9 @@ let client;
 export async function initialize() {
     logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ' Initializing ldap connection');
     client = new Client({
-        url: getLdapProperties().uri
+        url: getLdapProperties().uri,
+        timeout: getLdapProperties().timeout,
+        connectTimeout: getLdapProperties().connectTimeout,
     });
     await bindLdapIfNeeded();
     logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ' Ldap connection Initialized');

@@ -26,6 +26,10 @@
     },
     "ldap": {
         "uri": "ldap://127.0.0.1",
+        "#how_to_timeout": "Milliseconds client should let operations live for before timing out (Default: Infinity)",
+        "timeout": 0,
+        "#how_to_connectTimeout": "Milliseconds client should wait before timing out on TCP connections (Default: OS default)",
+        "connectTimeout": 0,
         "baseDn": "dc=univ,dc=fr",
         "adminDn": "cn=admin,dc=univ,dc=fr",
         "password": "changeit",
