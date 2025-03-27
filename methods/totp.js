@@ -18,8 +18,20 @@ export function send_message(user, req, res) {
  * @param req requete HTTP contenant le nom la personne recherchee
  * @param res response HTTP
  */
-export function verify_code(user, req) {
-    return verify_token(req.params.otp, user.totp.secret.base32);
+export async function verify_code(user, req) {
+    if (Date.now() > user.totp.expiry_time_of_last_code_used && verify_token(req.params.otp, user.totp.secret.base32)) {
+        user.totp.expiry_time_of_last_code_used = getCurrentPeriodEnd();
+        await apiDb.save_user(user);
+        return true;
+    }
+    return false;
+}
+
+function getCurrentPeriodEnd() {
+    const now = Date.now();
+    const periodDuration = OTPAuth.TOTP.defaults.period * 1000;
+    const currentPeriodStart = now - (now % periodDuration);
+    return currentPeriodStart + periodDuration;
 }
 
 function verify_token(token, base32_secret) {

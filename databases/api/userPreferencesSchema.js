@@ -72,6 +72,10 @@ export const schema = {
             type: Boolean,
             default: false
         },
+        expiry_time_of_last_code_used: {
+            type: Number,
+            default: 0
+        },
         transports: {
             type: Array,
             default: properties.getEsupProperty('transports')
