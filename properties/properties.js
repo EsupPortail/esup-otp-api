@@ -107,6 +107,10 @@ export function getProperty (property) {
 }
 
 export function getMongoDbUrl() {
-    const { address, db } = getEsupProperty('mongodb');
-    return 'mongodb://' + [address, db].filter(Boolean).join('/');
+    const { address, db, uri } = getEsupProperty('mongodb');
+    if(address) {
+        return 'mongodb://' + [address, db].filter(Boolean).join('/');
+    } else {
+        return uri;
+    }
 }

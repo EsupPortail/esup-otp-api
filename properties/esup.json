@@ -17,8 +17,12 @@
         "allowed_origins": ["https://cas.univ.fr", "https://esup-otp-manager.univ.fr"]
     },
     "mongodb": {
-        "address": "localhost",
-        "db": "test-otp",
+        "#how_to_uri": "see https://www.mongodb.com/docs/manual/reference/connection-string/#connection-string-formats",
+        "#uri_example": "mongodb://user:password@mongodb.example.com:27017/esup-otp-db?authSource=admin",
+        "uri": "mongodb://localhost:27017/test-otp",
+        "#address_and_db_are_DEPRECATED": "use 'uri' instead",
+        "#address": "localhost",
+        "#db": "test-otp",
         "transport": {
             "mail": "mail",
             "sms": "mobile"
