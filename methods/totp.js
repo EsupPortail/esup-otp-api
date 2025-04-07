@@ -91,15 +91,25 @@ export async function autoActivateTotp(user, req, res) {
 }
 
 export async function generate_method_secret(user, req, res) {
-    if(req.query.require_method_validation === 'true') {
+    if (req.query.require_method_validation === 'true' && user.totp.active) {
         user.totp.active = false;
+        logger.log('archive', {
+            message: [
+                {
+                    req,
+                    action: 'deactivate_method',
+                    method: req.params.method,
+                }
+            ]
+        });
     }
     user.totp.secret = generateSecret(user);
     logger.log('archive', {
         message: [
             {
                 req,
-                action: 'generate_secret'
+                action: 'generate_secret',
+                method: req.params.method,
             }
         ]
     });
@@ -138,6 +148,15 @@ export async function user_activate(user, req, res) {
 export async function confirm_user_activate(user, req, res) {
     if (!user.totp.active && req.params.activation_code && verify_token(req.params.activation_code, user.totp.secret.base32)) {
         user.totp.active = true;
+        logger.log('archive', {
+            message: [
+                {
+                    req,
+                    action: 'activate_method',
+                    method: req.params.method,
+                }
+            ]
+        });
         await apiDb.save_user(user);
         res.status(200);
         res.send({
