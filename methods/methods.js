@@ -1,11 +1,4 @@
-import * as bypass from './bypass.js';
-import * as passcode_grid from './passcode_grid.js';
-import * as esupnfc from './esupnfc.js';
-import * as push from './push.js';
-import * as random_code_mail from './random_code_mail.js';
-import * as random_code from './random_code.js';
-import * as totp from './totp.js';
-import * as webauthn from './webauthn.js';
+import * as properties from '../properties/properties.js';
 
 
 /**
@@ -25,12 +18,15 @@ import * as webauthn from './webauthn.js';
  */
 
 /**
- * @type { Array<Method> }
+ * @type { Object.<Method['name']:Method> }
  */
 const methods = {};
 
-for (const method of [bypass, passcode_grid, esupnfc, push, random_code_mail, random_code, totp, webauthn]) {
-    methods[method.name] = method;
+export async function initialize() {
+    for (const methodName in properties.getEsupProperty("methods")) {
+        const method = await import(`./${methodName}.js`);
+        methods[method.name] = method;
+    }
 }
 
 export default methods;

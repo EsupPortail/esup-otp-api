@@ -24,6 +24,7 @@ export function loadFile(dirname, filename) {
 function sortMethods(esup) {
     esup.methods = Object.fromEntries(
         Object.entries(esup.methods)
+            .filter(entry => !entry[0].startsWith("#"))
             .sort((a, b) => getPriority(b) - getPriority(a))
     );
 }
