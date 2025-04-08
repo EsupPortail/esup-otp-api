@@ -130,7 +130,7 @@ export function parse_user(user) {
     const parsed_user = {};
     parsed_user.codeRequired = false;
     parsed_user.waitingFor = false;
-    if (properties.getMethod('totp').activate) {
+    if (properties.getMethod('totp')?.activate) {
         if (user.totp.active) parsed_user.codeRequired = true;
         parsed_user.totp = {
             active: user.totp.active,
@@ -140,27 +140,27 @@ export function parse_user(user) {
         };
     }
 
-    if (properties.getMethod('webauthn').activate) {
+    if (properties.getMethod('webauthn')?.activate) {
         parsed_user.webauthn = {
             active: user.webauthn.active,
             transports: available_transports(user.webauthn.transports, "webauthn")
         };
     }
-    if (properties.getMethod('random_code').activate) {
+    if (properties.getMethod('random_code')?.activate) {
         if (user.random_code.active) parsed_user.codeRequired = true;
         parsed_user.random_code = {
             active: user.random_code.active,
             transports: available_transports(user.random_code.transports, 'random_code')
         };
     }
-    if (properties.getMethod('random_code_mail').activate) {
+    if (properties.getMethod('random_code_mail')?.activate) {
         if (user.random_code_mail.active) parsed_user.codeRequired = true;
         parsed_user.random_code_mail = {
             active: user.random_code_mail.active,
             transports: available_transports(user.random_code_mail.transports, 'random_code_mail')
         };
     }
-    if (properties.getMethod('bypass').activate) {
+    if (properties.getMethod('bypass')?.activate) {
         if (user.bypass.active) parsed_user.codeRequired = true;
         parsed_user.bypass = {
             active: user.bypass.active,
@@ -171,7 +171,7 @@ export function parse_user(user) {
             transports: available_transports(user.bypass.transports, "bypass")
         };
     }
-    if (properties.getMethod('passcode_grid').activate) {
+    if (properties.getMethod('passcode_grid')?.activate) {
         if (user.passcode_grid.active) parsed_user.codeRequired = true;
         parsed_user.passcode_grid = {
             active: user.passcode_grid.active,
@@ -179,11 +179,11 @@ export function parse_user(user) {
             transports: available_transports(user.passcode_grid.transports, "passcode_grid")
         };
     }
-    //if(properties.getMethod('matrix').activate){
+    //if(properties.getMethod('matrix')?.activate){
     //  parsed_user.matrix = user.matrix;
     //}
     // parsed_user.matrix.active = user.matrix.active;
-    if (properties.getMethod('push').activate) {
+    if (properties.getMethod('push')?.activate) {
         if (user.push.active) parsed_user.waitingFor = true;
         parsed_user.push = {
             device: {
@@ -203,7 +203,7 @@ export function parse_user(user) {
             transports: available_transports(user.push.transports, "push")
         };
     }
-    if (properties.getMethod('esupnfc').activate) {
+    if (properties.getMethod('esupnfc')?.activate) {
         // autologin
         if (user.esupnfc.active) parsed_user.waitingFor = true;
         parsed_user.esupnfc = {
