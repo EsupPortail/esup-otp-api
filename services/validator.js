@@ -2,34 +2,24 @@ import errors from 'restify-errors';
 import * as properties from '../properties/properties.js';
 import * as utils from '../services/utils.js';
 import * as apiDb from '../databases/api/mongodb.js';
-import { getInstance } from '../services/logger.js'; 
+import { getInstance } from '../services/logger.js';
 
 const logger = getInstance();
 
-export function check_hash(req, res, next) {
-    const tenant = req.headers['x-tenant'];
-    if(tenant) {
-        apiDb.find_tenant_by_name(tenant).then(dbTenant => {
-            if (!dbTenant) {
-                return next(new errors.BadRequestError());
-            }
-            if (check_hash_socket(req.params.uid, req.params.hash, dbTenant.users_secret)) {
-                return next();
-            } else {
-                return next(new errors.ForbiddenError());
-            }
-        }).catch(e => {
-            logger.error(e);
-            logger.error(e.cause);
-            logger.error(e.message);
-            
-            return next(new errors.InternalError());
-        });
-        return next();
-    } else if(check_hash_socket(req.params.uid, req.params.hash, properties.getEsupProperty('users_secret'))){
-		return next();
-	}
-    return next(new errors.ForbiddenError());
+export async function check_hash(req, res) {
+    const tenant = req.header('x-tenant');
+    let users_secret = properties.getEsupProperty('users_secret');
+    if (tenant) {
+        const dbTenant = await apiDb.find_tenant_by_name(tenant);
+        if (!dbTenant) {
+            throw new errors.BadRequestError();
+        }
+        users_secret = dbTenant.users_secret;
+    }
+
+    if (!check_hash_socket(req.params.uid, req.params.hash, users_secret)) {
+        throw new errors.ForbiddenError();
+    }
 }
 
 export function check_hash_socket(uid, hash, users_secret) {
@@ -39,7 +29,7 @@ export function check_hash_socket(uid, hash, users_secret) {
 
 export function check_api_password(req, res, next) {
     const tenant = req.headers['x-tenant'];
-    if(tenant) {
+    if (tenant) {
         return check_api_password_for_tenant(req, res, next);
     }
     const reqApiPwd = req.params.api_password || utils.get_auth_bearer(req.headers);
@@ -66,10 +56,10 @@ export function check_api_password_for_tenant(req, res, next) {
         logger.error(e);
         logger.error(e.cause);
         logger.error(e.message);
-        
+
         return next(new errors.InternalError());
     });
-    
+
 }
 
 export function check_admin_password(req, res, next) {
