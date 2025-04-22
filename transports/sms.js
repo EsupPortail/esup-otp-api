@@ -57,7 +57,7 @@ export async function send_message(req, opts, res) {
             throw new errors.EsupOtpApiError(200, error.message);
         }
 
-        console.log("Message will be sent to " + num + ", with the message: " + opts.message);
+        logger.info("Message will be sent to " + num + ", with the message: " + opts.message);
         res?.send({
             "code": sms_response.statusCode === 200 ? "Ok" : "KO",
             "message": await sms_response.body.json(),
