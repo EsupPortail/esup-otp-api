@@ -8,6 +8,7 @@ let io;
 import * as properties from '../properties/properties.js';
 import * as validator from '../services/validator.js';
 import * as utils from '../services/utils.js';
+import { getInstance } from '../services/logger.js'; const logger = getInstance();
 let managerSocket;
 
 import * as socket_io from 'socket.io';
@@ -27,7 +28,7 @@ function initialize() {
         if(socket.handshake.query.app=="manager"){
             const secret = socket.handshake.query.secret || utils.get_auth_bearer(socket.handshake.headers)
             if(secret != properties.getEsupProperty('api_password')) { 
-                console.error("denying manager app with wrong password");
+                logger.error("denying manager app with wrong password");
                 socket.disconnect('Forbidden');
             }
             managerSocket = socket.id;

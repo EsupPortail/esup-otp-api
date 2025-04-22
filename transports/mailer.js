@@ -58,7 +58,7 @@ export async function send_message(req, opts, res) {
         // send mail with defined transport object
         return transporter.sendMail(mailOptions)
             .then(() => {
-                console.log("Message sent to " + mail + " with the message: " + opts.message);
+                logger.info("Message sent to " + mail + " with the message: " + opts.message);
                 res?.send({
                     "code": "Ok",
                     "message": "Message sent",
