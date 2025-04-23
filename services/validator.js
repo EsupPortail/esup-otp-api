@@ -27,39 +27,20 @@ export function check_hash_socket(uid, hash, users_secret) {
     return hashes.includes(hash);
 }
 
-export function check_api_password(req, res, next) {
+export async function check_api_password(req, res) {
     const tenant = req.header('x-tenant');
+    let api_password = properties.getEsupProperty('api_password');
     if (tenant) {
-        return check_api_password_for_tenant(req, res, next);
-    }
-    const reqApiPwd = req.params.api_password || utils.get_auth_bearer(req.headers);
-    if (reqApiPwd == properties.getEsupProperty('api_password')) return next();
-    else return next(new errors.ForbiddenError());
-}
-
-export function check_api_password_for_tenant(req, res, next) {
-    const tenant = req.header('x-tenant');
-    if (!tenant) {
-        return next(new errors.BadRequestError());
-    }
-    const reqApiPwd = req.params.api_password || utils.get_auth_bearer(req.headers);
-    apiDb.find_tenant_by_name(tenant).then(dbTenant => {
+        const dbTenant = await apiDb.find_tenant_by_name(tenant);
         if (!dbTenant) {
-            return next(new errors.BadRequestError());
+            throw new errors.BadRequestError();
         }
-        if (reqApiPwd == dbTenant.api_password) {
-            return next();
-        } else {
-            return next(new errors.ForbiddenError());
-        }
-    }).catch(e => {
-        logger.error(e);
-        logger.error(e.cause);
-        logger.error(e.message);
-
-        return next(new errors.InternalError());
-    });
-
+        api_password = dbTenant.api_password;
+    }
+    const reqApiPwd = req.params.api_password || utils.get_auth_bearer(req.headers);
+    if (reqApiPwd != api_password) {
+        throw new errors.ForbiddenError();
+    }
 }
 
 export function check_admin_password(req, res, next) {
