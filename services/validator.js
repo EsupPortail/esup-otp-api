@@ -28,7 +28,7 @@ export function check_hash_socket(uid, hash, users_secret) {
 }
 
 export function check_api_password(req, res, next) {
-    const tenant = req.headers['x-tenant'];
+    const tenant = req.header('x-tenant');
     if (tenant) {
         return check_api_password_for_tenant(req, res, next);
     }
@@ -38,7 +38,7 @@ export function check_api_password(req, res, next) {
 }
 
 export function check_api_password_for_tenant(req, res, next) {
-    const tenant = req.headers['x-tenant'];
+    const tenant = req.header('x-tenant');
     if (!tenant) {
         return next(new errors.BadRequestError());
     }

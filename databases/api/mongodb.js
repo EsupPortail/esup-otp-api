@@ -149,7 +149,7 @@ function generateSecret() {
  * @param res response HTTP
  */
 export async function find_user(req, res) {
-    const tenant = req.headers['x-tenant'];
+    const tenant = req.header('x-tenant');
     const userPreferences = await UserPreferences.findOne({ 'uid': req.params.uid, 'tenant': tenant });
     if (userPreferences) {
         return userPreferences;
@@ -280,7 +280,7 @@ function available_transports(userTransports, method) {
 
 
 export async function get_uids(req, res) {
-    const tenant = req.headers['x-tenant'];
+    const tenant = req.header('x-tenant');
     const data = await UserPreferences.find({ 'tenant': tenant }, { uid: 1 });
     const result = data.map((uid) => uid.uid);
 
