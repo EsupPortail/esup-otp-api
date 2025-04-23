@@ -133,8 +133,8 @@ export async function send_message(user, req, res) {
 }
 
 function getText(req) {
-    const ip = req.headers['x-real-ip'] || req.connection.remoteAddress;
-    logger.debug("x-real-ip :" + req.headers['x-real-ip']);
+    const ip = req.header('x-real-ip') || req.connection.remoteAddress;
+    logger.debug("x-real-ip :" + req.header('x-real-ip'));
     logger.debug("Client ip is :" + ip);
     const geo = ip_location.lookup(ip);
     logger.debug("Client geoip is :" + JSON.stringify(geo));
@@ -223,15 +223,15 @@ export async function user_activate(user, req, res) {
 }
 
 function getUrl(req) {
-    const http = req.headers["x-forwarded-proto"] || 'http';
-    const host = req.headers["x-forwarded-host"]?.replace(/,.*/, '') || req.headers.host;
+    const http = req.header("x-forwarded-proto") || 'http';
+    const host = req.header("x-forwarded-host")?.replace(/,.*/, '') || req.header('host');
     return http + '://' + host;
 }
 // generation of tokenSecret sent to the client, edited by mbdeme on June 2020
 
 export async function confirm_user_activate(user, req, res) {
     if (user.push.activation_code != null && user.push.activation_fail < properties.getMethod('push').nbMaxFails && !user.push.active && req.params.activation_code == user.push.activation_code && (utils.isGcmIdWellFormed(req.params.gcm_id) || properties.getMethod('push').pending)) {
-        const userAgent = req.headers['user-agent'];
+        const userAgent = req.header('user-agent');
         const deviceInfosFromUserAgent = detector.detect(userAgent);
 
         const token_secret = utils.generate_string_code(128);

@@ -66,12 +66,14 @@ const logger = winston.createLogger({
                             delete message.req;
                             message.uid ||= req.params.uid;
                             message.requestIp ||= getIpAddr(req);
-                            if (req.headers['x-client-ip']) {
-                                message.clientIp ||= req.headers['x-client-ip'];
+                            const clientIp = req.header('x-client-ip');
+                            if (clientIp) {
+                                message.clientIp ||= clientIp;
                             }
-                            message.userAgent ||= req.headers['user-agent'];
-                            if (req.headers['client-user-agent']) {
-                                message.clientUserAgent ||= req.headers['client-user-agent'];
+                            message.userAgent ||= req.header('user-agent');
+                            const clientUserAgent = req.header('client-user-agent')
+                            if (clientUserAgent) {
+                                message.clientUserAgent ||= clientUserAgent;
                             }
                             if (req.query.managerUser) {
                                 message.managerUser ||= req.query.managerUser;
