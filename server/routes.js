@@ -36,7 +36,8 @@ function initializeUnprotectedRoutes(server) {
     logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ' Initializing "unprotected" routes');
     return Promise.all([
         initializeSocketIoRoute(server),
-        initializeOpenapiRoutes(server)
+        initializeOpenapiRoutes(server),
+        initializeStatusRoute(server)
     ]);
 }
 
@@ -66,6 +67,18 @@ async function initializeOpenapiRoutes(server) {
     server.get("/openapi.json", (req, res, next) => res.json(openapiDocument));
     server.get("/" + swaggerUiBaseURL + "/*", ...swaggerUi.serve);
     server.get('/' + swaggerUiBaseURL, swaggerUi.setup(openapiDocument, { baseURL: swaggerUiBaseURL }));
+}
+
+/**
+ * @param { restify.Server } server
+ */
+async function initializeStatusRoute(server) {
+    server.get("/status", function(req, res, next) {
+        res.status(200);
+        res.send({
+           code: 'Ok',
+       });
+    });
 }
 
 /**
