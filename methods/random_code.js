@@ -7,6 +7,16 @@ import { apiDb } from '../controllers/api.js';
 export const name = "random_code";
 
 export async function send_message(user, req, res) {
+    const lastSendTime = last_send_time(user);
+    const oneMinuteAgo = Date.now() - 1 * 60 * 1000;
+    // if last send is more recent than one minute ago
+    if (lastSendTime > oneMinuteAgo) {
+        res.header("Retry-After", Math.ceil((lastSendTime - oneMinuteAgo) / 1000));
+        res.status(200); // To avoid impacting esup-otp-cas, return a 200 instead of a 429
+        res.send({ code: 'Ok' });
+        return;
+    }
+    
     const new_otp = user.random_code;
 
     const code_length = properties.getMethod('random_code').code_length;
@@ -19,6 +29,13 @@ export async function send_message(user, req, res) {
     user.random_code = new_otp;
     await apiDb.save_user(user);
     return api_controller.transport_code(new_otp.code, req, res);
+}
+
+function last_send_time(user) {
+    if(user.random_code.validity_time) {
+        return user.random_code.validity_time - properties.getMethod('random_code').validity_time * 60 * 1000;
+    }
+    return 0;
 }
 
 /**
