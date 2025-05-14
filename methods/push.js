@@ -13,10 +13,11 @@ import admin from "firebase-admin";
 import { HttpsProxyAgent } from "https-proxy-agent";
 import * as sockets from '../server/sockets.js';
 
-process.env.ILA_FIELDS = "city";
-process.env.ILA_LANGUAGE = "fr";
-process.env.ILA_SILENT = true;
-const { lookup } = await import('ip-location-api');
+/** 
+ * @type {import('ip-location-api').lookup} 
+ */
+let lookup;
+
 import DeviceDetector from "node-device-detector";
 import { autoActivateTotpReady } from './totp.js';
 
@@ -40,9 +41,20 @@ function initFirebaseAdmin() {
 
     logger.info("firebase-admin initialized");
 
+    initIpLocation()
+        .then(() => logger.info("ip-location-api initialized"))
+        .catch(err => logger.error(err));
+
     return function sendWithFirebaseAdmin(content) {
         return admin.messaging().send(content);
     }
+}
+
+async function initIpLocation() {
+    process.env.ILA_FIELDS = "city";
+    process.env.ILA_LANGUAGE = "fr";
+    process.env.ILA_SILENT = true;
+    ({ lookup } = await import('ip-location-api'));
 }
 
 export const name = "push";
@@ -130,7 +142,7 @@ function getText(req) {
     const ip = req.header('x-real-ip') || req.connection.remoteAddress;
     logger.debug("x-real-ip :" + req.header('x-real-ip'));
     logger.debug("Client ip is :" + ip);
-    const geo = lookup(ip);
+    const geo = lookup?.(ip);
     logger.debug("Client geoip is :" + JSON.stringify(geo));
     const city = geo?.city;
 
