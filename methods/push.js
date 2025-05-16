@@ -87,7 +87,6 @@ export async function send_message(user, req, res) {
             },
             android: {
                 notification: {
-                    clickAction: "com.adobe.phonegap.push.background.MESSAGING_EVENT"
                 }
             },
             data: {
@@ -365,7 +364,6 @@ async function alert_deactivate(user) {
         },
         android: {
             notification: {
-                clickAction: "com.adobe.phonegap.push.background.MESSAGING_EVENT"
             }
         },
         data: {
