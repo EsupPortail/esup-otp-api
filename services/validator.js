@@ -7,14 +7,18 @@ import { getInstance } from '../services/logger.js';
 const logger = getInstance();
 
 export async function check_hash(req, res) {
+    let users_secret;
     const tenant = req.header('x-tenant');
-    let users_secret = properties.getEsupProperty('users_secret');
     if (tenant) {
+        // use tenant-specific users secret
         const dbTenant = await apiDb.find_tenant_by_name(tenant);
         if (!dbTenant) {
             throw new errors.BadRequestError();
         }
         users_secret = dbTenant.users_secret;
+    } else {
+        // use global users secret
+        users_secret = properties.getEsupProperty('users_secret');
     }
 
     if (!check_hash_socket(req.params.uid, req.params.hash, users_secret)) {
@@ -28,15 +32,20 @@ export function check_hash_socket(uid, hash, users_secret) {
 }
 
 export async function check_api_password(req, res) {
+    let api_password;
     const tenant = req.header('x-tenant');
-    let api_password = properties.getEsupProperty('api_password');
     if (tenant) {
+        // use tenant-specific API password
         const dbTenant = await apiDb.find_tenant_by_name(tenant);
         if (!dbTenant) {
             throw new errors.BadRequestError();
         }
         api_password = dbTenant.api_password;
+    } else {
+        // use global API password
+        api_password = properties.getEsupProperty('api_password');
     }
+
     const reqApiPwd = req.params.api_password || utils.get_auth_bearer(req.headers);
     if (reqApiPwd != api_password) {
         throw new errors.ForbiddenError();
