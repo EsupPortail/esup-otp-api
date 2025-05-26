@@ -13,7 +13,7 @@ export function getIpAddr(req) {
 export function get_hash(uid, users_secret) {
     const d = new Date();
     const d2 = new Date();
-    
+
     const present_salt=d.getUTCDate()+d.getUTCHours().toString();
     //calcul de la date - 1h (3600000 millisecondes)
     d2.setTime(d.getTime()-3600000);
@@ -65,8 +65,8 @@ export function generate_string_code(code_length) {
     return crypto.randomBytes(code_length / 2).toString('hex');
 }
 export function generate_digit_code(code_length) {
-	const max = Math.pow(10, code_length);
-	const intValue = crypto.randomInt(max);
+    const max = Math.pow(10, code_length);
+    const intValue = crypto.randomInt(max);
     return intValue.toString().padStart(code_length, '0');
 }
 
@@ -95,7 +95,7 @@ const smsRegex = new RegExp("^((0[67](([.]|[-]|[ ])?[0-9]){8})|((00|[+])(([.]|[-
 // eslint-disable-next-line no-useless-escape
 const defaultRegex = new RegExp(/^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/);
 export function check_transport_validity(transport, value){
-	const reg = (transport == 'sms') ? smsRegex : defaultRegex;
+    const reg = (transport == 'sms') ? smsRegex : defaultRegex;
     return reg.test(value);
 }
 

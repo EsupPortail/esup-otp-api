@@ -57,14 +57,14 @@ const get = 'get', post = "post", put = 'put', del = 'del';
 
 describe('Esup otp api', async () => {
     let mongoMemoryServer;
-    
+
     before(async () => {
         // use in memory mongodb
         properties.setEsupProperty("apiDb", "mongodb");
         properties.setEsupProperty("userDb", "mongodb");
-    
+
         mongoMemoryServer = await MongoMemoryServer.create({ instance: { dbName: "test-otp" } });
-    
+
         await apiDb.initialize(mongoMemoryServer.getUri());
         await userDb.initialize(mongoMemoryServer.getUri());
         await api_controller.initialize(apiDb);

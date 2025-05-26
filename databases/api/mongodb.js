@@ -111,7 +111,7 @@ function initiatilize_tenant_model(connection) {
 
                 // Generate users_secret secret
                 tenant.users_secret = generateSecret();
-    
+
                 init_tenant(tenant).then(created_tenant => {
                     logger.debug(fileUtils.getFileNameFromUrl(import.meta.url) + ` Tenant ${created_tenant.name} created`);
                     logger.trace(fileUtils.getFileNameFromUrl(import.meta.url) + ` Tenant ${created_tenant.name} api_password : ${created_tenant.api_password}`);

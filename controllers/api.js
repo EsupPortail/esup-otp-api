@@ -601,12 +601,12 @@ export async function get_tenant(req, res) {
             api_password: tenant.api_password,
             users_secret: tenant.users_secret
         };
-    
+
         res.send(200, response);
     } else {
         res.send(404);
     }
-    
+
 }
 
 export async function create_tenant(req, res) {

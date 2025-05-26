@@ -17,7 +17,7 @@ const schema = {
         "#how_to_relying_party": "The 'id' is a domain, identifying the 'server', the party that manages the authentication. It's value is important, unlike the name, which is just a displayable string.",
         relying_party: {
             type: Object,
-            
+
             name: {
                 type: String   
             },

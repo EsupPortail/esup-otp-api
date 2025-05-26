@@ -253,7 +253,7 @@ export async function verify_webauthn_auth(user, req, res) {
 
     const response = req.body.response;
     const credID = req.body.credID;
-    
+
     const { index, authenticator } = findAuthenticatorsById(user, credID, true, "Please use a valid, previously-registered authenticator.");
 
     const uint8a = (base64url_of_buffer) => new Uint8Array(utils.base64URLStringToBuffer(base64url_of_buffer));
