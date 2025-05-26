@@ -12,10 +12,10 @@ const logger = getInstance();
 
 export async function initialize(dbUrl) {
     const connection = await mongoose.createConnection(dbUrl || properties.getMongoDbUrl()).asPromise();
-    await initiatilize_tenant_model(connection);
+    await initialize_tenant_model(connection);
     return Promise.all([
-        initiatilize_api_preferences(connection),
-        initiatilize_user_model(connection),
+        initialize_api_preferences(connection),
+        initialize_user_model(connection),
     ]);
 }
 
@@ -29,7 +29,7 @@ let ApiPreferences;
 /**
  * @param { mongoose.Connection } connection
  */
-async function initiatilize_api_preferences(connection) {
+async function initialize_api_preferences(connection) {
     ApiPreferences = connection.model('ApiPreferences', ApiPreferencesSchema, 'ApiPreferences');
 
     const existingApiPrefsData = await ApiPreferences.findOne({}).exec();
@@ -82,7 +82,7 @@ let UserPreferences;
 /**
  * @param { mongoose.Connection } connection
  */
-async function initiatilize_user_model(connection) {
+async function initialize_user_model(connection) {
     UserPreferences = connection.model('UserPreferences', UserPreferencesSchema, 'UserPreferences');
 }
 
@@ -95,7 +95,7 @@ let Tenants;
 /**
  * @param { mongoose.Connection } connection
  */
-function initiatilize_tenant_model(connection) {
+function initialize_tenant_model(connection) {
     Tenants = connection.model('Tenants', TenantSchema, 'Tenants');
 
     logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + " Start initializing tenants");

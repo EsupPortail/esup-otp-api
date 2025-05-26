@@ -7,7 +7,7 @@ import UserSchema from './userSchema.js';
 
 export async function initialize(dbUrl) {
     const connection = await mongoose.createConnection(dbUrl || properties.getMongoDbUrl()).asPromise();
-    initiatilize_user_model(connection);
+    initialize_user_model(connection);
 }
 
 /** 
@@ -19,7 +19,7 @@ let User;
 /**
  * @param { mongoose.Connection } connection
  */
-function initiatilize_user_model(connection) {
+function initialize_user_model(connection) {
     User = connection.model('User', UserSchema, 'User');
 }
 
