@@ -20,6 +20,122 @@ import * as transports from '../transports/transports.js';
 let uid;
 let userCounter = 0;
 
+// test-specific configuration, without multi-tenant support
+const config = {
+    "auto_create_user": true,
+    "casVhost": "cas.univ.fr",
+    "api_password": "api_password",
+    "users_secret": "users_secret",
+    "apiDb": "mongodb",
+    "userDb": "mongodb",
+    "mongodb": {
+        "uri": "mongodb://localhost:27017/test-otp",
+        "transport": {
+            "mail": "mail",
+            "sms": "mobile"
+        }
+    },
+    "methods": {
+        "totp": {
+            "activate": true,
+            "priority": 5,
+            "autoActivate": true,
+            "name": "Esup Auth",
+            "transports": []
+        },
+        "random_code": {
+            "activate": true,
+            "priority": 5,
+            "validity_time": 15,
+            "code_type": "digit",
+            "code_length": 6,
+            "transports": ["sms"]
+        },
+        "random_code_mail": {
+            "activate": true,
+            "priority": 5,
+            "validity_time": 30,
+            "code_type": "digit",
+            "code_length": 6,
+            "transports": ["mail"]
+        },
+        "bypass": {
+            "activate": true,
+            "priority": 5,
+            "codes_number": 10,
+            "code_type": "digit",
+            "code_length": 6,
+            "transports": []
+        },
+        "passcode_grid": {
+            "activate": true,
+            "priority": 5,
+            "lines": 8,
+            "cols": 8,
+            "code_type": "digit",
+            "code_length": 6,
+            "validity_time": 3,
+            "transports": []
+        },
+        "push": {
+            "serviceAccount": {
+                "type": "service_account",
+                "project_id": "esup-otp-276500",
+                "private_key_id": "",
+                "private_key": "",
+                "client_email": "",
+                "client_id": "",
+                "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                "token_uri": "https://oauth2.googleapis.com/token",
+                "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+                "client_x509_cert_url": "",
+                "universe_domain": "googleapis.com"
+            },
+            "activate": true,
+            "priority": 5,
+            "validity_time": 3,
+            "trustGcm_id": false,
+            "notification": true,
+            "pending": true,
+            "title": "Esup Auth",
+            "body": "Demande de connexion à votre compte",
+            "text1": "Demande de connexion à votre compte",
+            "text2": " à proximité de $city",
+            "nbMaxFails": 3,
+            "transports": ["push"]
+        },
+        "esupnfc": {
+            "activate": false,
+            "priority": 5,
+            "validity_time": 3,
+            "transports": []
+        },
+        "webauthn": {
+            "activate": true,
+            "priority": 5,
+            "transports": []
+        }
+    },
+    "transports": ["sms", "mail", "push"],
+    "mailer": {
+        "sender_mail": "auth-api",
+        "sender_name": "Université",
+        "port": 25,
+        "hostname": "mail.univ.fr",
+        "use_proxy": false,
+        "use_templates": false,
+        "accept_self_signed_certificate": false,
+    },
+    "sms": {
+        "url": "https://user:mdp@sms.univ.fr/esup-smsuapi/?action=SendSms&phoneNumber=$phoneNumber$&message=$message$",
+        "method": "GET",
+    },
+    "esupnfc": {
+        "server_ip": "IP_ESUP-SGC-SERVER"
+    },
+    "trustedProxies": ["127.0.0.1", "loopback", "::1"]
+};
+
 async function getUser() {
     return userDb_controller.userDb.find_user(uid);
 }
@@ -59,10 +175,9 @@ describe('Esup otp api', async () => {
     let mongoMemoryServer;
 
     before(async () => {
-        // use in memory mongodb
-        properties.setEsupProperty("apiDb", "mongodb");
-        properties.setEsupProperty("userDb", "mongodb");
+        properties.setEsup(config);
 
+        // use in memory mongodb
         mongoMemoryServer = await MongoMemoryServer.create({ instance: { dbName: "test-otp" } });
 
         await apiDb.initialize(mongoMemoryServer.getUri());
@@ -93,12 +208,12 @@ describe('Esup otp api', async () => {
         await api_controller.remove_user(uid);
     });
 
-    await test('get methods with good ApiPwd', async () => {
-        await request(get, "/protected/methods", { setApiPwd: true }, properties.getEsupProperty('api_password'))
+    await test('get methods with correct global API password', async () => {
+        await request(get, "/protected/methods", { setApiPwd: true }, config.api_password)
             .expect(200);
     });
 
-    await test('get methods with wrong ApiPwd', async () => {
+    await test('get methods with wrong global API password', async () => {
         await request(get, "/protected/methods", { setApiPwd: true }, "toto")
             .expect(403)
             .then(res => {
