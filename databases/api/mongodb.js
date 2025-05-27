@@ -110,10 +110,10 @@ function initialize_tenant_model(connection) {
             if (existingTenant === undefined || existingTenant === null) {
                 logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ` Start configuration of tenant ${tenant.name}`);
                 // Generate api_password secret
-                tenant.api_password = generateSecret();
+                tenant.api_password ??= generateSecret();
 
                 // Generate users_secret secret
-                tenant.users_secret = generateSecret();
+                tenant.users_secret ??= generateSecret();
 
                 init_tenant(tenant).then(created_tenant => {
                     logger.debug(fileUtils.getFileNameFromUrl(import.meta.url) + ` Tenant ${created_tenant.name} created`);
