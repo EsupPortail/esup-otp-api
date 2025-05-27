@@ -3,18 +3,19 @@
     "casVhost": "cas.univ.fr",
     "proxyUrl": "",
     "#how_to_proxyUrl": "If set, API will use this proxy configurations, usually proxyURl must be like : http://username:password@univ.fr:port may be necessary for sms and mailer services",
+    "#how_to_admin_password": "only needed for multi-tenants support",
     "admin_password": "changeit",
-    "#how_to_api_password": "Deprecated, use api_password in Tenants collection",
+    "#how_to_api_password": "will be ignored if multi-tenants support is used",
     "api_password": "changeit",
-    "#how_to_users_secret": "Deprecated, use users_secret in Tenants collection",
+    "#how_to_users_secret": "will be ignored if multi-tenants support is used",
     "users_secret": "changeit",
     "apiDb": "mongodb",
     "userDb": "mongodb",
     "tenants": [
         {
             "name": "changeit",
-            "#api_password": "At startup, if tenant not exist in mongodb, api_password was generated",
-            "#users_secret": "At startup, if tenant not exist in mongodb, users_secret was generated",
+            "#api_password": "will be automatically generated at startup if tenant does not exist in mongodb",
+            "#users_secret": " will be automatically generated at startup if tenant does not exist in mongodb",
             "webauthn": {
                 "#how_to_relying_party": "The 'id' is a domain, identifying the 'server', the party that manages the authentication. It's value is important, unlike the name, which is just a displayable string.",
                 "relying_party": {
