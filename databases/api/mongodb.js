@@ -12,7 +12,10 @@ const logger = getInstance();
 
 export async function initialize(dbUrl) {
     const connection = await mongoose.createConnection(dbUrl || properties.getMongoDbUrl()).asPromise();
-    await initialize_tenant_model(connection);
+    const tenants = properties.getEsupProperty('tenants');
+    if (tenants && tenants.length) {
+        await initialize_tenant_model(connection);
+    }
     return Promise.all([
         initialize_api_preferences(connection),
         initialize_user_model(connection),
