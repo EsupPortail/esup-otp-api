@@ -150,7 +150,7 @@ async function getUserPreferences() {
  * 
  * @returns supertest.Test
  */
-function request(httpMethod, uri, { appendHash, setApiPwd } = {}, customApiPwd) {
+function request(httpMethod, uri, { appendHash, password } = {}) {
     if (appendHash) {
         const hash = "/" + utils.get_hash(uid)[1];
         if (uri.includes('?')) { // if 
@@ -164,8 +164,8 @@ function request(httpMethod, uri, { appendHash, setApiPwd } = {}, customApiPwd) 
      * @type supertest.Test
      */
     const request = supertest(server.server)[httpMethod](uri);
-    if (setApiPwd) {
-        request.auth(customApiPwd || properties.getEsupProperty('api_password'), { type: 'bearer' });
+    if (password) {
+        request.auth(password, { type: 'bearer' });
     }
     return request;
 }
@@ -209,12 +209,12 @@ describe('Esup otp api', async () => {
     });
 
     await test('get methods with correct global API password', async () => {
-        await request(get, "/protected/methods", { setApiPwd: true }, config.api_password)
+        await request(get, "/protected/methods", { password: config.api_password })
             .expect(200);
     });
 
     await test('get methods with wrong global API password', async () => {
-        await request(get, "/protected/methods", { setApiPwd: true }, "toto")
+        await request(get, "/protected/methods", { password: "toto" })
             .expect(403)
             .then(res => {
                 assert.equal(res.body.code, 'Forbidden');
@@ -225,7 +225,7 @@ describe('Esup otp api', async () => {
         try {
             await userDb_controller.create_user(uid);
             await api_controller.create_user(uid);
-            await request(get, "/protected/users/" + uid, { setApiPwd: true })
+            await request(get, "/protected/users/" + uid, { password: config.api_password })
                 .expect(200);
         } catch (e) {
             console.error(e);
@@ -234,14 +234,14 @@ describe('Esup otp api', async () => {
     });
 
     await test('get unknown user with auto_create', async () => {
-        await request(get, "/protected/users/" + uid, { setApiPwd: true })
+        await request(get, "/protected/users/" + uid, { password: config.api_password })
             .expect(200);
     });
 
     await test('get unknown user without auto_create', async () => {
         properties.setEsupProperty('auto_create_user', false);
 
-        await request(get, "/protected/users/" + uid, { setApiPwd: true })
+        await request(get, "/protected/users/" + uid, { password: config.api_password })
             .expect(404, {
                 code: 'Error',
                 message: properties.getMessage('error', 'user_not_found')
@@ -263,7 +263,7 @@ describe('Esup otp api', async () => {
     });
 
     await test('get test_user totp method generate secret', async () => {
-        await request(post, "/protected/users/" + uid + "/methods/totp/secret", { setApiPwd: true })
+        await request(post, "/protected/users/" + uid + "/methods/totp/secret", { password: config.api_password })
             .expect(200)
             .then(res => {
                 assert.equal(res.body.code, "Ok");
@@ -276,14 +276,14 @@ describe('Esup otp api', async () => {
         const uri = '/protected/users/' + uid + '/methods/' + method + '/secret/';
 
         if (properties.getMethodProperty(method, 'activate')) {
-            await request(post, uri, { setApiPwd: true })
+            await request(post, uri, { password: config.api_password })
                 .expect(200)
                 .then(res => {
                     assert.equal(res.body.code, "Ok");
                     assert.equal(res.body.codes.length, properties.getMethodProperty(method, 'codes_number'));
                 });
         } else {
-            await request(post, uri, { setApiPwd: true })
+            await request(post, uri, { password: config.api_password })
                 .expect(404, {
                     code: 'Error',
                     message: properties.getMessage('error', 'method_not_found')
@@ -297,43 +297,43 @@ describe('Esup otp api', async () => {
         const phoneNumber = '0606060606';
 
         before(async () => {
-            await request(put, "/protected/users/" + uid + "/transports/" + transport + "/" + phoneNumber, { setApiPwd: true })
+            await request(put, "/protected/users/" + uid + "/transports/" + transport + "/" + phoneNumber, { password: config.api_password })
                 .expect(200);
 
             assert.equal(userUtils.getTransport(await getUser(), transport), phoneNumber);
         });
 
         await describe('activate_method_admin', async () => {
-            await request(put, "/admin/methods/" + method + "/deactivate", { setApiPwd: true })
+            await request(put, "/admin/methods/" + method + "/deactivate", { password: config.api_password })
                 .expect(200);
             assert(!properties.getMethodProperty(method, 'activate'));
 
-            await request(put, "/protected/users/" + uid + "/methods/" + method + "/activate", { setApiPwd: true })
+            await request(put, "/protected/users/" + uid + "/methods/" + method + "/activate", { password: config.api_password })
                 .expect(404, {
                     code: 'Error',
                     message: properties.getMessage('error', 'method_not_found')
                 });
 
-            await request(put, "/admin/methods/" + method + "/activate", { setApiPwd: true })
+            await request(put, "/admin/methods/" + method + "/activate", { password: config.api_password })
                 .expect(200);
             assert(properties.getMethodProperty(method, 'activate'));
 
-            await request(put, "/protected/users/" + uid + "/methods/" + method + "/activate", { setApiPwd: true })
+            await request(put, "/protected/users/" + uid + "/methods/" + method + "/activate", { password: config.api_password })
                 .expect(200);
         });
 
         await describe('activate_method_transport', async () => {
-            await request(put, "/admin/methods/" + method + "/transports/" + transport + "/deactivate", { setApiPwd: true })
+            await request(put, "/admin/methods/" + method + "/transports/" + transport + "/deactivate", { password: config.api_password })
                 .expect(200);
             assert(!properties.containsMethodTransport(method, transport));
 
-            await request(put, "/admin/methods/" + method + "/transports/" + transport + "/activate", { setApiPwd: true })
+            await request(put, "/admin/methods/" + method + "/transports/" + transport + "/activate", { password: config.api_password })
                 .expect(200);
             assert(properties.containsMethodTransport(method, transport));
         });
 
         await describe('activate_method', async () => {
-            await request(put, "/protected/users/" + uid + "/methods/" + method + "/deactivate", { setApiPwd: true })
+            await request(put, "/protected/users/" + uid + "/methods/" + method + "/deactivate", { password: config.api_password })
                 .expect(200);
             await request(get, "/users/" + uid, { appendHash: true })
                 .expect(200)
@@ -341,7 +341,7 @@ describe('Esup otp api', async () => {
                     assert(!res.body.user.methods[method].active);
                 });
 
-            await request(put, "/protected/users/" + uid + "/methods/" + method + "/activate", { setApiPwd: true })
+            await request(put, "/protected/users/" + uid + "/methods/" + method + "/activate", { password: config.api_password })
                 .expect(200);
             await request(get, "/users/" + uid, { appendHash: true })
                 .expect(200)
@@ -378,7 +378,7 @@ describe('Esup otp api', async () => {
                 wrongCode = utils.generate_code_of_type(code_length, code_type);
             } while (code == wrongCode);
 
-            await request(post, "/protected/users/" + uid + "/" + wrongCode, { setApiPwd: true })
+            await request(post, "/protected/users/" + uid + "/" + wrongCode, { password: config.api_password })
                 .expect(401, {
                     code: 'Error',
                     message: properties.getMessage('error', 'invalid_credentials')
@@ -386,7 +386,7 @@ describe('Esup otp api', async () => {
         });
 
         await describe('test verify_code', async () => {
-            await request(post, "/protected/users/" + uid + "/" + code, { setApiPwd: true })
+            await request(post, "/protected/users/" + uid + "/" + code, { password: config.api_password })
                 .expect(200)
                 .then(res => {
                     assert.equal(res.body.code, 'Ok');
@@ -394,11 +394,11 @@ describe('Esup otp api', async () => {
         });
 
         await describe('deactive', async () => {
-            await request(put, "/protected/users/" + uid + "/methods/" + method + "/deactivate", { setApiPwd: true })
+            await request(put, "/protected/users/" + uid + "/methods/" + method + "/deactivate", { password: config.api_password })
                 .expect(200);
 
             // get_activate_methods
-            await request(get, "/admin/users/" + uid + "/methods", { setApiPwd: true })
+            await request(get, "/admin/users/" + uid + "/methods", { password: config.api_password })
                 .expect(200)
                 .then(res => {
                     assert(!res.body.methods[method]);
