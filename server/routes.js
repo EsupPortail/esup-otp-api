@@ -124,9 +124,9 @@ async function initializeNfcRoutes(server) {
  */
 async function initializeWebAuthnRoutes(server) {
     // MANAGER
-    server.post("/protected/users/:uid/methods/:method/confirm_activate", validator.check_api_password, api_controller.confirm_activate_method);
-    server.post("/protected/users/:uid/methods/:method/auth/:authenticator_id", validator.check_api_password, api_controller.change_method_special);
-    server.del("/protected/users/:uid/methods/:method/auth/:authenticator_id", validator.check_api_password, api_controller.delete_method_special);
+    server.post("/protected/users/:uid/methods/:method/confirm_activate", validator.check_restricted_access, api_controller.confirm_activate_method);
+    server.post("/protected/users/:uid/methods/:method/auth/:authenticator_id", validator.check_restricted_access, api_controller.change_method_special);
+    server.del("/protected/users/:uid/methods/:method/auth/:authenticator_id", validator.check_restricted_access, api_controller.delete_method_special);
 }
 
 /**
@@ -136,17 +136,17 @@ async function initializeWebAuthnRoutes(server) {
 async function initializeProtectedRoutes(server) {
     logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ' Initializing protected routes');
     //api_api_password
-    server.get("/protected/methods", validator.check_api_password, api_controller.get_methods);
-    server.get("/protected/users/:uid", validator.check_api_password, api_controller.get_user_infos);
-    server.get("/protected/users/:uid/transports/:transport/test", validator.check_api_password, api_controller.transport_test);
-    server.put("/protected/users/:uid/methods/:method/deactivate", validator.check_api_password, api_controller.deactivate_method);
-    server.put("/protected/users/:uid/methods/:method/activate", validator.check_api_password, api_controller.activate_method);
-    server.post("/protected/users/:uid/methods/:method/activate/:activation_code", validator.check_api_password, api_controller.confirm_activate_method);
-    server.put("/protected/users/:uid/transports/:transport/:new_transport", validator.check_api_password, userDb_controller.update_transport);
-    server.get("/protected/users/:uid/transports/:transport/:new_transport/test", validator.check_api_password, api_controller.new_transport_test);
-    server.post("/protected/users/:uid/methods/:method/secret", validator.check_api_password, api_controller.generate_method_secret);
-    server.post("/protected/users/:uid/:otp/:api_password?", validator.check_api_password, api_controller.verify_code);
-    server.del("/protected/users/:uid/transports/:transport", validator.check_api_password, userDb_controller.delete_transport);
+    server.get("/protected/methods", validator.check_restricted_access, api_controller.get_methods);
+    server.get("/protected/users/:uid", validator.check_restricted_access, api_controller.get_user_infos);
+    server.get("/protected/users/:uid/transports/:transport/test", validator.check_restricted_access, api_controller.transport_test);
+    server.put("/protected/users/:uid/methods/:method/deactivate", validator.check_restricted_access, api_controller.deactivate_method);
+    server.put("/protected/users/:uid/methods/:method/activate", validator.check_restricted_access, api_controller.activate_method);
+    server.post("/protected/users/:uid/methods/:method/activate/:activation_code", validator.check_restricted_access, api_controller.confirm_activate_method);
+    server.put("/protected/users/:uid/transports/:transport/:new_transport", validator.check_restricted_access, userDb_controller.update_transport);
+    server.get("/protected/users/:uid/transports/:transport/:new_transport/test", validator.check_restricted_access, api_controller.new_transport_test);
+    server.post("/protected/users/:uid/methods/:method/secret", validator.check_restricted_access, api_controller.generate_method_secret);
+    server.post("/protected/users/:uid/:otp/:api_password?", validator.check_restricted_access, api_controller.verify_code);
+    server.del("/protected/users/:uid/transports/:transport", validator.check_restricted_access, userDb_controller.delete_transport);
 }
 
 /**
@@ -154,14 +154,14 @@ async function initializeProtectedRoutes(server) {
  */
 async function initializeAdminRoutes(server) {
     logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ' Initializing admin routes');
-    server.get("/admin/users/:uid", validator.check_api_password, api_controller.get_user);
-    server.get("/admin/users", validator.check_api_password, api_controller.get_uids);
-    server.get("/admin/users/:uid/methods", validator.check_api_password, api_controller.get_activate_methods);
-    server.put("/admin/methods/:method/transports/:transport/deactivate", validator.check_api_password, api_controller.deactivate_method_transport);
-    server.put("/admin/methods/:method/transports/:transport/activate", validator.check_api_password, api_controller.activate_method_transport);
-    server.put("/admin/methods/:method/deactivate", validator.check_api_password, api_controller.deactivate_method_admin);
-    server.put("/admin/methods/:method/activate", validator.check_api_password, api_controller.activate_method_admin);
-    server.del("/admin/users/:uid/methods/:method/secret", validator.check_api_password, api_controller.delete_method_secret);
+    server.get("/admin/users/:uid", validator.check_restricted_access, api_controller.get_user);
+    server.get("/admin/users", validator.check_restricted_access, api_controller.get_uids);
+    server.get("/admin/users/:uid/methods", validator.check_restricted_access, api_controller.get_activate_methods);
+    server.put("/admin/methods/:method/transports/:transport/deactivate", validator.check_restricted_access, api_controller.deactivate_method_transport);
+    server.put("/admin/methods/:method/transports/:transport/activate", validator.check_restricted_access, api_controller.activate_method_transport);
+    server.put("/admin/methods/:method/deactivate", validator.check_restricted_access, api_controller.deactivate_method_admin);
+    server.put("/admin/methods/:method/activate", validator.check_restricted_access, api_controller.activate_method_admin);
+    server.del("/admin/users/:uid/methods/:method/secret", validator.check_restricted_access, api_controller.delete_method_secret);
 }
 
 /**
@@ -169,9 +169,9 @@ async function initializeAdminRoutes(server) {
  */
 async function initializeTenantsRoutes(server) {
     logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ' Initializing multi-tenants routes');
-    server.get("/tenants", validator.check_admin_password, api_controller.get_tenants);
-    server.get("/tenants/:id", validator.check_admin_password, api_controller.get_tenant);
-    server.post("/tenants", validator.check_admin_password, api_controller.create_tenant);
-    server.put("/tenants/:id", validator.check_admin_password, api_controller.update_tenant);
-    server.del("/tenants/:id", validator.check_admin_password, api_controller.delete_tenant);
+    server.get("/tenants", validator.check_tenants_access, api_controller.get_tenants);
+    server.get("/tenants/:id", validator.check_tenants_access, api_controller.get_tenant);
+    server.post("/tenants", validator.check_tenants_access, api_controller.create_tenant);
+    server.put("/tenants/:id", validator.check_tenants_access, api_controller.update_tenant);
+    server.del("/tenants/:id", validator.check_tenants_access, api_controller.delete_tenant);
 }

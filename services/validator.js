@@ -36,7 +36,7 @@ export function check_hash_socket(uid, hash, users_secret) {
     return hashes.includes(hash);
 }
 
-export async function check_api_password(req, res) {
+export async function check_restricted_access(req, res) {
     let api_password;
     const tenants = properties.getEsupProperty('tenants');
     if (tenants && tenants.length) {
@@ -62,7 +62,7 @@ export async function check_api_password(req, res) {
     }
 }
 
-export function check_admin_password(req, res, next) {
+export function check_tenants_access(req, res, next) {
     const reqApiPwd = utils.get_auth_bearer(req.headers);
     if (reqApiPwd == properties.getEsupProperty('admin_password')) return next();
     else return next(new errors.ForbiddenError());
