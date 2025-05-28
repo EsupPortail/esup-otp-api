@@ -20,7 +20,6 @@ export function initialize(server) {
         initializeUnprotectedRoutes(server),
         initializeEsupAuthRoutes(server),
         initializeCasOtpClientRoutes(server),
-        initializeWebAuthnRoutes(server),
         initializeNfcRoutes(server),
         initializeProtectedRoutes(server),
         initializeAdminRoutes(server),
@@ -120,22 +119,11 @@ async function initializeNfcRoutes(server) {
 }
 
 /**
- * @param { restify.Server } server
- */
-async function initializeWebAuthnRoutes(server) {
-    // MANAGER
-    server.post("/protected/users/:uid/methods/:method/confirm_activate", validator.check_restricted_access, api_controller.confirm_activate_method);
-    server.post("/protected/users/:uid/methods/:method/auth/:authenticator_id", validator.check_restricted_access, api_controller.change_method_special);
-    server.del("/protected/users/:uid/methods/:method/auth/:authenticator_id", validator.check_restricted_access, api_controller.delete_method_special);
-}
-
-/**
  * routes used by manager or simple user in esup-otp-manager
  * @param { restify.Server } server
  */
 async function initializeProtectedRoutes(server) {
     logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ' Initializing protected routes');
-    //api_api_password
     server.get("/protected/methods", validator.check_restricted_access, api_controller.get_methods);
     server.get("/protected/users/:uid", validator.check_restricted_access, api_controller.get_user_infos);
     server.get("/protected/users/:uid/transports/:transport/test", validator.check_restricted_access, api_controller.transport_test);
@@ -147,6 +135,9 @@ async function initializeProtectedRoutes(server) {
     server.post("/protected/users/:uid/methods/:method/secret", validator.check_restricted_access, api_controller.generate_method_secret);
     server.post("/protected/users/:uid/:otp/:api_password?", validator.check_restricted_access, api_controller.verify_code);
     server.del("/protected/users/:uid/transports/:transport", validator.check_restricted_access, userDb_controller.delete_transport);
+    server.post("/protected/users/:uid/methods/:method/confirm_activate", validator.check_restricted_access, api_controller.confirm_activate_method);
+    server.post("/protected/users/:uid/methods/:method/auth/:authenticator_id", validator.check_restricted_access, api_controller.change_method_special);
+    server.del("/protected/users/:uid/methods/:method/auth/:authenticator_id", validator.check_restricted_access, api_controller.delete_method_special);
 }
 
 /**
