@@ -24,7 +24,6 @@ let userCounter = 0;
 const config = {
     "auto_create_user": true,
     "casVhost": "cas.univ.fr",
-    "admin_password": "admin_password",
     "api_password": "api_password",
     "users_secret": "users_secret",
     "apiDb": "mongodb",

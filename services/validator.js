@@ -64,7 +64,7 @@ export async function check_restricted_access(req, res) {
 
 export function check_tenants_access(req, res, next) {
     const reqApiPwd = utils.get_auth_bearer(req.headers);
-    if (reqApiPwd == properties.getEsupProperty('admin_password')) return next();
+    if (reqApiPwd == properties.getEsupProperty('api_password')) return next();
     else return next(new errors.ForbiddenError());
 }
 
