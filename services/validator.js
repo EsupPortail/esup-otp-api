@@ -10,13 +10,13 @@ export async function check_hash(req, res) {
     let users_secret;
     const tenants = properties.getEsupProperty('tenants');
     if (tenants && tenants.length) {
-        // multi-tenants support is active: require tenant header, and use
+        // multi-tenants support is active: compute tenant from user id, and use
         // tenant-specific users secret
-        const tenant = req.header('x-tenant');
-        if (!tenant) {
+        const scope = req.params.uid.split("@")[1];
+        if (!scope) {
             throw new errors.BadRequestError();
         }
-        const dbTenant = await apiDb.find_tenant_by_name(tenant);
+        const dbTenant = await apiDb.find_tenant_by_scope(scope);
         if (!dbTenant) {
             throw new errors.BadRequestError();
         }
