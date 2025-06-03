@@ -599,6 +599,7 @@ export async function get_tenant(req, res) {
     if(tenant) {
         const response = {
             name: tenant.name, 
+            scopes: tenant.scopes,
             webauthn: tenant.webauthn, 
             api_password: tenant.api_password,
             users_secret: tenant.users_secret
