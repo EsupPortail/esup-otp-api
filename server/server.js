@@ -9,7 +9,6 @@ import * as sockets from './sockets.js';
 import * as userDb_controller from '../controllers/user.js';
 import * as api_controller from '../controllers/api.js';
 import * as routes from '../server/routes.js';
-import * as methods from "../methods/methods.js";
 
 properties.loadFile(fileUtils.relativeToAbsolutePath(import.meta.url, '..'), "package.json");
 
@@ -81,7 +80,6 @@ export async function attach_socket() {
 export async function start() {
     await initialize_userDBController();
     await initialize_apiController();
-    await methods.initialize();
     await initialize_routes();
     await launch_server(process.env.PORT || 3000);
     await attach_socket();

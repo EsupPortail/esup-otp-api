@@ -16,6 +16,8 @@ const logger = getInstance();
 export let apiDb;
 
 export async function initialize(initializedApiDb) {
+    await methods.initialize();
+
     if (initializedApiDb) {
         apiDb = initializedApiDb;
     } else {
