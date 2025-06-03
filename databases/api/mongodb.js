@@ -152,13 +152,12 @@ function generateSecret() {
  * @param res response HTTP
  */
 export async function find_user(req, res) {
-    const tenant = req.header('x-tenant');
-    const userPreferences = await UserPreferences.findOne({ 'uid': req.params.uid, 'tenant': tenant });
+    const userPreferences = await UserPreferences.findOne({ 'uid': req.params.uid });
     if (userPreferences) {
         return userPreferences;
     } else {
         const user = await userDb_controller.find_user(req, res);
-        return create_user(user.uid, tenant);
+        return create_user(user.uid);
     }
 }
 
@@ -169,8 +168,8 @@ export function save_user(user) {
     return user.save();
 }
 
-export function create_user(uid, tenant) {
-    return save_user(new UserPreferences({ uid: uid, tenant: tenant }));
+export function create_user(uid) {
+    return save_user(new UserPreferences({ uid: uid }));
 }
 
 /**
@@ -307,6 +306,10 @@ export async function find_tenant_by_name(name) {
     return await Tenants.findOne({ 'name': name });
 }
 
+export async function find_tenant_by_scope(scope) {
+    return await Tenants.findOne({ 'scopes': scope });
+}
+
 /**
  * Sauve le tenant
  */
@@ -315,13 +318,21 @@ export function save_tenant(tenant) {
 }
 
 async function init_tenant(tenant) {
-    return save_tenant(new Tenants({ id: new mongoose.mongo.ObjectId(), name: tenant.name, webauthn: tenant.webauthn, api_password: tenant.api_password, users_secret: tenant.users_secret }));
+    return save_tenant(new Tenants({
+        id:           new mongoose.mongo.ObjectId(),
+        name:         tenant.name,
+        scopes:       tenant.scopes,
+        webauthn:     tenant.webauthn,
+        api_password: tenant.api_password,
+        users_secret: tenant.users_secret
+    }));
 }
 
 export async function update_tenant(req, res) {
     const tenant = await find_tenant_by_id(req, res);
     if(tenant) {
         tenant.name = req.body.name;
+        tenant.scopes = req.body.scopes;
         tenant.webauthn = req.body.webauthn;
         tenant.api_password = req.body.api_password;
         tenant.users_secret = req.body.users_secret;
@@ -344,7 +355,14 @@ export async function create_tenant(req, res) {
         return;
     }*/
     const tenant = req.body;
-    save_tenant(new Tenants({ id: new mongoose.mongo.ObjectId(), name: tenant.name, webauthn: tenant.webauthn, api_password: btoa(tenant.api_password), users_secret: btoa(tenant.users_secret) }));
+    save_tenant(new Tenants({
+        id:           new mongoose.mongo.ObjectId(),
+        name:         tenant.name,
+        scopes:       tenant.scopes,
+        webauthn:     tenant.webauthn,
+        api_password: btoa(tenant.api_password),
+        users_secret: btoa(tenant.users_secret)
+    }));
 }
 
 /**

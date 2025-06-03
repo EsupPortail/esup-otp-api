@@ -12,6 +12,10 @@ const schema = {
         required: true,
         unique: true,
     },
+    scopes: {
+        type: [String],
+        required: true
+    },
     webauthn: {
         type: Object,
         "#how_to_relying_party": "The 'id' is a domain, identifying the 'server', the party that manages the authentication. It's value is important, unlike the name, which is just a displayable string.",
