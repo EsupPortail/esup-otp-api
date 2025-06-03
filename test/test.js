@@ -150,25 +150,25 @@ async function getUserPreferences() {
  * 
  * @returns supertest.Test
  */
-function request(httpMethod, uri, { appendHash, password } = {}) {
-    if (appendHash) {
-        const hash = "/" + utils.get_hash(uid)[1];
-        if (uri.includes('?')) { // if 
+function request(httpMethod, uri, { uid, secret, password } = {}) {
+    if (uid && secret) {
+        const hash = "/" + utils.get_hash(uid, secret)[1];
+        if (uri.includes('?')) {
             uri.replace('?', hash + "?");
         } else {
             uri += hash;
         }
     }
 
-    /**
-     * @type supertest.Test
-     */
     const request = supertest(server.server)[httpMethod](uri);
+
     if (password) {
         request.auth(password, { type: 'bearer' });
     }
+
     return request;
 }
+
 const get = 'get', post = "post", put = 'put', del = 'del';
 
 describe('Esup otp api', async () => {
@@ -250,19 +250,19 @@ describe('Esup otp api', async () => {
     });
 
     await test('get test_user with good hash', async () => {
-        await request(get, "/users/" + uid + "/" + utils.get_hash(uid)[1])
+        await request(get, "/users/" + uid, { uid: uid, secret: config.users_secret })
             .expect(200);
     });
 
     await test('get test_user with wrong hash', async () => {
-        await request(get, "/users/" + uid + "/" + utils.get_hash("toto")[1])
+        await request(get, "/users/" + uid, { uid: uid, secret: "toto" })
             .expect(403)
             .then(res => {
                 assert.equal(res.body.code, 'Forbidden');
             });
     });
 
-    await test('get test_user totp method generate secret', async () => {
+    await test('generate TOTP method secret for test_user', async () => {
         await request(post, "/protected/users/" + uid + "/methods/totp/secret", { password: config.api_password })
             .expect(200)
             .then(res => {
@@ -271,7 +271,7 @@ describe('Esup otp api', async () => {
             });
     });
 
-    await test('get test_user bypass method generate secret', async () => {
+    await test('generate bypass method secret for test_user', async () => {
         const method = "bypass";
         const uri = '/protected/users/' + uid + '/methods/' + method + '/secret/';
 
@@ -335,7 +335,7 @@ describe('Esup otp api', async () => {
         await describe('activate_method', async () => {
             await request(put, "/protected/users/" + uid + "/methods/" + method + "/deactivate", { password: config.api_password })
                 .expect(200);
-            await request(get, "/users/" + uid, { appendHash: true })
+            await request(get, "/users/" + uid, { uid: uid, secret: config.users_secret })
                 .expect(200)
                 .then(res => {
                     assert(!res.body.user.methods[method].active);
@@ -343,7 +343,7 @@ describe('Esup otp api', async () => {
 
             await request(put, "/protected/users/" + uid + "/methods/" + method + "/activate", { password: config.api_password })
                 .expect(200);
-            await request(get, "/users/" + uid, { appendHash: true })
+            await request(get, "/users/" + uid, { uid: uid, secret: config.users_secret })
                 .expect(200)
                 .then(res => {
                     assert.equal(res.body.user.transports.sms, utils.cover_string(phoneNumber, 2, 2));
@@ -364,7 +364,7 @@ describe('Esup otp api', async () => {
         });
 
         await describe('send_message', async () => {
-            await request(post, "/users/" + uid + "/methods/" + method + "/transports/" + transport, { appendHash: true })
+            await request(post, "/users/" + uid + "/methods/" + method + "/transports/" + transport, { uid: uid, secret: config.users_secret })
                 .expect(200);
             assert(code);
         });
@@ -404,7 +404,7 @@ describe('Esup otp api', async () => {
                     assert(!res.body.methods[method]);
                 });
 
-            await request(post, "/users/" + uid + "/methods/" + method + "/transports/" + transport, { appendHash: true })
+            await request(post, "/users/" + uid + "/methods/" + method + "/transports/" + transport, { uid: uid, secret: config.users_secret })
                 .expect(404, {
                     code: 'Error',
                     message: properties.getMessage('error', 'method_not_found')
