@@ -1,6 +1,6 @@
 import * as properties from '../../properties/properties.js';
 import * as errors from '../../services/errors.js';
-
+import { searchAttributes } from './userUtils.js';
 import * as mongoose from 'mongoose';
 
 import UserSchema from './userSchema.js';
@@ -35,6 +35,22 @@ export async function find_user(uid) {
             throw new errors.UserNotFoundError();
         }
     }
+}
+
+/**
+ * @returns {Promise<Array<{uid: String, displayName: String}>>}
+ */
+export async function search_users(token) {
+    const regex = new RegExp(token, 'i');
+
+    /** @example [{uid: /token/i}, {displayName: /token/i}] */
+    const orConditions = searchAttributes.map(attr => ({
+        [attr]: regex,
+    }));
+
+    return await User.find()
+        .or(orConditions)
+        .select(searchAttributes);
 }
 
 export function create_user(uid) {

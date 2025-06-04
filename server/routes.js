@@ -138,6 +138,8 @@ async function initializeProtectedRoutes(server) {
     server.del("/protected/users/:uid/methods/:method/secret", validator.check_protected_access, api_controller.delete_method_secret);
     server.post("/protected/users/:uid/:otp/:api_password?", validator.check_protected_access, api_controller.verify_code);
     server.del("/protected/users/:uid/transports/:transport", validator.check_protected_access, userDb_controller.delete_transport);
+    server.get("/protected/users", validator.check_api_password, userDb_controller.search_users);
+    server.put("/protected/users/:uid", validator.check_api_password, userDb_controller.update_user);
     // WebAuthn routes
     server.post("/protected/users/:uid/methods/:method/confirm_activate", validator.check_protected_access, api_controller.confirm_activate_method);
     server.post("/protected/users/:uid/methods/:method/auth/:authenticator_id", validator.check_protected_access, api_controller.change_method_special);

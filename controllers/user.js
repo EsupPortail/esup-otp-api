@@ -6,7 +6,7 @@ import * as userUtils from '../databases/user/userUtils.js';
 const logger = getInstance();
 
 /**
- * @type {import('../databases/user/mongodb.js')} apiDb
+ * @type {import('../databases/user/mongodb.js')} userDb
  */
 export let userDb;
 
@@ -89,6 +89,57 @@ export async function delete_transport(req, res) {
     res.status(200);
     res.send({
         code: 'Ok',
+    });
+}
+
+export async function update_user(req, res) {
+    const user = await find_user(req);
+    const newValues = req.body;
+
+    const changes = Object.entries(newValues)
+        .map(([key, value]) => [userUtils.attributes[key], value]) // map to database attribute name
+        .filter(([key, value]) => userUtils.modifiableAttributes.includes(key))
+        .filter(([key, value]) => user[key] != value);
+
+
+    if (changes.length) {
+        for (const [key, value] of changes) {
+            user[key] = value;
+        }
+
+        await userDb.save_user(user);
+
+        logger.log('archive', {
+            message: [
+                {
+                    req,
+                    action: 'save',
+                    changes: Object.fromEntries(changes),
+                }
+            ]
+        });
+
+        res.status(200);
+        res.send({
+            code: 'Ok',
+            message: properties.getMessage('success', 'update')
+        });
+    } else {
+        res.status(200);
+        res.send({
+            code: 'Ok',
+        });
+    }
+}
+
+export async function search_users(req, res) {
+    const token = req.query.token;
+    const users = await userDb.search_users(token);
+
+    res.status(200);
+    res.send({
+        code: 'Ok',
+        users: users.map(user => ({ uid: user.uid, displayName: userUtils.getDisplayName(user) })),
     });
 }
 
