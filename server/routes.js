@@ -130,7 +130,7 @@ async function initializeNfcRoutes(server) {
 async function initializeProtectedRoutes(server) {
     logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ' Initializing protected routes');
     server.get("/protected/methods", validator.check_protected_access, api_controller.get_methods);
-    server.get("/protected/users", validator.check_protected_access, api_controller.get_uids);
+    server.get("/protected/users", validator.check_protected_access, userDb_controller.search_users);
     server.get("/protected/users/:uid", validator.check_protected_access, api_controller.get_user_infos);
     server.get("/protected/users/:uid/transports/:transport/test", validator.check_protected_access, api_controller.transport_test);
     server.put("/protected/users/:uid/methods/:method/deactivate", validator.check_protected_access, api_controller.deactivate_method);
@@ -142,6 +142,7 @@ async function initializeProtectedRoutes(server) {
     server.del("/protected/users/:uid/methods/:method/secret", validator.check_protected_access, api_controller.delete_method_secret);
     server.post("/protected/users/:uid/:otp/:api_password?", validator.check_protected_access, api_controller.verify_code);
     server.del("/protected/users/:uid/transports/:transport", validator.check_protected_access, userDb_controller.delete_transport);
+    server.put("/protected/users/:uid", validator.check_protected_access, userDb_controller.update_user);
     // WebAuthn routes
     server.post("/protected/users/:uid/methods/:method/confirm_activate", validator.check_protected_access, api_controller.confirm_activate_method);
     server.post("/protected/users/:uid/methods/:method/auth/:authenticator_id", validator.check_protected_access, api_controller.change_method_special);

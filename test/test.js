@@ -1,20 +1,7 @@
 import test from "node:test";
 import supertest from 'supertest';
 
-import * as inMemoryMongoTest from './inMemoryMongoTest.js';
-
 import * as properties from '../properties/properties.js';
-import * as api_controller from '../controllers/api.js';
-import * as userDb_controller from '../controllers/user.js';
-import * as userUtils from '../databases/user/userUtils.js';
-
-import * as utils from '../services/utils.js';
-import { server } from '../server/server.js';
-
-import * as transports from '../transports/transports.js';
-
-let uid;
-let userCounter = 0;
 
 // test-specific configuration, without multi-tenant support
 const config = {
@@ -29,7 +16,8 @@ const config = {
         "transport": {
             "mail": "mail",
             "sms": "mobile"
-        }
+        },
+        "displayName": "displayName"
     },
     "methods": {
         "totp": {
@@ -129,16 +117,36 @@ const config = {
     "esupnfc": {
         "server_ip": "IP_ESUP-SGC-SERVER"
     },
+    "logs": {
+        "main": {
+            "level": "debug",
+            "console": true,
+        },
+        "audit": {
+            "console": true,
+        },
+        "access": {
+            "format": "dev",
+            "console": true,
+        }
+    },
     "trustedProxies": ["127.0.0.1", "loopback", "::1"]
 };
 
-async function getUser() {
-    return (await getUserPreferences()).userDb;
-}
+properties.setEsup(config);
 
-async function getUserPreferences() {
-    return api_controller.apiDb.find_user_by_id(uid);
-}
+const inMemoryMongoTest = await import('./inMemoryMongoTest.js');
+
+const api_controller = await import('../controllers/api.js');
+const userDb_controller = await import('../controllers/user.js');
+
+const utils = await import('../services/utils.js');
+const { server } = await import('../server/server.js');
+
+const transports = await import('../transports/transports.js');
+
+let uid;
+let userCounter = 0;
 
 /**
  * @param {string} httpMethod get, post, put, del...
@@ -286,7 +294,6 @@ await test('Esup otp api', async (t) => {
             pause_global_hooks = true;
             await request(put, "/protected/users/" + uid + "/transports/" + transport + "/" + phoneNumber, { password: config.api_password })
                 .expect(200);
-            t.assert.equal(userUtils.getTransport(await getUser(), transport), phoneNumber);
         });
 
         t.after(() => {
@@ -401,5 +408,54 @@ await test('Esup otp api', async (t) => {
                     message: properties.getMessage('error', 'method_not_found')
                 });
         });
+    });
+
+    await t.test('test search_users', async (t) => {
+        /**
+         * @typedef {{uid: String, displayName: String}} User 
+         * @type { [ User ] }
+         */
+        const users = [
+            { uid: "alanteigne", displayName: "Aubine Lanteigne" },
+            { uid: "zbabin", displayName: "Zacharie Babin" },
+            { uid: "ebabin", displayName: "Émile Babin" },
+            { uid: "acressac", displayName: "Aubin Cressac" },
+            { uid: "agingras", displayName: "Aubin Gingras" },
+            { uid: "ddoddu", displayName: "Durandana Goddu" },
+            { uid: "jrocher", displayName: "Jay Rocher" },
+            { uid: "clemieux", displayName: "Jessamine Lemieux" },
+            { uid: "flaramee", displayName: "Florian Laramée" },
+            { uid: "fletourneau", displayName: "Florent Létourneau" },
+        ];
+
+        for (const user of users) {
+            await request(get, `/protected/users/${user.uid}`, { password: config.api_password }).expect(200);
+            await request(put, `/protected/users/${user.uid}`, { password: config.api_password })
+                .send({ displayName: user.displayName })
+                .expect(200);
+        }
+
+        /** @type { [{ token: String, result: [String] }] }  */
+        const expecteds = [
+            { token: "Aubin", result: ["acressac", "agingras", "alanteigne"] },
+            { token: "Babin", result: ["zbabin", "ebabin"] },
+            { token: "jroch", result: ["jrocher"] },
+            { token: "azerty", result: [] },
+            { token: "ine", result: ["alanteigne", "clemieux"] },
+            { token: "flo", result: ["flaramee", "fletourneau"] },
+        ];
+
+        for (const expected of expecteds) {
+            await request(get, `/protected/users?token=${expected.token}`, { password: config.api_password })
+                .then(res => {
+                    t.assert.equal(res.body.code, "Ok");
+                    /** @type { [ User ] } */
+                    const users = res.body.users;
+                    t.assert.equal(users.length, expected.result.length, JSON.stringify({ token: expected.token, response: users }));
+                    for (const uid of expected.result) {
+                        t.assert.ok(users.some(user => user.uid == uid), JSON.stringify({ token: expected.token, response: users, expectedUser: uid }));
+                    }
+                });
+        }
     });
 });

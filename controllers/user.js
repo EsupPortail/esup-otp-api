@@ -5,7 +5,7 @@ import * as userUtils from '../databases/user/userUtils.js';
 import * as api_controller from './api.js';
 
 /**
- * @type {import('../databases/user/mongodb.js')} apiDb
+ * @type {import('../databases/user/mongodb.js')} userDb
  */
 export let userDb;
 
@@ -52,6 +52,64 @@ async function update_transport_internal(req, res, action) {
     res.send({
         code: 'Ok',
         message: properties.getMessage('success', 'update'),
+    });
+}
+
+export async function update_user(req, res) {
+    const user = await api_controller.apiDb.find_user(req);
+    const user_db = user.userDb;
+    const newValues = req.body;
+
+    const changes = Object.entries(newValues)
+        .map(([key, value]) => [userUtils.attributes[key], value]) // map to database attribute name
+        .filter(([key, value]) => userUtils.modifiableAttributes.includes(key)) // remove non-modifiable attributes
+        .filter(([key, value]) => user_db[key] != value); // remove unmodified attributes
+
+
+    if (changes.length) {
+        for (const [key, value] of changes) {
+            user_db[key] = value;
+        }
+
+        await userDb.save_user(user_db);
+        await api_controller.save_user(user);
+
+        logger.log('archive', {
+            message: [
+                {
+                    req,
+                    action: 'save',
+                    changes: Object.fromEntries(changes),
+                }
+            ]
+        });
+
+        res.status(200);
+        res.send({
+            code: 'Ok',
+            message: properties.getMessage('success', 'update')
+        });
+    } else {
+        res.status(200);
+        res.send({
+            code: 'Ok',
+        });
+    }
+}
+
+export async function search_users(req, res) {
+    const token = req.query.token;
+
+    if (!token) {
+        return api_controller.get_uids(req, res);
+    }
+
+    const users = await userDb.search_users(req, token);
+
+    res.status(200);
+    res.send({
+        code: 'Ok',
+        users: users.map(user => ({ uid: user.uid, displayName: userUtils.getDisplayName(user) })),
     });
 }
 

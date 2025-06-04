@@ -1,5 +1,5 @@
 import * as userDb_controller from '../../controllers/user.js';
-import { getCurrentTenantProperties, isMultiTenantContext } from '../../controllers/api.js';
+import { isMultiTenantContext, currentTenantMongodbFilter } from '../../services/multiTenantUtils.js';
 import * as properties from '../../properties/properties.js';
 import * as fileUtils from '../../services/fileUtils.js';
 import * as utils from '../../services/utils.js';
@@ -292,15 +292,7 @@ function available_transports(userTransports, method) {
 
 
 export async function get_uids(req, res) {
-    let filter;
-    if (isMultiTenantContext()) {
-        const { scopes } = getCurrentTenantProperties(req);
-        // Only get uids ending with the scope (prefixed with "@")
-        const regex = new RegExp(`@(${scopes.join('|')})$`);
-        filter = { uid: regex };
-    } else {
-        filter = {};
-    }
+    const filter = currentTenantMongodbFilter(req);
 
     const data = await UserPreferences.find(filter, { uid: 1 });
     const result = data.map((uid) => uid.uid);

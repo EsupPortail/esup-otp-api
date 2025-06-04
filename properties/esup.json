@@ -28,7 +28,8 @@
         "transport": {
             "mail": "mail",
             "sms": "mobile"
-        }
+        },
+        "displayName": "displayName"
     },
     "ldap": {
         "uri": "ldap://127.0.0.1",
@@ -42,7 +43,8 @@
         "transport": {
             "mail": "mail",
             "sms": "mobile"
-        }
+        },
+        "displayName": "displayName"
     },
     "mysql": {
         "host": "127.0.0.1",
@@ -53,7 +55,8 @@
         "transport": {
             "mail": "mail",
             "sms": "sms"
-        }
+        },
+        "displayName": "displayName"
     },
     "methods": {
         "totp": {

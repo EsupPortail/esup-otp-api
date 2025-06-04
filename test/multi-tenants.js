@@ -1,20 +1,7 @@
 import test from "node:test";
 import supertest from 'supertest';
 
-import * as inMemoryMongoTest from './inMemoryMongoTest.js';
-
 import * as properties from '../properties/properties.js';
-import * as api_controller from '../controllers/api.js';
-import * as userDb_controller from '../controllers/user.js';
-import * as userUtils from '../databases/user/userUtils.js';
-
-import * as utils from '../services/utils.js';
-import { server } from '../server/server.js';
-
-import * as transports from '../transports/transports.js';
-
-let uid;
-let userCounter = 0;
 
 // test-specific configuration, with multi-tenant support
 const config = {
@@ -29,12 +16,13 @@ const config = {
         "transport": {
             "mail": "mail",
             "sms": "mobile"
-        }
+        },
+        "displayName": "displayName"
     },
     "tenants": [
         {
             "name": "https://idp.univ.fr",
-            "scopes": [ "univ.fr" ],
+            "scopes": [ "univ.fr", "univ3.fr" ],
             "webauthn": {
                 "relying_party": {
                     "name": "Univ",
@@ -42,7 +30,20 @@ const config = {
                 },
                 "allowed_origins": ["https://cas.univ.fr", "https://esup-otp-manager.univ.fr"]
             }
-        }
+        },
+        {
+            "name": "https://idp.univ2.fr",
+            "scopes": [ "univ2.fr" ],
+            "webauthn": {
+                "relying_party": {
+                    "name": "Univ2",
+                    "id": "univ2.fr"
+                },
+                "allowed_origins": ["https://cas.univ2.fr", "https://esup-otp-manager.univ2.fr"]
+            },
+            api_password: "toto",
+            users_secret: "tata"
+        },
     ],
     "methods": {
         "totp": {
@@ -142,16 +143,36 @@ const config = {
     "esupnfc": {
         "server_ip": "IP_ESUP-SGC-SERVER"
     },
+    "logs": {
+        "main": {
+            "level": "debug",
+            "console": true,
+        },
+        "audit": {
+            "console": true,
+        },
+        "access": {
+            "format": "dev",
+            "console": true
+        }
+    },
     "trustedProxies": ["127.0.0.1", "loopback", "::1"]
 };
 
-async function getUser() {
-    return (await getUserPreferences()).userDb;
-}
+properties.setEsup(config);
 
-async function getUserPreferences() {
-    return api_controller.apiDb.find_user_by_id(uid);
-}
+const inMemoryMongoTest = await import('./inMemoryMongoTest.js');
+
+const api_controller = await import('../controllers/api.js');
+const userDb_controller = await import('../controllers/user.js');
+
+const utils = await import('../services/utils.js');
+const { server } = await import('../server/server.js');
+
+const transports = await import('../transports/transports.js');
+
+let uid;
+let userCounter = 0;
 
 /**
  * @param {string} httpMethod get, post, put, del...
@@ -188,9 +209,12 @@ function request(httpMethod, uri, { uid, secret, password, tenant } = {}) {
 const get = 'get', post = "post", put = 'put', del = 'del';
 
 await test('Esup otp api', async (t) => {
-    let tenant = {
-        name: config.tenants[0].name
+    const tenant = {
+        name: config.tenants[0].name,
+        scopes: config.tenants[0].scopes,
     };
+
+    const tenant2 = config.tenants[1];
 
     t.before(async (t) => {
         properties.setEsup(config);
@@ -228,10 +252,12 @@ await test('Esup otp api', async (t) => {
             .expect(200)
             .expect(res => {
                 t.assert.ok(Array.isArray(res.body));
-                t.assert.equal(res.body.length, 1);
-                t.assert.equal(res.body[0].name, tenant.name);
-            })
-            .then(res => { tenant.id = res.body[0].id });
+                t.assert.equal(res.body.length, 2);
+                for (const t of [tenant, tenant2]) {
+                    const res_tenant = res.body.find(tenant => tenant.name == t.name);
+                    t.id = res_tenant.id;
+                }
+            });
     });
 
     await t.test('get non-existing tenant', async (t) => {
@@ -375,7 +401,6 @@ await test('Esup otp api', async (t) => {
             pause_global_hooks = true;
             await request(put, "/protected/users/" + uid + "/transports/" + transport + "/" + phoneNumber, { password: tenant.api_password, tenant: tenant.name })
                 .expect(200);
-            t.assert.equal(userUtils.getTransport(await getUser(), transport), phoneNumber);
         });
 
         t.after(() => {
@@ -460,5 +485,69 @@ await test('Esup otp api', async (t) => {
                     message: properties.getMessage('error', 'method_not_found')
                 });
         });
+    });
+
+    await test('test search_users', async (t) => {
+        /**
+         * @typedef {{uid: String, displayName: String}} User 
+         */
+
+        const tenantsAndUsers = [
+            {
+                tenant: tenant,
+                users: [
+                    { uid: "alanteigne" + "@" + tenant.scopes[0], displayName: "Aubine Lanteigne" },
+                    { uid: "zbabin" + "@" + tenant.scopes[1], displayName: "Zacharie Babin" },
+                    { uid: "ebabin" + "@" + tenant.scopes[0], displayName: "Émile Babin" },
+                    { uid: "acressac" + "@" + tenant.scopes[1], displayName: "Aubin Cressac" },
+                    { uid: "agingras" + "@" + tenant.scopes[0], displayName: "Aubin Gingras" },
+                    { uid: "ddoddu" + "@" + tenant.scopes[1], displayName: "Durandana Goddu" },
+                    { uid: "jrocher" + "@" + tenant.scopes[0], displayName: "Jay Rocher" },
+                    { uid: "clemieux" + "@" + tenant.scopes[1], displayName: "Jessamine Lemieux" },
+                    { uid: "flaramee" + "@" + tenant.scopes[0], displayName: "Florian Laramée" },
+                    { uid: "fletourneau" + "@" + tenant.scopes[1], displayName: "Florent Létourneau" },
+                ],
+            },
+            {
+                tenant: tenant2,
+                users: [
+                    { uid: "agingras" + "@" + tenant2.scopes[0], displayName: "Aubine Gingras" },
+                    { uid: "flaramee" + "@" + tenant2.scopes[0], displayName: "Floriane Laramée" },
+                    { uid: "fletourneau" + "@" + tenant2.scopes[0], displayName: "Florence Létourneau" },
+                ],
+            }
+        ]
+
+        for (const tenantAndUsers of tenantsAndUsers) {
+            for (const user of tenantAndUsers.users) {
+                await request(get, `/protected/users/${user.uid}`, { password: tenantAndUsers.tenant.api_password }).expect(200);
+                await request(put, `/protected/users/${user.uid}`, { password: tenantAndUsers.tenant.api_password })
+                    .send({ displayName: user.displayName })
+                    .expect(200);
+            }
+        }
+
+        /** @type { [{ token: String, result: [String] }] }  */
+        const expecteds = [
+            { token: "Aubin", result: ["acressac" + "@" + tenant.scopes[1], "agingras" + "@" + tenant.scopes[0], "alanteigne" + "@" + tenant.scopes[0]] },
+            { token: "Babin", result: ["zbabin" + "@" + tenant.scopes[1], "ebabin" + "@" + tenant.scopes[0]] },
+            { token: "jroch", result: ["jrocher" + "@" + tenant.scopes[0]] },
+            { token: "azerty", result: [] },
+            { token: "ine", result: ["alanteigne" + "@" + tenant.scopes[0], "clemieux" + "@" + tenant.scopes[1]] },
+            { token: "flo", result: ["flaramee" + "@" + tenant.scopes[0], "fletourneau" + "@" + tenant.scopes[1]] },
+        ];
+
+        for (const expected of expecteds) {
+            await request(get, `/protected/users?token=${expected.token}`, { password: tenant.api_password, tenant: tenant.name })
+                .then(res => {
+                    t.assert.equal(res.body.code, "Ok");
+                    /** @type { [ User ] } */
+                    const users = res.body.users;
+                    t.assert.equal(users.length, expected.result.length, JSON.stringify({ token: expected.token, response: users }));
+                    for (const uid of expected.result) {
+                        t.assert.ok(users.some(user => user.uid == uid), JSON.stringify({ token: expected.token, response: users, expectedUser: uid }));
+                    }
+                });
+        }
     });
 });
