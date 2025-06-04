@@ -394,4 +394,53 @@ describe('Esup otp api', async () => {
                 });
         });
     });
+
+    await test('test search_users', async () => {
+        /**
+         * @typedef {{uid: String, displayName: String}} User 
+         * @type { [ User ] }
+         */
+        const users = [
+            { uid: "alanteigne", displayName: "Aubine Lanteigne" },
+            { uid: "zbabin", displayName: "Zacharie Babin" },
+            { uid: "ebabin", displayName: "Émile Babin" },
+            { uid: "acressac", displayName: "Aubin Cressac" },
+            { uid: "agingras", displayName: "Aubin Gingras" },
+            { uid: "ddoddu", displayName: "Durandana Goddu" },
+            { uid: "jrocher", displayName: "Jay Rocher" },
+            { uid: "clemieux", displayName: "Jessamine Lemieux" },
+            { uid: "flaramee", displayName: "Florian Laramée" },
+            { uid: "fletourneau", displayName: "Florent Létourneau" },
+        ];
+
+        for (const user of users) {
+            await request(get, `/protected/users/${user.uid}`, { password: config.api_password }).expect(200);
+            await request(put, `/protected/users/${user.uid}`, { password: config.api_password })
+                .send({ displayName: user.displayName })
+                .expect(200);
+        }
+
+        /** @type { [{ token: String, result: [String] }] }  */
+        const expecteds = [
+            { token: "Aubin", result: ["acressac", "agingras", "alanteigne"] },
+            { token: "Babin", result: ["zbabin", "ebabin"] },
+            { token: "jroch", result: ["jrocher"] },
+            { token: "azerty", result: [] },
+            { token: "ine", result: ["alanteigne", "clemieux"] },
+            { token: "flo", result: ["flaramee", "fletourneau"] },
+        ];
+
+        for (const expected of expecteds) {
+            await request(get, `/protected/users?token=${expected.token}`, { password: config.api_password })
+                .then(res => {
+                    assert.equal(res.body.code, "Ok");
+                    /** @type { [ User ] } */
+                    const users = res.body.users;
+                    assert.equal(users.length, expected.result.length, JSON.stringify({ token: expected.token, response: users }));
+                    for (const uid of expected.result) {
+                        assert(users.some(user => user.uid == uid), JSON.stringify({ token: expected.token, response: users, expectedUser: uid }));
+                    }
+                });
+        }
+    });
 });

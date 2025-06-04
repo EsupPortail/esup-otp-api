@@ -1,14 +1,17 @@
 import { Schema } from 'mongoose';
 
-const schema = {
-    uid: {
-        type: String,
-        required: true,
-        unique: true
-    },
-    mobile: String,
-    mail: String
-}
+import { attributes } from './userUtils.js';
+
+const schema = Object.fromEntries(
+    Object.values(attributes)
+        .map(attr => [attr, String])
+);
+
+schema.uid = {
+    type: String,
+    required: true,
+    unique: true,
+};
 
 const UserSchema = new Schema(schema);
 
