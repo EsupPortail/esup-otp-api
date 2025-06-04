@@ -3,6 +3,7 @@ import { isMultiTenantContext, currentTenantMongodbFilter } from '../../services
 import * as properties from '../../properties/properties.js';
 import * as fileUtils from '../../services/fileUtils.js';
 import * as utils from '../../services/utils.js';
+import { UserNotFoundError } from '../../services/errors.js';
 import * as mongoose from 'mongoose';
 import UserPreferencesSchema from './userPreferencesSchema.js';
 import ApiPreferencesSchema from './apiPreferencesSchema.js';
@@ -182,7 +183,8 @@ async function update_active_methods(user) {
     // turn off webauthn if no authenticator is present
     user.webauthn.active = Boolean(user.webauthn.internally_activated && user.webauthn.authenticators?.length);
 
-    const userDb = user.userDb || await userDb_controller.userDb.find_user(user.uid);
+    const userDb = user.userDb || await find_userDb(user.uid);
+
     // turn off random_code(_mail) if no transport is present for this method
     for (const random_code of RANDOM_CODE_METHODS) {
         const userMethod = user[random_code];
@@ -190,6 +192,18 @@ async function update_active_methods(user) {
     }
 
     user.userDb = userDb;
+}
+
+async function find_userDb(uid) {
+    try {
+        return await userDb_controller.userDb.find_user(uid);
+    } catch (error) {
+        if (error instanceof UserNotFoundError && properties.getEsupProperty('auto_create_user')) {
+            return userDb_controller.userDb.create_user(uid);
+        } else {
+            throw error;
+        }
+    }
 }
 
 export function parse_user(user) {

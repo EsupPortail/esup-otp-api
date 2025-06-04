@@ -12,3 +12,4 @@ esup-otp-api.iml
 *.out
 /.settings/
 /lcov.info
+/test/ldap-server.jar

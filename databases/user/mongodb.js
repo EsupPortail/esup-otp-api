@@ -37,11 +37,7 @@ export async function find_user(uid) {
     if (user) {
         return user;
     } else {
-        if (properties.getEsupProperty('auto_create_user')) {
-            return create_user(uid);
-        } else {
-            throw new errors.UserNotFoundError();
-        }
+        throw new errors.UserNotFoundError();
     }
 }
 

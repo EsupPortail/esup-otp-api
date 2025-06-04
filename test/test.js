@@ -11,8 +11,22 @@ const config = {
     "users_secret": "users_secret",
     "apiDb": "mongodb",
     "userDb": "mongodb",
+    //"userDb": "ldap",
     "mongodb": {
         "uri": "mongodb://localhost:27017/test-otp",
+        "transport": {
+            "mail": "mail",
+            "sms": "mobile"
+        },
+        "displayName": "displayName"
+    },
+    "ldap": {
+        "uri": "ldap://127.0.0.1:389",
+        "timeout": 0,
+        "connectTimeout": 0,
+        "baseDn": "dc=univ,dc=fr",
+        "adminDn": "cn=admin,dc=univ,dc=fr",
+        "password": "changeit",
         "transport": {
             "mail": "mail",
             "sms": "mobile"

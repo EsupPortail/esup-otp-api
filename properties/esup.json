@@ -1,5 +1,4 @@
 {
-    "auto_create_user": true,
     "casVhost": "cas.univ.fr",
     "proxyUrl": "",
     "#how_to_proxyUrl": "If set, API will use this proxy configurations, usually proxyURl must be like : http://username:password@univ.fr:port may be necessary for sms and mailer services",
@@ -7,6 +6,8 @@
     "users_secret": "changeit",
     "apiDb": "mongodb",
     "userDb": "mongodb",
+    "#how_to_auto_create_user": "create user in userDb if it does not exist",
+    "auto_create_user": true,
     "webauthn": {
         "#how_to_relying_party": "The 'id' is a domain, identifying the 'server', the party that manages the authentication. It's value is important, unlike the name, which is just a displayable string.",
         "relying_party": {

@@ -15,7 +15,7 @@ let client;
 
 export async function initialize() {
     errorIfMultiTenantContext();
-    
+
     logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ' Initializing ldap connection');
     client = new Client({
         url: getUserDbProperties().uri,
@@ -46,7 +46,7 @@ export async function find_user(uid) {
     try {
         user = await find_user_internal(uid);
     } catch (error) {
-        if (error.name !== 'NoSuchObjectError') {
+        if (!isNoSuchObjectError(error)) {
             throw error;
         }
     }
@@ -128,7 +128,7 @@ function getDN(uid) {
     return `uid=${uid},${getBaseDn()}`;
 }
 
-export function create_user(uid) {
+export async function create_user(uid) {
     const entry = {
         cn: uid,
         uid: uid,
@@ -138,13 +138,26 @@ export function create_user(uid) {
         [attributes.displayName]: uid,
         objectclass: ['inetOrgPerson']
     };
-    return getClient().then(client => client.add(getDN(uid), entry));
+    const client = await getClient();
+    await client.add(getDN(uid), entry);
+    return find_user(uid);
 }
 
-export function remove_user(uid) {
-    return getClient().then(client => client.del(getDN(uid)));
+export async function remove_user(uid) {
+    const client = await getClient();
+    try {
+        return await client.del(getDN(uid));
+    } catch (error) {
+        if (!isNoSuchObjectError(error)) {
+            throw error;
+        }
+    }
 }
 
 function getBaseDn() {
     return getUserDbProperties().baseDn;
+}
+
+function isNoSuchObjectError(error) {
+    return error?.name == "NoSuchObjectError";
 }

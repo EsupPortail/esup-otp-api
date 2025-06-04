@@ -1,0 +1,35 @@
+version: 1
+
+dn: dc=univ,dc=fr
+dc: univ
+objectClass: top
+objectClass: domain
+
+dn: cn=admin,dc=univ,dc=fr
+objectClass: top
+objectClass: person
+objectClass: inetOrgPerson
+cn: admin
+sn: admin
+userPassword: changeit
+
+dn: uid=fnari,dc=univ,dc=fr
+objectClass: top
+objectClass: person
+objectClass: inetOrgPerson
+cn: Florian Nari
+sn: Nari
+uid: fnari
+userPassword: theduke
+mail: flo@example.com
+
+dn: ou=Roles,dc=univ,dc=fr
+objectclass: top
+objectclass: organizationalUnit
+ou: Roles
+
+dn: cn=Admin,ou=Roles,dc=univ,dc=fr
+objectClass: top
+objectClass: groupOfNames
+cn: Admin
+member: cn=admin,dc=univ,dc=fr

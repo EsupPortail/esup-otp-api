@@ -91,11 +91,11 @@ export async function attach_socket() {
     sockets.attach(server);
 }
 
-export async function start() {
+export async function start(port) {
     await initialize_userDBController();
     await initialize_apiController();
     await initialize_routes();
-    await launch_server(process.env.PORT || 3000);
+    await launch_server(port ?? (process.env.PORT || 3000));
     await attach_socket();
     logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ' App is ready at : ' + server.address().port);
 }
