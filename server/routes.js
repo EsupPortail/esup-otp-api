@@ -33,7 +33,7 @@ export function initialize(server) {
  * @param { restify.Server } server
  */
 function initializeUnprotectedRoutes(server) {
-    logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ' Initializing "unprotected" routes');
+    logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ' Initializing unprotected routes');
     return Promise.all([
         initializeSocketIoRoute(server),
         initializeOpenapiRoutes(server),
