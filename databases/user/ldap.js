@@ -1,7 +1,7 @@
 import * as fileUtils from '../../services/fileUtils.js';
-import * as properties from '../../properties/properties.js';
 import * as errors from '../../services/errors.js';
-import { Client, Change, Attribute, EqualityFilter } from 'ldapts';
+import { getUserDbProperties, searchAttributes, modifiableAttributes, allAttributes } from './userUtils.js';
+import { Client, Change, Attribute, EqualityFilter, SubstringFilter, OrFilter } from 'ldapts';
 /** @import { SearchOptions } from 'ldapts' */
 
 import { getInstance } from '../../services/logger.js';
@@ -15,9 +15,9 @@ let client;
 export async function initialize() {
     logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ' Initializing ldap connection');
     client = new Client({
-        url: getLdapProperties().uri,
-        timeout: getLdapProperties().timeout,
-        connectTimeout: getLdapProperties().connectTimeout,
+        url: getUserDbProperties().uri,
+        timeout: getUserDbProperties().timeout,
+        connectTimeout: getUserDbProperties().connectTimeout,
     });
     await bindLdapIfNeeded();
     logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ' Ldap connection Initialized');
@@ -25,7 +25,7 @@ export async function initialize() {
 
 async function bindLdapIfNeeded() {
     if (!client.isConnected) {
-        await client.bind(getLdapProperties().adminDn, getLdapProperties().password);
+        await client.bind(getUserDbProperties().adminDn, getUserDbProperties().password);
     }
 }
 
@@ -46,9 +46,6 @@ export async function find_user(uid) {
     return user || errors.UserNotFoundError.throw();
 }
 
-const modifiableAttributes = [getSmsAttribute(), getMailAttribute()];
-const allAttributes = modifiableAttributes.concat("uid");
-
 /**
  * @returns the user, or undefined
  */
@@ -67,13 +64,35 @@ async function find_user_internal(uid) {
         return;
     }
 
-    const user = Object.fromEntries(
+    return parseUser(searchEntry, allAttributes);
+}
+
+/**
+ * @param {String[]} attributeList 
+ */
+function parseUser(searchEntry, attributeList) {
+    return Object.fromEntries(
         Object.entries(searchEntry)
-            .filter(([key]) => allAttributes.includes(key))
+            .filter(([key]) => attributeList.includes(key))
             .map(([key, value]) => [key, Array.isArray(value) ? value[0] : value])
     );
+}
 
-    return user;
+export async function search_users(token) {
+    /** @type SearchOptions */
+    const opts = {
+        filter: new OrFilter( // (|(uid=*token*)(memberOf=*token*))
+            searchAttributes.map(attr => new SubstringFilter({
+                attribute: attr,
+                any: token,
+            }))
+        ),
+        scope: 'sub',
+        attributes: searchAttributes,
+    };
+
+    const { searchEntries } = await getClient().then(client => client.search(getBaseDn(), opts));
+    return searchEntries.map(searchEntry => parseUser(searchEntry, searchAttributes));
 }
 
 function ldap_change(user) {
@@ -106,8 +125,9 @@ export function create_user(uid) {
         cn: uid,
         uid: uid,
         sn: uid,
-        [getMailAttribute()]: uid + '@univ.org',
-        [getSmsAttribute()]: '0612345678',
+        [getUserDbProperties().transport.mail]: uid + '@univ.org',
+        [getUserDbProperties().transport.sms]: '0612345678',
+        [getUserDbProperties().displayName]: uid,
         objectclass: ['inetOrgPerson']
     };
     return getClient().then(client => client.add(getDN(uid), entry));
@@ -117,22 +137,6 @@ export function remove_user(uid) {
     return getClient().then(client => client.del(getDN(uid)));
 }
 
-function getLdapProperties() {
-    return properties.getEsupProperty('ldap');
-}
-
 function getBaseDn() {
-    return getLdapProperties().baseDn;
-}
-
-function getTransportProperties() {
-    return getLdapProperties().transport;
-}
-
-function getSmsAttribute() {
-    return getTransportProperties().sms;
-}
-
-function getMailAttribute() {
-    return getTransportProperties().mail;
+    return getUserDbProperties().baseDn;
 }
