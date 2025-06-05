@@ -2,12 +2,9 @@ import { describe, test, before, after, beforeEach, afterEach } from "node:test"
 import assert from "node:assert/strict";
 import supertest from 'supertest';
 
-import { MongoMemoryServer } from 'mongodb-memory-server';
-import * as mongoose from 'mongoose';
+import * as inMemoryMongoTest from './inMemoryMongoTest.js';
 
 import * as properties from '../properties/properties.js';
-import * as apiDb from '../databases/api/mongodb.js';
-import * as userDb from '../databases/user/mongodb.js';
 import * as api_controller from '../controllers/api.js';
 import * as userDb_controller from '../controllers/user.js';
 import * as userUtils from '../databases/user/userUtils.js';
@@ -172,32 +169,14 @@ function request(httpMethod, uri, { uid, secret, password } = {}) {
 const get = 'get', post = "post", put = 'put', del = 'del';
 
 describe('Esup otp api', async () => {
-    let mongoMemoryServer;
-
     before(async () => {
         properties.setEsup(config);
-
-        // use in memory mongodb
-        mongoMemoryServer = await MongoMemoryServer.create({ instance: { dbName: "test-otp" } });
-
-        await apiDb.initialize(mongoMemoryServer.getUri());
-        await userDb.initialize(mongoMemoryServer.getUri());
-        await api_controller.initialize(apiDb);
-        await userDb_controller.initialize(userDb);
-        await server.initialize_routes();
-        server.server.listen();
-    });
-    after(async (done) => {
-        console.log('🛑 Fermeture de MongoMemoryServer...');
-        await mongoose.disconnect();
-        await mongoMemoryServer.stop();
-        console.log('🛑 Fermeture du serveur...');
-        server.server.close(() => {
-            console.log('✅ Serveur fermé proprement');
-            process.exit(0);
-        });
+        await inMemoryMongoTest.initialise();
     });
 
+    after(async () => {
+        await inMemoryMongoTest.stop();
+    });
 
     beforeEach(async () => {
         uid = "user" + (userCounter++);
