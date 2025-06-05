@@ -10,7 +10,7 @@ import * as userDb_controller from '../controllers/user.js';
 import * as userUtils from '../databases/user/userUtils.js';
 
 import * as utils from '../services/utils.js';
-import * as server from '../server/server.js';
+import { server } from '../server/server.js';
 
 import * as transports from '../transports/transports.js';
 
@@ -145,7 +145,7 @@ async function getUserPreferences() {
  * @param {string} httpMethod get, post, put, del...
  * @param {string} uri example: '/toto/tata?titi=tutu'
  * 
- * @returns supertest.Test
+ * @returns { supertest.Test }
  */
 function request(httpMethod, uri, { uid, secret, password } = {}) {
     if (uid && secret) {
@@ -157,7 +157,10 @@ function request(httpMethod, uri, { uid, secret, password } = {}) {
         }
     }
 
-    const request = supertest(server.server)[httpMethod](uri);
+    /**
+     * @type { supertest.Test }
+     */
+    const request = supertest(server)[httpMethod](uri);
 
     if (password) {
         request.auth(password, { type: 'bearer' });
@@ -376,13 +379,14 @@ describe('Esup otp api', async () => {
             await request(put, "/protected/users/" + uid + "/methods/" + method + "/deactivate", { password: config.api_password })
                 .expect(200);
 
-            // get_activate_methods
-            await request(get, "/admin/users/" + uid + "/methods", { password: config.api_password })
+            // api_controller.get_user_infos
+            await request(get, "/protected/users/" + uid, { password: config.api_password })
                 .expect(200)
                 .then(res => {
-                    assert(!res.body.methods[method]);
+                    assert(!res.body.user.methods[method].active);
                 });
 
+            // api_controller.send_message
             await request(post, "/users/" + uid + "/methods/" + method + "/transports/" + transport, { uid: uid, secret: config.users_secret })
                 .expect(404, {
                     code: 'Error',

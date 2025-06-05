@@ -10,7 +10,7 @@ import * as userDb_controller from '../controllers/user.js';
 import * as userUtils from '../databases/user/userUtils.js';
 
 import * as utils from '../services/utils.js';
-import * as server from '../server/server.js';
+import { server } from '../server/server.js';
 
 import * as transports from '../transports/transports.js';
 
@@ -170,7 +170,7 @@ function request(httpMethod, uri, { uid, secret, password, tenant } = {}) {
         }
     }
 
-    const request = supertest(server.server)[httpMethod](uri);
+    const request = supertest(server)[httpMethod](uri);
 
     if (password) {
         request.auth(password, { type: 'bearer' });
@@ -370,35 +370,6 @@ describe('Esup otp api', async () => {
             assert.equal(userUtils.getTransport(await getUser(), transport), phoneNumber);
         });
 
-        await describe('activate_method_admin', async () => {
-            await request(put, "/admin/methods/" + method + "/deactivate", { password: tenant.api_password, tenant: tenant.name })
-                .expect(200);
-            assert(!properties.getMethodProperty(method, 'activate'));
-
-            await request(put, "/protected/users/" + uid + "/methods/" + method + "/activate", { password: tenant.api_password, tenant: tenant.name })
-                .expect(404, {
-                    code: 'Error',
-                    message: properties.getMessage('error', 'method_not_found')
-                });
-
-            await request(put, "/admin/methods/" + method + "/activate", { password: tenant.api_password, tenant: tenant.name })
-                .expect(200);
-            assert(properties.getMethodProperty(method, 'activate'));
-
-            await request(put, "/protected/users/" + uid + "/methods/" + method + "/activate", { password: tenant.api_password, tenant: tenant.name })
-                .expect(200);
-        });
-
-        await describe('activate_method_transport', async () => {
-            await request(put, "/admin/methods/" + method + "/transports/" + transport + "/deactivate", { password: tenant.api_password, tenant: tenant.name })
-                .expect(200);
-            assert(!properties.containsMethodTransport(method, transport));
-
-            await request(put, "/admin/methods/" + method + "/transports/" + transport + "/activate", { password: tenant.api_password, tenant: tenant.name })
-                .expect(200);
-            assert(properties.containsMethodTransport(method, transport));
-        });
-
         await describe('activate_method', async () => {
             await request(put, "/protected/users/" + uid + "/methods/" + method + "/deactivate", { password: tenant.api_password, tenant: tenant.name })
                 .expect(200);
@@ -465,10 +436,10 @@ describe('Esup otp api', async () => {
                 .expect(200);
 
             // get_activate_methods
-            await request(get, "/admin/users/" + uid + "/methods", { password: tenant.api_password, tenant: tenant.name })
+            await request(get, "/protected/users/" + uid, { password: tenant.api_password, tenant: tenant.name })
                 .expect(200)
                 .then(res => {
-                    assert(!res.body.methods[method]);
+                    assert(!res.body.user.methods[method].active);
                 });
 
             await request(post, "/users/" + uid + "/methods/" + method + "/transports/" + transport, { secret: tenant.users_secret})

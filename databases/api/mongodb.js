@@ -1,4 +1,5 @@
 import * as userDb_controller from '../../controllers/user.js';
+import { getCurrentTenantProperties, isMultiTenantContext } from '../../controllers/api.js';
 import * as properties from '../../properties/properties.js';
 import * as fileUtils from '../../services/fileUtils.js';
 import * as utils from '../../services/utils.js';
@@ -12,8 +13,7 @@ const logger = getInstance();
 
 export async function initialize(dbUrl) {
     const connection = await mongoose.createConnection(dbUrl || properties.getMongoDbUrl()).asPromise();
-    const tenants = properties.getEsupProperty('tenants');
-    if (tenants && tenants.length) {
+    if (isMultiTenantContext()) {
         await initialize_tenant_model(connection);
     }
     return Promise.all([
@@ -258,8 +258,17 @@ function available_transports(userTransports, method) {
 
 
 export async function get_uids(req, res) {
-    const tenant = req.header('x-tenant');
-    const data = await UserPreferences.find({ 'tenant': tenant }, { uid: 1 });
+    let filter;
+    if (isMultiTenantContext()) {
+        const { scopes } = getCurrentTenantProperties(req);
+        // Only get uids ending with the scope (prefixed with "@")
+        const regex = new RegExp(`@(${scopes.join('|')})$`);
+        filter = { uid: regex };
+    } else {
+        filter = {};
+    }
+
+    const data = await UserPreferences.find(filter, { uid: 1 });
     const result = data.map((uid) => uid.uid);
 
     res.status(200);
@@ -295,10 +304,10 @@ export function save_tenant(tenant) {
 
 async function init_tenant(tenant) {
     return save_tenant(new Tenants({
-        id:           new mongoose.mongo.ObjectId(),
-        name:         tenant.name,
-        scopes:       tenant.scopes,
-        webauthn:     tenant.webauthn,
+        id: new mongoose.mongo.ObjectId(),
+        name: tenant.name,
+        scopes: tenant.scopes,
+        webauthn: tenant.webauthn,
         api_password: tenant.api_password,
         users_secret: tenant.users_secret
     }));
@@ -306,7 +315,7 @@ async function init_tenant(tenant) {
 
 export async function update_tenant(req, res) {
     const tenant = await find_tenant_by_id(req, res);
-    if(tenant) {
+    if (tenant) {
         tenant.name = req.body.name;
         tenant.scopes = req.body.scopes;
         tenant.webauthn = req.body.webauthn;
@@ -332,10 +341,10 @@ export async function create_tenant(req, res) {
     }*/
     const tenant = req.body;
     save_tenant(new Tenants({
-        id:           new mongoose.mongo.ObjectId(),
-        name:         tenant.name,
-        scopes:       tenant.scopes,
-        webauthn:     tenant.webauthn,
+        id: new mongoose.mongo.ObjectId(),
+        name: tenant.name,
+        scopes: tenant.scopes,
+        webauthn: tenant.webauthn,
         api_password: btoa(tenant.api_password),
         users_secret: btoa(tenant.users_secret)
     }));
@@ -346,7 +355,7 @@ export async function create_tenant(req, res) {
  */
 export async function get_tenants(req, res) {
     const data = await Tenants.find({});
-    const result = data.map(t => ({id: t.id, name: t.name}));
+    const result = data.map(t => ({ id: t.id, name: t.name }));
     return result;
 }
 

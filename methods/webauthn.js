@@ -1,9 +1,8 @@
-import * as properties from '../properties/properties.js';
 import * as utils from '../services/utils.js';
 import * as fileUtils from '../services/fileUtils.js';
 import * as errors from '../services/errors.js';
 import { getInstance } from '../services/logger.js';
-import { apiDb } from '../controllers/api.js';
+import { apiDb, getCurrentTenantProperties } from '../controllers/api.js';
 const logger = getInstance();
 
 import * as SimpleWebAuthnServer from '@simplewebauthn/server';
@@ -42,7 +41,7 @@ const pubkeyTypes = [ // https://www.iana.org/assignments/cose/cose.xhtml#algori
     *
     */
 export async function generate_method_secret(user, req, res) {
-    const { rp } = await get_tenant(user);
+    const { rp } = await getWebauthnProperties(user);
     const nonce = utils.bufferToBase64URLString(utils.generate_u8array_code(128));
 
     user.webauthn.registration.nonce = nonce;
@@ -99,7 +98,7 @@ export async function confirm_user_activate(user, req, res) {
         return;
     }
 
-    const { rp, allowedOrigins } = await get_tenant(user);
+    const { rp, allowedOrigins } = await getWebauthnProperties(user);
 
     let verification;
     try {
@@ -194,7 +193,7 @@ function findAuthenticatorsById(user, id, throwExceptionIfNotFound, errorMessage
 
     if (ret.index !== -1) {
         ret.authenticator = user.webauthn.authenticators[ret.index];
-    } else if(throwExceptionIfNotFound === true) {
+    } else if (throwExceptionIfNotFound === true) {
         throw new errors.EsupOtpApiError(404, errorMessage || "Unknown credential id");
     }
 
@@ -258,7 +257,7 @@ export async function verify_webauthn_auth(user, req, res) {
 
     const uint8a = (base64url_of_buffer) => new Uint8Array(utils.base64URLStringToBuffer(base64url_of_buffer));
 
-    const { rp, allowedOrigins } = await get_tenant(user);
+    const { rp, allowedOrigins } = await getWebauthnProperties(user);
 
     let verification;
     try {
@@ -337,17 +336,7 @@ export async function user_deactivate(user, req, res) {
     });
 }
 
-
-async function get_tenant(user) {
-    const tenant = await apiDb.find_tenant_by_name(user.tenant);
-    if(!tenant) {
-        res.status(400);
-        res.send({
-            message: "Unable to find tenant setted for user."
-        });
-        return;
-    }
-
-    return  { rp: tenant.webauthn.relying_party, allowedOrigins: tenant.webauthn.allowed_origins};
+async function getWebauthnProperties(req) {
+    const tenant = await getCurrentTenantProperties(req);
+    return tenant.webauthn;
 }
-
