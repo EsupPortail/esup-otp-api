@@ -102,7 +102,7 @@ async function initialize_tenant_model(connection) {
     Tenants = connection.model('Tenants', TenantSchema, 'Tenants');
 
     logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + " Start initializing tenants");
-    for (const tenant of cleanTenant(properties.getEsupProperty('tenants'))) {
+    for (const tenant of properties.getEsupProperty('tenants')) {
         logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ` Check tenant configuration ${tenant['name']}`)
         const existingTenant = await find_tenant_by_name(tenant.name);
         if (existingTenant === undefined || existingTenant === null) {
@@ -119,20 +119,6 @@ async function initialize_tenant_model(connection) {
             logger.trace(fileUtils.getFileNameFromUrl(import.meta.url) + ` Tenant ${created_tenant.name} users_secret : ${created_tenant.users_secret}`);
         }
     }
-}
-
-function cleanTenant(tenant) {
-    if (Array.isArray(tenant)) {
-        return tenant.map(cleanTenant);
-    } else if (typeof tenant === 'object' && tenant !== null) {
-        return Object.keys(tenant).reduce((acc, key) => {
-            if (!key.startsWith("#")) {
-                acc[key] = cleanTenant(tenant[key]); // Appel récursif
-            }
-            return acc;
-        }, {});
-    }
-    return tenant;
 }
 
 /**
