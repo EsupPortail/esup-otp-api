@@ -98,32 +98,27 @@ let Tenants;
 /**
  * @param { mongoose.Connection } connection
  */
-function initialize_tenant_model(connection) {
+async function initialize_tenant_model(connection) {
     Tenants = connection.model('Tenants', TenantSchema, 'Tenants');
 
     logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + " Start initializing tenants");
-    return new Promise(async function(resolve, reject) {
-        for (let tenant of properties.getEsupProperty('tenants')) {
-            tenant = cleanTenant(tenant);
-            logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ` Check tenant configuration ${tenant['name']}`)
-            const existingTenant = await Tenants.findOne({ 'name': tenant.name }).exec();
-            if (existingTenant === undefined || existingTenant === null) {
-                logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ` Start configuration of tenant ${tenant.name}`);
-                // Generate api_password secret
-                tenant.api_password ??= generateSecret();
+    for (const tenant of cleanTenant(properties.getEsupProperty('tenants'))) {
+        logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ` Check tenant configuration ${tenant['name']}`)
+        const existingTenant = await find_tenant_by_name(tenant.name);
+        if (existingTenant === undefined || existingTenant === null) {
+            logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ` Start configuration of tenant ${tenant.name}`);
+            // Generate api_password secret
+            tenant.api_password ??= generateSecret();
 
-                // Generate users_secret secret
-                tenant.users_secret ??= generateSecret();
+            // Generate users_secret secret
+            tenant.users_secret ??= generateSecret();
 
-                init_tenant(tenant).then(created_tenant => {
-                    logger.debug(fileUtils.getFileNameFromUrl(import.meta.url) + ` Tenant ${created_tenant.name} created`);
-                    logger.trace(fileUtils.getFileNameFromUrl(import.meta.url) + ` Tenant ${created_tenant.name} api_password : ${created_tenant.api_password}`);
-                    logger.trace(fileUtils.getFileNameFromUrl(import.meta.url) + ` Tenant ${created_tenant.name} users_secret : ${created_tenant.users_secret}`);
-                });
-            }
+            const created_tenant = await init_tenant(tenant);
+            logger.debug(fileUtils.getFileNameFromUrl(import.meta.url) + ` Tenant ${created_tenant.name} created`);
+            logger.trace(fileUtils.getFileNameFromUrl(import.meta.url) + ` Tenant ${created_tenant.name} api_password : ${created_tenant.api_password}`);
+            logger.trace(fileUtils.getFileNameFromUrl(import.meta.url) + ` Tenant ${created_tenant.name} users_secret : ${created_tenant.users_secret}`);
         }
-        resolve();
-    });
+    }
 }
 
 function cleanTenant(tenant) {
