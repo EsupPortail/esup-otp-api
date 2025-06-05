@@ -108,10 +108,10 @@ async function initialize_tenant_model(connection) {
         if (existingTenant === undefined || existingTenant === null) {
             logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ` Start configuration of tenant ${tenant.name}`);
             // Generate api_password secret
-            tenant.api_password ??= generateSecret();
+            tenant.api_password ??= utils.generate_base64url_code(30);
 
             // Generate users_secret secret
-            tenant.users_secret ??= generateSecret();
+            tenant.users_secret ??= utils.generate_base64url_code(30);
 
             const created_tenant = await init_tenant(tenant);
             logger.debug(fileUtils.getFileNameFromUrl(import.meta.url) + ` Tenant ${created_tenant.name} created`);
@@ -133,11 +133,6 @@ function cleanTenant(tenant) {
         }, {});
     }
     return tenant;
-}
-
-function generateSecret() {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+';
-    return Array.from({length: 16}, (x, i) => chars.charAt(Math.floor(Math.random() * chars.length))).join('');
 }
 
 /**

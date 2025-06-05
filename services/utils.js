@@ -64,10 +64,17 @@ export function generate_code_of_type(code_length, code_type) {
 export function generate_string_code(code_length) {
     return crypto.randomBytes(code_length / 2).toString('hex');
 }
+
 export function generate_digit_code(code_length) {
     const max = Math.pow(10, code_length);
     const intValue = crypto.randomInt(max);
     return intValue.toString().padStart(code_length, '0');
+}
+
+export function generate_base64url_code(code_length) {
+    return crypto.randomBytes(code_length)
+        .toString('base64url')
+        .slice(0, code_length);
 }
 
 /**
