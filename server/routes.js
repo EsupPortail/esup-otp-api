@@ -162,9 +162,9 @@ async function initializeAdminRoutes(server) {
  */
 async function initializeTenantsRoutes(server) {
     logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ' Initializing multi-tenants routes');
-    server.get("/tenants", validator.check_admin_access, tenants_controller.get_tenants);
-    server.get("/tenants/:id", validator.check_admin_access, tenants_controller.get_tenant);
-    server.post("/tenants", validator.check_admin_access, tenants_controller.create_tenant);
-    server.put("/tenants/:id", validator.check_admin_access, tenants_controller.update_tenant);
-    server.del("/tenants/:id", validator.check_admin_access, tenants_controller.delete_tenant);
+    server.get("/admin/tenants", validator.check_admin_access, tenants_controller.get_tenants);
+    server.get("/admin/tenants/:id", validator.check_admin_access, tenants_controller.get_tenant);
+    server.post("/admin/tenants", validator.check_admin_access, tenants_controller.create_tenant);
+    server.put("/admin/tenants/:id", validator.check_admin_access, tenants_controller.update_tenant);
+    server.del("/admin/tenants/:id", validator.check_admin_access, tenants_controller.delete_tenant);
 }

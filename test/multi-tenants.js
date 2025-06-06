@@ -208,7 +208,7 @@ describe('Esup otp api', async () => {
     });
 
     await test('get tenants list with wrong global API password', async () => {
-        await request(get, "/tenants", { password: "toto" })
+        await request(get, "/admin/tenants", { password: "toto" })
             .expect(403)
             .then(res => {
                 assert.equal(res.body.code, 'Forbidden');
@@ -216,7 +216,7 @@ describe('Esup otp api', async () => {
     });
 
     await test('get tenants list with correct global API password', async () => {
-        await request(get, "/tenants", { password: config.api_password })
+        await request(get, "/admin/tenants", { password: config.api_password })
             .expect(200)
             .expect(res => {
                 assert.ok(Array.isArray(res.body));
@@ -227,12 +227,12 @@ describe('Esup otp api', async () => {
     });
 
     await test('get non-existing tenant', async () => {
-        await request(get, "/tenants/42", { password: config.api_password })
+        await request(get, "/admin/tenants/42", { password: config.api_password })
             .expect(404);
     });
 
     await test('get existing tenant', async () => {
-        await request(get, "/tenants/" + tenant.id, { password: config.api_password })
+        await request(get, "/admin/tenants/" + tenant.id, { password: config.api_password })
             .expect(200)
             .expect(res => {
                 assert.equal(res.body.name, tenant.name);
