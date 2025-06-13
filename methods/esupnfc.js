@@ -2,6 +2,7 @@ import * as properties from '../properties/properties.js';
 import * as utils from '../services/utils.js';
 import * as errors from '../services/errors.js';
 import { apiDb } from '../controllers/api.js';
+import * as qrcode from 'qrcode';
 
 import { getInstance } from '../services/logger.js';
 const logger = getInstance();
@@ -44,6 +45,35 @@ export function send_message(user, req, res) {
     //res.send("<h1>Code :</h1><p>" + user.esupnfc.code + "</p>");
     // autologin
     res.send("");
+}
+
+const serverInfos = properties.getMethod('esupnfc').server_infos;
+let serverInfosWithQrCode;
+
+if (serverInfos) {
+    serverInfosWithQrCode = {
+        ...serverInfos,
+        qrCode: await qrcode.toString(JSON.stringify(serverInfos), { type: "svg" }),
+    }
+}
+
+export async function getServerInfos(req, res) {
+    if (!serverInfos) {
+        res.send({
+            "code": "Ko"
+        })
+    }
+    else if (req.query.requireQrCode) {
+        res.send({
+            "code": "Ok",
+            server_infos: serverInfosWithQrCode,
+        });
+    } else {
+        res.send({
+            "code": "Ok",
+            server_infos: serverInfos,
+        });
+    }
 }
 
 export function generate_method_secret(user, req, res) {
