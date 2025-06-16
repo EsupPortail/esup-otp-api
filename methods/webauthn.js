@@ -41,7 +41,7 @@ const pubkeyTypes = [ // https://www.iana.org/assignments/cose/cose.xhtml#algori
     *
     */
 export async function generate_method_secret(user, req, res) {
-    const { relying_party } = await getWebauthnProperties(user);
+    const { relying_party } = await getWebauthnProperties(req);
     const nonce = utils.bufferToBase64URLString(utils.generate_u8array_code(128));
 
     user.webauthn.registration.nonce = nonce;
@@ -98,7 +98,7 @@ export async function confirm_user_activate(user, req, res) {
         return;
     }
 
-    const { relying_party, allowed_origins } = await getWebauthnProperties(user);
+    const { relying_party, allowed_origins } = await getWebauthnProperties(req);
 
     let verification;
     try {
@@ -257,7 +257,7 @@ export async function verify_webauthn_auth(user, req, res) {
 
     const uint8a = (base64url_of_buffer) => new Uint8Array(utils.base64URLStringToBuffer(base64url_of_buffer));
 
-    const { relying_party, allowed_origins } = await getWebauthnProperties(user);
+    const { relying_party, allowed_origins } = await getWebauthnProperties(req);
 
     let verification;
     try {
