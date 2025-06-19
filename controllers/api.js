@@ -321,6 +321,12 @@ export async function accept_authentication(req, res) {
     return method.accept_authentication(user, req, res);
 }
 
+export async function reject_authentication(req, res) {
+    errorIfNotPushMethod(req);
+    const { user, method } = await getUserAndMethodModule(req, { checkUserMethodActive: true, checkMethodPropertyActivate: true });
+    return method.reject_authentication(user, req, res);
+}
+
 export async function pending(req, res) {
     errorIfNotPushMethod(req);
     const { user, method } = await getUserAndMethodModule(req, { checkMethodPropertyPending: true });

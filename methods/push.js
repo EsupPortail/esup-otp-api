@@ -65,6 +65,16 @@ const detector = new DeviceDetector({
 });
 
 export async function send_message(user, req, res) {
+    const remainingTimeoutDuration = user.push.last_rejection_date + (user.push.timeout * 1000) - Date.now();
+    if (remainingTimeoutDuration > 0) {
+        const remainingTimeoutDurationinSeconds = Math.ceil(remainingTimeoutDuration / 1000)
+        res.header("Retry-After", remainingTimeoutDurationinSeconds);
+        res.status(200); // To avoid impacting esup-otp-cas, return a 200 instead of a 429
+        res.send({ code: 'Ok' });
+        logger.warn(`notification not sent : user ${user.uid} rejected previous notification (remaining timeout ${remainingTimeoutDurationinSeconds} seconds, total timeout ${user.push.timeout} seconds)`);
+        return;
+    }
+
     user.push.code = utils.generate_digit_code(properties.getMethod('random_code').code_length);
     let validity_time = properties.getMethod('push').validity_time * 60 * 1000;
     validity_time += new Date().getTime();
@@ -161,6 +171,7 @@ export async function verify_code(user, req) {
     if (user.push.code == req.params.otp && Date.now() < user.push.validity_time) {
         user.push.code = null;
         user.push.validity_time = null;
+        user.push.timeout = 0;
         await apiDb.save_user(user);
         return true;
     } else {
@@ -249,6 +260,7 @@ export async function confirm_user_activate(user, req, res) {
         user.push.device.model = deviceInfosFromUserAgent.device.model || req.params.model || "DevDevice";
         user.push.activation_code = null;
         user.push.activation_fail = null;
+        user.push.timeout = 0;
         await apiDb.save_user(user);
         sockets.emitManager('userPushActivate', { uid: user.uid });
         sockets.emitToManagers('userPushActivateManager', user.uid);
@@ -287,19 +299,53 @@ export async function refresh_user_gcm_id(user, req, res) {
 // Checks whether the tokenSecret received is equal to the one generated, changed by mbdeme on June 2020
 
 export async function accept_authentication(user, req, res) {
-    logger.debug("accept_authentication ? " + user.push.token_secret + " VS " + req.params.tokenSecret);
+    const tokenSecret = checkTokenSecret("accept_authentication", user, req, res);
+
+    sockets.emitCas(user.uid, 'userAuth', { "code": "Ok", "otp": user.push.code });
+    res.send({
+        "code": "Ok",
+        "tokenSecret": tokenSecret
+    });
+    logger.debug("sockets.emitCas OK : otp = " + user.push.code);
+}
+
+export async function reject_authentication(user, req, res) {
+    checkTokenSecret("reject_authentication", user, req, res);
+    const previous_timeout = user.push.timeout;
+
+    /**
+     * 1 reject = 3 seconds
+     * 2 rejects = 3*3 = 9 seconds
+     * 3 rejects = 9*9 = 81s
+     * 4 rejects = 81*81 = 6561 = 1h49
+     */
+    let new_timeout;
+    if (previous_timeout) {
+        new_timeout = previous_timeout * previous_timeout;
+    } else {
+        new_timeout = 3;
+    }
+    logger.warn(`user ${user.uid} rejected push notification. (timeout: ${new_timeout} seconds)`);
+
+    user.push.timeout = new_timeout;
+    user.push.last_rejection_date = Date.now();
+    user.push.code = null;
+    user.push.validity_time = null;
+    await apiDb.save_user(user);
+
+    res.send({
+        "code": "Ok",
+    });
+}
+
+function checkTokenSecret(methodName, user, req, res) {
+    logger.debug(methodName + " ? " + user.push.token_secret + " VS " + req.params.tokenSecret);
     let tokenSecret = null;
     if (trustGcm_id == true && utils.isGcmIdWellFormed(user.push.device.gcm_id) && user.push.device.gcm_id == req.params.tokenSecret)
         tokenSecret = user.push.token_secret;
     if ((user.push.token_secret == req.params.tokenSecret || tokenSecret != null) && req.params.loginTicket == user.push.lt) {
-        logger.debug("accept_authentication OK : lt = " + req.params.loginTicket);
-        await apiDb.save_user(user);
-        sockets.emitCas(user.uid, 'userAuth', { "code": "Ok", "otp": user.push.code });
-        res.send({
-            "code": "Ok",
-            "tokenSecret": tokenSecret
-        });
-        logger.debug("sockets.emitCas OK : otp = " + user.push.code);
+        logger.debug(methodName + " OK : lt = " + req.params.loginTicket);
+        return tokenSecret;
     } else {
         logger.warn(user.uid + "'s token_secret or lt doesn't match. req.params.tokenSecret=" + req.params.tokenSecret + " and req.params.loginTicket=" + req.params.loginTicket);
         throw new errors.UnvailableMethodOperationError();
@@ -337,6 +383,7 @@ async function clearUserPush(user, req, res) {
     user.push.validity_time = null;
     user.push.text = null;
     user.push.lt = null;
+    user.push.timeout = 0;
     await apiDb.save_user(user);
 }
 

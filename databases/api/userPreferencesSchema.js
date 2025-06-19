@@ -127,11 +127,13 @@ const schema = {
             },
         code : String,
         validity_time: Number,
+        last_rejection_date: Number,
+        timeout: Number, // in seconds, setted when notification is rejected
         text: String,
-        lt:{
+        lt: {
             type: String,
             default: null
-            },
+        },
     },
     esupnfc: {
         code : String,
