@@ -1,5 +1,6 @@
 import * as properties from '../properties/properties.js';
 import * as utils from '../services/utils.js';
+import * as fileUtils from '../services/fileUtils.js';
 import * as errors from '../services/errors.js';
 import { apiDb } from '../controllers/api.js';
 import * as qrcode from 'qrcode';
@@ -90,6 +91,35 @@ export async function user_activate(user, req, res) {
     res.send({
         "code": "Ok",
     });
+}
+
+export async function autoActivateEsupnfcReady(user, res, data) {
+    if (serverInfos && properties.getMethodProperty('esupnfc', 'activate') && properties.getMethodProperty('esupnfc', 'autoActivateWithPush')) {
+        data.autoActivateEsupnfc = true;
+        data.esupnfc_server_infos = serverInfos;
+        logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + " autoActivateEsupnfcReady " + user.uid);
+    }
+    else {
+        data.autoActivateEsupnfc = false;
+        logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + " autoActivateEsupnfcReady is false");
+    }
+}
+
+export async function autoActivateWithPush(user, req, res) {
+    if (properties.getMethodProperty('esupnfc', 'activate') && properties.getMethodProperty('esupnfc', 'autoActivateWithPush')) {
+        await user_activate(user, req, res);
+        logger.log('archive', {
+            message: [
+                {
+                    req,
+                    action: 'autoActivateWithPush',
+                }
+            ]
+        });
+    }
+    else res.send({
+        "code": "Ko",
+    })
 }
 
 export function confirm_user_activate(user, req, res) {

@@ -78,6 +78,9 @@ const logger = winston.createLogger({
                             if (req.query.managerUser) {
                                 message.managerUser ||= req.query.managerUser;
                             }
+                            if (req.params.method) {
+                                message.method ||= req.params.method;
+                            }
                         }
                     }
 

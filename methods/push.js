@@ -19,6 +19,7 @@ let lookup;
 
 import DeviceDetector from "node-device-detector";
 import { autoActivateTotpReady } from './totp.js';
+import { autoActivateEsupnfcReady } from './esupnfc.js';
 
 const trustGcm_id = properties.getMethod('push').trustGcm_id;
 
@@ -268,6 +269,7 @@ export async function confirm_user_activate(user, req, res) {
             "tokenSecret": token_secret,
         };
         await autoActivateTotpReady(user, res, data);
+        await autoActivateEsupnfcReady(user, res, data);
         logger.debug(fileUtils.getFileNameFromUrl(import.meta.url) + " autoActivateTotpReady " + JSON.stringify(data));
         res.send(data);
     } else {
