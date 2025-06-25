@@ -12,6 +12,11 @@ export function send_message(user, req, res) {
     throw new errors.UnvailableMethodOperationError();
 }
 
+if(properties.getMethodProperty('totp', 'autoActivate')) {
+    logger.warn("the 'totp.autoActivate' configuration is deprecated. In esup.json, replace it with 'totp.autoActivateWithPush'.");
+    properties.setMethodProperty('totp', 'autoActivateWithPush', 'true');
+}
+
 /**
  * Indique si l'otp fourni correspond à celui généré
  *
@@ -55,7 +60,7 @@ function generateSecret(user) {
 }
 
 export async function autoActivateTotpReady(user, res, data) {
-    if (!user.totp.active && properties.getMethodProperty('totp', 'activate') && properties.getMethodProperty('totp', 'autoActivate')) {
+    if (!user.totp.active && properties.getMethodProperty('totp', 'activate') && properties.getMethodProperty('totp', 'autoActivateWithPush')) {
         user.totp.secret = generateSecret(user);
         data.autoActivateTotp = true;
         data.totpKey = user.totp.secret.base32;
@@ -69,8 +74,8 @@ export async function autoActivateTotpReady(user, res, data) {
     }
 }
 
-export async function autoActivateTotp(user, req, res) {
-    if (!user.totp.active && properties.getMethodProperty('totp', 'activate') && properties.getMethodProperty('totp', 'autoActivate') && user.totp.secret != null) {
+export async function autoActivateWithPush(user, req, res) {
+    if (!user.totp.active && properties.getMethodProperty('totp', 'activate') && properties.getMethodProperty('totp', 'autoActivateWithPush') && user.totp.secret != null) {
         user.totp.active = true;
         await apiDb.save_user(user);
         res.send({
