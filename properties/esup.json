@@ -133,6 +133,8 @@
                 "url": "https://esupnfctag.example.com/",
                 "etablissement": "Univ"
             },
+            "#how_to_autoActivateWithPush": "require server_infos",
+            "autoActivateWithPush": true,
             "validity_time": 3,
             "transports": []
         },
