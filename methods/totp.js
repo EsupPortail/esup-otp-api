@@ -85,7 +85,7 @@ export async function autoActivateWithPush(user, req, res) {
             message: [
                 {
                     req,
-                    action: 'activate_totp_auto'
+                    action: 'autoActivateWithPush',
                 }
             ]
         });
@@ -103,7 +103,6 @@ export async function generate_method_secret(user, req, res) {
                 {
                     req,
                     action: 'deactivate_method',
-                    method: req.params.method,
                 }
             ]
         });

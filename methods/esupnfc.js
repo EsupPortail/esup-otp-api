@@ -93,6 +93,36 @@ export async function user_activate(user, req, res) {
     });
 }
 
+export async function autoActivateEsupnfcReady(user, res, data) {
+    if (serverInfos && properties.getMethodProperty('esupnfc', 'activate') && properties.getMethodProperty('esupnfc', 'autoActivateWithPush')) {
+        data.autoActivateEsupnfc = true;
+        data.esupnfc_server_infos = serverInfos;
+        logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + " autoActivateEsupnfcReady " + user.uid);
+        await apiDb.save_user(user);
+    }
+    else {
+        data.autoActivateEsupnfc = false;
+        logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + " autoActivateEsupnfcReady is false");
+    }
+}
+
+export async function autoActivateWithPush(user, req, res) {
+    if (properties.getMethodProperty('esupnfc', 'activate') && properties.getMethodProperty('esupnfc', 'autoActivateWithPush')) {
+        await user_activate(user, req, res);
+        logger.log('archive', {
+            message: [
+                {
+                    req,
+                    action: 'autoActivateWithPush',
+                }
+            ]
+        });
+    }
+    else res.send({
+        "code": "Ko",
+    })
+}
+
 export function confirm_user_activate(user, req, res) {
     throw new errors.UnvailableMethodOperationError();
 }
