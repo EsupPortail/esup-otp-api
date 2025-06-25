@@ -27,7 +27,7 @@ const trustGcm_id = properties.getMethod('push').trustGcm_id;
 const proxyUrl = properties.getEsupProperty('proxyUrl');
 
 /**
- * @type {(content: admin.messaging.TokenMessage) => Promise<string>}
+ * @type {(message: admin.messaging.Message, dryRun?: boolean) => Promise<string>}
  */
 // initFirebaseAdmin() only if serviceAccount.private_key is defined
 const send = properties.getMethod('push').serviceAccount?.private_key && initFirebaseAdmin();
@@ -45,8 +45,8 @@ function initFirebaseAdmin() {
         .then(() => logger.info("ip-location-api initialized"))
         .catch(err => logger.error(err));
 
-    return function sendWithFirebaseAdmin(content) {
-        return admin.messaging().send(content);
+    return function sendWithFirebaseAdmin(message, dryRun) {
+        return admin.messaging().send(message, dryRun);
     }
 }
 
@@ -65,16 +65,6 @@ const detector = new DeviceDetector({
 });
 
 export async function send_message(user, req, res) {
-    const remainingTimeoutDuration = user.push.last_rejection_date + (user.push.timeout * 1000) - Date.now();
-    if (remainingTimeoutDuration > 0) {
-        const remainingTimeoutDurationinSeconds = Math.ceil(remainingTimeoutDuration / 1000)
-        res.header("Retry-After", remainingTimeoutDurationinSeconds);
-        res.status(200); // To avoid impacting esup-otp-cas, return a 200 instead of a 429
-        res.send({ code: 'Ok' });
-        logger.warn(`notification not sent : user ${user.uid} rejected previous notification (remaining timeout ${remainingTimeoutDurationinSeconds} seconds, total timeout ${user.push.timeout} seconds)`);
-        return;
-    }
-
     user.push.code = utils.generate_digit_code(properties.getMethod('random_code').code_length);
     let validity_time = properties.getMethod('push').validity_time * 60 * 1000;
     validity_time += new Date().getTime();
@@ -86,6 +76,15 @@ export async function send_message(user, req, res) {
     user.push.text = getText(req);
 
     let response = false;
+    let dryRun = false;
+    
+    const remainingTimeoutDuration = user.push.last_rejection_date + (user.push.timeout * 1000) - Date.now();
+    if (remainingTimeoutDuration > 0) {
+        const remainingTimeoutDurationinSeconds = Math.ceil(remainingTimeoutDuration / 1000)
+        logger.warn(`notification not sent : user ${user.uid} rejected previous notification (remaining timeout ${remainingTimeoutDurationinSeconds} seconds, total timeout ${user.push.timeout} seconds)`);
+        dryRun = true;
+    }
+    
     if (utils.canReceiveNotifications(user)) {
         /**
          * @type {admin.messaging.TokenMessage}
@@ -114,7 +113,7 @@ export async function send_message(user, req, res) {
         logger.debug("send gsm push ...");
 
         try {
-            response = await send(content);
+            response = await send(content, dryRun);
         } catch (err) {
             if (err.code == "messaging/registration-token-not-registered") {
                 logger.info(`user ${user.uid} gcm_id not registered (${user.push.device.gcm_id})`);
@@ -134,7 +133,7 @@ export async function send_message(user, req, res) {
         logger.debug("send gsm push ok : " + response);
         res.send({
             "code": "Ok",
-            "message": response
+            "message": "notification sent successfully",
         });
     } else {
         if (!properties.getMethod('push').notification) {
