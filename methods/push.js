@@ -298,7 +298,7 @@ export async function refresh_user_gcm_id(user, req, res) {
 // Checks whether the tokenSecret received is equal to the one generated, changed by mbdeme on June 2020
 
 export async function accept_authentication(user, req, res) {
-    const tokenSecret = checkTokenSecret("accept_authentication", user, req, res);
+    const tokenSecret = checkTokenSecretAndLoginTicket("accept_authentication", user, req, res);
 
     sockets.emitCas(user.uid, 'userAuth', { "code": "Ok", "otp": user.push.code });
     res.send({
@@ -309,7 +309,7 @@ export async function accept_authentication(user, req, res) {
 }
 
 export async function reject_authentication(user, req, res) {
-    checkTokenSecret("reject_authentication", user, req, res);
+    checkTokenSecretAndLoginTicket("reject_authentication", user, req, res);
     const previous_timeout = user.push.timeout;
 
     /**
@@ -337,16 +337,26 @@ export async function reject_authentication(user, req, res) {
     });
 }
 
-function checkTokenSecret(methodName, user, req, res) {
+function checkTokenSecretAndLoginTicket(methodName, user, req, res) {
+    const tokenSecret = checkTokenSecret(methodName, user, req, res);
+    if (req.params.loginTicket == user.push.lt) {
+        logger.debug(methodName + " OK : lt = " + req.params.loginTicket);
+        return tokenSecret;
+    } else {
+        logger.warn(user.uid + "'s lt doesn't match. req.params.loginTicket=" + req.params.loginTicket);
+        throw new errors.UnvailableMethodOperationError();
+    }
+}
+
+export function checkTokenSecret(methodName, user, req, res) {
     logger.debug(methodName + " ? " + user.push.token_secret + " VS " + req.params.tokenSecret);
     let tokenSecret = null;
     if (trustGcm_id == true && utils.isGcmIdWellFormed(user.push.device.gcm_id) && user.push.device.gcm_id == req.params.tokenSecret)
         tokenSecret = user.push.token_secret;
-    if ((user.push.token_secret == req.params.tokenSecret || tokenSecret != null) && req.params.loginTicket == user.push.lt) {
-        logger.debug(methodName + " OK : lt = " + req.params.loginTicket);
+    if (user.push.token_secret == req.params.tokenSecret || tokenSecret != null) {
         return tokenSecret;
     } else {
-        logger.warn(user.uid + "'s token_secret or lt doesn't match. req.params.tokenSecret=" + req.params.tokenSecret + " and req.params.loginTicket=" + req.params.loginTicket);
+        logger.warn(user.uid + "'s token_secret match. req.params.tokenSecret=" + req.params.tokenSecret);
         throw new errors.UnvailableMethodOperationError();
     }
 }
