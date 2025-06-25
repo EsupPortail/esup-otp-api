@@ -7,7 +7,7 @@ import { getInstance } from '../services/logger.js';
 const logger = getInstance();
 
 export async function check_hash(req, res) {
-    if (!check_hash_internal(req.params.uid, req.params.hash)) {
+    if (!await check_hash_internal(req.params.uid, req.params.hash)) {
         throw new errors.ForbiddenError();
     }
 }
