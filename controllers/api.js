@@ -543,3 +543,10 @@ function errorIfNotPushMethod(req) {
         throw new errors.MethodNotFoundError();
     }
 }
+
+export async function stats(req, res) {
+    const stats = await apiDb.stats()
+    res.status(200);
+    res.send(stats);
+    return;
+}

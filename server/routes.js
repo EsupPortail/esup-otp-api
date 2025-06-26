@@ -164,4 +164,5 @@ async function initializeAdminRoutes(server) {
     server.post("/admin/tenants", validator.check_admin_access, tenants_controller.create_tenant);
     server.put("/admin/tenants/:id", validator.check_admin_access, tenants_controller.update_tenant);
     server.del("/admin/tenants/:id", validator.check_admin_access, tenants_controller.delete_tenant);
+    server.get("/admin/stats", validator.check_admin_access, api_controller.stats);
 }
