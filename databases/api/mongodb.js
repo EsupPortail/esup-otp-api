@@ -362,3 +362,95 @@ export async function get_tenants(req, res) {
 export async function delete_tenant(req, res) {
     await Tenants.deleteOne({ 'id': req.params.id });
 }
+
+/**
+ * Retourne le nombre d'utilisateurs totaux ayant au moins une méthode de MFA activée
+ * Puis, pour chaque méthode, le nombre d'utilisateurs ayant cette méthode activée
+ */
+export async function stats() {
+    console.time("Statistiques MFA");
+
+    const stats = {
+        totalUsers: 0,
+        totalMfaUsers: 0,
+        methods: {}
+    };
+
+    const allMethods = properties.getEsupProperty('methods');
+
+    // Filtrer les méthodes activées
+    const activeMethods = Object.entries(allMethods)
+        .filter(([_, conf]) => conf.activate === true || conf.activate === 'true')
+        .map(([method]) => method);
+
+    // Initialiser le compteur de méthodes
+    for (const method of activeMethods) {
+        stats.methods[method] = 0;
+    }
+
+    try {
+        const pipeline = [
+            {
+                $project: Object.fromEntries(
+                    activeMethods.map(method => [method, 1])
+                )
+            },
+            {
+                $facet: {
+                    methodCounts: [
+                        {
+                            $group: Object.fromEntries([
+                                ['_id', null],
+                                ...activeMethods.map(method => [
+                                    method,
+                                    {
+                                        $sum: {
+                                            $cond: [
+                                                { $eq: [`$${method}.active`, true] },
+                                                1,
+                                                0
+                                            ]
+                                        }
+                                    }
+                                ])
+                            ])
+                        }
+                    ],
+                    mfaUsers: [
+                        {
+                            $match: {
+                                $or: activeMethods.map(method => ({
+                                    [`${method}.active`]: true
+                                }))
+                            }
+                        },
+                        { $count: 'count' }
+                    ],
+                    totalUsers: [
+                        { $count: 'count' }
+                    ]
+                }
+            }
+        ];
+
+        const result = await UserPreferences.aggregate(pipeline).exec();
+        const data = result[0];
+
+        // Remplir stats.methods
+        if (data.methodCounts.length > 0) {
+            for (const method of activeMethods) {
+                stats.methods[method] = data.methodCounts[0][method] || 0;
+            }
+        }
+
+        stats.totalUsers = data.totalUsers[0]?.count || 0;
+        stats.totalMfaUsers = data.mfaUsers[0]?.count || 0;
+
+    } catch (err) {
+        console.error("Erreur lors de l'agrégation des statistiques MFA :", err);
+    }
+
+    console.timeEnd("Statistiques MFA");
+    return stats;
+}
+
