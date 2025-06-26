@@ -645,3 +645,7 @@ function errorIfNotPushMethod(req) {
         throw new errors.MethodNotFoundError();
     }
 }
+
+export async function stats(req, res) {
+    return res.send(await apiDb.stats());
+}
