@@ -2,6 +2,7 @@ import restify from 'restify';
 import errors from 'restify-errors';
 import corsMiddleware from "restify-cors-middleware2";
 import { promisify } from 'util';
+import { ProxyAgent, setGlobalDispatcher } from 'undici';
 
 import * as properties from '../properties/properties.js';
 import * as fileUtils from '../services/fileUtils.js';
@@ -41,6 +42,14 @@ server.use(
         return next();
     }
 );
+
+/**@type { String } */
+const proxyUrl = properties.getEsupProperty('proxyUrl');
+if (proxyUrl) {
+    setGlobalDispatcher(new ProxyAgent(proxyUrl));
+    process.env.https_proxy ||= proxyUrl;
+    process.env.http_proxy ||= proxyUrl;
+}
 
 server.on('restifyError', (req, res, err, callback) => {
     if (err instanceof errors.HttpError) { // e.g.: 404 error, or errors difined in ../services/errors.js

@@ -3,7 +3,7 @@ import * as utils from '../services/utils.js';
 import * as userDb_controller from '../controllers/user.js';
 import { getInstance } from '../services/logger.js'; const logger = getInstance();
 import * as errors from '../services/errors.js';
-import { request, ProxyAgent } from 'undici';
+import { request } from 'undici';
 
 export const name = "sms";
 
@@ -22,13 +22,6 @@ if (baseUrlBroker.username || baseUrlBroker.password) {
     baseUrlBroker.username = '';
     baseUrlBroker.password = '';
 }
-
-const proxyUrl = properties.getEsupProperty('proxyUrl');
-
-if (proxyUrl) {
-    requestOpts.dispatcher = new ProxyAgent(proxyUrl);
-}
-
 
 export async function send_message(req, opts, res) {
     const num = opts.userTransport || await userDb_controller.get_phone_number(req);
