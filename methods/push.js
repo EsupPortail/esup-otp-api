@@ -34,9 +34,10 @@ const send = properties.getMethod('push').serviceAccount?.private_key && initFir
 
 
 function initFirebaseAdmin() {
+    const httpAgent = proxyUrl ? new HttpsProxyAgent(proxyUrl) : undefined;
     admin.initializeApp({
-        credential: admin.credential.cert(properties.getMethod('push').serviceAccount),
-        httpAgent: proxyUrl ? new HttpsProxyAgent(proxyUrl) : undefined,
+        credential: admin.credential.cert(properties.getMethod('push').serviceAccount, httpAgent),
+        httpAgent: httpAgent,
     });
 
     logger.info("firebase-admin initialized");
