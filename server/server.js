@@ -94,3 +94,20 @@ export async function start() {
     await attach_socket();
     logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ' App is ready at : ' + server.address().port);
 }
+
+export async function stop() {
+    logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ' Stopping server');
+    await Promise.allSettled([
+        promisify(server.close).call(server),
+        sockets.close(),
+    ]);
+    await Promise.race([ // close all connections (or wait a second if some connections don't want to close)
+        async () => server.closeAllConnections(),
+        new Promise(resolve => setTimeout(resolve, 1000)),
+    ]);
+    await Promise.allSettled([
+        userDb_controller.userDb.close(),
+        api_controller.apiDb.close(),
+    ]);
+    logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ' Server is stopped');
+}

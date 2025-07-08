@@ -12,6 +12,10 @@ export async function initialize() {
     connection = await mysql.createConnection(getMysqlProperty());
 }
 
+export function close() {
+    return connection.end();
+}
+
 export async function find_user(uid) {
     const query = "Select * From " + getUserTable() + " u Where u.uid = ?";
     const [rows, fields] = await connection.execute(query, [uid]);

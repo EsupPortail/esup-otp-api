@@ -49,6 +49,11 @@ function initialize() {
     });
 }
 
+export async function close() {
+    io.disconnectSockets();
+    return io.close();
+}
+
 export function emitManager(emit, data) {
     io.to(managerSocket).emit(emit, data);
 }

@@ -1,6 +1,4 @@
 import { MongoMemoryServer } from 'mongodb-memory-server';
-import * as mongoose from 'mongoose';
-import { promisify } from 'util';
 import assert from "node:assert/strict";
 
 import * as properties from '../properties/properties.js';
@@ -33,9 +31,7 @@ export async function initialise() {
 }
 
 export async function stop() {
-    await mongoose.disconnect();
+    await server.stop();
     await mongoMemoryServer.stop();
-    await promisify(server.server.close).call(server.server);
-
     console.log("MongoMemoryServer stopped");
 }

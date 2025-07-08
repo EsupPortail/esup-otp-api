@@ -5,9 +5,16 @@ import * as mongoose from 'mongoose';
 
 import UserSchema from './userSchema.js';
 
+/** @type { mongoose.Connection } */
+let connection;
+
 export async function initialize(dbUrl) {
-    const connection = await mongoose.createConnection(dbUrl || properties.getMongoDbUrl()).asPromise();
+    connection = await mongoose.createConnection(dbUrl || properties.getMongoDbUrl()).asPromise();
     initialize_user_model(connection);
+}
+
+export function close() {
+    return connection.close();
 }
 
 /** 

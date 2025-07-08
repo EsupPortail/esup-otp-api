@@ -23,6 +23,10 @@ export async function initialize() {
     logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ' Ldap connection Initialized');
 }
 
+export function close() {
+    return client.unbind();
+}
+
 async function bindLdapIfNeeded() {
     if (!client.isConnected) {
         await client.bind(getLdapProperties().adminDn, getLdapProperties().password);

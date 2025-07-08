@@ -5,6 +5,9 @@ import * as server from './server/server.js';
 
 server.start();
 
-process.on('SIGINT', function() {
-    process.exit(0);
-});
+for (const signal of ['SIGINT', 'SIGTERM', 'SIGQUIT']) {
+    process.prependOnceListener(signal, async () => {
+        await server.stop();
+        process.exit(0);
+    });
+}

@@ -11,8 +11,11 @@ import TenantSchema from './tenantSchema.js';
 import { getInstance } from '../../services/logger.js';
 const logger = getInstance();
 
+/** @type { mongoose.Connection } */
+let connection;
+
 export async function initialize(dbUrl) {
-    const connection = await mongoose.createConnection(dbUrl || properties.getMongoDbUrl()).asPromise();
+    connection = await mongoose.createConnection(dbUrl || properties.getMongoDbUrl()).asPromise();
     if (isMultiTenantContext()) {
         await initialize_tenant_model(connection);
     }
@@ -22,6 +25,9 @@ export async function initialize(dbUrl) {
     ]);
 }
 
+export function close() {
+    return connection.close();
+}
 
 /** 
  * Api Preferences
