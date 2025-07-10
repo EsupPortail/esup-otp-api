@@ -1,9 +1,9 @@
 import * as properties from '../properties/properties.js';
 import * as utils from '../services/utils.js';
-import * as userDb_controller from '../controllers/user.js';
 import { getInstance } from '../services/logger.js'; const logger = getInstance();
 import * as errors from '../services/errors.js';
 import { request } from 'undici';
+import { getSms } from '../databases/user/userUtils.js';
 
 export const name = "sms";
 
@@ -23,8 +23,8 @@ if (baseUrlBroker.username || baseUrlBroker.password) {
     baseUrlBroker.password = '';
 }
 
-export async function send_message(req, opts, res) {
-    const num = opts.userTransport || await userDb_controller.get_phone_number(req);
+export async function send_message(req, opts, res, user) {
+    const num = opts.userTransport || getSms(user.userDb);
     if (utils.check_transport_validity('sms', num)) {
         const url = replacePhoneNumberAndMessage(baseUrlBroker.href, num, opts.message);
         if (properties.getEsupProperty('sms').method) {

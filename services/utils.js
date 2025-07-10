@@ -1,7 +1,7 @@
 import * as properties from '../properties/properties.js';
 import CryptoJS from 'crypto-js';
 import crypto from 'crypto';
-import { getInstance } from '../services/logger.js'; const logger = getInstance();
+import { logger } from '../services/logger.js';
 import * as qrcode from 'qrcode';
 import proxyAddr from 'proxy-addr';
 
@@ -36,7 +36,16 @@ export function get_hash(uid, users_secret) {
     return hashes;
 }
 
-export function cover_string(str, start, end) {
+export function cover_mail(mail) {
+    return cover_string(mail, 4, 5);
+}
+
+export function cover_sms(sms) {
+    return cover_string(sms, 2, 2);
+}
+
+function cover_string(str, start, end) {
+    if (!str) return str;
     if (str.length <= (start + end)) return str;
     const start_str = str.substr(0, start);
     const end_str = str.substr(str.length - (end + 1), str.length - 1);

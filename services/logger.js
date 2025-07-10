@@ -22,7 +22,7 @@ const logLevels = {
     debug: 4,
     trace: 5,
 };
-const logger = winston.createLogger({
+export const logger = winston.createLogger({
     levels: logLevels,
     format: format.combine(
         format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),

@@ -1,8 +1,8 @@
 import * as properties from '../properties/properties.js';
-import * as utils from '../services/utils.js';
 
 import { getInstance } from '../services/logger.js';
 import * as userUtils from '../databases/user/userUtils.js';
+import * as api_controller from './api.js';
 const logger = getInstance();
 
 /**
@@ -24,71 +24,35 @@ export async function initialize(initializedUserDb) {
     }
 }
 
-export function find_user(req) {
-    return userDb.find_user(req.params.uid);
-}
-
-export async function get_available_transports(req) {
-    const user = await find_user(req);
-    const result = {};
-    const mail = userUtils.getMail(user);
-    const sms = userUtils.getSms(user);
-    if (mail) {
-        result.mail = utils.cover_string(mail, 4, 5);
-    }
-    if (sms) {
-        result.sms = utils.cover_string(sms, 2, 2);
-    }
-    return result;
-}
-
-export async function get_phone_number(req) {
-    const user = await find_user(req);
-    return userUtils.getSms(user);
-}
-
-export async function get_mail_address(req) {
-    const user = await find_user(req);
-    return userUtils.getMail(user);
-}
-
 export async function update_transport(req, res) {
-    const user = await find_user(req);
-    userUtils.setTransport(user, req.params.transport, req.params.new_transport);
-    await userDb.save_user(user);
-    logger.log('archive', {
-        message: [
-            {
-                req,
-                action: 'save',
-                method: req.params.transport,
-                [req.params.transport === 'sms' ? 'phoneNumber' : 'Email']: req.params.new_transport
-            }
-        ]
-    });
-    res.status(200);
-    res.send({
-        code: 'Ok',
-        message: properties.getMessage('success', 'update')
-    });
+    return update_transport_internal(req, res, 'save');
 }
 
 export async function delete_transport(req, res) {
-    const user = await find_user(req);
-    userUtils.setTransport(user, req.params.transport, "");
+    return update_transport_internal(req, res, 'delete');
+}
+
+async function update_transport_internal(req, res, action) {
+    const user = await api_controller.apiDb.find_user(req);
+    const old_transport = userUtils.getTransport(user.userDb, req.params.transport);
+    userUtils.setTransport(user.userDb, req.params.transport, req.params.new_transport || "");
     logger.log('archive', {
         message: [
             {
                 req,
-                action: 'delete',
-                method: req.params.transport
+                action: action,
+                method: req.params.transport,
+                old_value: old_transport,
+                new_value: req.params.new_transport || undefined,
             }
         ]
     });
-    await userDb.save_user(user);
+    await userDb.save_user(user.userDb);
+    await api_controller.save_user(user);
     res.status(200);
     res.send({
         code: 'Ok',
+        message: properties.getMessage('success', 'update'),
     });
 }
 

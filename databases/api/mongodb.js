@@ -9,6 +9,7 @@ import ApiPreferencesSchema from './apiPreferencesSchema.js';
 import TenantSchema from './tenantSchema.js';
 
 import { getInstance } from '../../services/logger.js';
+import { getTransport } from '../user/userUtils.js';
 const logger = getInstance();
 
 /** @type { mongoose.Connection } */
@@ -133,24 +134,30 @@ async function initialize_tenant_model(connection) {
  * @param req requete HTTP contenant le nom la personne recherchee
  * @param res response HTTP
  */
-export async function find_user(req, res) {
-    const userPreferences = await UserPreferences.findOne({ 'uid': req.params.uid });
+export async function find_user_by_id(uid) {
+    const userPreferences = await UserPreferences.findOne({ 'uid': uid });
     if (userPreferences) {
+        // to call update_active_methods() and save potential changes
+        await save_user(userPreferences);
         return userPreferences;
     } else {
-        const user = await userDb_controller.find_user(req, res);
-        return create_user(user.uid);
+        return create_user(uid);
     }
+}
+
+export async function find_user(req) {
+    return find_user_by_id(req.params.uid);
 }
 
 /**
  * Sauve l'utilisateur
  */
-export function save_user(user) {
+export async function save_user(user) {
+    await update_active_methods(user);
     return user.save();
 }
 
-export function create_user(uid) {
+export async function create_user(uid) {
     return save_user(new UserPreferences({ uid: uid }));
 }
 
@@ -162,6 +169,28 @@ export function create_user(uid) {
  */
 export function remove_user(uid) {
     return UserPreferences.deleteOne({ uid: uid });
+}
+
+const RANDOM_CODE_METHODS = ["random_code", "random_code_mail"];
+const METHODS_WITH_INTERNALLY_ACTIVATED = RANDOM_CODE_METHODS.concat("webauthn");
+async function update_active_methods(user) {
+    // for the first access to this user since "internally_activated" exists, we configure it with the existing value of "active".
+    for (const methodName of METHODS_WITH_INTERNALLY_ACTIVATED) {
+        const userMethod = user[methodName];
+        userMethod.internally_activated ??= userMethod.active;
+    }
+
+    // turn off webauthn if no authenticator is present
+    user.webauthn.active = Boolean(user.webauthn.internally_activated && user.webauthn.authenticators?.length);
+
+    const userDb = user.userDb || await userDb_controller.userDb.find_user(user.uid);
+    // turn off random_code(_mail) if no transport is present for this method
+    for (const random_code of RANDOM_CODE_METHODS) {
+        const userMethod = user[random_code];
+        userMethod.active = userMethod.internally_activated && properties.getTransports(random_code).some(transport => getTransport(userDb, transport));
+    }
+
+    user.userDb = userDb;
 }
 
 export function parse_user(user) {

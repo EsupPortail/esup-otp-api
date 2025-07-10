@@ -1,5 +1,4 @@
-import { describe, test, before, after, beforeEach, afterEach } from "node:test";
-import assert from "node:assert/strict";
+import test from "node:test";
 import supertest from 'supertest';
 
 import * as inMemoryMongoTest from './inMemoryMongoTest.js';
@@ -134,11 +133,11 @@ const config = {
 };
 
 async function getUser() {
-    return userDb_controller.userDb.find_user(uid);
+    return (await getUserPreferences()).userDb;
 }
 
 async function getUserPreferences() {
-    return api_controller.apiDb.find_user(uid);
+    return api_controller.apiDb.find_user_by_id(uid);
 }
 
 /**
@@ -171,39 +170,44 @@ function request(httpMethod, uri, { uid, secret, password } = {}) {
 
 const get = 'get', post = "post", put = 'put', del = 'del';
 
-describe('Esup otp api', async () => {
-    before(async () => {
+await test('Esup otp api', async (t) => {
+    t.before(async (t) => {
         properties.setEsup(config);
         await inMemoryMongoTest.initialise();
     });
 
-    after(async () => {
+    t.after(async (t) => {
         await inMemoryMongoTest.stop();
     });
 
-    beforeEach(async () => {
-        uid = "user" + (userCounter++);
+    let pause_global_hooks = false;
+    t.beforeEach(async (t) => {
+        if(!pause_global_hooks) {
+            uid = "user" + (userCounter++);
+        }
     });
 
-    afterEach(async () => {
-        await userDb_controller.remove_user(uid);
-        await api_controller.remove_user(uid);
+    t.afterEach(async (t) => {
+        if (!pause_global_hooks) {
+            await userDb_controller.remove_user(uid);
+            await api_controller.remove_user(uid);
+        }
     });
 
-    await test('get methods with correct global API password', async () => {
+    await t.test('get methods with correct global API password', async (t) => {
         await request(get, "/protected/methods", { password: config.api_password })
             .expect(200);
     });
 
-    await test('get methods with wrong global API password', async () => {
+    await t.test('get methods with wrong global API password', async (t) => {
         await request(get, "/protected/methods", { password: "toto" })
             .expect(403)
             .then(res => {
-                assert.equal(res.body.code, 'Forbidden');
+                t.assert.equal(res.body.code, 'Forbidden');
             });
     });
 
-    await test('get existing user', async () => {
+    await t.test('get existing user', async (t) => {
         try {
             await userDb_controller.create_user(uid);
             await api_controller.create_user(uid);
@@ -215,12 +219,12 @@ describe('Esup otp api', async () => {
         }
     });
 
-    await test('get unknown user with auto_create', async () => {
+    await t.test('get unknown user with auto_create', async (t) => {
         await request(get, "/protected/users/" + uid, { password: config.api_password })
             .expect(200);
     });
 
-    await test('get unknown user without auto_create', async () => {
+    await t.test('get unknown user without auto_create', async (t) => {
         properties.setEsupProperty('auto_create_user', false);
 
         await request(get, "/protected/users/" + uid, { password: config.api_password })
@@ -231,29 +235,29 @@ describe('Esup otp api', async () => {
         properties.setEsupProperty('auto_create_user', true);
     });
 
-    await test('get test_user with good hash', async () => {
+    await t.test('get test_user with good hash', async (t) => {
         await request(get, "/users/" + uid, { uid: uid, secret: config.users_secret })
             .expect(200);
     });
 
-    await test('get test_user with wrong hash', async () => {
+    await t.test('get test_user with wrong hash', async (t) => {
         await request(get, "/users/" + uid, { uid: uid, secret: "toto" })
             .expect(403)
             .then(res => {
-                assert.equal(res.body.code, 'Forbidden');
+                t.assert.equal(res.body.code, 'Forbidden');
             });
     });
 
-    await test('generate TOTP method secret for test_user', async () => {
+    await t.test('generate TOTP method secret for test_user', async (t) => {
         await request(post, "/protected/users/" + uid + "/methods/totp/secret", { password: config.api_password })
             .expect(200)
             .then(res => {
-                assert.equal(res.body.code, "Ok");
-                assert(res.body.qrCode);
+                t.assert.equal(res.body.code, "Ok");
+                t.assert.ok(res.body.qrCode);
             });
     });
 
-    await test('generate bypass method secret for test_user', async () => {
+    await t.test('generate bypass method secret for test_user', async (t) => {
         const method = "bypass";
         const uri = '/protected/users/' + uid + '/methods/' + method + '/secret/';
 
@@ -261,8 +265,8 @@ describe('Esup otp api', async () => {
             await request(post, uri, { password: config.api_password })
                 .expect(200)
                 .then(res => {
-                    assert.equal(res.body.code, "Ok");
-                    assert.equal(res.body.codes.length, properties.getMethodProperty(method, 'codes_number'));
+                    t.assert.equal(res.body.code, "Ok");
+                    t.assert.equal(res.body.codes.length, properties.getMethodProperty(method, 'codes_number'));
                 });
         } else {
             await request(post, uri, { password: config.api_password })
@@ -273,22 +277,26 @@ describe('Esup otp api', async () => {
         }
     });
 
-    await test('test random code', async () => {
+    await t.test('test random code', async (t) => {
         const method = 'random_code';
         const transport = "sms";
         const phoneNumber = '0606060606';
 
-        before(async () => {
+        t.before(async (t) => {
+            pause_global_hooks = true;
             await request(put, "/protected/users/" + uid + "/transports/" + transport + "/" + phoneNumber, { password: config.api_password })
                 .expect(200);
-
-            assert.equal(userUtils.getTransport(await getUser(), transport), phoneNumber);
+            t.assert.equal(userUtils.getTransport(await getUser(), transport), phoneNumber);
         });
 
-        await describe('activate_method_admin', async () => {
+        t.after(() => {
+            pause_global_hooks = false;
+        });
+
+        await t.test('activate_method_admin', async (t) => {
             await request(put, "/admin/methods/" + method + "/deactivate", { password: config.api_password })
                 .expect(200);
-            assert(!properties.getMethodProperty(method, 'activate'));
+            t.assert.ok(!properties.getMethodProperty(method, 'activate'));
 
             await request(put, "/protected/users/" + uid + "/methods/" + method + "/activate", { password: config.api_password })
                 .expect(404, {
@@ -298,29 +306,29 @@ describe('Esup otp api', async () => {
 
             await request(put, "/admin/methods/" + method + "/activate", { password: config.api_password })
                 .expect(200);
-            assert(properties.getMethodProperty(method, 'activate'));
+            t.assert.ok(properties.getMethodProperty(method, 'activate'));
 
             await request(put, "/protected/users/" + uid + "/methods/" + method + "/activate", { password: config.api_password })
                 .expect(200);
         });
 
-        await describe('activate_method_transport', async () => {
+        await t.test('activate_method_transport', async (t) => {
             await request(put, "/admin/methods/" + method + "/transports/" + transport + "/deactivate", { password: config.api_password })
                 .expect(200);
-            assert(!properties.containsMethodTransport(method, transport));
+            t.assert.ok(!properties.containsMethodTransport(method, transport));
 
             await request(put, "/admin/methods/" + method + "/transports/" + transport + "/activate", { password: config.api_password })
                 .expect(200);
-            assert(properties.containsMethodTransport(method, transport));
+            t.assert.ok(properties.containsMethodTransport(method, transport));
         });
 
-        await describe('activate_method', async () => {
+        await t.test('activate_method', async (t) => {
             await request(put, "/protected/users/" + uid + "/methods/" + method + "/deactivate", { password: config.api_password })
                 .expect(200);
             await request(get, "/users/" + uid, { uid: uid, secret: config.users_secret })
                 .expect(200)
                 .then(res => {
-                    assert(!res.body.user.methods[method].active);
+                    t.assert.ok(!res.body.user.methods[method].active);
                 });
 
             await request(put, "/protected/users/" + uid + "/methods/" + method + "/activate", { password: config.api_password })
@@ -328,14 +336,14 @@ describe('Esup otp api', async () => {
             await request(get, "/users/" + uid, { uid: uid, secret: config.users_secret })
                 .expect(200)
                 .then(res => {
-                    assert.equal(res.body.user.transports.sms, utils.cover_string(phoneNumber, 2, 2));
-                    assert(res.body.user.methods[method].active);
+                    t.assert.equal(res.body.user.transports.sms, utils.cover_sms(phoneNumber));
+                    t.assert.ok(res.body.user.methods[method].active);
                 });
         });
 
         let code;
 
-        await describe('mock sms sending', async () => {
+        await t.test('mock sms sending', async (t) => {
             transports.setTransport({
                 name: transport,
                 send_message(req, opts, res) {
@@ -345,13 +353,13 @@ describe('Esup otp api', async () => {
             });
         });
 
-        await describe('send_message', async () => {
+        await t.test('send_message', async (t) => {
             await request(post, "/users/" + uid + "/methods/" + method + "/transports/" + transport, { uid: uid, secret: config.users_secret })
                 .expect(200);
-            assert(code);
+            t.assert.ok(code);
         });
 
-        await describe('test verify_code with wrong code', async () => {
+        await t.test('test verify_code with wrong code', async (t) => {
             let wrongCode;
 
             do {
@@ -367,15 +375,15 @@ describe('Esup otp api', async () => {
                 });
         });
 
-        await describe('test verify_code', async () => {
+        await t.test('test verify_code', async (t) => {
             await request(post, "/protected/users/" + uid + "/" + code, { password: config.api_password })
                 .expect(200)
                 .then(res => {
-                    assert.equal(res.body.code, 'Ok');
+                    t.assert.equal(res.body.code, 'Ok');
                 });
         });
 
-        await describe('deactive', async () => {
+        await t.test('deactive', async (t) => {
             await request(put, "/protected/users/" + uid + "/methods/" + method + "/deactivate", { password: config.api_password })
                 .expect(200);
 
@@ -383,7 +391,7 @@ describe('Esup otp api', async () => {
             await request(get, "/protected/users/" + uid, { password: config.api_password })
                 .expect(200)
                 .then(res => {
-                    assert(!res.body.user.methods[method].active);
+                    t.assert.ok(!res.body.user.methods[method].active);
                 });
 
             // api_controller.send_message

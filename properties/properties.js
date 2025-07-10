@@ -88,7 +88,7 @@ export function setMethodProperty (method, property, value) {
 }
 
 /** @returns {Array<String>} */
-function getTransports(method) {
+export function getTransports(method) {
     return getMethodProperty(method, 'transports');
 }
 

@@ -10,7 +10,7 @@ import * as SimpleWebAuthnServer from '@simplewebauthn/server';
 export const name = "webauthn";
 
 export async function user_activate(user, req, res) {
-    user.webauthn.active = true;
+    user.webauthn.internally_activated = true;
 
     await apiDb.save_user(user);
     res.status(200);
@@ -62,7 +62,7 @@ export async function generate_method_secret(user, req, res) {
     * This function validates the signed nonce.
     */
 export async function confirm_user_activate(user, req, res) {
-    if (user.webauthn.active === false) {
+    if (user.webauthn.internally_activated === false) {
         res.status(403);
         res.send({
             message: "Please activate the method before accessing this endpoint."
@@ -159,10 +159,6 @@ export async function delete_method_special(user, req, res) {
     const { index, authenticator } = findAuthenticatorsById(user, req.params.authenticator_id, true);
 
     user.webauthn.authenticators.splice(index, 1);
-
-    /*if(user.webauthn.authenticators.length === 0) {
-        user.webauthn.active = false;
-    }*/
 
     logger.log('archive', {
         message: [
@@ -327,7 +323,7 @@ export async function verify_webauthn_auth(user, req, res) {
 }
 
 export async function user_deactivate(user, req, res) {
-    user.webauthn.active = false;
+    user.webauthn.internally_activated = false;
     user.webauthn.registered = false;
     await apiDb.save_user(user);
     res.send({

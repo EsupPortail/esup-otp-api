@@ -14,6 +14,10 @@ const schema = {
             type: Boolean,
             default: false
         },
+        internally_activated: {
+            type: Boolean,
+            default: undefined,
+        },
         transports: {
             type: Array,
             default: properties.getEsupProperty('transports')
@@ -25,6 +29,10 @@ const schema = {
         active: {
             type: Boolean,
             default: false
+        },
+        internally_activated: {
+            type: Boolean,
+            default: undefined,
         },
         transports: {
             type: Array,
@@ -151,6 +159,10 @@ const schema = {
         active: {
             type: Boolean,
             default: false
+        },
+        internally_activated: {
+            type: Boolean,
+            default: undefined,
         },
         transports: {
             type: Array,

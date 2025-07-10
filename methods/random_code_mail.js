@@ -18,7 +18,7 @@ export async function send_message(user, req, res) {
     new_otp.validity_time = validity_time;
     user.random_code_mail = new_otp;
     await apiDb.save_user(user);
-    return api_controller.transport_code(new_otp.code, req, res);
+    return api_controller.transport_code(new_otp.code, req, res, user);
 }
 
 /**
@@ -47,7 +47,7 @@ export function delete_method_secret(user, req, res) {
 }
 
 export async function user_activate(user, req, res) {
-    user.random_code_mail.active = true;
+    user.random_code_mail.internally_activated = true;
     await apiDb.save_user(user);
     res.status(200);
     res.send({
@@ -60,7 +60,7 @@ export function confirm_user_activate(user, req, res) {
 }
 
 export async function user_deactivate(user, req, res) {
-    user.random_code_mail.active = false;
+    user.random_code_mail.internally_activated = false;
     await apiDb.save_user(user);
     res.status(200);
     res.send({

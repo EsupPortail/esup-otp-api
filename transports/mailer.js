@@ -3,9 +3,9 @@ import * as utils from '../services/utils.js';
 import * as fileUtils from '../services/fileUtils.js';
 import * as nodemailer from "nodemailer";
 import { Eta } from "eta";
-import * as userDb_controller from '../controllers/user.js';
 import { getInstance } from '../services/logger.js'; const logger = getInstance();
 import * as errors from '../services/errors.js';
+import { getMail } from '../databases/user/userUtils.js';
 
 export const name = "mail";
 
@@ -37,8 +37,8 @@ const senderAddress = mailerProperty.sender_name + " <" + mailerProperty.sender_
  */
 const eta = mailerProperty.use_templates && new Eta({ views: fileUtils.relativeToAbsolutePath(import.meta.url, "./email_templates") });
 
-export async function send_message(req, opts, res) {
-    const mail = opts.userTransport || await userDb_controller.get_mail_address(req);
+export async function send_message(req, opts, res, user) {
+    const mail = opts.userTransport || getMail(user.userDb);
 
     if (utils.check_transport_validity('mail', mail)) {
         /**

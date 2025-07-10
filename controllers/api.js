@@ -1,6 +1,5 @@
 import restifyErrors from 'restify-errors';
 
-import * as userDb_controller from './user.js';
 import * as utils from '../services/utils.js';
 import * as fileUtils from '../services/fileUtils.js';
 import * as properties from '../properties/properties.js';
@@ -10,6 +9,7 @@ import methods, { initialize as initializeMethods } from '../methods/methods.js'
 import * as transports from '../transports/transports.js';
 
 import { getInstance } from '../services/logger.js';
+import * as userUtils from '../databases/user/userUtils.js';
 const logger = getInstance();
 
 /**
@@ -151,7 +151,7 @@ export function remove_user(uid) {
  * @param req requete HTTP contenant le nom la personne recherchee
  * @param res response HTTP
  */
-export function transport_code(code, req, res) {
+export function transport_code(code, req, res, user) {
     const { object, message } = getTransportObjectAndMessage(req.params.transport, code);
 
     const opts = {
@@ -163,7 +163,7 @@ export function transport_code(code, req, res) {
         waitingFor: properties.getMethodProperty(req.params.method, 'waitingFor'),
     };
 
-    return transport(opts, req, res);
+    return transport(opts, req, res, user);
 }
 
 function getTransportObjectAndMessage(transport, code) {
@@ -200,7 +200,8 @@ export async function transport_test(req, res) {
 
     opts.message = transportMessageProperty.pre + req.params.uid + transportMessageProperty.post;
 
-    return transport(opts, req, res);
+    const user = await apiDb.find_user(req, res);
+    return transport(opts, req, res, user);
 }
 
 /**
@@ -228,10 +229,10 @@ export async function new_transport_test(req, res) {
  * @param req requete HTTP contenant le nom la personne recherchee
  * @param res response HTTP
  */
-function transport(opts, req, res) {
+function transport(opts, req, res, user) {
     const transport = transports.getTransport([req.params.transport]);
     if (transport) {
-        return transport.send_message(req, opts, res);
+        return transport.send_message(req, opts, res, user);
     } else {
         throw new errors.UnvailableMethodTransportError();
     }
@@ -245,55 +246,22 @@ function transport(opts, req, res) {
  */
 export async function get_user_infos(req, res) {
     const user = await apiDb.find_user(req, res);
-    const data = await userDb_controller.get_available_transports(req, res);
-    await deactivateRandomCodeIfNoTransport(user, data, ""); //nettoyage des random_code activés sans transport
-    await deactivateRandomCodeIfNoTransport(user, data, "_mail"); // pour random_code_mail
-
-    // turn off webauthn if no authenticator is present (?)
-    if (user.webauthn.authenticators.length === 0) {
-        user.webauthn.active = false;
+    const transports = {
+        sms: utils.cover_sms(userUtils.getSms(user.userDb)),
+        mail: utils.cover_mail(userUtils.getMail(user.userDb)),
+        push: user.push.device.manufacturer + ' ' + user.push.device.model,
     }
 
-    data.push = user.push.device.manufacturer + ' ' + user.push.device.model;
     res.status(200);
     res.send({
         code: "Ok",
         user: {
             methods: apiDb.parse_user(user),
-            transports: data,
+            transports: transports,
             last_send_message: user.last_send_message,
             last_validated: user.last_validated,
         }
     });
-}
-
-/**
- * Désactivation de la méthode random_code si aucun transport renseigné
- * On ne doit pas avoir de random_code activé sans transport.
-**/
-
-async function deactivateRandomCodeIfNoTransport(user, data, suffixe) {
-    if (user['random_code' + suffixe]?.active) {
-        logger.debug("Active transports for randomCode" + suffixe);
-        const randomCode = await apiDb.parse_user(user)["random_code" + suffixe];
-
-        if (!hasTransport(randomCode, data)) {
-            user["random_code" + suffixe].active = false;
-        }
-    }
-}
-
-function hasTransport(randomCode, data) {
-    const randomCodeTransports = randomCode?.transports;
-    if (randomCodeTransports && typeof randomCodeTransports[Symbol.iterator] === 'function') {
-        for (const transport of randomCodeTransports) {
-            logger.debug("check if transport is defined: data[" + transport + "]=" + data[transport]);
-            if (data[transport]) {
-                return true;
-            }
-        }
-    }
-    return false;
 }
 
 /**
@@ -626,12 +594,16 @@ export async function getUserAndMethodModule(req, { checkUserMethodActive, check
     const reqMethod = req.params.method;
     const methodModule = methods[reqMethod];
     const user = await apiDb.find_user(req);
-    if ((!methodModule)
-        || (checkUserMethodActive && !user[reqMethod].active)
-        || (checkMethodPropertiesExists && !properties.getMethod(reqMethod))
-        || (checkMethodPropertyActivate && !properties.getMethodProperty(reqMethod, 'activate'))
-        || (checkMethodPropertyPending && !properties.getMethodProperty(reqMethod, 'pending'))
-    ) {
+
+    if (!methodModule) {
+        throw new errors.MethodNotFoundError();
+    } else if (checkUserMethodActive && !user[reqMethod].active) {
+        throw new errors.MethodNotFoundError();
+    } else if (checkMethodPropertiesExists && !properties.getMethod(reqMethod)) {
+        throw new errors.MethodNotFoundError();
+    } else if (checkMethodPropertyActivate && !properties.getMethodProperty(reqMethod, 'activate')) {
+        throw new errors.MethodNotFoundError();
+    } else if (checkMethodPropertyPending && !properties.getMethodProperty(reqMethod, 'pending')) {
         throw new errors.MethodNotFoundError();
     }
     return {
