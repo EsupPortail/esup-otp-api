@@ -13,7 +13,7 @@ import * as routes from '../server/routes.js';
 
 properties.loadFile(fileUtils.relativeToAbsolutePath(import.meta.url, '..'), "package.json");
 
-import { getInstance } from '../services/logger.js'; const logger = getInstance();
+import logger from '../services/logger.js';
 
 export const server = restify.createServer({
     name: 'esup-otp',

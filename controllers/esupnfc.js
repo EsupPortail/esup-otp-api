@@ -1,5 +1,4 @@
-import { getInstance } from '../services/logger.js';
-const logger = getInstance();
+import logger from '../services/logger.js';
 import { apiDb, getUserAndMethodModule } from './api.js';
 import methods from '../methods/methods.js';
 

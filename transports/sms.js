@@ -1,6 +1,6 @@
 import * as properties from '../properties/properties.js';
 import * as utils from '../services/utils.js';
-import { getInstance } from '../services/logger.js'; const logger = getInstance();
+import logger from '../services/logger.js';
 import * as errors from '../services/errors.js';
 import { request } from 'undici';
 import { getSms } from '../databases/user/userUtils.js';

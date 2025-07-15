@@ -8,9 +8,8 @@ import UserPreferencesSchema from './userPreferencesSchema.js';
 import ApiPreferencesSchema from './apiPreferencesSchema.js';
 import TenantSchema from './tenantSchema.js';
 
-import { getInstance } from '../../services/logger.js';
+import logger from '../../services/logger.js';
 import { getTransport } from '../user/userUtils.js';
-const logger = getInstance();
 
 /** @type { mongoose.Connection } */
 let connection;

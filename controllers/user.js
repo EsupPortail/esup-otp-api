@@ -1,9 +1,8 @@
 import * as properties from '../properties/properties.js';
 
-import { getInstance } from '../services/logger.js';
+import logger from '../services/logger.js';
 import * as userUtils from '../databases/user/userUtils.js';
 import * as api_controller from './api.js';
-const logger = getInstance();
 
 /**
  * @type {import('../databases/user/mongodb.js')} apiDb

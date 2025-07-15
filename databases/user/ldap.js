@@ -4,8 +4,7 @@ import * as errors from '../../services/errors.js';
 import { Client, Change, Attribute, EqualityFilter } from 'ldapts';
 /** @import { SearchOptions } from 'ldapts' */
 
-import { getInstance } from '../../services/logger.js';
-const logger = getInstance();
+import logger from '../../services/logger.js';
 
 /**
  * @type Client

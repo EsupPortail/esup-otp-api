@@ -3,7 +3,7 @@ import * as utils from '../services/utils.js';
 import * as fileUtils from '../services/fileUtils.js';
 import * as nodemailer from "nodemailer";
 import { Eta } from "eta";
-import { getInstance } from '../services/logger.js'; const logger = getInstance();
+import logger from '../services/logger.js';
 import * as errors from '../services/errors.js';
 import { getMail } from '../databases/user/userUtils.js';
 

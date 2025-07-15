@@ -8,7 +8,7 @@ let io;
 import * as properties from '../properties/properties.js';
 import * as validator from '../services/validator.js';
 import * as utils from '../services/utils.js';
-import { getInstance } from '../services/logger.js'; const logger = getInstance();
+import logger from '../services/logger.js';
 let managerSocket;
 
 import * as socket_io from 'socket.io';

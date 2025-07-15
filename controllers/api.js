@@ -8,9 +8,8 @@ import * as errors from '../services/errors.js';
 import methods, { initialize as initializeMethods } from '../methods/methods.js';
 import * as transports from '../transports/transports.js';
 
-import { getInstance } from '../services/logger.js';
+import logger from '../services/logger.js';
 import * as userUtils from '../databases/user/userUtils.js';
-const logger = getInstance();
 
 /**
  * @type {import('../databases/api/mongodb.js')} apiDb

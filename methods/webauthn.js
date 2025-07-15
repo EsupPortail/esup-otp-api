@@ -1,9 +1,8 @@
 import * as utils from '../services/utils.js';
 import * as fileUtils from '../services/fileUtils.js';
 import * as errors from '../services/errors.js';
-import { getInstance } from '../services/logger.js';
+import logger from '../services/logger.js';
 import { apiDb, getCurrentTenantProperties } from '../controllers/api.js';
-const logger = getInstance();
 
 import * as SimpleWebAuthnServer from '@simplewebauthn/server';
 
