@@ -50,7 +50,6 @@ function initialize() {
 }
 
 export async function close() {
-    io.disconnectSockets();
     return io.close();
 }
 
