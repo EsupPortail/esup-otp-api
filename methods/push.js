@@ -62,7 +62,6 @@ export const name = "push";
 
 // https://github.com/sanchezzzhak/node-device-detector#user-content-gettersetteroptions-
 const detector = new DeviceDetector({
-    deviceIndexes: true,
 });
 
 export async function send_message(user, req, res) {
@@ -247,8 +246,7 @@ function getUrl(req) {
 
 export async function confirm_user_activate(user, req, res) {
     if (user.push.activation_code != null && user.push.activation_fail < properties.getMethod('push').nbMaxFails && !user.push.active && req.params.activation_code == user.push.activation_code && (utils.isGcmIdWellFormed(req.params.gcm_id) || properties.getMethod('push').pending)) {
-        const userAgent = req.header('user-agent');
-        const deviceInfosFromUserAgent = detector.detect(userAgent);
+        const deviceInfosFromUserAgent = await detector.detectAsync(`${req.params.platform} ${req.params.manufacturer} ${req.params.model}`);
 
         const token_secret = utils.generate_string_code(128);
         user.push.token_secret = token_secret;
