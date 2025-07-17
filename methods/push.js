@@ -183,13 +183,15 @@ function ifTokenSecretsMatch(user, req) {
 }
 
 export function pending(user, req, res) {
+    const bad_GCM_ID = !utils.isGcmIdValidAndRegistered(user);
     if (user.push.active && properties.getMethodProperty(req.params.method, 'activate') && ifTokenSecretsMatch(user, req) && Date.now() < user.push.validity_time) {
         res.send({
             "code": "Ok",
             "message": user.push.text,
             "text": user.push.text,
             "action": 'auth',
-            "lt": user.push.lt
+            "lt": user.push.lt,
+            "bad_GCM_ID": bad_GCM_ID,
         });
     }
     else if (!user.push.active || req.params.tokenSecret != user.push.token_secret) {
@@ -203,6 +205,7 @@ export function pending(user, req, res) {
     else {
         res.send({
             "code": "Ok",
+            "bad_GCM_ID": bad_GCM_ID,
         });
     }
 }
@@ -278,15 +281,30 @@ export async function confirm_user_activate(user, req, res) {
     }
 }
 
+function troncateGcmId(gcmId) {
+    return gcmId?.substring(0, 10) + "***";
+}
+
 // refresh gcm_id when it is regenerated
 export async function refresh_user_gcm_id(user, req, res) {
-    if (ifTokenSecretsMatch(user, req) && utils.isGcmIdWellFormed(user.push.device.gcm_id) && req.params.gcm_id == user.push.device.gcm_id) {
+    const old_gcm_id = user.push.device.gcm_id;
+    if (ifTokenSecretsMatch(user, req) && (!utils.isGcmIdWellFormed(old_gcm_id) || req.params.gcm_id == user.push.device.gcm_id)) {
         logger.debug("refresh old gcm_id : " + user.push.device.gcm_id + " with " + req.params.gcm_id_refreshed);
         user.push.device.gcm_id = req.params.gcm_id_refreshed;
         user.push.gcm_id_not_registered = false;
         await apiDb.save_user(user);
         res.send({
             "code": "Ok",
+        });
+        logger.log('archive', {
+            message: [
+                {
+                    req,
+                    action: 'refresh_push',
+                    old_gcm_id: troncateGcmId(old_gcm_id),
+                    new_gcm_id: troncateGcmId(user.push.device.gcm_id),
+                }
+            ]
         });
     } else {
         throw new errors.InvalidCredentialsError();

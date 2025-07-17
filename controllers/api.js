@@ -453,16 +453,6 @@ export async function autoActivateWithPush(req, res) {
 
 export async function refresh_gcm_id_method(req, res) {
     logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ' ' + req.params.uid + " refresh_push " + req.params.method);
-    logger.log('archive', {
-        message: [
-            {
-                req,
-                action: 'refresh_push',
-                method: req.params.method
-            }
-        ]
-    });
-
     const { user, method } = await getUserAndMethodModule(req);
     return method.refresh_user_gcm_id(user, req, res);
 }

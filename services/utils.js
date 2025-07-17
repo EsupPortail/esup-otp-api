@@ -99,8 +99,12 @@ export function isGcmIdWellFormed(gcm_id) {
     return gcm_id && gcm_id != "undefined";
 }
 
+export function isGcmIdValidAndRegistered(user) {
+    return isGcmIdWellFormed(user.push.device.gcm_id) && !user.push.gcm_id_not_registered;
+}
+
 export function canReceiveNotifications(user) {
-    return properties.getMethod('push').notification && isGcmIdWellFormed(user.push.device.gcm_id) && !user.push.gcm_id_not_registered;
+    return properties.getMethod('push').notification && isGcmIdValidAndRegistered(user);
 }
 
 export function generate_u8array_code(nonce_length) {
