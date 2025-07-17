@@ -201,10 +201,8 @@ export function pending(user, req, res) {
         });
     }
     else {
-        if (req.params.tokenSecret != user.push.token_secret)
-            logger.warn(fileUtils.getFileNameFromUrl(import.meta.url) + " Bad token_secret provided by " + user.uid + " in pending action");
         res.send({
-            "code": "KO"
+            "code": "Ok",
         });
     }
 }
