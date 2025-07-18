@@ -10,7 +10,7 @@ export async function esupnfc_locations(req, res) {
 }
 
 export async function esupnfc_check_accept_authentication(req, res) {
-    return methods['esupnfc'].check_accept_authentication(req, res);
+    return esupnfc.check_accept_authentication(req, res);
 }
 
 export async function esupnfc_accept_authentication(req, res) {
