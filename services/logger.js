@@ -1,6 +1,7 @@
 import winston, { format } from 'winston';
 import { getIpAddr } from '../services/utils.js';
 import * as properties from '../properties/properties.js';
+import fs from 'fs';
 
 const logProperties = properties.getEsupProperty('logs');
 
@@ -72,3 +73,10 @@ if (logProperties.audit?.console) {
 if (logProperties.audit?.file) {
     auditLogger.add(new winston.transports.File({ filename: logProperties.audit?.file }));
 }
+
+fs.stat('logs/logs.json', function(err, stat) {
+    if (stat) {
+        logger.warn('logs/logs.json file usage is deprecated, see CONFIGURATION.md for details');
+    }
+});
+
