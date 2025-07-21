@@ -4,7 +4,7 @@ import * as errors from '../../services/errors.js';
 import { Client, Change, Attribute, EqualityFilter } from 'ldapts';
 /** @import { SearchOptions } from 'ldapts' */
 
-import logger from '../../services/logger.js';
+import { logger } from '../../services/logger.js';
 
 /**
  * @type Client

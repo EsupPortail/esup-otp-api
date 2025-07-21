@@ -2,7 +2,7 @@ import errors from 'restify-errors';
 import * as properties from '../properties/properties.js';
 import * as utils from '../services/utils.js';
 import { getCurrentTenantProperties, getCurrentTenantPropertiesInternal } from '../controllers/api.js';
-import logger from '../services/logger.js';
+import { logger } from '../services/logger.js';
 
 export async function check_hash(req, res) {
     if (!await check_hash_internal(req.params.uid, req.params.hash)) {

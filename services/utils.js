@@ -1,7 +1,7 @@
 import * as properties from '../properties/properties.js';
 import CryptoJS from 'crypto-js';
 import crypto from 'crypto';
-import logger from '../services/logger.js';
+import { logger } from '../services/logger.js';
 import * as qrcode from 'qrcode';
 import proxyAddr from 'proxy-addr';
 

@@ -1,4 +1,4 @@
-import logger from '../services/logger.js';
+import { logger } from '../services/logger.js';
 import { apiDb, getUserAndMethodModule } from './api.js';
 import * as esupnfc from "../methods/esupnfc.js";
 import * as properties from '../properties/properties.js';

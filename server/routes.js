@@ -9,7 +9,7 @@ import restify from 'restify';
 import swaggerUi from 'swagger-ui-restify'
 import openapiDocument from './openapi.js'
 
-import logger from '../services/logger.js';
+import { logger } from '../services/logger.js';
 
 
 /**

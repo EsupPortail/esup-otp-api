@@ -2,7 +2,7 @@ import * as properties from '../properties/properties.js';
 import * as utils from '../services/utils.js';
 import * as fileUtils from '../services/fileUtils.js';
 import { apiDb } from '../controllers/api.js';
-import logger from '../services/logger.js';
+import { logger } from '../services/logger.js';
 import * as OTPAuth from "otpauth";
 import * as errors from '../services/errors.js';
 

@@ -5,7 +5,7 @@ import * as utils from '../services/utils.js';
 import * as errors from '../services/errors.js';
 import { apiDb } from '../controllers/api.js';
 
-import logger from '../services/logger.js';
+import { logger } from '../services/logger.js';
 
 export const name = "passcode_grid";
 

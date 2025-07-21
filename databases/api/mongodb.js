@@ -8,7 +8,7 @@ import UserPreferencesSchema from './userPreferencesSchema.js';
 import ApiPreferencesSchema from './apiPreferencesSchema.js';
 import TenantSchema from './tenantSchema.js';
 
-import logger from '../../services/logger.js';
+import { logger } from '../../services/logger.js';
 import { getTransport } from '../user/userUtils.js';
 
 /** @type { mongoose.Connection } */
