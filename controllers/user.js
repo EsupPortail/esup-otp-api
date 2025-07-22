@@ -1,6 +1,6 @@
 import * as properties from '../properties/properties.js';
 
-import logger from '../services/logger.js';
+import { logger, auditLogger } from '../services/logger.js';
 import * as userUtils from '../databases/user/userUtils.js';
 import * as api_controller from './api.js';
 
@@ -35,7 +35,7 @@ async function update_transport_internal(req, res, action) {
     const user = await api_controller.apiDb.find_user(req);
     const old_transport = userUtils.getTransport(user.userDb, req.params.transport);
     userUtils.setTransport(user.userDb, req.params.transport, req.params.new_transport || "");
-    logger.log('archive', {
+    auditLogger.info({
         message: [
             {
                 req,

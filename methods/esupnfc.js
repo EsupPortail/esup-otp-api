@@ -5,7 +5,7 @@ import * as errors from '../services/errors.js';
 import { apiDb } from '../controllers/api.js';
 import * as qrcode from 'qrcode';
 
-import logger from '../services/logger.js';
+import { logger } from '../services/logger.js';
 import * as sockets from '../server/sockets.js';
 
 export const name = "esupnfc";

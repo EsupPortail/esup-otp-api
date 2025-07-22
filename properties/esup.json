@@ -164,5 +164,20 @@
     "esupnfc": {
         "server_ip": "IP_ESUP-SGC-SERVER"
     },
+    "logs": {
+        "main": {
+            "level": "debug",
+            "console": true,
+            "file": "logs/esup-otp-api-info.log"
+        },
+        "audit": {
+            "console": false,
+            "file": "logs/audit.log"
+        },
+        "access": {
+            "format": "dev",
+            "console": true
+        }
+    },
     "trustedProxies": ["127.0.0.1", "loopback", "::1"]
 }

@@ -1,4 +1,5 @@
 import restify from 'restify';
+import morgan from 'morgan';
 import errors from 'restify-errors';
 import corsMiddleware from "restify-cors-middleware2";
 import { promisify } from 'util';
@@ -13,7 +14,7 @@ import * as routes from '../server/routes.js';
 
 properties.loadFile(fileUtils.relativeToAbsolutePath(import.meta.url, '..'), "package.json");
 
-import logger from '../services/logger.js';
+import { logger } from '../services/logger.js';
 
 export const server = restify.createServer({
     name: 'esup-otp',
@@ -36,12 +37,16 @@ const cors = corsMiddleware({
 server.pre(cors.preflight);
 server.use(cors.actual);
 
-server.use(
-    function logRequestUrl(req, res, next) {
-        logger.debug(req.method + " " + req.url);
-        return next();
+const logProperties = properties.getEsupProperty('logs');
+if (logProperties.access) {
+    const format = logProperties.access.format || 'dev';
+    if (logProperties.access.console) {
+        server.use(morgan(format, { stream: process.stdout }));
     }
-);
+    if (logProperties.access.file) {
+        server.use(morgan(format, { stream: fs.createWriteStream(logProperties.access.file, { flags: 'a' }) }));
+    }
+}
 
 /**@type { String } */
 const proxyUrl = properties.getEsupProperty('proxyUrl');

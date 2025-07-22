@@ -8,7 +8,7 @@ import * as errors from '../services/errors.js';
 import methods, { initialize as initializeMethods } from '../methods/methods.js';
 import * as transports from '../transports/transports.js';
 
-import logger from '../services/logger.js';
+import { logger, auditLogger } from '../services/logger.js';
 import * as userUtils from '../databases/user/userUtils.js';
 
 /**
@@ -400,7 +400,7 @@ export async function verify_webauthn_auth(req, res) {
 export async function activate_method(req, res) {
     logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ' ' + req.params.uid + " activate_method " + req.params.method);
     if (req.params.method !== 'push') {
-        logger.log('archive', {
+        auditLogger.info({
             message: [
                 {
                     req,
@@ -429,7 +429,7 @@ export async function confirm_activate_push(req, res) {
 export async function confirm_activate_method(req, res) {
     logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ' ' + req.params.uid + " confirm_activate_method " + req.params.method);
     if (req.params.method === 'push') {
-        logger.log('archive', {
+        auditLogger.info({
             message: [
                 {
                     req,
@@ -465,7 +465,7 @@ export async function refresh_gcm_id_method(req, res) {
  */
 export async function deactivate_method(req, res) {
     logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ' ' + req.params.uid + " deactivate_method " + req.params.method);
-    logger.log('archive', {
+    auditLogger.info({
         message: [
             {
                 req,
@@ -486,7 +486,7 @@ export async function deactivate_method(req, res) {
  */
 export async function desync(req, res) {
     logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ' ' + req.params.uid + " desync " + req.params.method);
-    logger.log('archive', {
+    auditLogger.info({
         message: [
             {
                 req,

@@ -8,7 +8,7 @@ import UserPreferencesSchema from './userPreferencesSchema.js';
 import ApiPreferencesSchema from './apiPreferencesSchema.js';
 import TenantSchema from './tenantSchema.js';
 
-import logger from '../../services/logger.js';
+import { logger } from '../../services/logger.js';
 import { getTransport } from '../user/userUtils.js';
 
 /** @type { mongoose.Connection } */
@@ -121,8 +121,8 @@ async function initialize_tenant_model(connection) {
 
             const created_tenant = await init_tenant(tenant);
             logger.debug(fileUtils.getFileNameFromUrl(import.meta.url) + ` Tenant ${created_tenant.name} created`);
-            logger.trace(fileUtils.getFileNameFromUrl(import.meta.url) + ` Tenant ${created_tenant.name} api_password : ${created_tenant.api_password}`);
-            logger.trace(fileUtils.getFileNameFromUrl(import.meta.url) + ` Tenant ${created_tenant.name} users_secret : ${created_tenant.users_secret}`);
+            logger.silly(fileUtils.getFileNameFromUrl(import.meta.url) + ` Tenant ${created_tenant.name} api_password : ${created_tenant.api_password}`);
+            logger.silly(fileUtils.getFileNameFromUrl(import.meta.url) + ` Tenant ${created_tenant.name} users_secret : ${created_tenant.users_secret}`);
         }
     }
 }

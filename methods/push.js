@@ -7,7 +7,7 @@ import * as fileUtils from '../services/fileUtils.js';
 import * as errors from '../services/errors.js';
 import { apiDb } from '../controllers/api.js';
 
-import logger from '../services/logger.js';
+import { logger } from '../services/logger.js';
 import admin from "firebase-admin";
 import { HttpsProxyAgent } from "https-proxy-agent";
 import * as sockets from '../server/sockets.js';
