@@ -18,6 +18,7 @@
     "ip-location-api": "github:floriannari/ip-location-api#use_undici_fetch_and_request",
     "ldapts": "7.x",
     "mongoose": "8.x",
+    "morgan": "1.x",
     "mysql2": "3.x",
     "node-device-detector": "2.x",
     "nodemailer": "6.x",

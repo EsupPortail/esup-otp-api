@@ -173,6 +173,10 @@
         "audit": {
             "console": true,
             "file": "logs/audit.log"
+        },
+        "access": {
+            "format": "dev",
+            "console": true
         }
     },
     "trustedProxies": ["127.0.0.1", "loopback", "::1"]
