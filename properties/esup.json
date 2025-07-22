@@ -166,12 +166,12 @@
     },
     "logs": {
         "main": {
-            "level": "silly",
+            "level": "debug",
             "console": true,
             "file": "logs/esup-otp-api-info.log"
         },
         "audit": {
-            "console": true,
+            "console": false,
             "file": "logs/audit.log"
         },
         "access": {
