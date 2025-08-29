@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:latest
+    environment:
+      MYSQL_DATABASE: 'test_otp'
+      MYSQL_USER: 'admin'
+      MYSQL_PASSWORD: 'changeit'
+      MYSQL_RANDOM_ROOT_PASSWORD: true
+    ports:
+      - '3306:3306'
+    expose:
+      - '3306'
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql

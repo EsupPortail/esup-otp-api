@@ -12,6 +12,7 @@ const config = {
     "apiDb": "mongodb",
     "userDb": "mongodb",
     //"userDb": "ldap",
+    //"userDb": "mysql",
     "mongodb": {
         "uri": "mongodb://localhost:27017/test-otp",
         "transport": {
@@ -33,11 +34,23 @@ const config = {
         },
         "displayName": "displayName"
     },
+    "mysql": {
+        "host": "127.0.0.1",
+        "user": "admin",
+        "password": "changeit",
+        "database": "test_otp",
+        "userTable": "User",
+        "transport": {
+            "mail": "mail",
+            "sms": "sms"
+        },
+        "displayName": "displayName"
+    },
     "methods": {
         "totp": {
             "activate": true,
             "priority": 5,
-            "autoActivate": true,
+            "autoActivateWithPush": true,
             "name": "Esup Auth",
             "transports": []
         },

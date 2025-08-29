@@ -49,7 +49,7 @@ const config = {
         "totp": {
             "activate": true,
             "priority": 5,
-            "autoActivate": true,
+            "autoActivateWithPush": true,
             "name": "Esup Auth",
             "transports": []
         },

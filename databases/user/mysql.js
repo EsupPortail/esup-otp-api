@@ -57,14 +57,14 @@ export async function create_user(uid) {
     const new_user = {
         uid: uid
     };
-    const query = "INSERT INTO " + getUserTable() + " SET ?";
-    const [rows, fields] = await connection.execute(query, new_user)
-    return rows[0];
+    const query = `INSERT INTO ${getUserTable()} (uid) VALUES (:uid)`;
+    await connection.execute(query, new_user)
+    return find_user(uid);
 }
 
 export function remove_user(uid) {
     const query = "DELETE FROM " + getUserTable() + " WHERE uid = :uid";
-    return connection.query(query, { uid: uid });
+    return connection.execute(query, { uid: uid });
 }
 
 
