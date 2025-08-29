@@ -16,7 +16,9 @@ export async function initialize() {
      */
     const config = getMysqlProperty();
     config.namedPlaceholders = true;
-    connection = await mysql.createConnection(getMysqlProperty());
+    // because "Ignoring invalid configuration option passed to Connection: [displayName, userTable,transport] . This is currently a warning, but in future versions of MySQL2, an error will be thrown if you pass an invalid configuration option to a Connection"
+    const { userTable, transport, displayName, ...connectionOptions } = getMysqlProperty();
+    connection = await mysql.createConnection(connectionOptions);
 }
 
 export function close() {
