@@ -74,7 +74,7 @@ export async function update_user(req, res) {
         await userDb.save_user(user_db);
         await api_controller.save_user(user);
 
-        logger.log('archive', {
+        auditLogger.info({
             message: [
                 {
                     req,

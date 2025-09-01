@@ -5,7 +5,7 @@ import * as utils from '../services/utils.js';
 import * as errors from '../services/errors.js';
 import { apiDb } from '../controllers/api.js';
 
-import { logger } from '../services/logger.js';
+import { auditLogger } from '../services/logger.js';
 
 export const name = "passcode_grid";
 
@@ -65,7 +65,7 @@ export async function verify_code(user, req) {
 export async function generate_method_secret(user, req, res) {
     user.passcode_grid.grid = generateGrid();
     user.passcode_grid.generation_date = Date.now();
-    logger.log('archive', {
+    auditLogger.info({
         message: [
             {
                 req,

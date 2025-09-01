@@ -2,7 +2,7 @@ import * as properties from '../properties/properties.js';
 import * as utils from '../services/utils.js';
 import * as fileUtils from '../services/fileUtils.js';
 import { apiDb } from '../controllers/api.js';
-import { logger } from '../services/logger.js';
+import { logger, auditLogger } from '../services/logger.js';
 import * as OTPAuth from "otpauth";
 import * as errors from '../services/errors.js';
 
@@ -81,7 +81,7 @@ export async function autoActivateWithPush(user, req, res) {
         res.send({
             "code": "Ok"
         })
-        logger.log('archive', {
+        auditLogger.info({
             message: [
                 {
                     req,
@@ -98,7 +98,7 @@ export async function autoActivateWithPush(user, req, res) {
 export async function generate_method_secret(user, req, res) {
     if (req.query.require_method_validation === 'true' && user.totp.active) {
         user.totp.active = false;
-        logger.log('archive', {
+        auditLogger.info({
             message: [
                 {
                     req,
@@ -108,7 +108,7 @@ export async function generate_method_secret(user, req, res) {
         });
     }
     user.totp.secret = generateSecret(user);
-    logger.log('archive', {
+    auditLogger.info({
         message: [
             {
                 req,
@@ -152,7 +152,7 @@ export async function user_activate(user, req, res) {
 export async function confirm_user_activate(user, req, res) {
     if (!user.totp.active && req.params.activation_code && verify_token(req.params.activation_code, user.totp.secret.base32)) {
         user.totp.active = true;
-        logger.log('archive', {
+        auditLogger.info({
             message: [
                 {
                     req,

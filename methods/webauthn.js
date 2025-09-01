@@ -1,7 +1,7 @@
 import * as utils from '../services/utils.js';
 import * as fileUtils from '../services/fileUtils.js';
 import * as errors from '../services/errors.js';
-import { logger } from '../services/logger.js';
+import { logger, auditLogger } from '../services/logger.js';
 import { apiDb } from '../controllers/api.js';
 import { getCurrentTenantProperties } from '../services/multiTenantUtils.js'
 
@@ -138,7 +138,7 @@ export async function confirm_user_activate(user, req, res) {
         status = 200;
         registered = true;
 
-        logger.log('archive', {
+        auditLogger.info({
             message: [
                 {
                     req,
@@ -160,7 +160,7 @@ export async function delete_method_special(user, req, res) {
 
     user.webauthn.authenticators.splice(index, 1);
 
-    logger.log('archive', {
+    auditLogger.info({
         message: [
             {
                 req,
@@ -206,7 +206,7 @@ export async function change_method_special(user, req, res) {
 
     authenticator.name = req.body.name.trim();
 
-    logger.log('archive', {
+    auditLogger.info({
         message: [
             {
                 req,

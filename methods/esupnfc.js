@@ -5,7 +5,7 @@ import * as errors from '../services/errors.js';
 import { apiDb } from '../controllers/api.js';
 import * as qrcode from 'qrcode';
 
-import { logger } from '../services/logger.js';
+import { logger, auditLogger } from '../services/logger.js';
 import * as sockets from '../server/sockets.js';
 
 export const name = "esupnfc";
@@ -108,7 +108,7 @@ export async function autoActivateEsupnfcReady(user, res, data) {
 export async function autoActivateWithPush(user, req, res) {
     if (properties.getMethodProperty('esupnfc', 'activate') && properties.getMethodProperty('esupnfc', 'autoActivateWithPush')) {
         await user_activate(user, req, res);
-        logger.log('archive', {
+        auditLogger.info({
             message: [
                 {
                     req,
