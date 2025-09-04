@@ -1,13 +1,12 @@
 {
   "name": "esup-otp-api",
   "version": "1.7.3",
-  "description": "One time passwords api for ESUP",
-  "author": "Alex Bouskine <abouskine@gmail.com>",
+  "description": "Multi-factor authentication API for ESUP",
   "repository": {
     "type": "git",
     "url": "git://github.com/EsupPortail/esup-otp-api.git"
   },
-  "license": "MIT",
+  "license": "Apache-2.0",
   "type": "module",
   "dependencies": {
     "@simplewebauthn/server": "9.x",
