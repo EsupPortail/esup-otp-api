@@ -119,8 +119,8 @@ export async function send_message(user, req, res) {
                 logger.info(`user ${user.uid} gcm_id not registered (${user.push.device.gcm_id})`);
                 user.push.gcm_id_not_registered = true;
             } else if (err.code == "messaging/invalid-registration-token" || err.message == "The registration token is not a valid FCM registration token") {
-                logger.info(`user ${user.uid} gcm_id invalid (${user.push.device.gcm_id})`);
-                user.push.device.gcm_id = null;
+                logger.info(`user ${user.uid} invalid gcm_id (${user.push.device.gcm_id})`);
+                user.push.invalid_gcm_id = true;
             } else {
                 logger.error("Problem to send a notification to " + user.uid + ": " + err);
             }
@@ -184,14 +184,22 @@ function ifTokenSecretsMatch(user, req) {
 
 export function pending(user, req, res) {
     const bad_GCM_ID = !utils.isGcmIdValidAndRegistered(user);
+    const body = {
+        code: "Ok",
+        bad_GCM_ID: bad_GCM_ID,
+    }
+
+    if (bad_GCM_ID) {
+        body.gcm_id = user.push.device.gcm_id;
+    }
+    
     if (user.push.active && properties.getMethodProperty(req.params.method, 'activate') && ifTokenSecretsMatch(user, req) && Date.now() < user.push.validity_time) {
         res.send({
-            "code": "Ok",
             "message": user.push.text,
             "text": user.push.text,
             "action": 'auth',
             "lt": user.push.lt,
-            "bad_GCM_ID": bad_GCM_ID,
+            ...body
         });
     }
     else if (!user.push.active || req.params.tokenSecret != user.push.token_secret) {
@@ -203,10 +211,7 @@ export function pending(user, req, res) {
         });
     }
     else {
-        res.send({
-            "code": "Ok",
-            "bad_GCM_ID": bad_GCM_ID,
-        });
+        res.send(body);
     }
 }
 

@@ -100,7 +100,7 @@ export function isGcmIdWellFormed(gcm_id) {
 }
 
 export function isGcmIdValidAndRegistered(user) {
-    return isGcmIdWellFormed(user.push.device.gcm_id) && !user.push.gcm_id_not_registered;
+    return isGcmIdWellFormed(user.push.device.gcm_id) && !user.push.gcm_id_not_registered && !user.push.invalid_gcm_id;
 }
 
 export function canReceiveNotifications(user) {

@@ -125,6 +125,10 @@ const schema = {
             type: Boolean,
             default: false
         },
+        invalid_gcm_id: {
+            type: Boolean,
+            default: false
+        },
         transports: {
             type: Array,
             default: properties.getEsupProperty('transports')
