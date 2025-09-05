@@ -35,6 +35,7 @@ export function initialize(server) {
  */
 function initializeUnprotectedRoutes(server) {
     logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ' Initializing unprotected routes');
+    server.get('/public/*', restify.plugins.serveStaticFiles('./public'))
     return Promise.all([
         initializeSocketIoRoute(server),
         initializeOpenapiRoutes(server),
