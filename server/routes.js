@@ -35,6 +35,10 @@ export function initialize(server) {
  */
 function initializeUnprotectedRoutes(server) {
     logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ' Initializing unprotected routes');
+    server.get('/public/*', restify.plugins.serveStaticFiles('./public', { 
+        // force a specific cache-control max-age: do not rely on browser heuristic cache!
+        maxage: 1/*hour*/ * 60*60*1000 
+    }))
     return Promise.all([
         initializeSocketIoRoute(server),
         initializeOpenapiRoutes(server),
