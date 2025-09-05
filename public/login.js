@@ -1,19 +1,36 @@
+    function _(s, args) {
+        $.each(args || {}, (key, val) => {
+            s = s.replace(key, val)
+        })
+        return s;
+    }
+
+    function or_list_to_string(spans) {
+        if(spans.length === 1) {
+            return spans[0];
+        } else if(spans.length === 2) {
+            return spans.join(" " + _("ou") + " ");
+        } else {
+            return spans.slice(0, -1).join(', ') + ', ' + _("ou") + ' ' + spans.slice(-1);
+        }
+    }
+
     $("form").append(/*html*/`
 
        <div class="main1">
 
-        <div id="no-choices" class="d-none">
+        <div id="no-choices" class="d-none">${_(/*html*/`
             Vous n'avez pas activé vos codes à usage unique.
             <br/><br/>
             Nous vous invitons à activer l'authentification renforcée sur l'application de
             <a href="https://otpmanager-test.univ-paris1.fr/preferences" target="_blank">gestion d'authentification</a> de votre compte.
-        </div>
+        `)}</div>
 
         <div id="choices">
-            <h2>Utilisez une des méthodes suivantes pour vous connecter</h2>
+            <h2>${_("Utilisez une des méthodes suivantes pour vous connecter")}</h2>
 
             <ul id="methodChoices">
-                <li>Veuillez patienter</li>
+                <li>${_("Veuillez patienter")}</li>
             </ul>
         </div>
                
@@ -25,13 +42,13 @@
                 <input type="text" id="token" class="obfuscated" required
                 oninput="autosubmitIfValid(this)"
                 minlength="6" maxlength="6" pattern="[0-9]{6}"
-                placeholder="Saisissez le code de 6 chiffres"
+                placeholder="${_("Saisissez le code de 6 chiffres")}"
                 accesskey="m" autocomplete="one-time-code" name="token" value="">
               </label>
             </p>
             <p>
               <label id="toggle_code_visibility-LABEL" for="toggle_code_visibility">
-                Afficher le code
+                ${_("Afficher le code")}
                 <input id="toggle_code_visibility" type="checkbox"
                   onchange="document.getElementById('token').classList.toggle('obfuscated', !this.checked)" />
               </label>
@@ -39,7 +56,7 @@
 
             <ul>
                 <li id="retry"><a></a></li>
-                <li id="back_to_choices"><a>Autre méthode de connexion</a></li>
+                <li id="back_to_choices"><a>${_("Autre méthode de connexion")}</a></li>
             </ul>
           </div>
           <img id="page_icon"></div>
@@ -164,7 +181,7 @@
 
         $("#token, #submitCode, #toggle_code_visibility-LABEL").toggleClass('d-none', chosen.opts.hide_submitCode === true);
         $("#token").focus();
-        updateCode_label(chosen.opts.code_label && await chosen.opts.code_label(params, chosen) || "Merci de renseigner un code :");
+        updateCode_label(chosen.opts.code_label && await chosen.opts.code_label(params, chosen) || _("Merci de renseigner un code :"));
 
         document.querySelector('#page_icon').src = params.apiUrl + '/public/images/page-' + (chosen.opts.override_icon || chosen.transport || chosen.method) + ".svg";
 
@@ -172,7 +189,7 @@
 
         $("#retry").toggleClass('d-none', !(chosen.transport || chosen.opts.retryText));
         const retryElement = document.querySelector("#retry a");
-        retryElement.text = chosen.opts.retryText || "Recevoir un nouveau code";
+        retryElement.text = chosen.opts.retryText || _("Recevoir un nouveau code");
         onclick(retryElement, async () => { clear_errors(); await activate_method(params, chosen, {}) });
 
         return false;
@@ -218,28 +235,19 @@
         // afficher le titre
         if(webauthnData.auths.length === 0) {
             displayTitle({
-             title: "Vous n'avez aucun facteur enregistré",
-             desc: "Essayez une autre méthode"
+             title: _("Vous n'avez aucun facteur enregistré"),
+             desc: _("Essayez une autre méthode")
             });
         } else {
             let spans = webauthnData.auths.map(function authToSpan(authenticator) {
-                const name = authenticator.name || "clé sans nom";
+                const name = authenticator.name || _("clé sans nom");
                 const title = authenticator.name ? 
-                    `Le facteur physique que vous avez nommé '${authenticator.name}'` :
-                    "Vous n'avez pas donné de nom à ce facteur. Allez dans vos paramètres pour donner un nom."
+                    _("Le facteur physique que vous avez nommé '%NAME%'", { '%NAME%': authenticator.name }) :
+                    _("Vous n'avez pas donné de nom à ce facteur. Allez dans vos paramètres pour donner un nom.")
                 return `<span class="factor" title="${title}">${name}</span>`;
             });
-            let factorsString;
-            
-            if(spans.length === 1) {
-                factorsString = spans[0];
-            } else if(spans.length === 2) {
-                factorsString = spans.join(" ou ");
-            } else {
-                factorsString = spans.slice(0, -1).join(', ') + ', ou ' + spans.slice(-1);
-            }
             displayTitle({
-                title: "Utilisez " + factorsString + " pour vous authentifier."
+                title: _("Utilisez %FACTORS% pour vous authentifier.", { '%FACTORS%': or_list_to_string(spans) })
             });
         }
         
@@ -269,16 +277,16 @@
             if(e.name === "NotAllowedError") {
                 if(e.message === "CredentialContainer request is not allowed.") {
                     displayTitle({
-                        title: "L'authentification a échoué",
-                        desc: "Veuillez réessayer.",
+                        title: _("L'authentification a échoué"),
+                        desc: _("Veuillez réessayer."),
                     })
                     // There is a firefox bug where if you have your console opened when you try to call this, it fails
                     console.info("If the authentication crashed and you had your firefox console open when you tried to login, please close it and try again, as it may be due to a firefox bug. You can ignore this message otherwise.");
                 }
                 else {
                     displayTitle({
-                        title: "L'authentification a échoué",
-                        desc: "Vous avez refusé la demande.",
+                        title: _("L'authentification a échoué"),
+                        desc: _("Vous avez refusé la demande."),
                     })
                 }
             }
@@ -287,8 +295,8 @@
         
         if(assertion === undefined) {
             displayTitle({
-                title: "L'authentification a échoué",
-                desc: "Veuillez réessayer.",
+                title: _("L'authentification a échoué"),
+                desc: _("Veuillez réessayer."),
             })
             return;
         }
@@ -320,7 +328,7 @@
         else {
             if(typeof verifdata.message === "object") {
                 displayTitle({
-                    title: "L'authentification a échoué",
+                    title: _("L'authentification a échoué"),
                     desc: verifdata.message.title + "<br>" + verifdata.message.desc,
                 })
             }
@@ -330,13 +338,13 @@
     function getUserOtpMethods_and_displayChoices(params) {
         $.ajax({ url: params.apiUrl + '/users/'+ params.uid +'/' + params.userHash }).done(async function(data) {
             if (data.code != "Ok") {
-                alert("Erreur, veuillez réessayer ultérieurement");
+                alert(_("Erreur, veuillez réessayer ultérieurement"));
                 return;
             }
             try {
                 await displayChoices(params, data.user);
             } catch (e) {
-                alert("Erreur " + e)
+                alert(_("Erreur") + ' ' + e)
             }
         });
     }
@@ -344,7 +352,7 @@
         // l'ordre est utilisé pour choisir dans quel ordre afficher les méthodes
         webauthn: {
             label: {
-                '': "S'authentifier par facteur physique (WebAuthn)"
+                '': _("S'authentifier par facteur physique (WebAuthn)")
             },
             override_icon: 'cle',
             hide_submitCode: true,
@@ -353,46 +361,46 @@
         },
         push: { 
             label: { 
-                push: "S'authentifier via l'application Esup Auth sur votre %TRANSPORT%",
+                push: _("S'authentifier via l'application Esup Auth sur votre %TRANSPORT%"),
             },
             hide_submitCode: true,
-            retryText: "Demander une nouvelle notification",
-            code_label_afterSubmit: "Ouvrez l'application Esup Auth sur votre portable %TRANSPORT% pour valider l'authentification.",
+            retryText: _("Demander une nouvelle notification"),
+            code_label_afterSubmit: _("Ouvrez l'application Esup Auth sur votre portable %TRANSPORT% pour valider l'authentification."),
         },
         no_transport: {
             label: {
-                '': 'Saisir un code TOTP ou un code de secours',
+                '': _("Saisir un code TOTP ou un code de secours"),
             },
             real_methods: [ 'totp', 'bypass'],
             code_label: (params, chosen) => {
                 switch(chosen.real_methods.sort().join(' ')) {
                     case 'totp':
-                        return "Merci de renseigner le code affiché sur votre application TOTP :";
+                        return _("Merci de renseigner le code affiché sur votre application TOTP :");
                     case 'bypass totp':
-                        return "Merci de renseigner le code affiché sur votre application TOTP ou un code de secours :";
+                        return _("Merci de renseigner le code affiché sur votre application TOTP ou un code de secours :");
                 }
             },
         },
         random_code_mail: { label: { 
-            sms: "Recevoir un code par SMS sur %TRANSPORT%",
-            mail: "Recevoir un code par mél sur %TRANSPORT%",
+            sms: _("Recevoir un code par SMS sur %TRANSPORT%"),
+            mail: _("Recevoir un code par mél sur %TRANSPORT%"),
         } },
         random_code: { label: { 
-            sms: "Recevoir un code par SMS sur %TRANSPORT%",
-            mail: "Recevoir un code par mél sur %TRANSPORT%",
+            sms: _("Recevoir un code par SMS sur %TRANSPORT%"),
+            mail: _("Recevoir un code par mél sur %TRANSPORT%"),
         } },
         passcode_grid: { label: { 
-            '': 'Saisir le code indiqué sur votre grille de code',
+            '': _("Saisir le code indiqué sur votre grille de code"),
         } },
         esupnfc: {
             label: {
-                '': "S'authentifier avec sa carte multi-service sur un Smartphone compatible NFC"
+                '': _("S'authentifier avec sa carte multi-service sur un Smartphone compatible NFC")
             },
             override_icon: 'carte',
             hide_submitCode: true,
             code_label: async (params, chosen) => {
                 if (!(params.methods.esupnfc || {}).server_infos) {
-                    return "S'authentifier avec sa carte multi-service sur un Smartphone compatible NFC";
+                    return _("S'authentifier avec sa carte multi-service sur un Smartphone compatible NFC");
                 }
                 if (!params.methods.esupnfc.server_infos.qrCode) {
                     const esupnfc_secret = await (fetch(`${params.apiUrl}esupnfc/infos?requireQrCode=true`, { method: "GET" })
@@ -400,23 +408,24 @@
                     );
                     params.methods.esupnfc.server_infos = esupnfc_secret.server_infos;
                 }
-                return `
+                return _(/*html*/`
                     <ol>
                         <li>Lancez ou téléchargez la dernière version d'Esup-Auth (pour <a href="https://play.google.com/store/apps/details?id=org.esupportail.esupAuth">Android</a> ou <a href="https://apps.apple.com/fr/app/esup-auth/id1563904941">IOS</a>)</li>
-                        <li>Scannez le QRcode suivant à l'aide de l'application Esup-Auth dans le menu "Authentification NFC" : <div class="esupnfc_qrcode">${params.methods.esupnfc.server_infos.qrCode}</div></li>
+                        <li>Scannez le QRcode suivant à l'aide de l'application Esup-Auth dans le menu "Authentification NFC" : <div class="esupnfc_qrcode">%QRCODE%</div></li>
                         <li>Scannez votre carte étudiante ou professionnelle en NFC l'aide de l'application Esup-Auth</li>
                     </ol>
-                    `;
+                    `, { '%QRCODE%': params.methods.esupnfc.server_infos.qrCode }
+                );
             },
         },
     };
     
     const transports = {
         mail:{
-            code_label_afterSubmit: "Un code a été envoyé sur votre mél %TRANSPORT%,<br>saisissez le ici pour vous connecter."
+            code_label_afterSubmit: _("Un code a été envoyé sur votre mél %TRANSPORT%,<br>saisissez le ici pour vous connecter.")
         },
         sms:{
-            code_label_afterSubmit: "Un code a été envoyé au %TRANSPORT%,<br>saisissez le ici pour vous connecter."
+            code_label_afterSubmit: _("Un code a été envoyé au %TRANSPORT%,<br>saisissez le ici pour vous connecter.")
         }
     }
 
@@ -516,15 +525,16 @@
             url: params.apiUrl + '/users/'+ params.uid +'/methods/' + chosen.method + '/transports/' + chosen.transport + '/' + params.userHash + (opts.auto ? '?auto' : '')
         }).done(function(data) {
             if (data.code !== "Ok") {
-                alert("Erreur, veuillez réessayer ultérieurement");
+                alert(_("Erreur, veuillez réessayer ultérieurement"));
                 show('choices');
                 console.log("Something is broken : ", data);
             } else {
                 console.log(chosen);
-                let code_label = chosen.opts.code_label_afterSubmit || "Un code a été envoyé au %TRANSPORT%,<br>saisissez le ici pour vous connecter.";
+                let code_label = chosen.opts.code_label_afterSubmit || _("Un code a été envoyé au %TRANSPORT%,<br>saisissez le ici pour vous connecter.");
                 if(chosen.method == "passcode_grid") {
                     const challenge = data.message.challenge;
-                    code_label = `Veuillez saisir le code indiqué au croisement de la <strong>ligne ${String.fromCharCode(challenge[0] + 'A'.charCodeAt(0))}</strong> et de la <strong>colonne ${challenge[1] + 1}</strong> de votre grille de codes.`
+                    code_label = _("Veuillez saisir le code indiqué au croisement de la <strong>ligne %LINE%</strong> et de la <strong>colonne %COLUMN%</strong> de votre grille de codes.",
+                                   { '%LINE%': String.fromCharCode(challenge[0] + 'A'.charCodeAt(0)), '%COLUMN%': challenge[1] + 1 })
                 }
                 updateCode_label(code_label.replace('%TRANSPORT%', chosen.transport_text));
             }
