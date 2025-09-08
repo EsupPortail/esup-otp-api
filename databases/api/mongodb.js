@@ -405,23 +405,23 @@ export async function delete_tenant(req, res) {
 
 /**
  * Retourne le nombre d'utilisateurs totaux ayant au moins une méthode de MFA activée
- * Puis, pour chaque méthode, le nombre d'utilisateurs ayant cette méthode activée
+ * Puis, pour chaque méthode, le nombre d'utilisateurs ayant cette méthode activée.
+ * Retourne enfin l'OS (platform) utilisé pour la méthode Authentification (push)
  */
 export async function stats() {
     const stats = {
         totalUsers: 0,
         totalMfaUsers: 0,
-        methods: {}
+        methods: {},
+        pushPlatforms: {}
     };
 
     const allMethods = properties.getEsupProperty('methods');
 
-    // Filtrer les méthodes activées
     const activeMethods = Object.entries(allMethods)
         .filter(([_, conf]) => conf.activate === true || conf.activate === 'true')
         .map(([method]) => method);
-
-    // Initialiser le compteur de méthodes
+    
     for (const method of activeMethods) {
         stats.methods[method] = 0;
     }
@@ -448,7 +448,7 @@ export async function stats() {
                                             0
                                         ]
                                     }
-                                }
+                                },
                             ])
                         ])
                     }
@@ -465,6 +465,14 @@ export async function stats() {
                 ],
                 totalUsers: [
                     { $count: 'count' }
+                ],
+                pushPlatforms: [
+                    {
+                        $group: {
+                            _id: '$push.device.platform',
+                            count: { $sum: 1 }
+                        }
+                    }
                 ]
             }
         }
@@ -477,6 +485,15 @@ export async function stats() {
     if (data.methodCounts.length > 0) {
         for (const method of activeMethods) {
             stats.methods[method] = data.methodCounts[0][method] || 0;
+        }
+    }
+
+    // Remplir stats.pushPlatforms
+    if (data.pushPlatforms.length > 0) {
+        for (const platform of data.pushPlatforms) {
+            if(platform.count>0 && platform._id) {
+                stats.pushPlatforms[platform._id] = platform.count;
+            }
         }
     }
 
