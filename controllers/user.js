@@ -113,6 +113,22 @@ export async function search_users(req, res) {
     });
 }
 
+export async function user_exists(req, res) {
+    res.status(200);
+    res.send({
+        code: 'Ok',
+        user_exists: await user_exists_internal(req.params.uid),
+    });
+}
+
+async function user_exists_internal(uid) {
+    try {
+        return Boolean(await userDb.find_user(uid));
+    } catch (error) {
+        return false;
+    }
+}
+
 /**
  * Supprime l'utilisateur
  *

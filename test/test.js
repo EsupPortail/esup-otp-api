@@ -270,6 +270,30 @@ await test('Esup otp api', async (t) => {
         properties.setEsupProperty('auto_create_user', true);
     });
 
+    await t.test('user_exists', async (t) => {
+        // user does not exist 
+        await request(get, "/protected/users/" + uid + "/exists", { password: config.api_password })
+            .expect(200)
+            .then(res => {
+                t.assert.equal(res.body.user_exists, false);
+            });
+        // make sure that the previous call did not create it
+        await request(get, "/protected/users/" + uid + "/exists", { password: config.api_password })
+            .expect(200)
+            .then(res => {
+                t.assert.equal(res.body.user_exists, false);
+            });
+        // user is automatically created
+        await request(get, "/protected/users/" + uid, { password: config.api_password })
+            .expect(200);
+        // user exists
+        await request(get, "/protected/users/" + uid + "/exists", { password: config.api_password })
+            .expect(200)
+            .then(res => {
+                t.assert.equal(res.body.user_exists, true);
+            });
+    });
+
     await t.test('get test_user with good hash', async (t) => {
         await request(get, "/users/" + uid, { uid: uid, secret: config.users_secret })
             .expect(200);

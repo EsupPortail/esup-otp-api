@@ -132,6 +132,7 @@ async function initializeProtectedRoutes(server) {
     server.get("/protected/methods", validator.check_protected_access, api_controller.get_methods);
     server.get("/protected/users", validator.check_protected_access, userDb_controller.search_users);
     server.get("/protected/users/:uid", validator.check_protected_access, api_controller.get_user_infos);
+    server.get("/protected/users/:uid/exists", validator.check_protected_access, userDb_controller.user_exists);
     server.get("/protected/users/:uid/transports/:transport/test", validator.check_protected_access, api_controller.transport_test);
     server.put("/protected/users/:uid/methods/:method/deactivate", validator.check_protected_access, api_controller.deactivate_method);
     server.put("/protected/users/:uid/methods/:method/activate", validator.check_protected_access, api_controller.activate_method);
