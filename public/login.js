@@ -102,11 +102,12 @@ const langs = unique([...navigator.languages, 'en'].map(k => {
         }
     }
 
+function add_html_template(params) {
     $("form").append(/*html*/`
 
        <div class="main1">
 
-        <div id="no-choices" class="d-none">${_('no_choices_html', { '%OTP_MANAGER_URL%': 'https://otpmanager-test.univ-paris1.fr/preferences' })}</div>
+        <div id="no-choices" class="d-none">${_('no_choices_html', { '%OTP_MANAGER_URL%': params.otpManagerUrl })}</div>
 
         <div id="choices">
             <h2>${_("Use one of the following methods to log in")}</h2>
@@ -144,6 +145,7 @@ const langs = unique([...navigator.languages, 'en'].map(k => {
           <img id="page_icon"></div>
        </div>
     `)
+}
 
     // for IE11 in pulse-secure
     Array.prototype.find = Array.prototype.find || function(callback) {
@@ -418,6 +420,10 @@ const langs = unique([...navigator.languages, 'en'].map(k => {
     }
 
     function getUserOtpMethods_and_displayChoices(params) {
+        add_html_template(params)
+
+        onclick("#back_to_choices", () => { clear_errors(); show('choices'); });
+
         $.ajax({ url: params.apiUrl + '/users/'+ params.uid +'/' + params.userHash }).done(async function(data) {
             if (data.code != "Ok") {
                 alert(_("Error, please try again later"));
@@ -663,4 +669,3 @@ const langs = unique([...navigator.languages, 'en'].map(k => {
         ).filter(s => s).join(' et ')
     }
    
-    onclick("#back_to_choices", () => { clear_errors(); show('choices'); });
