@@ -260,6 +260,7 @@ export async function confirm_user_activate(user, req, res) {
         user.push.device.platform = deviceInfosFromUserAgent.os.name || req.params.platform || "AndroidDev";
         user.push.device.gcm_id = utils.isGcmIdWellFormed(req.params.gcm_id) ? req.params.gcm_id : null;
         user.push.gcm_id_not_registered = false;
+        user.push.invalid_gcm_id = false;
         user.push.device.manufacturer = deviceInfosFromUserAgent.device.brand || req.params.manufacturer || "DevCorp";
         user.push.device.model = deviceInfosFromUserAgent.device.model || req.params.model || "DevDevice";
         user.push.activation_code = null;
@@ -297,6 +298,7 @@ export async function refresh_user_gcm_id(user, req, res) {
         logger.debug("refresh old gcm_id : " + user.push.device.gcm_id + " with " + req.params.gcm_id_refreshed);
         user.push.device.gcm_id = req.params.gcm_id_refreshed;
         user.push.gcm_id_not_registered = false;
+        user.push.invalid_gcm_id = false;
         await apiDb.save_user(user);
         res.send({
             "code": "Ok",
@@ -402,6 +404,7 @@ export async function check_accept_authentication(user, req, res) {
 async function clearUserPush(user, req, res) {
     user.push.active = false;
     user.push.gcm_id_not_registered = false;
+    user.push.invalid_gcm_id = false;
     user.push.device.platform = null;
     user.push.device.gcm_id = null;
     user.push.device.manufacturer = null;
