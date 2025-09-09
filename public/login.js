@@ -35,9 +35,22 @@ const msgs = {
 
         "nfc_html": /*html*/`
             <ol>
-                <li>Lancez ou téléchargez la dernière version d'Esup-Auth (pour <a href="%ANDROID_APP_URL%">Android</a> ou <a href="%IOS_APP_URL%">IOS</a>)</li>
-                <li>Scannez le QRcode suivant à l'aide de l'application Esup-Auth dans le menu "Authentification NFC" : <div class="esupnfc_qrcode">%QRCODE%</div></li>
-                <li>Scannez votre carte étudiante ou professionnelle en NFC l'aide de l'application Esup-Auth</li>
+                <li>Télécharger la dernière version de l'application Esup-Auth (pour <a href="%ANDROID_APP_URL%">Android</a> ou <a href="%IOS_APP_URL%">IOS</a>) si ce n'est pas déjà fait.</li>
+                <li>Lancer l'application Esup-Auth.</li>
+                <li>
+                    Configurer l'authentification NFC sur l'application si ce n'est pas déjà fait.
+                    <ol style="list-style-type: circle;">
+                        <li>Pour cela, sur l'application, cliquer sur le symbole "+" en bas à droite de l'écran.</li>
+                        <li>Puis sélectionner <span class="inline-block">"Scanner QR code"</span>.</li>
+                        <li>
+                            Scanner le QR code ci-dessous :
+                            <div class="esupnfc_qrcode">%QRCODE%</div>
+                        </li>
+                    </ol>
+                    En cas de difficultés pour scanner le QR code, sélectionner "Saisie manuelle", et renseigner l'adresse <span class="inline-block">%API_URL%</span>
+                </li>
+                <li>Cliquer sur <span class="inline-block">"%ETABLISSEMENT%"</span>.</li>
+                <li>Suivre les instructions à l'écran.</li>
             </ol>
         `,
         "no_choices_html": /*html*/`
@@ -50,9 +63,22 @@ const msgs = {
     en: {
         "nfc_html": /*html*/`
             <ol>
-                <li>Launch or download the latest version of Esup-Auth (for <a href="%ANDROID_APP_URL%">Android</a> or <a href="%IOS_APP_URL%">IOS</a>)</li>
-                <li>Scan the following QR code using the Esup-Auth app in the "NFC Authentication" menu: <div class="esupnfc_qrcode">%QRCODE%</div></li>
-                <li>Scan your student or professional card via NFC using the Esup-Auth app</li>
+                <li>Download the latest version of the Esup-Auth app (for <a href="%ANDROID_APP_URL%">Android</a> or <a href="%IOS_APP_URL%">IOS</a>) if you haven't already done so.</li>
+                <li>Launch the Esup-Auth app.</li>
+                <li>
+                    Configure NFC authentication on the app if you haven't already done so.
+                    <ol style="list-style-type: circle;">
+                        <li>To do this, click on the "+" symbol at the bottom right of the screen on the app.</li>
+                        <li>Then select <span class="inline-block">"Scanner QR code"</span>.</li>
+                        <li>
+                            Scan the QR code below:
+                            <div class="esupnfc_qrcode">%QRCODE%</div>
+                        </li>
+                    </ol>
+                    If you have trouble scanning the QR code, select "Saisie manuelle" and enter the address <span class="inline-block">%API_URL%</span>
+                </li>
+                <li>Click on <span class="inline-block">"%ETABLISSEMENT%"</span>.</li>
+                <li>Follow the on-screen instructions.</li>
             </ol>
         `,
         "no_choices_html": /*html*/`
@@ -499,8 +525,10 @@ function add_html_template(params) {
                 return _('nfc_html', { 
                     '%ANDROID_APP_URL%': 'https://play.google.com/store/apps/details?id=org.esupportail.esupAuth',
                     '%IOS_APP_URL%': 'https://apps.apple.com/fr/app/esup-auth/id1563904941',
-                    '%QRCODE%': params.methods.esupnfc.server_infos.qrCode }
-                );
+                    '%QRCODE%': params.methods.esupnfc.server_infos.qrCode,
+                    '%ETABLISSEMENT%': params.methods.esupnfc.server_infos.etablissement,
+                    '%API_URL%': params.apiUrl,
+                });
             },
         },
     };
