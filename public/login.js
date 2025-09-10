@@ -513,20 +513,17 @@ function add_html_template(params) {
             override_icon: 'carte',
             hide_submitCode: true,
             code_label: async (params, chosen) => {
-                if (!(params.methods.esupnfc || {}).server_infos) {
+                const esupnfc_secret = await (fetch(`${params.apiUrl}esupnfc/infos?requireQrCode=true`, { method: "GET" })
+                    .then(res => res.json())
+                );
+                if (esupnfc_secret.code !== 'Ok') {
                     return _("Authenticate with your multi-service card on an NFC-compatible smartphone");
-                }
-                if (!params.methods.esupnfc.server_infos.qrCode) {
-                    const esupnfc_secret = await (fetch(`${params.apiUrl}esupnfc/infos?requireQrCode=true`, { method: "GET" })
-                        .then(res => res.json())
-                    );
-                    params.methods.esupnfc.server_infos = esupnfc_secret.server_infos;
                 }
                 return _('nfc_html', { 
                     '%ANDROID_APP_URL%': 'https://play.google.com/store/apps/details?id=org.esupportail.esupAuth',
                     '%IOS_APP_URL%': 'https://apps.apple.com/fr/app/esup-auth/id1563904941',
-                    '%QRCODE%': params.methods.esupnfc.server_infos.qrCode,
-                    '%ETABLISSEMENT%': params.methods.esupnfc.server_infos.etablissement,
+                    '%QRCODE%': esupnfc_secret.server_infos.qrCode,
+                    '%ETABLISSEMENT%': esupnfc_secret.server_infos.etablissement,
                     '%API_URL%': params.apiUrl,
                 });
             },
