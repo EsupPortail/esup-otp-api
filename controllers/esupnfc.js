@@ -2,6 +2,7 @@ import { logger } from '../services/logger.js';
 import { apiDb, getUserAndMethodModule } from './api.js';
 import * as esupnfc from "../methods/esupnfc.js";
 import * as properties from '../properties/properties.js';
+import * as errors from '../services/errors.js';
 
 export async function esupnfc_locations(req, res) {
     req.params.uid = req.params.eppn.split('@').shift();
