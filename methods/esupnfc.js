@@ -85,7 +85,7 @@ export function delete_method_secret(user, req, res) {
 }
 
 export async function user_activate(user, req, res) {
-    user.esupnfc.active = true;
+    user.esupnfc.internally_activated = true;
     await apiDb.save_user(user);
     res.status(200);
     res.send({
