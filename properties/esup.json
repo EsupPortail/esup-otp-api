@@ -139,6 +139,8 @@
             },
             "#how_to_autoActivateWithPush": "requires server_infos (ignored otherwise)",
             "autoActivateWithPush": true,
+            "#how_to_autoActivate": "esupnfc will automatically be marked as enabled if the user has enabled any other method.",
+            "autoActivate": false,
             "validity_time": 3,
             "transports": []
         },

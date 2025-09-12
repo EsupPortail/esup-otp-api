@@ -172,7 +172,7 @@ export function remove_user(uid) {
 }
 
 const RANDOM_CODE_METHODS = ["random_code", "random_code_mail"];
-const METHODS_WITH_INTERNALLY_ACTIVATED = RANDOM_CODE_METHODS.concat("webauthn");
+const METHODS_WITH_INTERNALLY_ACTIVATED = RANDOM_CODE_METHODS.concat(["webauthn", "esupnfc"]);
 async function update_active_methods(user) {
     // for the first access to this user since "internally_activated" exists, we configure it with the existing value of "active".
     for (const methodName of METHODS_WITH_INTERNALLY_ACTIVATED) {
@@ -191,6 +191,10 @@ async function update_active_methods(user) {
         userMethod.active = userMethod.internally_activated && properties.getTransports(random_code).some(transport => getTransport(userDb, transport));
     }
 
+    user.hasEnabledMethod = Object.keys(properties.getEsupProperty("methods")).some(method => user[method]?.active && properties.getMethod(method)?.activate);
+
+    user.esupnfc.active = user.esupnfc.internally_activated || (properties.getMethod("esupnfc").autoActivate && user.hasEnabledMethod);
+
     user.userDb = userDb;
 }
 
@@ -207,9 +211,10 @@ async function find_userDb(uid) {
 }
 
 export function parse_user(user) {
-    const parsed_user = {};
-    parsed_user.codeRequired = false;
-    parsed_user.waitingFor = false;
+    const parsed_user = {
+        codeRequired: false,
+        waitingFor: false,
+    };
     if (properties.getMethod('totp')?.activate) {
         if (user.totp.active) parsed_user.codeRequired = true;
         parsed_user.totp = {
