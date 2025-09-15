@@ -1,3 +1,22 @@
+a, a:visited, details summary {  
+    text-decoration: none;
+    color: #20559A;
+}
+
+a:hover, details summary:hover { 
+    color: #2055cc;
+    text-decoration: underline; 
+    cursor: pointer;
+}
+
+h2 {
+  font-weight: normal;
+  font-size: 19px;
+  color: #666;
+  padding: 15px 0;
+  text-align: center;
+}
+
 #fm1 ul {
     list-style: none;
     padding-left: 0;
@@ -43,7 +62,14 @@
     border-radius: 0.25rem; 
     background-color: #dfe6f3c2;
     color: #555; 
+    padding: 1rem;
+    font-size: 16px;
 }
+
+#toggle_code_visibility {
+    margin: 3px;
+}
+
 
 .obfuscated {
     -webkit-text-security: disc;
