@@ -64,7 +64,7 @@ export async function autoActivateTotpReady(user, res, data) {
         user.totp.secret = generateSecret(user);
         data.autoActivateTotp = true;
         data.totpKey = user.totp.secret.base32;
-        data.totpName = properties.getMethod('totp').name + ":" + user.uid;
+        data.totpName = properties.getMethod('totp').name + " (" + user.uid + ")";
         logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + " autoActivateTotpReady " + user.uid);
         await apiDb.save_user(user);
     }
