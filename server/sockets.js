@@ -19,7 +19,8 @@ export function attach(server){
     if (!casVhost) {
         throw "casVhost must be defined in properties/esup.json"
     }
-    io = new socket_io.Server({path: "/sockets"}).attach(server.server, { cors: { origin: "https://" + casVhost }});
+    const otherHosts = properties.getEsupProperty("otherHosts") || [];
+    io = new socket_io.Server({path: "/sockets"}).attach(server.server, { cors: { origin: otherHosts.concat("https://" + casVhost) }});
     initialize();
 }
 
