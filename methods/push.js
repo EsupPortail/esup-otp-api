@@ -423,7 +423,7 @@ async function clearUserPush(user, req, res) {
 
 export async function user_deactivate(user, req, res) {
     if (properties.getMethod('push').notification)
-        alert_deactivate(user);
+        alert_deactivate(user, req);
     await clearUserPush(user, req, res);
     res.status(200);
     res.send({
@@ -431,7 +431,7 @@ export async function user_deactivate(user, req, res) {
     });
 }
 
-async function alert_deactivate(user) {
+async function alert_deactivate(user, req) {
     if (!utils.canReceiveNotifications(user)) {
         return;
     }
@@ -450,7 +450,9 @@ async function alert_deactivate(user) {
         data: {
             message: "Les notifications push ont été désactivées pour votre compte",
             text: "Les notifications push ont été désactivées pour votre compte",
-            action: 'desync'
+            action: 'desync',
+            url: getUrl(req),
+            uid: user.uid,
         },
         token: user.push.device.gcm_id
     };
