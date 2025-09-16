@@ -106,7 +106,7 @@ export async function autoActivateEsupnfcReady(user, res, data) {
 }
 
 export async function autoActivateWithPush(user, req, res) {
-    if (properties.getMethodProperty('esupnfc', 'activate') && properties.getMethodProperty('esupnfc', 'autoActivateWithPush')) {
+    if (properties.getMethodProperty('esupnfc', 'autoActivateWithPush')) {
         await user_activate(user, req, res);
         auditLogger.info({
             message: [

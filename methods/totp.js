@@ -75,12 +75,12 @@ export async function autoActivateTotpReady(user, res, data) {
 }
 
 export async function autoActivateWithPush(user, req, res) {
-    if (!user.totp.active && properties.getMethodProperty('totp', 'activate') && properties.getMethodProperty('totp', 'autoActivateWithPush') && user.totp.secret != null) {
+    if (!user.totp.active && properties.getMethodProperty('totp', 'autoActivateWithPush') && user.totp.secret != null) {
         user.totp.active = true;
         await apiDb.save_user(user);
         res.send({
             "code": "Ok"
-        })
+        });
         auditLogger.info({
             message: [
                 {

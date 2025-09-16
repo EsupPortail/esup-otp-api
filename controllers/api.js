@@ -444,8 +444,8 @@ export async function confirm_activate_method(req, res) {
 
 export async function autoActivateWithPush(req, res) {
     logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ' ' + req.params.uid + " autoActivateWithPush " + req.params.method);
-    const { user, method } = await getUserAndMethodModule(req);
-    methods.push.checkTokenSecret("autoActivateWithPush", user, req, res)
+    const { user, method } = await getUserAndMethodModule(req, { checkMethodPropertyActivate: true });
+    methods.push.checkTokenSecret("autoActivateWithPush", user, req, res);
     return method.autoActivateWithPush(user, req, res);
 }
 
