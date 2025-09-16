@@ -127,7 +127,7 @@ export function confirm_user_activate(user, req, res) {
 }
 
 export async function user_deactivate(user, req, res) {
-    user.esupnfc.active = false;
+    user.esupnfc.internally_activated = false;
     await apiDb.save_user(user);
     res.status(200);
     res.send({
