@@ -178,6 +178,7 @@ async function update_active_methods(user) {
     for (const methodName of METHODS_WITH_INTERNALLY_ACTIVATED) {
         const userMethod = user[methodName];
         userMethod.internally_activated ??= userMethod.active;
+        userMethod.active = false;
     }
 
     // turn off webauthn if no authenticator is present
