@@ -142,6 +142,8 @@
             "autoActivateWithPush": true,
             "#how_to_autoActivate": "esupnfc will automatically be marked as enabled if the user has enabled any other method.",
             "autoActivate": false,
+            "#how_to_saveAutoActivation": "If the user disables all other methods, esupnfc auto-activated stay active. (Only applies to 'autoActivate'. With 'autoActivateWithPush', it is persistent in all cases.)",
+            "saveAutoActivation": false,
             "validity_time": 3,
             "transports": []
         },

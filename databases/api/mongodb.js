@@ -194,7 +194,11 @@ async function update_active_methods(user) {
 
     user.hasEnabledMethod = Object.keys(properties.getEsupProperty("methods")).some(method => user[method]?.active && properties.getMethod(method)?.activate);
 
-    user.esupnfc.active = user.esupnfc.internally_activated || (properties.getMethod("esupnfc").autoActivate && user.hasEnabledMethod);
+    user.esupnfc.active = user.esupnfc.internally_activated || (properties.getMethod("esupnfc")?.autoActivate && user.hasEnabledMethod);
+
+    if (properties.getMethod("esupnfc")?.saveAutoActivation) {
+        user.esupnfc.internally_activated = user.esupnfc.active;
+    }
 
     user.userDb = userDb;
 }
