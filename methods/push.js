@@ -272,7 +272,7 @@ export async function confirm_user_activate(user, req, res) {
         const data = {
             "code": "Ok",
             "tokenSecret": token_secret,
-            "hostName": properties.getMethod('push').name,
+            "hostName": properties.getMethod('push').title,
         };
         await autoActivateTotpReady(user, res, data);
         await autoActivateEsupnfcReady(user, res, data);
