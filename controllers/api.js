@@ -293,6 +293,19 @@ export async function reject_authentication(req, res) {
 }
 
 export async function pending(req, res) {
+    const acceptHeader = req.header("accept");
+    if (acceptHeader?.includes("html") && !acceptHeader?.includes("json")) {
+        // If a user scans the push activation QR code without using the Esup Auth app, they will end up here.
+        const html = `<!DOCTYPE html><html><body>Veuillez télécharger l'application Esup-Auth (pour <a href="https://play.google.com/store/apps/details?id=org.esupportail.esupAuth">Android</a> ou <a href="https://apps.apple.com/fr/app/esup-auth/id1563904941">IOS</a>).<br />Puis scannez le QR code depuis l'application.</body></html>`;
+        res.writeHead(200, {
+            "Content-Type": "text/html; charset=utf-8",
+            "Content-Length": Buffer.byteLength(html),
+        });
+        res.write(html);
+        res.end();
+        return;
+    }
+
     errorIfNotPushMethod(req);
     const { user, method } = await getUserAndMethodModule(req, { checkMethodPropertyPending: true });
     return method.pending(user, req, res);
