@@ -316,7 +316,7 @@ function available_transports(userTransports, method) {
 
 
 export async function get_uids(req, res) {
-    const filter = currentTenantMongodbFilter(req);
+    const filter = await currentTenantMongodbFilter(req);
 
     const data = await UserPreferences.find(filter, { uid: 1 });
     const result = data.map((uid) => uid.uid);
