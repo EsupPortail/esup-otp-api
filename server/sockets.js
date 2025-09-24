@@ -48,6 +48,9 @@ function initialize() {
             userDisconnection(socket.id);
         })
     });
+    io.engine.on("connection_error", (err) => {
+        logger.debug("socket connection error: " + err.message);
+    });
 }
 
 export async function close() {
