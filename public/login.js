@@ -293,7 +293,7 @@ function add_html_template(params) {
         $("#token").focus();
         updateCode_label(chosen.opts.code_label && await chosen.opts.code_label(params, chosen) || _("Please enter a code:"));
 
-        document.querySelector('#page_icon').src = params.apiUrl + '/public/images/page-' + (chosen.opts.override_icon || chosen.transport || chosen.method) + ".svg";
+        document.querySelector('#page_icon').src = params.apiUrl + 'public/images/page-' + (chosen.opts.override_icon || chosen.transport || chosen.method) + ".svg";
 
         $("#back_to_choices").toggleClass('d-none', $("#methodChoices > li").length <= 1);
 
@@ -454,7 +454,7 @@ function add_html_template(params) {
 
         onclick("#back_to_choices", () => { clear_errors(); show('choices'); });
 
-        $.ajax({ url: params.apiUrl + '/users/'+ params.uid +'/' + params.userHash }).done(async function(data) {
+        $.ajax({ url: params.apiUrl + 'users/'+ params.uid +'/' + params.userHash }).done(async function(data) {
             if (data.code != "Ok") {
                 alert(_("Error, please try again later"));
                 return;
@@ -616,7 +616,7 @@ function add_html_template(params) {
                 return false;
             });
             button.append($("<span></span>").text(choice.text));
-            button.append($("<img>", { src: params.apiUrl + "/public/images/liste-" + (choice.opts.override_icon || choice.transport || choice.method) + ".svg" } ));
+            button.append($("<img>", { src: params.apiUrl + "public/images/liste-" + (choice.opts.override_icon || choice.transport || choice.method) + ".svg" } ));
             return $("<li></li>").append(button);
         }));
         $("#methodChoices li a").first().focus();
@@ -636,7 +636,7 @@ function add_html_template(params) {
     function submitCodeRequest(params, chosen, opts) {
         $.ajax({
             type: 'POST',
-            url: params.apiUrl + '/users/'+ params.uid +'/methods/' + chosen.method + '/transports/' + chosen.transport + '/' + params.userHash + (opts.auto ? '?auto' : '')
+            url: params.apiUrl + 'users/'+ params.uid +'/methods/' + chosen.method + '/transports/' + chosen.transport + '/' + params.userHash + (opts.auto ? '?auto' : '')
         }).done(function(data) {
             if (data.code !== "Ok") {
                 alert(_("Error, please try again later"));
