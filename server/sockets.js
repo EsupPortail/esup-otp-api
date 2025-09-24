@@ -49,7 +49,7 @@ function initialize() {
         })
     });
     io.engine.on("connection_error", (err) => {
-        logger.error("socket connection error: " + err.message);
+        logger.debug("socket connection error: " + err.message);
     });
 }
 
