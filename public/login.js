@@ -446,6 +446,10 @@ function add_html_template(params) {
     }
 
     function getUserOtpMethods_and_displayChoices(params) {
+        if (!params.apiUrl) throw "missing params.apiUrl"
+        // ensure esup-otp-api base url has a trailing slash
+        if (!params.apiUrl.match(/[/]$/)) params.apiUrl += "/"
+
         add_html_template(params)
 
         onclick("#back_to_choices", () => { clear_errors(); show('choices'); });
