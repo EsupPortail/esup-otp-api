@@ -257,6 +257,7 @@ export async function get_user_infos(req, res) {
             transports: transports,
             last_send_message: user.last_send_message,
             last_validated: user.last_validated,
+            has_enabled_method: user.hasEnabledMethod,
         }
     });
 }
