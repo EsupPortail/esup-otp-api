@@ -278,6 +278,16 @@ function add_html_template(params) {
         $("#errors").remove();
     }
 
+    const set_global_class_for_method = (() => {
+        let ourClass
+        return (method) => {
+            const elt = document.getElementById("fm1").parentElement
+            if (ourClass) elt.classList.remove(ourClass)
+            ourClass = method ? "method-" + method : "show-choices"
+            elt.classList.add(ourClass)
+        }
+    })()
+
     function show(idToShow) {
         ["no-choices", "choices", "code"].forEach(function (id) {
             $('#' + id).toggleClass('d-none', id !== idToShow);
@@ -285,9 +295,14 @@ function add_html_template(params) {
         // focus on first focusable element
         let elt = document.getElementById(idToShow).querySelector('button, [href], input, select, [tabindex]')
         if (elt) elt.focus();
+
+        if (idToShow === 'choices') {
+            set_global_class_for_method(null)
+        }
     }
     async function show_method(params, chosen) {
         show('code');
+        set_global_class_for_method(chosen.method)
 
         $("#token, #submitCode, #toggle_code_visibility-LABEL").toggleClass('d-none', chosen.opts.hide_submitCode === true);
         $("#token").focus();
@@ -625,6 +640,7 @@ function add_html_template(params) {
             // we are not visible, wait for user to choose
         } else if (last_send_message.auto && !last_send_message.verified) {
             // last submitCodeRequest did not succeed
+            show('choices');
         } else {
             const last_validated_method = (user_params.last_validated || {}).method;
             // use last validated method, or first method by default
