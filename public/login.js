@@ -35,10 +35,10 @@ const msgs = {
 
         "nfc_html": /*html*/`
             <ol>
-                <li>Télécharger la dernière version de l'application Esup-Auth (pour <a href="%ANDROID_APP_URL%">Android</a> ou <a href="%IOS_APP_URL%">IOS</a>) si ce n'est pas déjà fait.</li>
+                <li>Télécharger la dernière version de l'application Esup-Auth (pour <a href="%ANDROID_APP_URL%">Android</a> ou <a href="%IOS_APP_URL%">IOS</a>) <b>si ce n'est pas déjà fait</b>.</li>
                 <li>Lancer l'application Esup-Auth.</li>
                 <li>
-                    Configurer l'authentification NFC sur l'application si ce n'est pas déjà fait.
+                    Configurer l'authentification NFC sur l'application <b>si ce n'est pas déjà fait</b>.
                     <ol style="list-style-type: circle;">
                         <li>Pour cela, sur l'application, cliquer sur le symbole "+" en bas à droite de l'écran.</li>
                         <li>Puis sélectionner <span class="inline-block">"Scanner QR code"</span>.</li>
