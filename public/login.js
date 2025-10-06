@@ -273,16 +273,16 @@ function add_html_template(params) {
     }
 
     const set_global_class_for_method = (() => {
-        let ourClass
+        let previousClass;
         return (method) => {
             const elt = document.getElementById("fm1").parentElement
-            if (ourClass) elt.classList.remove(ourClass)
-            ourClass = method ? "method-" + method : "show-choices"
-            elt.classList.add(ourClass)
+            if (previousClass) elt.classList.remove(previousClass);
+            elt.classList.add(method);
+            previousClass = method;
         }
     })()
 
-    function show(idToShow) {
+    function show(idToShow, method) {
         ["no-choices", "choices", "code"].forEach(function (id) {
             $('#' + id).toggleClass('d-none', id !== idToShow);
         });
@@ -290,13 +290,20 @@ function add_html_template(params) {
         let elt = document.getElementById(idToShow).querySelector('button, [href], input, select, [tabindex]')
         if (elt) elt.focus();
 
-        if (idToShow === 'choices') {
-            set_global_class_for_method(null)
+        switch (idToShow) {
+            case 'choices':
+                set_global_class_for_method('show-choices');
+                break;
+            case 'no-choices':
+                set_global_class_for_method('no-choices');
+                break;
+            default:
+                set_global_class_for_method('method-' + method);
+                break;
         }
     }
     async function show_method(params, chosen) {
-        show('code');
-        set_global_class_for_method(chosen.method)
+        show('code', chosen.method);
 
         $("#token, #submitCode, #toggle_code_visibility-LABEL").toggleClass('d-none', chosen.opts.hide_submitCode === true);
         $("#token").focus();
