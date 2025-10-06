@@ -54,10 +54,7 @@ const msgs = {
             </ol>
         `,
         "no_choices_html": /*html*/`
-            Vous n'avez pas activé vos codes à usage unique.
-            <br/><br/>
-            Nous vous invitons à activer l'authentification renforcée sur l'application de
-            <a href="%OTP_MANAGER_URL%" target="_blank">gestion d'authentification</a> de votre compte.
+            Veuillez activer l’<a href="%OTP_MANAGER_URL%" target="_blank">authentification renforcée</a> pour pouvoir accéder à ce service.
         `,
     },
     en: {
@@ -82,10 +79,7 @@ const msgs = {
             </ol>
         `,
         "no_choices_html": /*html*/`
-            You have not activated your one-time codes.
-            <br/><br/>
-            We invite you to activate enhanced authentication in the
-            <a href="%OTP_MANAGER_URL%" target="_blank">authentication management</a> application of your account.
+            To access this service, activate <a href="%OTP_MANAGER_URL%" target="_blank">multi-factor authentication</a>.
         `,
     }
 }
