@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.1.0 (2025-10-09) ([release](https://github.com/EsupPortail/esup-otp-api/releases/tag/v2.1.0))
+- Centralize the common code from [esup-otp-cas](https://github.com/EsupPortail/esup-otp-cas), [esup-otp-cas-server](https://github.com/EsupPortail/esup-otp-cas-server), and [esup-otp-shibboleth](https://github.com/Renater/esup-otp-shibboleth/) in [esup-otp-api](https://github.com/EsupPortail/esup-otp-api/tree/master/public). (The corresponding commits of esup-otp-api are prefixed with `[login.js]`)
+- chore: update dependencies (requires "npm install")
+
 ## v2.0.2 (2025-09-26) ([release](https://github.com/EsupPortail/esup-otp-api/releases/tag/v2.0.2))
 - fix: undefined esupnfc.active [55c2119](https://github.com/EsupPortail/esup-otp-api/commit/55c2119f34274f208fa68271e770811932eacdf6)<br />
 (which could cause errors on esup-otp-cas)
