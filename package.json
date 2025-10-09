@@ -20,7 +20,7 @@
     "morgan": "1.x",
     "mysql2": "3.x",
     "node-device-detector": "2.x",
-    "nodemailer": "6.x",
+    "nodemailer": "7.x",
     "otpauth": "9.x",
     "proxy-addr": "2.x",
     "qrcode": "1.x",
@@ -36,6 +36,7 @@
     "@scarf/scarf": "npm:dry-uninstall",
     "restify": {
       "find-my-way": "8.x",
+      "pino": "10.x",
       "send": "0.x"
     }
   },
