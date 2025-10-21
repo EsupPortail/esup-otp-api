@@ -33,16 +33,16 @@ function initialize() {
                 socket.disconnect('Forbidden');
             }
             managerSocket = socket.id;
+
+            socket.on('managers', function (data) {
+                users._managers = data;
+            })
         }
         else if(socket.handshake.query.app=="cas" && socket.handshake.query.uid && socket.handshake.query.hash){
             if (await validator.check_hash_internal(socket.handshake.query.uid, socket.handshake.query.hash)) {
                 userConnection(socket.handshake.query.uid, socket.id);
             }
         } else socket.disconnect('Forbidden');
-
-        socket.on('managers', function (data) {
-            users._managers = data;
-        })
 
         socket.on('disconnect', function () {
             userDisconnection(socket.id);
