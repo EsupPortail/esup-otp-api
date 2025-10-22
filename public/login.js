@@ -317,6 +317,7 @@ function add_html_template(params) {
         switch (idToShow) {
             case 'choices':
                 set_global_class_for_method('show-choices');
+                mayDisconnectSocket()
                 break;
             case 'no-choices':
                 set_global_class_for_method('no-choices');
@@ -606,6 +607,10 @@ function add_html_template(params) {
             chosen.transport = "passcode_grid";
         }
 
+        if (chosen.method === "push" || chosen.method === "esupnfc") {
+            mayInitializeSocket(params);
+        }
+
         if (chosen.transport) {
             submitCodeRequest(params, chosen, opts);
         }
@@ -663,9 +668,6 @@ function add_html_template(params) {
             try { server_log({ warn: "no-choices", uid: params.uid, service: new URLSearchParams(location.search).get("service") }); } catch (e) {}
             return;
         }
-        if(user_params.methods.waitingFor === true){
-            initializeSocket(params);
-        }
         $("#methodChoices").empty().append(choices.map(function (choice) {
             const button = $("<a class='large'>");
             onclick(button[0], async () => {
@@ -714,8 +716,11 @@ function add_html_template(params) {
         });
     }
     
-    function initializeSocket(params) {
-        var socket = io.connect(params.apiUrl, {
+    let socket
+    function mayInitializeSocket(params) {
+        if (socket) return; // already in place (NB: socket.io will handle reconnect in case of WebSocket breakage)
+
+        socket = io.connect(params.apiUrl, {
             reconnect: true, 
             path: "/sockets", 
             query: 'uid=' + params.uid + '&hash=' + params.userHash + '&app=cas'
@@ -728,6 +733,12 @@ function add_html_template(params) {
                 $('#fm1').submit();
             }
         });
+    }
+    function mayDisconnectSocket() {
+        if (socket) {
+            socket.disconnect()
+            socket = undefined
+        }
     }
 
     function milliseconds_to_DaysHoursMinutes(ms) {
