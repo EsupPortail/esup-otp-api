@@ -26,8 +26,9 @@ export function attach(server){
 
 function initialize() {
     io.on("connection", async function(socket) {
-        if(socket.handshake.query.app=="manager"){
-            const secret = socket.handshake.query.secret || utils.get_auth_bearer(socket.handshake.headers)
+        const query = socket.handshake.query
+        if(query.app=="manager"){
+            const secret = query.secret || utils.get_auth_bearer(socket.handshake.headers)
             if(secret != properties.getEsupProperty('api_password')) {
                 logger.error("denying manager app with wrong password");
                 socket.disconnect('Forbidden');
@@ -38,9 +39,9 @@ function initialize() {
                 users._managers = data;
             })
         }
-        else if(socket.handshake.query.app=="cas" && socket.handshake.query.uid && socket.handshake.query.hash){
-            if (await validator.check_hash_internal(socket.handshake.query.uid, socket.handshake.query.hash)) {
-                userConnection(socket.handshake.query.uid, socket.id);
+        else if(query.app=="cas" && query.uid && query.hash){
+            if (await validator.check_hash_internal(query.uid, query.hash)) {
+                userConnection(query.uid, socket.id);
             }
         } else socket.disconnect('Forbidden');
 
