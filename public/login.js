@@ -721,8 +721,6 @@ function add_html_template(params) {
             path: "/sockets", 
             query: 'uid=' + params.uid + '&hash=' + params.userHash + '&app=cas'
         });
-        socket.on('connect', function () {
-        });          
         socket.on('userAuth', function (data) {
             if (data.code == "Ok") {
                 $('#token').val(data.otp);
