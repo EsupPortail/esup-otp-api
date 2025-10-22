@@ -608,7 +608,7 @@ function add_html_template(params) {
         }
 
         if (chosen.method === "push" || chosen.method === "esupnfc") {
-            mayInitializeSocket(params);
+            mayInitializeSocket(params, chosen.method);
         }
 
         if (chosen.transport) {
@@ -717,13 +717,13 @@ function add_html_template(params) {
     }
     
     let socket
-    function mayInitializeSocket(params) {
+    function mayInitializeSocket(params, method) {
         if (socket) return; // already in place (NB: socket.io will handle reconnect in case of WebSocket breakage)
 
         socket = io.connect(params.apiUrl, {
             reconnect: true, 
             path: "/sockets", 
-            query: 'uid=' + params.uid + '&hash=' + params.userHash + '&app=cas'
+            query: 'uid=' + params.uid + '&hash=' + params.userHash + '&app=cas' + '&method=' + method
         });
         socket.on('userAuth', function (data) {
             if (data.code == "Ok") {

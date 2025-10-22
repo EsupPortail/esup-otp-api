@@ -41,7 +41,7 @@ function initialize() {
         }
         else if(query.app=="cas" && query.uid && query.hash){
             if (await validator.check_hash_internal(query.uid, query.hash)) {
-                userConnection(query.uid, socket.id);
+                userConnection(query.uid, query.method, socket.id);
             }
         } else socket.disconnect('Forbidden');
 
@@ -68,12 +68,19 @@ export function emitToManagers(emit, target) {
     }
 }
 
-export function emitUserAuth(uid, otp) {
-    if (users[uid])io.to(users[uid]).emit('userAuth', { code: "Ok", otp });
+export function emitUserAuth(successful_method, uid, otp) {
+    if (users[uid]) {
+        const { idSocket, method } = users[uid]
+        if (!method || method === successful_method) {
+            io.to(idSocket).emit('userAuth', { code: "Ok", otp });
+        } else {
+            logger.warn(`not sending to socket of user ${uid}: successful method ${successful_method} vs connected method ${method}`)
+        }
+    }
 }
 
-function userConnection(uid, idSocket){
-    users[uid]=idSocket;
+function userConnection(uid, method, idSocket){
+    users[uid]= { idSocket, method };
 }
 
 function userDisconnection(idSocket){
