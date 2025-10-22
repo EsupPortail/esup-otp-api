@@ -32,7 +32,7 @@ export async function accept_authentication(user, req, res) {
     validity_time += new Date().getTime();
     user.esupnfc.validity_time = validity_time;
     await apiDb.save_user(user);
-    sockets.emitCas(user.uid, 'userAuth', { "code": "Ok", "otp": user.esupnfc.code });
+    sockets.emitUserAuth(user.uid, user.esupnfc.code);
     logger.debug("sockets.emitCas OK : otp = " + user.esupnfc.code);
     res.send({
         "code": "Ok",
