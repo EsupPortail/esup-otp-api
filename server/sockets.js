@@ -78,6 +78,9 @@ function userConnection(uid, idSocket){
 
 function userDisconnection(idSocket){
     for(const user in users){
-        if(users[user]==idSocket)delete users[user];
+        if(users[user]==idSocket) {
+            delete users[user];
+            break;
+        }
     }
 }
