@@ -324,7 +324,7 @@ export async function refresh_user_gcm_id(user, req, res) {
 export async function accept_authentication(user, req, res) {
     const tokenSecret = checkTokenSecretAndLoginTicket("accept_authentication", user, req, res);
 
-    sockets.emitCas(user.uid, 'userAuth', { "code": "Ok", "otp": user.push.code });
+    sockets.emitUserAuth(user.uid, user.push.code);
     res.send({
         "code": "Ok",
         "tokenSecret": tokenSecret

@@ -68,8 +68,8 @@ export function emitToManagers(emit, target) {
     }
 }
 
-export function emitCas(uid, emit, data) {
-    if(users[uid])io.to(users[uid]).emit(emit, data);
+export function emitUserAuth(uid, otp) {
+    if (users[uid])io.to(users[uid]).emit('userAuth', { code: "Ok", otp });
 }
 
 function userConnection(uid, idSocket){
