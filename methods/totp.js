@@ -129,12 +129,14 @@ export async function generate_method_secret(user, req, res) {
 
 export async function delete_method_secret(user, req, res) {
     user.totp.active = false;
+    const deleted_secret = user.totp.secret;
     user.totp.secret = {};
     await apiDb.save_user(user);
     res.status(200);
     res.send({
         "code": "Ok",
-        "message": 'Secret removed'
+        "message": 'Secret removed',
+        deleted_secret: deleted_secret.base32,
     });
 }
 
