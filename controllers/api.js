@@ -253,7 +253,7 @@ export async function get_user_infos(req, res) {
     res.send({
         code: "Ok",
         user: {
-            methods: apiDb.parse_user(user),
+            methods: apiDb.parse_user(req, user),
             transports: transports,
             last_send_message: user.last_send_message,
             last_validated: user.last_validated,

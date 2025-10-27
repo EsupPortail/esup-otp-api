@@ -215,7 +215,7 @@ async function find_userDb(uid) {
     }
 }
 
-export function parse_user(user) {
+export function parse_user(req, user) {
     const parsed_user = {
         codeRequired: false,
         waitingFor: false,
@@ -228,6 +228,12 @@ export function parse_user(user) {
             qrCode: "",
             transports: available_transports(user.totp.transports, "totp")
         };
+        if (user.totp.secret?.base32 && req.protected_access_checked) {
+            // Send the hash of the first 20 characters (out of 32)
+            const subStr = user.totp.secret.base32.substring(0, 20);
+            const salt = user.uid;
+            parsed_user.totp.secret_hash = utils.hash(subStr + salt);
+        }
     }
 
     if (properties.getMethod('webauthn')?.activate) {

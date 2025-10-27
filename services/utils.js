@@ -187,3 +187,10 @@ export function bufferToBase64URLString(buffer) {
 
   return base64String.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
 }
+
+export function hash(str, alg = "sha256", encoding = "base64url") {
+    if (crypto.hash) { // since v20.12.0, v21.7.0 https://nodejs.org/api/crypto.html#cryptohashalgorithm-data-options
+        return crypto.hash(alg, str, encoding);
+    } else
+        return crypto.createHash(alg).update(str).digest(encoding);
+}

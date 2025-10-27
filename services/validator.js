@@ -8,6 +8,7 @@ export async function check_hash(req, res) {
     if (!await check_hash_internal(req.params.uid, req.params.hash)) {
         throw new errors.ForbiddenError();
     }
+    req.hash_checked = true;
 }
 
 /**
@@ -25,6 +26,7 @@ export async function check_protected_access(req, res) {
     if (reqApiPwd != tenant.api_password) {
         throw new errors.ForbiddenError();
     }
+    req.protected_access_checked = true;
 }
 
 export async function check_admin_access(req, res) {
@@ -32,11 +34,13 @@ export async function check_admin_access(req, res) {
     if (reqApiPwd != properties.getEsupProperty('api_password')) {
         throw new errors.ForbiddenError();
     }
+    req.admin_access_checked = true;
 }
 
 export function esupnfc_check_server_ip(req, res, next) {
     const ip = utils.getIpAddr(req);
     if (ip && ip == properties.getEsupProperty('esupnfc').server_ip) {
+        req.esupnfc_server_ip_checked = true;
         return next();
     }
     else {
