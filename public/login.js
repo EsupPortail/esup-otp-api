@@ -56,6 +56,18 @@ const msgs = {
         "no_choices_html": /*html*/`
             Veuillez activer l’<a href="%OTP_MANAGER_URL%" target="_blank">authentification renforcée</a> pour pouvoir accéder à ce service.
         `,
+        "webauthn_on_office": /*html*/`
+            <p>
+                <p>
+                    Le facteur physique Webauthn n'est pas supporté par le navigateur intégré à Microsoft Office sur IOS/Android/macOS.<br />
+                    Veuillez utiliser une autre méthode de connexion.
+                </p>
+                <p>
+                    Si besoin, vous pouvez accéder à %OTP_MANAGER_URL% depuis votre navigateur pour activer d'autres méthodes.<br />
+                    Puis, réessayez de vous connecter à Microsoft Office en utilisant une de ces méthodes.
+                </p>
+            </p>
+        `,
     },
     en: {
         "nfc_html": /*html*/`
@@ -80,6 +92,18 @@ const msgs = {
         `,
         "no_choices_html": /*html*/`
             To access this service, activate <a href="%OTP_MANAGER_URL%" target="_blank">multi-factor authentication</a>.
+        `,
+        "webauthn_on_office": /*html*/`
+            <p>
+                <p>
+                    The hardware authenticator (Webauthn) is not available in Microsoft Office's embedded browser on iOS/Android/macOS.<br />
+                    Please use another method.
+                </p>
+                <p>
+                    If needed, go to esup-otp-manager from your browser to enable other methods,<br />
+                    then try again to login to Microsoft Office using one of those methods.
+                </p>
+            </p>
         `,
     }
 }
@@ -408,8 +432,13 @@ function add_html_template(params) {
                     })
                     // There is a firefox bug where if you have your console opened when you try to call this, it fails
                     console.info("If the authentication crashed and you had your firefox console open when you tried to login, please close it and try again, as it may be due to a firefox bug. You can ignore this message otherwise.");
-                }
-                else {
+                } else if (window.navigator.userAgent.endsWith("PKeyAuth/1.0")) {
+                    // if webauthn fail in embedded browser used by Microsoft Office in Android/IOS/macOS
+                    displayTitle({
+                        title: _("Authentication failed"),
+                        desc: _("webauthn_on_office", { '%OTP_MANAGER_URL%': params.otpManagerUrl }),
+                    })
+                } else {
                     displayTitle({
                         title: _("Authentication failed"),
                         desc: _("You refused the request"),
