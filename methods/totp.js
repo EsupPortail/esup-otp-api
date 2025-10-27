@@ -132,6 +132,16 @@ export async function delete_method_secret(user, req, res) {
     const deleted_secret = user.totp.secret;
     user.totp.secret = {};
     await apiDb.save_user(user);
+
+    auditLogger.info({
+        message: [
+            {
+                req,
+                action: 'deactivate_method',
+            }
+        ]
+    });
+
     res.status(200);
     res.send({
         "code": "Ok",
