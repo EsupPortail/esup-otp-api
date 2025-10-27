@@ -416,6 +416,22 @@ function add_html_template(params) {
         
         await afterNextPaint();
 
+        function displayWebauthnOnOfficeTitle() {
+            displayTitle({
+                title: _("Authentication failed"),
+                desc: _("webauthn_on_office", { '%OTP_MANAGER_URL%': params.otpManagerUrl }),
+            })
+        }
+
+        function isMicrosoftOfficeUA() {
+            return window.navigator.userAgent.endsWith("PKeyAuth/1.0");
+        }
+
+        // On Android, there is no error, but nothing happens.
+        if (isMicrosoftOfficeUA() && window.navigator.userAgent.includes("Android")) {
+            displayWebauthnOnOfficeTitle();
+        }
+
         let assertion;
         try {
             // authenticate
@@ -432,12 +448,9 @@ function add_html_template(params) {
                     })
                     // There is a firefox bug where if you have your console opened when you try to call this, it fails
                     console.info("If the authentication crashed and you had your firefox console open when you tried to login, please close it and try again, as it may be due to a firefox bug. You can ignore this message otherwise.");
-                } else if (window.navigator.userAgent.endsWith("PKeyAuth/1.0")) {
+                } else if (isMicrosoftOfficeUA()) {
                     // if webauthn fail in embedded browser used by Microsoft Office in Android/IOS/macOS
-                    displayTitle({
-                        title: _("Authentication failed"),
-                        desc: _("webauthn_on_office", { '%OTP_MANAGER_URL%': params.otpManagerUrl }),
-                    })
+                    displayWebauthnOnOfficeTitle();
                 } else {
                     displayTitle({
                         title: _("Authentication failed"),
