@@ -156,7 +156,7 @@ export async function confirm_user_activate(user, req, res) {
 }
 
 export async function delete_method_special(user, req, res) {
-    const { index, authenticator } = findAuthenticatorsById(user, req.params.authenticator_id, true);
+    const { index, authenticator } = findAuthenticatorsById(user, req.params.authenticator_id);
 
     user.webauthn.authenticators.splice(index, 1);
 
@@ -181,26 +181,24 @@ export async function delete_method_special(user, req, res) {
  * 
  * @returns {{ index: number, authenticator: object }}
  */
-function findAuthenticatorsById(user, id, throwExceptionIfNotFound, errorMessage) {
-    const ret = {
-        index: user.webauthn.authenticators.findIndex(authenticator => authenticator.credentialID === id),
-        authenticator: null
-    };
+function findAuthenticatorsById(user, id, errorMessage) {
+    const index = user.webauthn.authenticators.findIndex(authenticator => authenticator.credentialID === id);
 
-    if (ret.index !== -1) {
-        ret.authenticator = user.webauthn.authenticators[ret.index];
-    } else if (throwExceptionIfNotFound === true) {
+    if (ret.index === -1) {
         throw new errors.EsupOtpApiError(404, errorMessage || "Unknown credential id");
     }
 
-    return ret;
+    return {
+        index,
+        authenticator: user.webauthn.authenticators[ret.index],
+    }
 }
 
 /**
  * rename the given factor
  */
 export async function change_method_special(user, req, res) {
-    const { authenticator } = findAuthenticatorsById(user, req.params.authenticator_id, true);
+    const { authenticator } = findAuthenticatorsById(user, req.params.authenticator_id);
 
     const old_name = authenticator.name;
 
@@ -249,7 +247,7 @@ export async function verify_webauthn_auth(user, req, res) {
     const response = req.body.response;
     const credID = req.body.credID;
 
-    const { index, authenticator } = findAuthenticatorsById(user, credID, true, "Please use a valid, previously-registered authenticator.");
+    const { index, authenticator } = findAuthenticatorsById(user, credID, "Please use a valid, previously-registered authenticator.");
 
     const uint8a = (base64url_of_buffer) => new Uint8Array(utils.base64URLStringToBuffer(base64url_of_buffer));
 
