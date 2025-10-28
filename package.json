@@ -29,7 +29,7 @@
     "socket.io": "4.x",
     "socket.io-client": "4.x",
     "swagger-ui-restify": "github:jamidon/swagger-ui-restify#b0933f72980dd4124f61cfbd6bd914c40ba48d81",
-    "undici": "6.x",
+    "undici": "7.x",
     "winston": "3.x"
   },
   "overrides": {
