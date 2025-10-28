@@ -6,6 +6,7 @@ import { apiDb } from '../controllers/api.js';
 import { getCurrentTenantProperties } from '../services/multiTenantUtils.js'
 
 import * as SimpleWebAuthnServer from '@simplewebauthn/server';
+import { generateChallenge, isoBase64URL } from '@simplewebauthn/server/helpers';
 
 export const name = "webauthn";
 
@@ -42,7 +43,7 @@ const pubkeyTypes = [ // https://www.iana.org/assignments/cose/cose.xhtml#algori
     */
 export async function generate_method_secret(user, req, res) {
     const { relying_party } = await getWebauthnProperties(req);
-    const nonce = utils.bufferToBase64URLString(utils.generate_u8array_code(128));
+    const nonce = isoBase64URL.fromBuffer(await generateChallenge());
 
     user.webauthn.registration.nonce = nonce;
     user.webauthn.registration.nonce_date = Date.now();
@@ -125,12 +126,12 @@ export async function confirm_user_activate(user, req, res) {
         user.webauthn.registration.nonce = null;
         user.webauthn.registration.nonce_date = null;
 
-        const { credentialPublicKey, credentialID, counter } = verification.registrationInfo;
+        const { publicKey, id, counter } = verification.registrationInfo.credential;
 
         // PREPEND the new authenticator
         user.webauthn.authenticators.push({
-            credentialID: utils.bufferToBase64URLString(credentialID),
-            credentialPublicKey: utils.bufferToBase64URLString(credentialPublicKey),
+            credentialID: id,
+            credentialPublicKey: isoBase64URL.fromBuffer(publicKey),
             counter,
             name: req.body.cred_name
         });
@@ -184,13 +185,13 @@ export async function delete_method_special(user, req, res) {
 function findAuthenticatorsById(user, id, errorMessage) {
     const index = user.webauthn.authenticators.findIndex(authenticator => authenticator.credentialID === id);
 
-    if (ret.index === -1) {
+    if (index === -1) {
         throw new errors.EsupOtpApiError(404, errorMessage || "Unknown credential id");
     }
 
     return {
         index,
-        authenticator: user.webauthn.authenticators[ret.index],
+        authenticator: user.webauthn.authenticators[index],
     }
 }
 
@@ -247,9 +248,7 @@ export async function verify_webauthn_auth(user, req, res) {
     const response = req.body.response;
     const credID = req.body.credID;
 
-    const { index, authenticator } = findAuthenticatorsById(user, credID, "Please use a valid, previously-registered authenticator.");
-
-    const uint8a = (base64url_of_buffer) => new Uint8Array(utils.base64URLStringToBuffer(base64url_of_buffer));
+    const { authenticator } = findAuthenticatorsById(user, credID, "Please use a valid, previously-registered authenticator.");
 
     const { relying_party, allowed_origins } = await getWebauthnProperties(req);
 
@@ -261,10 +260,10 @@ export async function verify_webauthn_auth(user, req, res) {
             expectedOrigin: allowed_origins,
             expectedRPID: relying_party.id,
             requireUserVerification: false, //?
-            authenticator: {
+            credential: {
                 counter: authenticator.counter,
-                credentialID: uint8a(authenticator.credentialID),
-                credentialPublicKey: uint8a(authenticator.credentialPublicKey),
+                id: authenticator.credentialID,
+                publicKey: isoBase64URL.toBuffer(authenticator.credentialPublicKey),
             }
         });
     } catch (error) {
