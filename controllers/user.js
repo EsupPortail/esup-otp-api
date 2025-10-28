@@ -1,6 +1,6 @@
 import * as properties from '../properties/properties.js';
 
-import { logger, auditLogger } from '../services/logger.js';
+import { auditLogger } from '../services/logger.js';
 import * as userUtils from '../databases/user/userUtils.js';
 import * as api_controller from './api.js';
 
