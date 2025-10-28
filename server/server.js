@@ -4,6 +4,7 @@ import errors from 'restify-errors';
 import corsMiddleware from "restify-cors-middleware2";
 import { promisify } from 'util';
 import { ProxyAgent, setGlobalDispatcher } from 'undici';
+import fs from 'fs';
 
 import * as properties from '../properties/properties.js';
 import * as fileUtils from '../services/fileUtils.js';
