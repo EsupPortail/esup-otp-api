@@ -660,7 +660,7 @@ function add_html_template(params) {
         let choices = computeChoices(params, user_params)
         if (choices.length === 0) {
             show('no-choices');
-            try { server_log({ warn: "no-choices", uid: params.uid, service: new URLSearchParams(location.search).get("service") }); } catch (e) {}
+            try { server_log({ warn: "no-choices", uid: params.uid, service: new URLSearchParams(location.search).get("service") }); } catch (_e) {}
             return;
         }
         if(user_params.methods.waitingFor === true){
@@ -715,6 +715,7 @@ function add_html_template(params) {
     }
     
     function initializeSocket(params) {
+        /* global io */
         var socket = io.connect(params.apiUrl, {
             reconnect: true, 
             path: "/sockets", 

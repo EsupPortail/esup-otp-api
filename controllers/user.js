@@ -62,7 +62,7 @@ export async function update_user(req, res) {
 
     const changes = Object.entries(newValues)
         .map(([key, value]) => [userUtils.attributes[key], value]) // map to database attribute name
-        .filter(([key, value]) => userUtils.modifiableAttributes.includes(key)) // remove non-modifiable attributes
+        .filter(([key, _value]) => userUtils.modifiableAttributes.includes(key)) // remove non-modifiable attributes
         .filter(([key, value]) => user_db[key] != value); // remove unmodified attributes
 
 
@@ -124,7 +124,7 @@ export async function user_exists(req, res) {
 async function user_exists_internal(uid) {
     try {
         return Boolean(await userDb.find_user(uid));
-    } catch (error) {
+    } catch (_error) {
         return false;
     }
 }

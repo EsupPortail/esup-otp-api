@@ -176,7 +176,7 @@ let uid;
 let userCounter = 0;
 
 /**
- * @param {string} httpMethod get, post, put, del...
+ * @param {get|post|put|del} httpMethod
  * @param {string} uri example: '/toto/tata?titi=tutu'
  * 
  * @returns { supertest.Test }
@@ -203,6 +203,7 @@ function request(httpMethod, uri, { uid, secret, password } = {}) {
     return request;
 }
 
+// eslint-disable-next-line no-unused-vars
 const get = 'get', post = "post", put = 'put', del = 'del';
 
 await test('Esup otp api', async (t) => {

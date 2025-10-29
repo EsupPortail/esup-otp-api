@@ -17,6 +17,7 @@ export async function initialize() {
     const config = getMysqlProperty();
     config.namedPlaceholders = true;
     // because "Ignoring invalid configuration option passed to Connection: [displayName, userTable,transport] . This is currently a warning, but in future versions of MySQL2, an error will be thrown if you pass an invalid configuration option to a Connection"
+    // eslint-disable-next-line no-unused-vars
     const { userTable, transport, displayName, ...connectionOptions } = getMysqlProperty();
     connection = await mysql.createConnection(connectionOptions);
 }
@@ -27,7 +28,7 @@ export function close() {
 
 const selectQuery = `Select ${allAttributes.join(", ")} From ${getUserTable()} u Where u.uid = :uid`
 export async function find_user(uid) {
-    const [rows, fields] = await connection.execute(selectQuery, { uid: uid });
+    const [rows, _fields] = await connection.execute(selectQuery, { uid: uid });
     const user = rows[0];
     return user || errors.UserNotFoundError.throw();
 }
@@ -38,7 +39,7 @@ const searchQuery = `Select ${searchAttributes.join(", ")} From ${getUserTable()
  */
 export async function search_users(req, token) {
     token = token.toLowerCase();
-    const [rows, fields] = await connection.execute(searchQuery, { token: `%${token}%` });
+    const [rows, _fields] = await connection.execute(searchQuery, { token: `%${token}%` });
     return rows;
 }
 

@@ -78,7 +78,7 @@ async function initializeOpenapiRoutes(server) {
  * @param { restify.Server } server
  */
 async function initializeStatusRoute(server) {
-    server.get("/status", function(req, res, next) {
+    server.get("/status", async (req, res) => {
         res.status(200);
         res.send({
            code: 'Ok',
