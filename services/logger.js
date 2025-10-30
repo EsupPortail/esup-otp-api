@@ -74,9 +74,6 @@ if (logProperties.audit?.file) {
     auditLogger.add(new winston.transports.File({ filename: logProperties.audit?.file }));
 }
 
-fs.stat('logs/logs.json', function(err, stat) {
-    if (stat) {
-        logger.warn('logs/logs.json file usage is deprecated, see CONFIGURATION.md for details');
-    }
-});
-
+if (fs.existsSync('logs/logs.json')) {
+    logger.error("logs are no longer configured in logs/logs.json, see CONFIGURATION.md for details");
+}

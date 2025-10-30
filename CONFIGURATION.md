@@ -2,8 +2,7 @@
 
 ## Logging
 
-esup-otp-api provides different log types, configured in the main 'esup.jon'
-configuration file. Usage of 'logs/logs.json' file is deprecated.
+esup-otp-api provides different log types, configured in the main 'esup.json' configuration file.
 
 Generic logs are configured with the following key:
 ```
