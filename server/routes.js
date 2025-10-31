@@ -35,6 +35,27 @@ export function initialize(server) {
  */
 function initializeUnprotectedRoutes(server) {
     logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ' Initializing unprotected routes');
+
+    // if requested login.js?v=X.X is not compatible, respond a javascript content which display a fatal error
+    server.use(function (req, res, next) {
+        if (req.path().match(/^[/]+public[/]login[.]js$/)) {
+            let err
+            const login_js_major = 1
+            if ((req.query.v ?? 0) < login_js_major) {
+                err = 'FATAL ERROR: you must upgrade esup-otp-cas / esup-otp-cas-server / esup-otp-shibboleth (or downgrade esup-otp-api)'
+            } else if ((req.query.v ?? 0) > login_js_major) {
+                err = 'FATAL ERROR: you must upgrade esup-otp-api (or downgrade esup-otp-cas / esup-otp-cas-server / esup-otp-shibboleth)'
+            }
+            if (err) {
+                res.setHeader('Content-Type', 'application/javascript')
+                res.write(`alert('${err}')`)
+                res.end()
+                return next(false)
+            }
+        }
+        return next();
+    })
+
     server.get('/public/*', restify.plugins.serveStaticFiles('./public', { 
         // force a specific cache-control max-age: do not rely on browser heuristic cache!
         maxage: 1/*hour*/ * 60*60*1000 
