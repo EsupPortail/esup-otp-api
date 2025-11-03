@@ -123,7 +123,8 @@ export async function generate_method_secret(user, req, res) {
     res.send({
         code: 'Ok',
         message: user.totp.secret.base32,
-        qrCode: await utils.generateQrCode(user.totp.secret.otpauth_url, 164)
+        qrCode: await utils.generateQrCode(user.totp.secret.otpauth_url, 164),
+        uri: user.totp.secret.otpauth_url,
     });
 }
 
