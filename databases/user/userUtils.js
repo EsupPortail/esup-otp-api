@@ -54,7 +54,7 @@ for (const attr in attributes) {
 }
 
 // external database to internal representation attribute mappings
-attributesFlipped = flip(attributes);
+export const attributesFlipped = flip(attributes);
 
 export const searchAttributes = filterAttributes([attributes.uid, attributes.displayName]);
 
