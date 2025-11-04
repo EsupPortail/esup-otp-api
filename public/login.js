@@ -716,11 +716,11 @@ function add_html_template(params) {
         });
     }
 
+    import { io } from '/js/socket.io.esm.js';
     let socket;
-    function mayInitializeSocket(params) {
+    async function mayInitializeSocket(params) {
         if (socket) return; // already in place (NB: socket.io will handle reconnect in case of WebSocket breakage)
 
-        /* global io */
         socket = io.connect(params.apiUrl, {
             reconnect: true, 
             path: "/sockets", 

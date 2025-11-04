@@ -73,9 +73,15 @@ function initializeUnprotectedRoutes(server) {
 async function initializeSocketIoRoute(server) {
     // goal: simply let esup-otp-cas get /js/socket.io.js from esup-otp-api (avoid use of cdn)
     const socketIoAbsoluteDistDirectory = fileUtils.relativeToAbsolutePath(import.meta.url, '../node_modules/socket.io-client/dist/');
+
+    // deprecated (used by old esup-otp-cas which do not use login.js)
     server.get("/js/socket.io.js", restify.plugins.serveStatic({
         directory: socketIoAbsoluteDistDirectory,
         file: 'socket.io.min.js',
+    }));
+    server.get("/js/socket.io.esm.js", restify.plugins.serveStatic({
+        directory: socketIoAbsoluteDistDirectory,
+        file: 'socket.io.esm.min.js',
     }));
 
     server.get("/js/socket.io.min.js.map", restify.plugins.serveStatic({
