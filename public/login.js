@@ -100,7 +100,7 @@ const msgs = {
                     Please use another method.
                 </p>
                 <p>
-                    If needed, go to esup-otp-manager from your browser to enable other methods,<br />
+                    If needed, go to %OTP_MANAGER_URL% from your browser to enable other methods,<br />
                     then try again to login to Microsoft Office using one of those methods.
                 </p>
             </p>
