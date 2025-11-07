@@ -167,7 +167,6 @@ function add_html_template(params) {
               <label for="token">
                 <div id="code_label"></div>
                 <input type="text" id="token" class="obfuscated" required
-                oninput="autosubmitIfValid(this)"
                 minlength="6" maxlength="6" pattern="[0-9]{6}"
                 placeholder="${_("Enter the 6-digit code")}"
                 accesskey="m" autocomplete="one-time-code" name="token" value="">
@@ -510,6 +509,7 @@ function add_html_template(params) {
 
         add_html_template(params)
 
+        document.getElementById("token").oninput = function () { autosubmitIfValid(this) }
         onclick("#back_to_choices", () => { clear_errors(); show('choices'); });
 
         $.ajax({ url: params.apiUrl + 'users/'+ params.uid +'/' + params.userHash }).done(async function(data) {
