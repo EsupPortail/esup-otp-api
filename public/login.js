@@ -167,7 +167,7 @@ function add_html_template(params) {
               <label for="token">
                 <div id="code_label"></div>
                 <input type="text" id="token" class="obfuscated" required
-                minlength="6" maxlength="6" pattern="[0-9]{6}"
+                minlength="6" maxlength="6" pattern="[0-9]{6}" inputmode="numeric"
                 placeholder="${_("Enter the 6-digit code")}"
                 accesskey="m" autocomplete="one-time-code" name="token" value="">
               </label>
