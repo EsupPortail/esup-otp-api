@@ -1,6 +1,6 @@
 import * as fileUtils from '../../services/fileUtils.js';
 import * as errors from '../../services/errors.js';
-import { getUserDbProperties, searchAttributes, modifiableAttributes, allAttributes, attributes } from './userUtils.js';
+import { getUserDbProperties, searchAttributes, modifiableAttributes, allAttributes, attributes, attributesFlipped } from './userUtils.js';
 import { errorIfMultiTenantContext } from '../../services/multiTenantUtils.js';
 
 import { Client, Change, Attribute, EqualityFilter, SubstringFilter, OrFilter } from 'ldapts';
@@ -59,7 +59,7 @@ export async function find_user(uid) {
 async function find_user_internal(uid) {
     /** @type SearchOptions */
     const opts = {
-        filter: new EqualityFilter({ attribute: 'uid', value: uid }),
+        filter: new EqualityFilter({ attribute: attributes.uid, value: uid }),
         scope: 'sub',
         attributes: allAttributes
     };
@@ -81,7 +81,7 @@ function parseUser(searchEntry, attributeList) {
     return Object.fromEntries(
         Object.entries(searchEntry)
             .filter(([key]) => attributeList.includes(key))
-            .map(([key, value]) => [key, Array.isArray(value) ? value[0] : value])
+            .map(([key, value]) => [attributesFlipped[key], Array.isArray(value) ? value[0] : value])
     );
 }
 

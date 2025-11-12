@@ -45,7 +45,8 @@
             "mail": "mail",
             "sms": "mobile"
         },
-        "displayName": "displayName"
+        "displayName": "displayName",
+        "uid": "uid"
     },
     "mysql": {
         "host": "127.0.0.1",
