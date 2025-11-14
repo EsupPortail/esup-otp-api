@@ -22,11 +22,15 @@ export async function check_hash_internal(uid, hash) {
 
 export async function check_protected_access(req, res) {
     const tenant = await getCurrentTenantProperties(req);
-    const reqApiPwd = req.params.api_password || utils.get_auth_bearer(req.headers);
+    await check_protected_access_internal(tenant, req.params.api_password, req.headers);
+    req.protected_access_checked = true;
+}
+
+export async function check_protected_access_internal(tenant, api_password = null, headers) {
+    const reqApiPwd = api_password || utils.get_auth_bearer(headers);
     if (reqApiPwd != tenant.api_password) {
         throw new errors.ForbiddenError();
     }
-    req.protected_access_checked = true;
 }
 
 export async function check_admin_access(req, res) {

@@ -7,8 +7,10 @@ export function isMultiTenantContext() {
     return Boolean(properties.getEsupProperty('tenants')?.length);
 }
 
+export const TENANT_HEADER = "x-tenant";
+
 export async function getCurrentTenantProperties(req) {
-    return getCurrentTenantPropertiesInternal(req.params.uid, req.header('x-tenant'));
+    return req.tenant ||= getCurrentTenantPropertiesInternal(req.params.uid, req.header(TENANT_HEADER));
 }
 
 /**

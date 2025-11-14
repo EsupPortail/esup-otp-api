@@ -7,13 +7,23 @@
 let io;
 import * as properties from '../properties/properties.js';
 import * as validator from '../services/validator.js';
-import * as utils from '../services/utils.js';
 import { logger } from '../services/logger.js';
-let managerSocket;
+/**
+ * @import { Room } from "socket.io-adapter"
+ *
+ * @type { Object.<String:Set<Room>>}
+ */
+const managerSockets = {};
 
 import * as socket_io from 'socket.io';
+import restifyErrors from 'restify-errors';
+import * as multiTenantUtils from '../services/multiTenantUtils.js';
 
-const users = {_managers:[]};
+/**
+ * @type { Object.<String:Room>}
+ */
+const users = {};
+
 export function attach(server){
     const casVhost = properties.getEsupProperty("casVhost")
     if (!casVhost) {
@@ -26,31 +36,50 @@ export function attach(server){
 
 function initialize() {
     io.on("connection", async function(socket) {
-        const query = socket.handshake.query
-        if(query.app=="manager"){
-            const secret = query.secret || utils.get_auth_bearer(socket.handshake.headers)
-            if(secret != properties.getEsupProperty('api_password')) {
-                logger.error("denying manager app with wrong password");
-                socket.disconnect('Forbidden');
+        try {
+            const query = socket.handshake.query;
+            switch (query.app) {
+                case 'manager':
+                    return connectManager(socket, query);
+                case 'cas':
+                    return connectCasUser(socket, query);
+                default: {
+                    throw new restifyErrors.BadRequestError();
+                }
             }
-            managerSocket = socket.id;
-
-            socket.on('managers', function (data) {
-                users._managers = data;
-            })
+        } catch (err) {
+            socket.disconnect('Forbidden');
+            throw err;
         }
-        else if(query.app=="cas" && query.uid && query.hash){
-            if (await validator.check_hash_internal(query.uid, query.hash)) {
-                userConnection(query.uid, socket.id);
-            }
-        } else socket.disconnect('Forbidden');
-
-        socket.on('disconnect', function () {
-            userDisconnection(socket.id);
-        })
     });
+
     io.engine.on("connection_error", (err) => {
         logger.debug("socket connection error: " + err.message);
+    });
+}
+
+async function connectManager(socket, query) {
+    const tenant = await multiTenantUtils.getCurrentTenantPropertiesInternal(null, socket.handshake.headers[multiTenantUtils.TENANT_HEADER]);
+    await validator.check_protected_access_internal(tenant, query.secret, socket.handshake.headers);
+
+    const sockets = getManagerSockets(tenant);
+
+    sockets.add(socket.id);
+
+    socket.on('disconnect', function() {
+        sockets.delete(socket.id)
+    });
+}
+
+async function connectCasUser(socket, query) {
+    await validator.check_hash({ params: query });
+
+    users[query.uid] = socket.id;
+
+    socket.on('disconnect', function() {
+        if (users[query.uid] === socket.id) {
+            delete users[query.uid];
+        }
     });
 }
 
@@ -58,29 +87,19 @@ export async function close() {
     return io.close();
 }
 
-export function emitManager(emit, data) {
-    io.to(managerSocket).emit(emit, data);
+export async function emitManager(req, eventName, data) {
+    const tenant = await multiTenantUtils.getCurrentTenantProperties(req);
+    io.to(Array.from(getManagerSockets(tenant))).emit(eventName, data);
 }
 
-export function emitToManagers(emit, target) {
-    for(const manager in users['_managers']){
-        io.to(managerSocket).emit(emit, {uid:users['_managers'][manager], target: target});
-    }
+/** @returns {Set<Room>} */
+function getManagerSockets(tenant) {
+    return managerSockets[tenant.id] ||= new Set();
 }
 
 export function emitUserAuth(uid, otp) {
-    if (users[uid])io.to(users[uid]).emit('userAuth', { code: "Ok", otp });
-}
-
-function userConnection(uid, idSocket){
-    users[uid]=idSocket;
-}
-
-function userDisconnection(idSocket){
-    for(const user in users){
-        if(users[user]==idSocket) {
-            delete users[user];
-            break;
-        }
+    if (users[uid]) {
+        io.to(users[uid])
+            .emit('userAuth', { code: "Ok", otp, });
     }
 }

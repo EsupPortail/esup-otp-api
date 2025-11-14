@@ -267,8 +267,7 @@ export async function confirm_user_activate(user, req, res) {
         user.push.activation_fail = null;
         user.push.timeout = 0;
         await apiDb.save_user(user);
-        sockets.emitManager('userPushActivate', { uid: user.uid });
-        sockets.emitToManagers('userPushActivateManager', user.uid);
+        sockets.emitManager(req, 'userPushActivate', { uid: user.uid });
         const data = {
             "code": "Ok",
             "tokenSecret": token_secret,
@@ -471,7 +470,7 @@ export async function user_desync(user, req, res) {
 
         await Promise.all([
             apiDb.save_user(user),
-            sockets.emitManager('userPushDeactivate', { uid: user.uid })
+            sockets.emitManager(req, 'userPushDeactivate', { uid: user.uid })
         ]);
     }
     res.status(200);
