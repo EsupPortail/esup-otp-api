@@ -17,9 +17,10 @@ const config = {
         "uri": "mongodb://localhost:27017/test-otp",
         "transport": {
             "mail": "mail",
-            "sms": "mobile"
+            "sms": "mobile",
         },
-        "displayName": "displayName"
+        "displayName": "displayName",
+        "uid": "employeeNumber",
     },
     "ldap": {
         "uri": "ldap://127.0.0.1:389",
@@ -30,9 +31,10 @@ const config = {
         "password": "changeit",
         "transport": {
             "mail": "mail",
-            "sms": "mobile"
+            "sms": "mobile",
         },
-        "displayName": "displayName"
+        "uid": "employeeNumber",
+        "displayName": "displayName",
     },
     "mysql": {
         "host": "127.0.0.1",
@@ -42,9 +44,10 @@ const config = {
         "userTable": "User",
         "transport": {
             "mail": "mail",
-            "sms": "sms"
+            "sms": "sms",
         },
-        "displayName": "displayName"
+        "displayName": "displayName",
+        "uid": "employeeNumber",
     },
     "methods": {
         "totp": {

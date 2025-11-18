@@ -13,13 +13,13 @@ cn: admin
 sn: admin
 userPassword: changeit
 
-dn: uid=fnari,dc=univ,dc=fr
+dn: employeeNumber=fnari,dc=univ,dc=fr
 objectClass: top
 objectClass: person
 objectClass: inetOrgPerson
 cn: Florian Nari
 sn: Nari
-uid: fnari
+employeeNumber: fnari
 userPassword: theduke
 mail: flo@example.com
 

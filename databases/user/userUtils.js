@@ -39,8 +39,12 @@ export function setDisplayName(user, newValue) {
     user[attributes.displayName] = newValue;
 }
 
+export function getUid(user) {
+    return user[attributes.uid];
+}
+
 export const attributes = {
-    uid: "uid",
+    uid: getUserDbProperties().uid || "uid",
     sms: getUserDbProperties().transport.sms,
     mail: getUserDbProperties().transport.mail,
     displayName: getUserDbProperties().displayName,

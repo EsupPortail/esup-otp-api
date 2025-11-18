@@ -1,6 +1,6 @@
 import * as properties from '../../properties/properties.js';
 import * as errors from '../../services/errors.js';
-import { searchAttributes } from './userUtils.js';
+import { attributes, searchAttributes } from './userUtils.js';
 import { currentTenantMongodbFilter } from '../../services/multiTenantUtils.js';
 import * as mongoose from 'mongoose';
 
@@ -32,7 +32,7 @@ function initialize_user_model(connection) {
 }
 
 export async function find_user(uid) {
-    const user = await User.findOne({ 'uid': uid });
+    const user = await User.findOne({ [attributes.uid]: uid });
 
     if (user) {
         return user;
@@ -61,7 +61,7 @@ export async function search_users(req, token) {
 }
 
 export function create_user(uid) {
-    return save_user(new User({ uid: uid }));
+    return save_user(new User({ [attributes.uid]: uid }));
 }
 
 export function save_user(user) {
@@ -72,5 +72,5 @@ export function save_user(user) {
  * Supprime l'utilisateur
  */
 export function remove_user(uid) {
-    return User.deleteOne({ uid: uid });
+    return User.deleteOne({ [attributes.uid]: uid });
 }

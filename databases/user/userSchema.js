@@ -7,7 +7,7 @@ const schema = Object.fromEntries(
         .map(attr => [attr, String])
 );
 
-schema.uid = {
+schema[attributes.uid] = {
     type: String,
     required: true,
     unique: true,

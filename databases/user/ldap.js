@@ -1,6 +1,6 @@
 import * as fileUtils from '../../services/fileUtils.js';
 import * as errors from '../../services/errors.js';
-import { getUserDbProperties, searchAttributes, modifiableAttributes, allAttributes, attributes } from './userUtils.js';
+import { getUserDbProperties, getUid, searchAttributes, modifiableAttributes, allAttributes, attributes } from './userUtils.js';
 import { errorIfMultiTenantContext } from '../../services/multiTenantUtils.js';
 
 import { Client, Change, Attribute, EqualityFilter, SubstringFilter, OrFilter } from 'ldapts';
@@ -59,7 +59,7 @@ export async function find_user(uid) {
 async function find_user_internal(uid) {
     /** @type SearchOptions */
     const opts = {
-        filter: new EqualityFilter({ attribute: 'uid', value: uid }),
+        filter: new EqualityFilter({ attribute: attributes.uid, value: uid }),
         scope: 'sub',
         attributes: allAttributes
     };
@@ -121,17 +121,17 @@ function ldap_change(user) {
 
 export function save_user(user) {
     const changes = ldap_change(user);
-    return getClient().then(client => client.modify(getDN(user.uid), changes));
+    return getClient().then(client => client.modify(getDN(getUid(user)), changes));
 }
 
 function getDN(uid) {
-    return `uid=${uid},${getBaseDn()}`;
+    return `${attributes.uid}=${uid},${getBaseDn()}`;
 }
 
 export async function create_user(uid) {
     const entry = {
         cn: uid,
-        uid: uid,
+        [attributes.uid]: uid,
         sn: uid,
         [attributes.mail]: uid + '@univ.org',
         [attributes.sms]: '0612345678',

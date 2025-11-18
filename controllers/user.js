@@ -109,7 +109,7 @@ export async function search_users(req, res) {
     res.status(200);
     res.send({
         code: 'Ok',
-        users: users.map(user => ({ uid: user.uid, displayName: userUtils.getDisplayName(user) })),
+        users: users.map(user => ({ uid: userUtils.getUid(user), displayName: userUtils.getDisplayName(user) })),
     });
 }
 
