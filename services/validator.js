@@ -6,7 +6,7 @@ import { logger } from '../services/logger.js';
 
 export async function check_hash(req, res) {
     if (!await check_hash_internal(req.params.uid, req.params.hash)) {
-        throw new errors.ForbiddenError();
+        throw new errors.ForbiddenError(`User '${req.params.uid}' tried to use wrong hash (${req.params.hash})`);
     }
     req.hash_checked = true;
 }
@@ -29,7 +29,7 @@ export async function check_protected_access(req, res) {
 export async function check_protected_access_internal(tenant, api_password = null, headers) {
     const reqApiPwd = api_password || utils.get_auth_bearer(headers);
     if (reqApiPwd != tenant.api_password) {
-        throw new errors.ForbiddenError();
+        throw new errors.ForbiddenError(`Tenant '${tenant.name}' tried to use wrong api_password (${reqApiPwd})`);
     }
 }
 

@@ -1,17 +1,15 @@
 /**
- * Created by abousk01 on 07/09/2016.
- */
-/**
  * @type socket_io.Server
  */
 let io;
 import * as properties from '../properties/properties.js';
 import * as validator from '../services/validator.js';
 import { logger } from '../services/logger.js';
+import * as multiTenantUtils from '../services/multiTenantUtils.js';
 
 import * as socket_io from 'socket.io';
 import restifyErrors from 'restify-errors';
-import * as multiTenantUtils from '../services/multiTenantUtils.js';
+import util from 'node:util';
 
 export function attach(server){
     const casVhost = properties.getEsupProperty("casVhost")
@@ -24,23 +22,24 @@ export function attach(server){
 }
 
 function initialize() {
-    io.on("connection", async function(socket) {
+    io.use(util.callbackify(async (socket) => {
+        const query = socket.handshake.query;
         try {
-            const query = socket.handshake.query;
             switch (query.app) {
                 case 'manager':
-                    return connectManager(socket, query);
+                    return await connectManager(socket, query);
+
                 case 'cas':
-                    return connectCasUser(socket, query);
-                default: {
-                    throw new restifyErrors.BadRequestError();
-                }
+                    return await connectCasUser(socket, query);
             }
         } catch (err) {
-            socket.disconnect('Forbidden');
+            if (err instanceof restifyErrors.ForbiddenError) {
+                logger.warn(err.message);
+            }
             throw err;
         }
-    });
+        throw new restifyErrors.BadRequestError();
+    }));
 
     io.engine.on("connection_error", (err) => {
         logger.debug("socket connection error: " + err.message);

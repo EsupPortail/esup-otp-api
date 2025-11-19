@@ -45,6 +45,7 @@ export async function getCurrentTenantPropertiesInternal(uid, tenantHeader) {
         return dbTenant;
     } else {
         return {
+            name: "Default tenant",
             webauthn: properties.getEsupProperty("webauthn"),
             api_password: properties.getEsupProperty('api_password'),
             users_secret: properties.getEsupProperty('users_secret'),
