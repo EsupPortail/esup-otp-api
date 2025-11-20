@@ -749,7 +749,7 @@ function add_html_template(params) {
         }
     }
 
-    function milliseconds_to_french_text(ms) {
+    export function milliseconds_to_french_text(ms) {
         const translate = { days: ['jour', 'jours'], hours: ['heure', 'heures'], minutes: ['minute', 'minutes'] }
         const dhm = milliseconds_to_DaysHoursMinutes(ms)
         const to_text = (field) => {
