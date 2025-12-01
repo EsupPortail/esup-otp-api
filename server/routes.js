@@ -137,7 +137,9 @@ async function initializeEsupAuthRoutes(server) {
     server.post("/users/:uid/methods/:method/autoActivateTotp/:tokenSecret", api_controller.autoActivateWithPush);
     server.post("/users/:uid/methods/:method/autoActivateWithPush/:tokenSecret", api_controller.autoActivateWithPush);
     server.post("/users/:uid/methods/push/activate/:activation_code/:gcm_id/:platform/:manufacturer/:model", api_controller.confirm_activate_push);
+    server.post("/users/:uid/methods/push/activate/:activation_code/:platform/:manufacturer/:model", api_controller.confirm_activate_push);
     server.post("/users/:uid/methods/:method/refresh/:tokenSecret/:gcm_id/:gcm_id_refreshed", api_controller.refresh_gcm_id_method);
+    server.post("/users/:uid/methods/:method/refresh/:tokenSecret/:gcm_id_refreshed", api_controller.refresh_gcm_id_method);
     server.del("/users/:uid/methods/:method/:tokenSecret", api_controller.desync);
 
 }
