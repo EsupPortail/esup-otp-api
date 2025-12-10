@@ -47,21 +47,25 @@ function verify_token(token, base32_secret) {
     }) !== null;
 }
 
-function generateSecret(user) {
+/** @param {boolean} generateDeeplLink  */
+function generateSecret(user, generateDeeplLink) {
     const totp = new OTPAuth.TOTP({
-      issuer: properties.getMethod('totp').name,
-      label: user.uid,
+        issuer: properties.getMethod('totp').name,
+        label: user.uid,
     });
 
     return {
-        base32: totp.secret.base32,
-        otpauth_url: totp.toString(),
+        secret: {
+            base32: totp.secret.base32,
+            otpauth_url: totp.toString(),
+        },
+        deepLink: generateDeeplLink && utils.getDeepLink("totp", { name: totp.label, issuer: totp.issuer, secret: totp.secret.base32, algorithm: totp.algorithm, digits: totp.digits, period: totp.period }),
     };
 }
 
 export async function autoActivateTotpReady(user, res, data) {
     if (!user.totp.active && properties.getMethodProperty('totp', 'activate') && properties.getMethodProperty('totp', 'autoActivateWithPush')) {
-        user.totp.secret = generateSecret(user);
+        user.totp.secret = generateSecret(user).secret;
         data.autoActivateTotp = true;
         data.totpKey = user.totp.secret.base32;
         data.totpName = properties.getMethod('totp').name + " (" + user.uid + ")";
@@ -107,7 +111,9 @@ export async function generate_method_secret(user, req, res) {
             ]
         });
     }
-    user.totp.secret = generateSecret(user);
+
+    const { deepLink, secret } = generateSecret(user, true);
+    user.totp.secret = secret;
     auditLogger.info({
         message: [
             {
@@ -125,6 +131,7 @@ export async function generate_method_secret(user, req, res) {
         message: user.totp.secret.base32,
         qrCode: await utils.generateQrCode(user.totp.secret.otpauth_url, 164),
         uri: user.totp.secret.otpauth_url,
+        deepLink: deepLink,
     });
 }
 

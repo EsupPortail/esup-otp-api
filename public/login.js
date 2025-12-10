@@ -36,20 +36,25 @@ const msgs = {
         "nfc_html": /*html*/`
             <ol>
                 <li>Télécharger la dernière version de l'application Esup-Auth (pour <a href="%ANDROID_APP_URL%">Android</a> ou <a href="%IOS_APP_URL%">IOS</a>) <b>si ce n'est pas déjà fait</b>.</li>
-                <li>Lancer l'application Esup-Auth.</li>
-                <li>
-                    Configurer l'authentification NFC sur l'application <b>si ce n'est pas déjà fait</b>.
-                    <ol style="list-style-type: circle;">
-                        <li>Pour cela, sur l'application, cliquer sur le symbole "+" en bas à droite de l'écran.</li>
-                        <li>Puis sélectionner <span class="inline-block">"Scanner QR code"</span>.</li>
+                ${/iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ?
+                    `<li><a href="%DEEPLINK%">Cliquer ici</a>.</li>`:
+                    `
+                        <li>Lancer l'application Esup-Auth.</li>
                         <li>
-                            Scanner le QR code ci-dessous :
-                            <div class="esupnfc_qrcode">%QRCODE%</div>
+                            Configurer l'authentification NFC sur l'application <b>si ce n'est pas déjà fait</b>.
+                            <ol style="list-style-type: circle;">
+                                <li>Pour cela, sur l'application, cliquer sur le symbole "+" en bas à droite de l'écran.</li>
+                                <li>Puis sélectionner <span class="inline-block">"Scanner QR code".</span></li>
+                                <li>
+                                    Scanner le QR code ci-dessous :
+                                    <div class="esupnfc_qrcode">%QRCODE%</div>
+                                </li>
+                            </ol>
+                            En cas de difficultés pour scanner le QR code, sélectionner "Saisie manuelle", et renseigner l'adresse <span class="inline-block">%API_URL%</span>
                         </li>
-                    </ol>
-                    En cas de difficultés pour scanner le QR code, sélectionner "Saisie manuelle", et renseigner l'adresse <span class="inline-block">%API_URL%</span>
-                </li>
-                <li>Cliquer sur <span class="inline-block">"%ETABLISSEMENT%"</span>.</li>
+                    `
+                }
+                <li>Sur l'application, cliquer sur <span class="inline-block">"%ETABLISSEMENT%".</span></li>
                 <li>Suivre les instructions à l'écran.</li>
             </ol>
         `,
@@ -73,20 +78,25 @@ const msgs = {
         "nfc_html": /*html*/`
             <ol>
                 <li>Download the latest version of the Esup-Auth app (for <a href="%ANDROID_APP_URL%">Android</a> or <a href="%IOS_APP_URL%">IOS</a>) if you haven't already done so.</li>
-                <li>Launch the Esup-Auth app.</li>
-                <li>
-                    Configure NFC authentication on the app if you haven't already done so.
-                    <ol style="list-style-type: circle;">
-                        <li>To do this, click on the "+" symbol at the bottom right of the screen on the app.</li>
-                        <li>Then select <span class="inline-block">"Scanner QR code"</span>.</li>
+                ${/iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ?
+                    `<li><a href="%DEEPLINK%">Click here</a>.</li>`:
+                    `
+                        <li>Launch the Esup-Auth app.</li>
                         <li>
-                            Scan the QR code below:
-                            <div class="esupnfc_qrcode">%QRCODE%</div>
+                            Configure NFC authentication on the app if you haven't already done so.
+                            <ol style="list-style-type: circle;">
+                                <li>To do this, click on the "+" symbol at the bottom right of the screen on the app.</li>
+                                <li>Then select <span class="inline-block">"Scanner QR code".</span></li>
+                                <li>
+                                    Scan the QR code below:
+                                    <div class="esupnfc_qrcode">%QRCODE%</div>
+                                </li>
+                            </ol>
+                            If you have trouble scanning the QR code, select "Saisie manuelle" and enter the address <span class="inline-block">%API_URL%</span>
                         </li>
-                    </ol>
-                    If you have trouble scanning the QR code, select "Saisie manuelle" and enter the address <span class="inline-block">%API_URL%</span>
-                </li>
-                <li>Click on <span class="inline-block">"%ETABLISSEMENT%"</span>.</li>
+                    `
+                } 
+                <li>On the app, click on <span class="inline-block">"%ETABLISSEMENT%".</span></li>
                 <li>Follow the on-screen instructions.</li>
             </ol>
         `,
@@ -586,6 +596,7 @@ function add_html_template(params) {
                     '%ANDROID_APP_URL%': 'https://play.google.com/store/apps/details?id=org.esupportail.esupAuth',
                     '%IOS_APP_URL%': 'https://apps.apple.com/fr/app/esup-auth/id1563904941',
                     '%QRCODE%': esupnfc_secret.server_infos.qrCode,
+                    '%DEEPLINK%': esupnfc_secret.server_infos.deepLink,
                     '%ETABLISSEMENT%': esupnfc_secret.server_infos.etablissement,
                     '%API_URL%': params.apiUrl,
                 });

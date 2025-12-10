@@ -228,7 +228,8 @@ export async function user_activate(user, req, res) {
     user.push.activation_code = activation_code;
     user.push.activation_fail = null;
     user.push.active = false;
-    const qrCodeUri = getUrl(req) + '/users/' + user.uid + '/methods/push/' + activation_code;
+    const apiHost = getUrl(req);
+    const qrCodeUri = apiHost + '/users/' + user.uid + '/methods/push/' + activation_code;
 
     await apiDb.save_user(user);
     res.send({
@@ -239,7 +240,8 @@ export async function user_activate(user, req, res) {
         "message4": properties.getMessage('success', 'push_confirmation4'),
         "message5": properties.getMessage('success', 'push_confirmation5'),
         "qrCode": await utils.generateQrCode(qrCodeUri, 260),
-        "activationCode": activation_code
+        "activationCode": activation_code,
+        deepLink: utils.getDeepLink("push", { uid: user.uid, code: activation_code, host: apiHost }),
     });
 }
 
@@ -248,7 +250,44 @@ function getUrl(req) {
     const host = req.header("x-forwarded-host")?.replace(/,.*/, '') || req.header('host');
     return http + '://' + host;
 }
-// generation of tokenSecret sent to the client, edited by mbdeme on June 2020
+
+const esupAuth = {android: "https://play.google.com/store/apps/details?id=org.esupportail.esupAuth", ios: "https://apps.apple.com/fr/app/esup-auth/id1563904941"};
+/**
+ * If a user scans the push activation QR code without using the Esup Auth app, they will end up here.
+ */
+export function redirectToDeepLink(req, res) {
+    const userAgent = req.userAgent();
+    const mobile = /Android/i.test(userAgent) ? "android" :
+                   /iPhone|iPad|iPod/i.test(userAgent) ? "ios" :
+                   false;
+    let htmlContent;
+    
+    if(mobile) {
+        const deeplink = utils.getDeepLink("push", { uid: req.params.uid, code: req.params.tokenSecret, host: getUrl(req) })
+        htmlContent = `
+            Veuillez <strong>télécharger</strong> l'application <a href="${esupAuth[mobile]}" target="_blank">Esup Auth</a>.
+            <br />Puis <strong><a href="${deeplink}">cliquez ici</a></strong>
+        `;
+    } else {
+        htmlContent = `
+            Veuillez télécharger l'application Esup-Auth sur <a href="${esupAuth.android}" target="_blank">Android</a> ou <a href="${esupAuth.ios}" target="_blank">IOS</a>.
+            <br />Puis scannez le QR code depuis l'application.
+        `;
+    }
+
+    const html = `
+                <!DOCTYPE html><html><body>
+                <p>${htmlContent}</p>
+                </body></html>
+            `;
+    res.writeHead(200, {
+        "Content-Type": "text/html; charset=utf-8",
+        "Content-Length": Buffer.byteLength(html),
+    });
+    res.write(html);
+    res.end();
+    return;
+}
 
 export async function confirm_user_activate(user, req, res) {
     const gcm_id = utils.isGcmIdWellFormed(req.params.gcm_id) ? req.params.gcm_id : null;
