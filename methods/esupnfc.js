@@ -54,6 +54,7 @@ if (serverInfos) {
     serverInfosWithQrCode = {
         ...serverInfos,
         qrCode: await qrcode.toString(JSON.stringify(serverInfos), { type: "svg" }),
+        deepLink: utils.getDeepLink("esupnfc", serverInfos),
     }
 }
 

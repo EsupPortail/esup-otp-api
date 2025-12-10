@@ -95,6 +95,17 @@ export async function generateQrCode(url, size = 164) {
     return `<img src='${imageUrl}' width='${size}' height='${size}'>`;
 }
 
+/**
+ * @param {String} method 
+ * @param {Object} params  
+ * @example
+ * // return "esupauth://app/auth/push?uid=toto&code=123456&host=https://esup-otp-api.example.com"
+ * getDeepLink("push", { uid: "toto", code: 1234, host: "https://esup-otp-api.example.com" })
+ */
+export function getDeepLink(method, params) {
+    return `esupauth://app/auth/${method}?${new URLSearchParams(params)}`;
+}
+
 export function isGcmIdWellFormed(gcm_id) {
     return gcm_id && gcm_id != "undefined";
 }

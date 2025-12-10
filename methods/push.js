@@ -228,7 +228,8 @@ export async function user_activate(user, req, res) {
     user.push.activation_code = activation_code;
     user.push.activation_fail = null;
     user.push.active = false;
-    const qrCodeUri = getUrl(req) + '/users/' + user.uid + '/methods/push/' + activation_code;
+    const apiHost = getUrl(req);
+    const qrCodeUri = apiHost + '/users/' + user.uid + '/methods/push/' + activation_code;
 
     await apiDb.save_user(user);
     res.send({
@@ -239,7 +240,8 @@ export async function user_activate(user, req, res) {
         "message4": properties.getMessage('success', 'push_confirmation4'),
         "message5": properties.getMessage('success', 'push_confirmation5'),
         "qrCode": await utils.generateQrCode(qrCodeUri, 260),
-        "activationCode": activation_code
+        "activationCode": activation_code,
+        deepLink: utils.getDeepLink("push", { uid: user.uid, code: activation_code, host: apiHost }),
     });
 }
 
