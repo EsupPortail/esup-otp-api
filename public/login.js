@@ -44,7 +44,7 @@ const msgs = {
                             Configurer l'authentification NFC sur l'application <b>si ce n'est pas déjà fait</b>.
                             <ol style="list-style-type: circle;">
                                 <li>Pour cela, sur l'application, cliquer sur le symbole "+" en bas à droite de l'écran.</li>
-                                <li>Puis sélectionner <span class="inline-block">"Scanner QR code"</span>.</li>
+                                <li>Puis sélectionner <span class="inline-block">"Scanner QR code".</span></li>
                                 <li>
                                     Scanner le QR code ci-dessous :
                                     <div class="esupnfc_qrcode">%QRCODE%</div>
@@ -86,7 +86,7 @@ const msgs = {
                             Configure NFC authentication on the app if you haven't already done so.
                             <ol style="list-style-type: circle;">
                                 <li>To do this, click on the "+" symbol at the bottom right of the screen on the app.</li>
-                                <li>Then select <span class="inline-block">"Scanner QR code"</span>.</li>
+                                <li>Then select <span class="inline-block">"Scanner QR code".</span></li>
                                 <li>
                                     Scan the QR code below:
                                     <div class="esupnfc_qrcode">%QRCODE%</div>
