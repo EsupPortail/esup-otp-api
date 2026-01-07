@@ -56,15 +56,15 @@ const msgs = {
         "no_choices_html": /*html*/`
             Veuillez activer l’<a href="%OTP_MANAGER_URL%" target="_blank">authentification renforcée</a> pour pouvoir accéder à ce service.
         `,
-        "webauthn_on_office": /*html*/`
+        "webauthn_on_webview": /*html*/`
             <p>
                 <p>
-                    Le facteur physique Webauthn n'est pas supporté par le navigateur intégré à Microsoft Office sur IOS/Android/macOS.<br />
+                    Le facteur physique Webauthn n'est pas supporté par cette application.<br />
                     Veuillez utiliser une autre méthode de connexion.
                 </p>
                 <p>
                     Si besoin, vous pouvez accéder à %OTP_MANAGER_URL% depuis votre navigateur pour activer d'autres méthodes.<br />
-                    Puis, réessayez de vous connecter à Microsoft Office en utilisant une de ces méthodes.
+                    Puis, réessayez de vous connecter à cette application en utilisant une de ces méthodes.
                 </p>
             </p>
         `,
@@ -93,15 +93,15 @@ const msgs = {
         "no_choices_html": /*html*/`
             To access this service, activate <a href="%OTP_MANAGER_URL%" target="_blank">multi-factor authentication</a>.
         `,
-        "webauthn_on_office": /*html*/`
+        "webauthn_on_webview": /*html*/`
             <p>
                 <p>
-                    The hardware authenticator (Webauthn) is not available in Microsoft Office's embedded browser on iOS/Android/macOS.<br />
+                    The hardware authenticator (Webauthn) is not available in this app.<br />
                     Please use another method.
                 </p>
                 <p>
                     If needed, go to %OTP_MANAGER_URL% from your browser to enable other methods,<br />
-                    then try again to login to Microsoft Office using one of those methods.
+                    then try again to login to this app using one of those methods.
                 </p>
             </p>
         `,
@@ -416,20 +416,20 @@ function add_html_template(params) {
         
         await afterNextPaint();
 
-        function displayWebauthnOnOfficeTitle() {
+        function displayWebauthnOnWebViewTitle() {
             displayTitle({
                 title: _("Authentication failed"),
-                desc: _("webauthn_on_office", { '%OTP_MANAGER_URL%': params.otpManagerUrl }),
+                desc: _("webauthn_on_webview", { '%OTP_MANAGER_URL%': params.otpManagerUrl }),
             })
         }
 
-        function isMicrosoftOfficeUA() {
-            return window.navigator.userAgent.endsWith("PKeyAuth/1.0");
-        }
+        /** MicrosoftOffice on Android/IOS/MacOS */
+        const isMicrosoftOffice = window.navigator.userAgent.endsWith("PKeyAuth/1.0");
+        const isWebView = window.webkit?.messageHandlers || window.android || isMicrosoftOffice;
 
         // On Android, there is no error, but nothing happens.
-        if (isMicrosoftOfficeUA() && window.navigator.userAgent.includes("Android")) {
-            displayWebauthnOnOfficeTitle();
+        if (isWebView && window.navigator.userAgent.includes("Android")) {
+            displayWebauthnOnWebViewTitle();
         }
 
         let assertion;
@@ -448,9 +448,9 @@ function add_html_template(params) {
                     })
                     // There is a firefox bug where if you have your console opened when you try to call this, it fails
                     console.info("If the authentication crashed and you had your firefox console open when you tried to login, please close it and try again, as it may be due to a firefox bug. You can ignore this message otherwise.");
-                } else if (isMicrosoftOfficeUA()) {
-                    // if webauthn fail in embedded browser used by Microsoft Office in Android/IOS/macOS
-                    displayWebauthnOnOfficeTitle();
+                } else if (isWebView) {
+                    // if webauthn fail in WebView
+                    displayWebauthnOnWebViewTitle();
                 } else {
                     displayTitle({
                         title: _("Authentication failed"),
