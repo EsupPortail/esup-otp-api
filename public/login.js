@@ -14,7 +14,7 @@ const msgs = {
         "unnamed key": "clé sans nom",
         "A code has been sent to %TRANSPORT%,<br>enter it here to log in.": "Un code a été envoyé au %TRANSPORT%,<br>saisissez le ici pour vous connecter.",
         "A code has been sent to your email %TRANSPORT%,<br>enter it here to log in.": "Un code a été envoyé sur votre mél %TRANSPORT%,<br>saisissez le ici pour vous connecter.",
-        "Authenticate with your multi-service card on an NFC-compatible smartphone": "S'authentifier avec sa carte multi-service sur un Smartphone compatible NFC",
+        "Authenticate with your multi-service card on an NFC-compatible smartphone": "S'authentifier avec votre carte multi-service sur un Smartphone compatible NFC",
         "Enter the code shown on your code grid": "Saisir le code indiqué sur votre grille de code",
         "Receive a code by mail on %TRANSPORT%": "Recevoir un code par mél sur %TRANSPORT%",
         "Receive a code by SMS on %TRANSPORT%": "Recevoir un code par SMS sur %TRANSPORT%",
