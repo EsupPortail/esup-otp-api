@@ -36,7 +36,7 @@ const msgs = {
         "nfc_html": /*html*/`
             <ol>
                 <li>Télécharger la dernière version de l'application Esup-Auth (pour <a href="%ANDROID_APP_URL%">Android</a> ou <a href="%IOS_APP_URL%">IOS</a>) <b>si ce n'est pas déjà fait</b>.</li>
-                ${/iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ?
+                ${false && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ?
                     `<li><a href="%DEEPLINK%">Cliquer ici</a>.</li>`:
                     `
                         <li>Lancer l'application Esup-Auth.</li>
@@ -78,7 +78,7 @@ const msgs = {
         "nfc_html": /*html*/`
             <ol>
                 <li>Download the latest version of the Esup-Auth app (for <a href="%ANDROID_APP_URL%">Android</a> or <a href="%IOS_APP_URL%">IOS</a>) if you haven't already done so.</li>
-                ${/iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ?
+                ${false && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ?
                     `<li><a href="%DEEPLINK%">Click here</a>.</li>`:
                     `
                         <li>Launch the Esup-Auth app.</li>

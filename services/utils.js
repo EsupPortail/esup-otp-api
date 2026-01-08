@@ -103,7 +103,8 @@ export async function generateQrCode(url, size = 164) {
  * getDeepLink("push", { uid: "toto", code: 1234, host: "https://esup-otp-api.example.com" })
  */
 export function getDeepLink(method, params) {
-    return `esupauth://app/auth/${method}?${new URLSearchParams(params)}`;
+    return undefined;
+    // return `esupauth://app/auth/${method}?${new URLSearchParams(params)}`;
 }
 
 export function isGcmIdWellFormed(gcm_id) {

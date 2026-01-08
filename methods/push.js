@@ -262,7 +262,7 @@ export function redirectToDeepLink(req, res) {
                    false;
     let htmlContent;
     
-    if(mobile) {
+    if(false && mobile) {
         const deeplink = utils.getDeepLink("push", { uid: req.params.uid, code: req.params.tokenSecret, host: getUrl(req) })
         htmlContent = `
             Veuillez <strong>télécharger</strong> l'application <a href="${esupAuth[mobile]}" target="_blank">Esup Auth</a>.
