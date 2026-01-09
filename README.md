@@ -83,7 +83,7 @@ In esup.json, set "notification" to false, leave "pending" set to true, and leav
 The user will not receive a push notification. He will have to open the application (on his smartphone) to validate (or not) the authentication.
 
 #### Get Google Cloud serviceAccount
-To obtain Google cloud serviceAccount, so that the user receives a notification on his smartphone, send a request to https://www.esup-portail.org/content/contact
+To obtain Google cloud serviceAccount, so that the user receives a notification on his smartphone, send a request to https://listes.esup-portail.org/sympa/compose_mail/esup-otp-demandepush
 
 Specify "ESUP AUTH: serviceAccount" in the subject line. And specify in the message that it's a request for a service key for mobile notifications with Esup Auth.
 
