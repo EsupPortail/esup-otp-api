@@ -629,14 +629,6 @@ function add_html_template(params) {
         if (chosen.opts.initialise) chosen.opts.initialise(params, chosen, opts);
     }
 
-    function toggleDisplay(element, shown) {
-        if(element.initialDisplayProperty === undefined) {
-            // value you gave (e.g. 'flex') or nothing (reset)
-            element.initialDisplayProperty = element.style.display || 'initial';
-        }
-        element.style.display = shown ? element.initialDisplayProperty : 'none';
-    }
-
     function computeChoices(params, methods_and_transports) {
         let choices = []
         $.each(methods, function (method, opts) {
