@@ -576,6 +576,7 @@ await test('Esup otp api', async (t) => {
             { uid: "user7", method: "random_code_mail", params: { new_transport: "user7@example.com" } },
             { uid: "user8", method: "totp" },
             { uid: "user9", method: "push", params: { platform: "ios", manufacturer: "Apple", model: "iPhone 14 pro" } },
+            { uid: "user9", method: "totp" },
             { uid: "user9", method: "random_code", params: { new_transport: "0606060602" } },
             { uid: "user20" },
             { uid: "user21" },
@@ -593,12 +594,22 @@ await test('Esup otp api', async (t) => {
         const expected = {
             totalUsers: 12,
             totalMfaUsers: 9,
+            users: {
+                "total": 12,
+                "enrolled": 9,
+                "methodsCount": {
+                    "0": 3,
+                    "1": 7,
+                    "2": 1,
+                    "3": 1,
+                }
+            },
             methods: {
                 bypass: 1,
                 esupnfc: 1,
                 passcode_grid: 1,
                 push: 3,
-                totp: 2,
+                totp: 3,
                 random_code: 2,
                 random_code_mail: 1,
                 webauthn: 0,
@@ -606,7 +617,7 @@ await test('Esup otp api', async (t) => {
             pushPlatforms: {
                 Android: 1,
                 iOS: 2,
-            }
+            },
         };
 
         await request(get, "/admin/stats", { password: config.api_password })

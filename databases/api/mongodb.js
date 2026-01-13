@@ -425,96 +425,81 @@ export async function delete_tenant(req, res) {
  * Retourne enfin l'OS (platform) utilisé pour la méthode Authentification (push)
  */
 export async function stats() {
-    const stats = {
-        totalUsers: 0,
-        totalMfaUsers: 0,
-        methods: {},
-        pushPlatforms: {}
-    };
-
     const allMethods = properties.getEsupProperty('methods');
-
     const activeMethods = Object.entries(allMethods)
-        .filter(([_, conf]) => conf.activate === true || conf.activate === 'true')
+        .filter(([_method, properties]) => properties.activate)
         .map(([method]) => method);
-    
-    for (const method of activeMethods) {
-        stats.methods[method] = 0;
-    }
+
+    const methodFields = Object.fromEntries(activeMethods.map(method => [method, 1]));
+    const methodGroupFields = Object.fromEntries(activeMethods.map(method => [
+        method, { $sum: { $toInt: `$${method}.active` } }
+    ]));
 
     const pipeline = [
         {
-            $project: Object.fromEntries(
-                activeMethods.map(method => [method, 1])
-            )
+            $project: {
+                methodsArray: {
+                    $filter: {
+                        input: { $objectToArray: "$$ROOT" },
+                        as: "method",
+                        cond: {
+                            $and: [
+                                { $in: ["$$method.k", activeMethods] },
+                                { $eq: ["$$method.v.active", true] },
+                            ]
+                        }
+                    }
+                },
+                pushPlatform: "$push.device.platform",
+                ...methodFields
+            }
+        },
+        {
+            $addFields: { activeMethodsCount: { $size: "$methodsArray" } }
         },
         {
             $facet: {
-                methodCounts: [
-                    {
-                        $group: Object.fromEntries([
-                            ['_id', null],
-                            ...activeMethods.map(method => [
-                                method,
-                                {
-                                    $sum: {
-                                        $cond: [
-                                            { $eq: [`$${method}.active`, true] },
-                                            1,
-                                            0
-                                        ]
-                                    }
-                                },
-                            ])
-                        ])
+                users: [{
+                    $group: {
+                        _id: null,
+                        total: { $sum: 1 },
+                        enrolled: { $sum: { $toInt: { $toBool: "$activeMethodsCount" } } }
                     }
+                }],
+                methodsCount: [
+                    { $group: { _id: "$activeMethodsCount", count: { $sum: 1 } } },
+                    { $group: { _id: null, result: { $push: { k: { $toString: "$_id" }, v: "$count" } } } },
+                    { $replaceRoot: { newRoot: { $arrayToObject: "$result" } } }
                 ],
-                mfaUsers: [
-                    {
-                        $match: {
-                            $or: activeMethods.map(method => ({
-                                [`${method}.active`]: true
-                            }))
-                        }
-                    },
-                    { $count: 'count' }
-                ],
-                totalUsers: [
-                    { $count: 'count' }
-                ],
+                methods: [{ $group: { _id: null, ...methodGroupFields } }],
                 pushPlatforms: [
-                    {
-                        $group: {
-                            _id: '$push.device.platform',
-                            count: { $sum: 1 }
-                        }
-                    }
+                    { $match: { "push.active": true } },
+                    { $group: { _id: "$push.device.platform", count: { $sum: 1 } } }
                 ]
             }
         }
     ];
 
-    const result = await UserPreferences.aggregate(pipeline).exec();
-    const data = result[0];
+    const [data] = await UserPreferences.aggregate(pipeline).exec();
+    const users = data.users[0] || { total: 0, enrolled: 0 };
 
-    // Remplir stats.methods
-    if (data.methodCounts.length > 0) {
-        for (const method of activeMethods) {
-            stats.methods[method] = data.methodCounts[0][method] || 0;
-        }
-    }
+    const [methods] = data.methods;
+    delete methods._id;
 
-    // Remplir stats.pushPlatforms
-    if (data.pushPlatforms.length > 0) {
-        for (const platform of data.pushPlatforms) {
-            if(platform.count>0 && platform._id) {
-                stats.pushPlatforms[platform._id] = platform.count;
-            }
-        }
-    }
+    const pushPlatforms = Object.fromEntries(
+        data.pushPlatforms.map(p => [p._id, p.count])
+    );
+    delete pushPlatforms._id;
 
-    stats.totalUsers = data.totalUsers[0]?.count || 0;
-    stats.totalMfaUsers = data.mfaUsers[0]?.count || 0;
-
-    return stats;
+    return {
+        totalUsers: users.total,
+        totalMfaUsers: users.enrolled,
+        users: {
+            total: users.total,
+            enrolled: users.enrolled,
+            methodsCount: data.methodsCount[0],
+        },
+        methods: methods,
+        pushPlatforms: pushPlatforms,
+    };
 }
