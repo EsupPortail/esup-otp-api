@@ -435,7 +435,7 @@ function add_html_template(params) {
 
         /** MicrosoftOffice on Android/IOS/MacOS */
         const isMicrosoftOffice = window.navigator.userAgent.endsWith("PKeyAuth/1.0");
-        const isWebView = window.webkit?.messageHandlers || window.android || isMicrosoftOffice;
+        const isWebView = (window.webkit || {}).messageHandlers || window.android || isMicrosoftOffice;
 
         // On Android, there is no error, but nothing happens.
         if (isWebView && window.navigator.userAgent.includes("Android")) {
