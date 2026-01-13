@@ -1,6 +1,8 @@
 import test from "node:test";
 import supertest from 'supertest';
 
+import * as OTPAuth from "otpauth";
+
 import * as properties from '../properties/properties.js';
 
 // test-specific configuration, without multi-tenant support
@@ -119,7 +121,7 @@ const config = {
             "transports": ["push"]
         },
         "esupnfc": {
-            "activate": false,
+            "activate": true,
             "priority": 5,
             "validity_time": 3,
             "transports": []
@@ -228,8 +230,11 @@ await test('Esup otp api', async (t) => {
 
     t.afterEach(async (t) => {
         if (!pause_global_hooks) {
-            await userDb_controller.remove_user(uid);
-            await api_controller.remove_user(uid);
+            const users = await request(get, '/protected/users', { password: config.api_password });
+            for(const uid of users.body.uids) {
+                await userDb_controller.remove_user(uid);
+                await api_controller.remove_user(uid);
+            }
         }
     });
 
@@ -512,5 +517,99 @@ await test('Esup otp api', async (t) => {
                     }
                 });
         }
+    });
+
+    await t.test('test stats', async (t) => {
+        async function activateMethodForUser({ uid, method, params }) {
+            switch (method) {
+                case 'push':
+                    return activatePush(uid, method, params);
+                case 'bypass':
+                    return activateBypass(uid, method, params);
+                case 'random_code':
+                case 'random_code_mail':
+                    return activateRandom_code(uid, method, params);
+                case 'totp':
+                    return activateTotp(uid, method, params);
+                default:
+                    return activateMethod(uid, method, params);
+            }
+        }
+
+        async function activateMethod(uid, method) {
+            await request(put, `/protected/users/${uid}/methods/${method}/activate/`, { password: config.api_password });
+        }
+
+        async function activatePush(uid, method, { platform, manufacturer, model }) {
+            const { body } = await request(put, `/protected/users/${uid}/methods/${method}/activate`, { password: config.api_password });
+            await request(post, `/users/${uid}/methods/${method}/activate/${body.activationCode}/${platform}/${manufacturer}/${model}`);
+        }
+
+        async function activateBypass(uid) {
+            await activateMethod(uid, "bypass");
+            await request(post, `/protected/users/${uid}/methods/bypass/secret`, { password: config.api_password });
+        }
+
+        async function activateRandom_code(uid, method, { new_transport }) {
+            const transport = method === "random_code_mail" ? "mail" : "sms";
+            await request(put, `/protected/users/${uid}/transports/${transport}/${new_transport}`, { password: config.api_password });
+            await activateMethod(uid, method);
+        }
+
+        async function activateTotp(uid) {
+            // generate_method_secret
+            const { body } = await request(post, `/protected/users/${uid}/methods/totp/secret?require_method_validation=true`, { password: config.api_password });
+            // confirm_user_activate
+            const token = OTPAuth.URI.parse(body.uri).generate();
+            await request(post, `/protected/users/${uid}/methods/totp/activate/${token}`, { password: config.api_password });
+        }
+
+        /** @type { [{ uid: String, method: String?, params: Object? }] }  */
+        const activations = [
+            { uid: "user1", method: "bypass" },
+            { uid: "user2", method: "esupnfc" },
+            { uid: "user3", method: "passcode_grid" },
+            { uid: "user4", method: "push", params: { platform: "android", manufacturer: "xiaomi", model: "24116RACCG" } },
+            { uid: "user4", method: "totp" },
+            { uid: "user5", method: "push", params: { platform: "ios", manufacturer: "Apple", model: "iPhone 12 mini" } },
+            { uid: "user6", method: "random_code", params: { new_transport: "0606060601" } },
+            { uid: "user7", method: "random_code_mail", params: { new_transport: "user7@example.com" } },
+            { uid: "user8", method: "totp" },
+            { uid: "user9", method: "push", params: { platform: "ios", manufacturer: "Apple", model: "iPhone 14 pro" } },
+            { uid: "user9", method: "random_code", params: { new_transport: "0606060602" } },
+            { uid: "user20" },
+            { uid: "user21" },
+            { uid: "user22" },
+        ];
+
+        for (const activation of activations) {
+            if (activation.method) {
+                await activateMethodForUser(activation);
+            } else {
+                await request(get, `/protected/users/${activation.uid}`, { password: config.api_password }).expect(200);
+            }
+        }
+
+        const expected = {
+            totalUsers: 12,
+            totalMfaUsers: 9,
+            methods: {
+                bypass: 1,
+                esupnfc: 1,
+                passcode_grid: 1,
+                push: 3,
+                totp: 2,
+                random_code: 2,
+                random_code_mail: 1,
+                webauthn: 0,
+            },
+            pushPlatforms: {
+                Android: 1,
+                iOS: 2,
+            }
+        };
+
+        await request(get, "/admin/stats", { password: config.api_password })
+            .expect(200, expected);
     });
 });
