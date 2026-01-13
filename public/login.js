@@ -359,7 +359,7 @@ function add_html_template(params) {
         $('#code_label').html(code_label);
     }
     
-    async function initializeWebauthn(params, chosen, opts) {
+    async function initializeWebauthn(params, _chosen, _opts) {
 
         function displayTitle({title, desc = ''}) {
             updateCode_label("<h2><b>" + "WebAuthn" + "</b><br>" + title + "</h2>" + desc)
@@ -559,7 +559,7 @@ function add_html_template(params) {
                 '': _("Enter a TOTP code or a backup code"),
             },
             real_methods: [ 'totp', 'bypass'],
-            code_label: (params, chosen) => {
+            code_label: (_params, chosen) => {
                 switch(chosen.real_methods.sort().join(' ')) {
                     case 'totp':
                         return _("Please enter the code displayed on your TOTP application:");
@@ -585,7 +585,7 @@ function add_html_template(params) {
             },
             override_icon: 'carte',
             hide_submitCode: true,
-            code_label: async (params, chosen) => {
+            code_label: async (params, _chosen) => {
                 const esupnfc_secret = await (fetch(`${params.apiUrl}esupnfc/infos?requireQrCode=true`, { method: "GET" })
                     .then(res => res.json())
                 );
@@ -629,7 +629,7 @@ function add_html_template(params) {
         if (chosen.opts.initialise) chosen.opts.initialise(params, chosen, opts);
     }
 
-    function computeChoices(params, methods_and_transports) {
+    function computeChoices(_params, methods_and_transports) {
         let choices = []
         $.each(methods, function (method, opts) {
 

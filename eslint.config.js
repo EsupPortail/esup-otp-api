@@ -51,6 +51,7 @@ export default defineConfig([
             "no-unused-vars": ["warn", {
                 "args": "all",
                 "varsIgnorePattern": "^_",
+                "argsIgnorePattern": "^_",
                 "caughtErrorsIgnorePattern": "^_",
             }],
             "no-empty": ["error", {
