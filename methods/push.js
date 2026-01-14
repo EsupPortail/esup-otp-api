@@ -292,17 +292,24 @@ export function redirectToDeepLink(req, res) {
 export async function confirm_user_activate(user, req, res) {
     const gcm_id = utils.isGcmIdWellFormed(req.params.gcm_id) ? req.params.gcm_id : null;
     if (user.push.activation_code != null && user.push.activation_fail < properties.getMethod('push').nbMaxFails && !user.push.active && req.params.activation_code == user.push.activation_code && (gcm_id || properties.getMethod('push').pending)) {
-        const deviceInfosFromUserAgent = await detector.detectAsync(`${req.params.platform} ${req.params.manufacturer} ${req.params.model}`);
+        let { platform, manufacturer, model } = req.params;
+        // Esup Auth on iOS now sends the commercial name of the device (and no longer its code name)
+        if (manufacturer !== "Apple" || model.includes(",")) {
+            const deviceInfosFromUserAgent = await detector.detectAsync(`${req.params.platform} ${req.params.manufacturer} ${req.params.model}`);
+            platform = deviceInfosFromUserAgent.os.name || platform;
+            manufacturer = deviceInfosFromUserAgent.device.brand || manufacturer;
+            model = deviceInfosFromUserAgent.device.model || model;
+        }
 
         const token_secret = utils.generate_string_code(128);
         user.push.token_secret = token_secret;
         user.push.active = true;
-        user.push.device.platform = deviceInfosFromUserAgent.os.name || req.params.platform || "AndroidDev";
+        user.push.device.platform = platform || "AndroidDev";
         user.push.device.gcm_id = gcm_id
         user.push.gcm_id_not_registered = false;
         user.push.invalid_gcm_id = !Boolean(gcm_id);
-        user.push.device.manufacturer = deviceInfosFromUserAgent.device.brand || req.params.manufacturer || "DevCorp";
-        user.push.device.model = deviceInfosFromUserAgent.device.model || req.params.model || "DevDevice";
+        user.push.device.manufacturer = manufacturer || "DevCorp";
+        user.push.device.model = model || "DevDevice";
         user.push.activation_code = null;
         user.push.activation_fail = null;
         user.push.timeout = 0;
