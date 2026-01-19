@@ -14,7 +14,7 @@
     "eta": "3.x",
     "firebase-admin": "13.x",
     "https-proxy-agent": "7.x",
-    "ip-location-api": "github:floriannari/ip-location-api#use_undici_fetch_and_request",
+    "ip-location-api": "4.x",
     "ldapts": "8.x",
     "mongoose": "8.x",
     "morgan": "1.x",
