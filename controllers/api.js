@@ -253,6 +253,7 @@ export async function get_user_infos(req, res) {
     res.send({
         code: "Ok",
         user: {
+            displayName: userUtils.getDisplayName(user.userDb),
             methods: apiDb.parse_user(req, user),
             transports: transports,
             last_send_message: user.last_send_message,
