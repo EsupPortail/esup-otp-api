@@ -53,8 +53,9 @@ if (logProperties.access) {
 const proxyUrl = properties.getEsupProperty('proxyUrl');
 if (proxyUrl) {
     setGlobalDispatcher(new ProxyAgent(proxyUrl));
-    process.env.https_proxy ||= proxyUrl;
-    process.env.http_proxy ||= proxyUrl;
+    process.env.https_proxy ??= proxyUrl;
+    process.env.http_proxy ??= proxyUrl;
+    process.env.NODE_USE_ENV_PROXY ??= 1;
 }
 
 server.on('restifyError', (req, res, err, callback) => {
