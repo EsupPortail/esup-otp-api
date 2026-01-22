@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.2.1 (2026-01-22) ([release](https://github.com/EsupPortail/esup-otp-api/releases/tag/v2.2.1))
+- chore: update dependencies (**requires "npm install"**)
+- various improvements (Full Changelog: https://github.com/EsupPortail/esup-otp-api/compare/v2.2.0...v2.2.1 )
+
 ## v2.2.0 (2025-11-07) ([release](https://github.com/EsupPortail/esup-otp-api/releases/tag/v2.2.0))
 - upgrade login.js to an ESM module<br />
 Breaking esup-otp-cas v2.1.0-cas_v7.3.x (Please use esup-otp-cas v2.2.0-cas_v7.3.x if you are on Apereo CAS 7.3)
