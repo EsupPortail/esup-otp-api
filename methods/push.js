@@ -301,6 +301,10 @@ export async function confirm_user_activate(user, req, res) {
             model = deviceInfosFromUserAgent.device.model || model;
         }
 
+        if (platform === "ios") {
+            platform = "iOS";
+        }
+
         const token_secret = utils.generate_string_code(128);
         user.push.token_secret = token_secret;
         user.push.active = true;
