@@ -184,12 +184,12 @@ async function update_active_methods(user) {
     // turn off webauthn if no authenticator is present
     user.webauthn.active = Boolean(user.webauthn.internally_activated && user.webauthn.authenticators?.length);
 
-    const userDb = user.userDb || await find_userDb(user.uid);
+    user.userDb ||= await find_userDb(user.uid);
 
     // turn off random_code(_mail) if no transport is present for this method
     for (const random_code of RANDOM_CODE_METHODS) {
         const userMethod = user[random_code];
-        userMethod.active = userMethod.internally_activated && properties.getTransports(random_code).some(transport => getTransport(userDb, transport));
+        userMethod.active = userMethod.internally_activated && properties.getTransports(random_code).some(transport => getTransport(user.userDb, transport));
     }
 
     user.hasEnabledMethod = Object.keys(properties.getEsupProperty("methods")).some(method => user[method]?.active && properties.getMethod(method)?.activate);
@@ -199,8 +199,6 @@ async function update_active_methods(user) {
     if (properties.getMethod("esupnfc")?.saveAutoActivation) {
         user.esupnfc.internally_activated = user.esupnfc.active;
     }
-
-    user.userDb = userDb;
 }
 
 async function find_userDb(uid) {
