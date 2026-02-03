@@ -7,13 +7,14 @@ import * as mailer from './mailer.js';
  * 
  * @typedef { Object } opts
  * @property { String } object
- * @property { String } code
- * @property { Boolean } codeRequired
- * @property { Boolean } waitingFor
+ * @property { String? } code
+ * @property { Boolean? } codeRequired
+ * @property { Boolean? } waitingFor
  * @property { String } message
+ * @property { String?} userTransport
  * 
  * @typedef {Object} Transport
- * @property {(req: Request, opts: opts, res: Response) => Promise} send_message
+ * @property {(req: Request?, opts: opts, res: Response?) => Promise} send_message
  * @property {String} name
  */
 
