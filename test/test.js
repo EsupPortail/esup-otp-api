@@ -1,7 +1,6 @@
 import test from "node:test";
-import supertest from 'supertest';
 
-import * as OTPAuth from "otpauth";
+import * as testUtils from './testUtils.js';
 
 import * as properties from '../properties/properties.js';
 
@@ -165,86 +164,36 @@ const config = {
     "trustedProxies": ["127.0.0.1", "loopback", "::1"]
 };
 
-properties.setEsup(config);
-
-const inMemoryMongoTest = await import('./inMemoryMongoTest.js');
+await testUtils.start(config);
 
 const api_controller = await import('../controllers/api.js');
 const userDb_controller = await import('../controllers/user.js');
-
 const utils = await import('../services/utils.js');
-const { server } = await import('../server/server.js');
-
-const transports = await import('../transports/transports.js');
 
 let uid;
 let userCounter = 0;
 
-/**
- * @param {get|post|put|del} httpMethod
- * @param {string} uri example: '/toto/tata?titi=tutu'
- * 
- * @returns { supertest.Test }
- */
-function request(httpMethod, uri, { uid, secret, password } = {}) {
-    if (uid && secret) {
-        const hash = "/" + utils.get_hash(uid, secret)[1];
-        if (uri.includes('?')) {
-            uri.replace('?', hash + "?");
-        } else {
-            uri += hash;
-        }
-    }
-
-    /**
-     * @type { supertest.Test }
-     */
-    const request = supertest(server)[httpMethod](uri);
-
-    if (password) {
-        request.auth(password, { type: 'bearer' });
-    }
-
-    return request;
-}
-
-// eslint-disable-next-line no-unused-vars
-const get = 'get', post = "post", put = 'put', del = 'del';
 
 await test('Esup otp api', async (t) => {
-    t.before(async (t) => {
-        properties.setEsup(config);
-        await inMemoryMongoTest.initialise();
-    });
+    t.before(testUtils.before);
 
-    t.after(async (t) => {
-        await inMemoryMongoTest.stop();
-    });
+    t.after(testUtils.after);
 
-    let pause_global_hooks = false;
-    t.beforeEach(async (t) => {
-        if(!pause_global_hooks) {
+    t.beforeEach(t => {
+        if (!testUtils.areBeforeAndAfterEachPaused()) {
             uid = "user" + (userCounter++);
         }
     });
 
-    t.afterEach(async (t) => {
-        if (!pause_global_hooks) {
-            const users = await request(get, '/protected/users', { password: config.api_password });
-            for(const uid of users.body.uids) {
-                await userDb_controller.remove_user(uid);
-                await api_controller.remove_user(uid);
-            }
-        }
-    });
+    t.afterEach(testUtils.afterEach);
 
     await t.test('get methods with correct global API password', async (t) => {
-        await request(get, "/protected/methods", { password: config.api_password })
+        await testUtils.getMethods({ password: config.api_password })
             .expect(200);
     });
 
     await t.test('get methods with wrong global API password', async (t) => {
-        await request(get, "/protected/methods", { password: "toto" })
+        await testUtils.getMethods({ password: "toto" })
             .expect(403)
             .then(res => {
                 t.assert.equal(res.body.code, 'Forbidden');
@@ -252,26 +201,21 @@ await test('Esup otp api', async (t) => {
     });
 
     await t.test('get existing user', async (t) => {
-        try {
-            await userDb_controller.create_user(uid);
-            await api_controller.create_user(uid);
-            await request(get, "/protected/users/" + uid, { password: config.api_password })
-                .expect(200);
-        } catch (e) {
-            console.error(e);
-            throw e;
-        }
+        await userDb_controller.create_user(uid);
+        await api_controller.create_user(uid);
+        await testUtils.get_user_infos(uid, { password: config.api_password })
+            .expect(200);
     });
 
     await t.test('get unknown user with auto_create', async (t) => {
-        await request(get, "/protected/users/" + uid, { password: config.api_password })
+        await testUtils.get_user_infos(uid, { password: config.api_password })
             .expect(200);
     });
 
     await t.test('get unknown user without auto_create', async (t) => {
         properties.setEsupProperty('auto_create_user', false);
 
-        await request(get, "/protected/users/" + uid, { password: config.api_password })
+        await testUtils.get_user_infos(uid, { password: config.api_password })
             .expect(404, {
                 code: 'Error',
                 message: properties.getMessage('error', 'user_not_found')
@@ -280,44 +224,31 @@ await test('Esup otp api', async (t) => {
     });
 
     await t.test('user_exists', async (t) => {
-        // user does not exist 
-        await request(get, "/protected/users/" + uid + "/exists", { password: config.api_password })
-            .expect(200)
-            .then(res => {
-                t.assert.equal(res.body.user_exists, false);
-            });
+        // user does not exist
+        await testUtils.assertUserExists(uid, false, { password: config.api_password });
         // make sure that the previous call did not create it
-        await request(get, "/protected/users/" + uid + "/exists", { password: config.api_password })
-            .expect(200)
-            .then(res => {
-                t.assert.equal(res.body.user_exists, false);
-            });
+        await testUtils.assertUserExists(uid, false, { password: config.api_password });
         // user is automatically created
-        await request(get, "/protected/users/" + uid, { password: config.api_password })
-            .expect(200);
+        await testUtils.get_user_infos(uid, { password: config.api_password }).expect(200);
         // user exists
-        await request(get, "/protected/users/" + uid + "/exists", { password: config.api_password })
-            .expect(200)
-            .then(res => {
-                t.assert.equal(res.body.user_exists, true);
-            });
+        await testUtils.assertUserExists(uid, true, { password: config.api_password });
     });
 
-    await t.test('get test_user with good hash', async (t) => {
-        await request(get, "/users/" + uid, { uid: uid, secret: config.users_secret })
+    await t.test('get user with good hash', async (t) => {
+        await testUtils.get_user_infos(uid, { uid: uid, secret: config.users_secret })
             .expect(200);
     });
 
-    await t.test('get test_user with wrong hash', async (t) => {
-        await request(get, "/users/" + uid, { uid: uid, secret: "toto" })
+    await t.test('get user with wrong hash', async (t) => {
+        await testUtils.get_user_infos(uid, { uid: uid, secret: "toto" })
             .expect(403)
             .then(res => {
                 t.assert.equal(res.body.code, 'Forbidden');
             });
     });
 
-    await t.test('generate TOTP method secret for test_user', async (t) => {
-        await request(post, "/protected/users/" + uid + "/methods/totp/secret", { password: config.api_password })
+    await t.test('generate TOTP method secret for user', async (t) => {
+        await testUtils.generate_method_secret(uid, "totp", { password: config.api_password })
             .expect(200)
             .then(res => {
                 t.assert.equal(res.body.code, "Ok");
@@ -325,82 +256,72 @@ await test('Esup otp api', async (t) => {
             });
     });
 
-    await t.test('generate bypass method secret for test_user', async (t) => {
+    await t.test('generate bypass method secret for user', async (t) => {
         const method = "bypass";
-        const uri = '/protected/users/' + uid + '/methods/' + method + '/secret/';
-
-        if (properties.getMethodProperty(method, 'activate')) {
-            await request(post, uri, { password: config.api_password })
-                .expect(200)
-                .then(res => {
-                    t.assert.equal(res.body.code, "Ok");
-                    t.assert.equal(res.body.codes.length, properties.getMethodProperty(method, 'codes_number'));
-                });
-        } else {
-            await request(post, uri, { password: config.api_password })
-                .expect(404, {
-                    code: 'Error',
-                    message: properties.getMessage('error', 'method_not_found')
-                });
-        }
+        await testUtils.generate_method_secret(uid, method, { password: config.api_password })
+            .expect(200)
+            .then(res => {
+                t.assert.equal(res.body.code, "Ok");
+                t.assert.equal(res.body.codes.length, properties.getMethodProperty(method, 'codes_number'));
+            });
     });
 
-    await t.test('test random code', async (t) => {
+    await t.test('test random_code', async (t) => {
         const method = 'random_code';
         const transport = "sms";
         const phoneNumber = '0606060606';
 
         t.before(async (t) => {
-            pause_global_hooks = true;
-            await request(put, "/protected/users/" + uid + "/transports/" + transport + "/" + phoneNumber, { password: config.api_password })
+            testUtils.pauseBeforeAndAfterEach();
+            await testUtils.setTransport(uid, { transport: transport, new_transport: phoneNumber }, { password: config.api_password })
                 .expect(200);
         });
 
         t.after(() => {
-            pause_global_hooks = false;
+            testUtils.resumeBeforeAndAfterEach();
         });
 
         await t.test('activate_method_admin', async (t) => {
-            await request(put, "/admin/methods/" + method + "/deactivate", { password: config.api_password })
+            await testUtils.admin.deactivate_method(method, { password: config.api_password })
                 .expect(200);
             t.assert.ok(!properties.getMethodProperty(method, 'activate'));
 
-            await request(put, "/protected/users/" + uid + "/methods/" + method + "/activate", { password: config.api_password })
+            await testUtils.standardActivate(uid, method, { password: config.api_password })
                 .expect(404, {
                     code: 'Error',
                     message: properties.getMessage('error', 'method_not_found')
                 });
 
-            await request(put, "/admin/methods/" + method + "/activate", { password: config.api_password })
+            await testUtils.admin.activate_method(method, { password: config.api_password })
                 .expect(200);
             t.assert.ok(properties.getMethodProperty(method, 'activate'));
 
-            await request(put, "/protected/users/" + uid + "/methods/" + method + "/activate", { password: config.api_password })
+            await testUtils.standardActivate(uid, method, { password: config.api_password })
                 .expect(200);
         });
 
         await t.test('activate_method_transport', async (t) => {
-            await request(put, "/admin/methods/" + method + "/transports/" + transport + "/deactivate", { password: config.api_password })
+            await testUtils.admin.deactivate_method_transport(method, transport, { password: config.api_password })
                 .expect(200);
             t.assert.ok(!properties.containsMethodTransport(method, transport));
 
-            await request(put, "/admin/methods/" + method + "/transports/" + transport + "/activate", { password: config.api_password })
+            await testUtils.admin.activate_method_transport(method, transport, { password: config.api_password })
                 .expect(200);
             t.assert.ok(properties.containsMethodTransport(method, transport));
         });
 
         await t.test('activate_method', async (t) => {
-            await request(put, "/protected/users/" + uid + "/methods/" + method + "/deactivate", { password: config.api_password })
+            await testUtils.deactivate(uid, method, { password: config.api_password })
                 .expect(200);
-            await request(get, "/users/" + uid, { uid: uid, secret: config.users_secret })
+            await testUtils.get_user_infos(uid, { password: config.api_password })
                 .expect(200)
                 .then(res => {
                     t.assert.ok(!res.body.user.methods[method].active);
                 });
 
-            await request(put, "/protected/users/" + uid + "/methods/" + method + "/activate", { password: config.api_password })
+            await testUtils.standardActivate(uid, method, { password: config.api_password })
                 .expect(200);
-            await request(get, "/users/" + uid, { uid: uid, secret: config.users_secret })
+            await testUtils.get_user_infos(uid, { password: config.api_password })
                 .expect(200)
                 .then(res => {
                     t.assert.equal(res.body.user.transports.sms, utils.cover_sms(phoneNumber));
@@ -410,32 +331,22 @@ await test('Esup otp api', async (t) => {
 
         let code;
 
-        await t.test('mock sms sending', async (t) => {
-            transports.setTransport({
-                name: transport,
-                send_message(req, opts, res) {
-                    code = opts.code;
-                    res.send();
-                }
-            });
-        });
-
         await t.test('send_message', async (t) => {
-            await request(post, "/users/" + uid + "/methods/" + method + "/transports/" + transport, { uid: uid, secret: config.users_secret })
+            await testUtils.send_message(uid, method, transport, { uid: uid, secret: config.users_secret })
                 .expect(200);
-            t.assert.ok(code);
+            t.assert.equal(testUtils.getSentSms().length, 1);
+            code = testUtils.getSentSms()[0].code;
         });
 
         await t.test('test verify_code with wrong code', async (t) => {
             let wrongCode;
 
             do {
-                const code_length = properties.getMethod(method).code_length;
-                const code_type = properties.getMethod(method).code_type;
+                const { code_length, code_type } = properties.getMethod(method);
                 wrongCode = utils.generate_code_of_type(code_length, code_type);
             } while (code == wrongCode);
 
-            await request(post, "/protected/users/" + uid + "/" + wrongCode, { password: config.api_password })
+            await testUtils.verify_code(uid, wrongCode, { password: config.api_password })
                 .expect(401, {
                     code: 'Error',
                     message: properties.getMessage('error', 'invalid_credentials')
@@ -443,38 +354,34 @@ await test('Esup otp api', async (t) => {
         });
 
         await t.test('test verify_code', async (t) => {
-            await request(post, "/protected/users/" + uid + "/" + code, { password: config.api_password })
+            await testUtils.verify_code(uid, code, { password: config.api_password })
                 .expect(200)
                 .then(res => {
                     t.assert.equal(res.body.code, 'Ok');
                 });
+            testUtils.clearSms();
         });
 
         await t.test('deactive', async (t) => {
-            await request(put, "/protected/users/" + uid + "/methods/" + method + "/deactivate", { password: config.api_password })
+            await testUtils.deactivate(uid, method, { password: config.api_password })
                 .expect(200);
 
-            // api_controller.get_user_infos
-            await request(get, "/protected/users/" + uid, { password: config.api_password })
+            await testUtils.get_user_infos(uid, { password: config.api_password })
                 .expect(200)
                 .then(res => {
                     t.assert.ok(!res.body.user.methods[method].active);
                 });
 
-            // api_controller.send_message
-            await request(post, "/users/" + uid + "/methods/" + method + "/transports/" + transport, { uid: uid, secret: config.users_secret })
+            await testUtils.send_message(uid, method, transport, { uid: uid, secret: config.users_secret })
                 .expect(404, {
                     code: 'Error',
                     message: properties.getMessage('error', 'method_not_found')
                 });
+            t.assert.equal(testUtils.getSentSms().length, 0);
         });
     });
 
     await t.test('test search_users', async (t) => {
-        /**
-         * @typedef {{uid: String, displayName: String}} User 
-         * @type { [ User ] }
-         */
         const users = [
             { uid: "alanteigne", displayName: "Aubine Lanteigne" },
             { uid: "zbabin", displayName: "Zacharie Babin" },
@@ -488,14 +395,10 @@ await test('Esup otp api', async (t) => {
             { uid: "fletourneau", displayName: "Florent Létourneau" },
         ];
 
-        for (const user of users) {
-            await request(get, `/protected/users/${user.uid}`, { password: config.api_password }).expect(200);
-            await request(put, `/protected/users/${user.uid}`, { password: config.api_password })
-                .send({ displayName: user.displayName })
-                .expect(200);
-        }
+        await testUtils.setDisplayNames(users, { password: config.api_password });
 
-        /** @type { [{ token: String, result: [String] }] }  */
+        const userByUid = Object.fromEntries(users.map(user => [user.uid, user]));
+
         const expecteds = [
             { token: "Aubin", result: ["acressac", "agingras", "alanteigne"] },
             { token: "Babin", result: ["zbabin", "ebabin"] },
@@ -503,68 +406,13 @@ await test('Esup otp api', async (t) => {
             { token: "azerty", result: [] },
             { token: "ine", result: ["alanteigne", "clemieux"] },
             { token: "flo", result: ["flaramee", "fletourneau"] },
-        ];
+        ].map(({ token, result }) => ({ token, expected: result.map(uid => userByUid[uid]) }));
 
-        for (const expected of expecteds) {
-            await request(get, `/protected/users?token=${expected.token}`, { password: config.api_password })
-                .then(res => {
-                    t.assert.equal(res.body.code, "Ok");
-                    /** @type { [ User ] } */
-                    const users = res.body.users;
-                    t.assert.equal(users.length, expected.result.length, JSON.stringify({ token: expected.token, response: users }));
-                    for (const uid of expected.result) {
-                        t.assert.ok(users.some(user => user.uid == uid), JSON.stringify({ token: expected.token, response: users, expectedUser: uid }));
-                    }
-                });
-        }
+        testUtils.assertSearch_usersReturns(expecteds, { password: config.api_password });
     });
 
     await t.test('test stats', async (t) => {
-        async function activateMethodForUser({ uid, method, params }) {
-            switch (method) {
-                case 'push':
-                    return activatePush(uid, method, params);
-                case 'bypass':
-                    return activateBypass(uid, method, params);
-                case 'random_code':
-                case 'random_code_mail':
-                    return activateRandom_code(uid, method, params);
-                case 'totp':
-                    return activateTotp(uid, method, params);
-                default:
-                    return activateMethod(uid, method, params);
-            }
-        }
-
-        async function activateMethod(uid, method) {
-            await request(put, `/protected/users/${uid}/methods/${method}/activate/`, { password: config.api_password });
-        }
-
-        async function activatePush(uid, method, { platform, manufacturer, model }) {
-            const { body } = await request(put, `/protected/users/${uid}/methods/${method}/activate`, { password: config.api_password });
-            await request(post, `/users/${uid}/methods/${method}/activate/${body.activationCode}/${platform}/${manufacturer}/${model}`);
-        }
-
-        async function activateBypass(uid) {
-            await activateMethod(uid, "bypass");
-            await request(post, `/protected/users/${uid}/methods/bypass/secret`, { password: config.api_password });
-        }
-
-        async function activateRandom_code(uid, method, { new_transport }) {
-            const transport = method === "random_code_mail" ? "mail" : "sms";
-            await request(put, `/protected/users/${uid}/transports/${transport}/${new_transport}`, { password: config.api_password });
-            await activateMethod(uid, method);
-        }
-
-        async function activateTotp(uid) {
-            // generate_method_secret
-            const { body } = await request(post, `/protected/users/${uid}/methods/totp/secret?require_method_validation=true`, { password: config.api_password });
-            // confirm_user_activate
-            const token = OTPAuth.URI.parse(body.uri).generate();
-            await request(post, `/protected/users/${uid}/methods/totp/activate/${token}`, { password: config.api_password });
-        }
-
-        /** @type { [{ uid: String, method: String?, params: Object? }] }  */
+        /** @type { [{ uid: String, method: String?, deactive: Boolean?, params: Object? }] }  */
         const activations = [
             { uid: "user1", method: "bypass" },
             { uid: "user2", method: "esupnfc" },
@@ -578,20 +426,15 @@ await test('Esup otp api', async (t) => {
             { uid: "user9", method: "push", params: { platform: "ios", manufacturer: "Apple", model: "iPhone 14 pro" } },
             { uid: "user9", method: "totp" },
             { uid: "user9", method: "random_code", params: { new_transport: "0606060602" } },
-            { uid: "user20" },
+            { uid: "user20", method: "totp" },
+            { uid: "user20", method: "totp", deactive: true },
             { uid: "user21" },
             { uid: "user22" },
         ];
 
-        for (const activation of activations) {
-            if (activation.method) {
-                await activateMethodForUser(activation);
-            } else {
-                await request(get, `/protected/users/${activation.uid}`, { password: config.api_password }).expect(200);
-            }
-        }
+        await testUtils.activateMethods(activations, { password: config.api_password });
 
-        const expected = {
+        const expectedStats = {
             totalUsers: 12,
             totalMfaUsers: 9,
             users: {
@@ -620,7 +463,6 @@ await test('Esup otp api', async (t) => {
             },
         };
 
-        await request(get, "/admin/stats", { password: config.api_password })
-            .expect(200, expected);
+        await testUtils.assertStatsEquals(expectedStats, { password: config.api_password });
     });
 });
