@@ -11,6 +11,7 @@ import TenantSchema from './tenantSchema.js';
 
 import { logger } from '../../services/logger.js';
 import { getTransport } from '../user/userUtils.js';
+import * as userChangesNotifier from '../../services/userChangesNotifier/userChangesNotifier.js';
 
 /** @type { mongoose.Connection } */
 let connection;
@@ -138,7 +139,7 @@ export async function find_user_by_id(uid) {
     const userPreferences = await UserPreferences.findOne({ 'uid': uid });
     if (userPreferences) {
         // to call update_active_methods() and save potential changes
-        await save_user(userPreferences);
+        await save_user(userPreferences, false);
         return userPreferences;
     } else {
         return create_user(uid);
@@ -152,13 +153,31 @@ export async function find_user(req) {
 /**
  * Sauve l'utilisateur
  */
-export async function save_user(user) {
+export async function save_user(user, notifyChanges = true) {
     await update_active_methods(user);
+    if (notifyChanges && userChangesNotifier.enabled) {
+        await notifyUserChanges(user);
+    }
     return user.save();
 }
 
+/**
+ * @param {mongoose.Document} user 
+ */
+async function notifyUserChanges(user) {
+    const changes = user.modifiedPaths()
+        // only keep changes on "[method].active", and extract the method
+        .map(modified => modified.match(/^([^.]+)[.]active$/)?.[1])
+        .filter(Boolean)
+        .map(method => ([method, user[method].active]));
+
+    if (changes.length) {
+        return userChangesNotifier.onUserMethodChange(user, changes);
+    }
+}
+
 export async function create_user(uid) {
-    return save_user(new UserPreferences({ uid: uid }));
+    return save_user(new UserPreferences({ uid: uid }), false);
 }
 
 /**

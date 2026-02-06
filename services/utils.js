@@ -36,6 +36,18 @@ export function get_hash(uid, users_secret) {
     return hashes;
 }
 
+export function cover_transport(transport, transport_name) {
+    if (!transport) {
+        return;
+    }
+
+    if (transport_name === "sms") {
+        return cover_sms(transport);
+    } else {
+        return cover_mail(transport);
+    }
+}
+
 export function cover_mail(mail) {
     return cover_string(mail, 4, 5);
 }
