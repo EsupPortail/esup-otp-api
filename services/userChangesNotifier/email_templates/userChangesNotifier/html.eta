@@ -1,0 +1,6 @@
+<p>Bonjour <%= it.displayName || it.user.uid %>,<br />
+Vos paramètres d’authentification renforcée ont été mis à jour :</p>
+
+<p><%~ it.mainContent.replace("\n", "<br />") %></p>
+
+<p>Cordialement.</p>

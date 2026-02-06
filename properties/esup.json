@@ -172,6 +172,11 @@
     "esupnfc": {
         "server_ip": "IP_ESUP-SGC-SERVER"
     },
+    "#how_to_userChangesNotifier": "see CONFIGURATION.MD #Notify users by email when their accounts get updated",
+    "userChangesNotifier": {
+        "enabled": false,
+        "emailAddressProvider": ""
+    },
     "logs": {
         "main": {
             "level": "debug",

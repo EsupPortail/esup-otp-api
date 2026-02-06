@@ -1,7 +1,9 @@
 import supertest from 'supertest';
 import assert from 'node:assert';
+import { mock } from 'node:test';
 
 import * as OTPAuth from "otpauth";
+import * as nodemailerMock from 'nodemailer-mock';
 
 import * as properties from '../properties/properties.js';
 import * as inMemoryMongoTest from './inMemoryMongoTest.js';
@@ -17,6 +19,8 @@ export async function start(config) {
     properties.setEsup(config);
     const mongoDbUri = await inMemoryMongoTest.initialise();
     config.mongodb.uri = mongoDbUri;
+
+    mock.module("nodemailer", { defaultExport: nodemailerMock });
 
     server = await import('../server/server.js');
     await server.start(0);
@@ -35,50 +39,38 @@ export async function stop() {
     await inMemoryMongoTest.stop();
 }
 
-const messages = {
-    sms: [],
-    mail: [],
-}
+const sms = [];
 
-export function mockTransport(name) {
+export function mockSms() {
     transports.setTransport({
-        name: name,
-        send_message(req, opts, res, user) {
-            messages[name].push(opts);
+        name: "sms",
+        async send_message(req, opts, res, user) {
+            sms.push(opts);
             res?.send({
                 "code": "Ok",
                 "message": "Message sent",
                 "codeRequired": opts.codeRequired,
-                "waitingFor": opts.waitingFor
+                "waitingFor": opts.waitingFor,
             });
         },
     });
 }
 
-export function mockSms() {
-    mockTransport("sms");
-}
-
-export function mockEmails() {
-    mockTransport("mail");
-}
-
 /** @returns {[import('../transports/transports.js').opts]} */
 export function getSentSms() {
-    return messages.sms;
-}
-
-/** @returns {[import('../transports/transports.js').opts]} */
-export function getSentEmails() {
-    return messages.mail;
+    return sms;
 }
 
 export function clearSms() {
-    getSentSms().length = 0;
+    sms.length = 0;
+}
+
+export function getSentEmails() {
+    return nodemailerMock.mock.getSentMail();
 }
 
 export function clearEmails() {
-    getSentEmails().length = 0;
+    nodemailerMock.mock.reset();
 }
 
 /** @returns {Promise<[String]>} */
@@ -95,7 +87,6 @@ export async function clearUsers(/** @type {api_passwordAuthentication} */ auth)
 }
 
 export function before() {
-    mockEmails();
     mockSms();
 }
 
@@ -195,6 +186,12 @@ export async function activateMethods(activations, /** @type {api_passwordAuthen
                 await deactivate(activation.uid, activation.method, auth).expect(200);
             } else {
                 await activateMethodForUser(activation, auth);
+            }
+        } else if (activation.params?.transport) {
+            if (activation.params.deleteTransport) {
+                await deleteTransport(activation.uid, activation.params.transport, auth);
+            } else {
+                await setTransport(activation.uid, activation.params, auth);
             }
         } else {
             await get_user_infos(activation.uid, auth).expect(200);
@@ -326,10 +323,23 @@ export async function assertASearch_usersReturns(/** @type {String} */ token, /*
             /** @type {search_usersResult} */
             const actual = res.body.users;
             for (const array of [actual, expected]) {
-                sortArray(array, user => user.uid);
+                utils.sortArray(array, user => user.uid);
             }
             assert.deepEqual(actual, expected);
         })
+}
+
+/**
+ * @param { [{ mainContent: String, recipients: String[] }] } expected
+ */
+export async function assertUserChangesNotified(expected) {
+    const emails = getSentEmails();
+    /*expected.forEach((expected, index) => {
+        const result = emails[index];
+        assert.equal(result.mainContent, expected.mainContent);
+        assert.deepEqual(result.userTransport.sort(), expected.recipients.sort());
+    });*/
+    assert.equal(emails.length, expected.length);
 }
 
 /**
@@ -366,31 +376,4 @@ export const admin = {
     getTenant: function(id, /** @type {api_passwordAuthentication} */ auth) {
         return request(get, `/admin/tenants/${id}`, auth);
     },
-}
-
-/**
- * @template T, U
- * @callback KeyExtractor
- * @param {T} item
- * @return {U} comparable value from item
- */
-
-/**
- * @template T
- * @template {String|Number} U
- * @param {[T]} array
- * @param {KeyExtractor<T, U>} keyExtractor
- */
-function sortArray(array, keyExtractor) {
-    array.sort((a, b) => {
-        const valueA = keyExtractor(a);
-        const valueB = keyExtractor(b);
-        if (valueA < valueB) {
-            return -1;
-        }
-        if (valueA > valueB) {
-            return 1;
-        }
-        return 0;
-    });
 }

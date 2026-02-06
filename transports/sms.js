@@ -23,6 +23,7 @@ if (baseUrlBroker.username || baseUrlBroker.password) {
     baseUrlBroker.password = '';
 }
 
+/** @param {import("./transports.js").opts} opts  */
 export async function send_message(req, opts, res, user) {
     const num = opts.userTransport || getSms(user.userDb);
     if (utils.check_transport_validity('sms', num)) {

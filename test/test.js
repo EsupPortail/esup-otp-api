@@ -148,6 +148,10 @@ const config = {
     "esupnfc": {
         "server_ip": "IP_ESUP-SGC-SERVER"
     },
+    "userChangesNotifier": {
+        "enabled": true,
+        "emailAddressProvider": "getEmailAddressFromUser"
+    },
     "logs": {
         "main": {
             "level": "debug",
@@ -412,7 +416,7 @@ await test('Esup otp api', async (t) => {
     });
 
     await t.test('test stats', async (t) => {
-        /** @type { [{ uid: String, method: String?, deactive: Boolean?, params: Object? }] }  */
+        /** @type {Parameters<typeof testUtils.activateMethods>[0]} */
         const activations = [
             { uid: "user1", method: "bypass" },
             { uid: "user2", method: "esupnfc" },
@@ -464,5 +468,86 @@ await test('Esup otp api', async (t) => {
         };
 
         await testUtils.assertStatsEquals(expectedStats, { password: config.api_password });
+    });
+
+    await t.test('test userChangesNotifier', async (t) => {
+        /** @type {Parameters<typeof testUtils.activateMethods>[0]} */
+        const activations = [
+            { uid: "user1", method: "bypass" },
+            { uid: "user2", method: "esupnfc" },
+            { uid: "user3", method: "passcode_grid" },
+            { uid: "user4", method: "push", params: { platform: "android", manufacturer: "xiaomi", model: "24116RACCG" } },
+            { uid: "user4", method: "totp" },
+            { uid: "user5", method: "push", params: { platform: "ios", manufacturer: "Apple", model: "iPhone 12 mini" } },
+            { uid: "user6", method: "random_code", params: { new_transport: "0606060601" } },
+            { uid: "user7", method: "random_code_mail", params: { new_transport: "user7@example.com" } },
+            { uid: "user7", params: { transport: "mail", new_transport: "user7@email2.com" } },
+            { uid: "user7", params: { transport: "mail", deleteTransport: true } },
+            { uid: "user8", method: "totp" },
+            { uid: "user9", method: "push", params: { platform: "ios", manufacturer: "Apple", model: "iPhone 14 pro" } },
+            { uid: "user9", method: "totp" },
+            { uid: "user9", method: "random_code", params: { new_transport: "0606060602" } },
+            { uid: "user20", method: "totp" },
+            { uid: "user20", method: "totp", deactive: true },
+            { uid: "user21" },
+            { uid: "user22" },
+        ];
+
+        await testUtils.activateMethods(activations, { password: config.api_password });
+
+        const expected = [
+            {
+                "recipients": ["user1@example.org"],
+                "mainContent": "L'authentification par codes de secours a été activée pour votre compte."
+            },
+            {
+                "recipients": ["user2@example.org"],
+                "mainContent": "L'authentification par NFC avec votre carte multi-service a été activée pour votre compte."
+            }, {
+                "recipients": ["user3@example.org"],
+                "mainContent": "L'authentification par grille de code a été activée pour votre compte."
+            }, {
+                "recipients": ["user4@example.org"],
+                "mainContent": "L'authentification par notifications sur l'application mobile Esup Auth a été activée pour votre compte."
+            }, {
+                "recipients": ["user4@example.org"],
+                "mainContent": "L'authentification par codes TOTP a été activée pour votre compte."
+            }, {
+                "recipients": ["user5@example.org"],
+                "mainContent": "L'authentification par notifications sur l'application mobile Esup Auth a été activée pour votre compte."
+            }, {
+                "recipients": ["user6@example.org"],
+                "mainContent": "Vous recevrez vos codes d'authentification par SMS au numéro 06******601"
+            }, {
+                "recipients": ["user7@example.org", "user7@example.com"],
+                "mainContent": "Vous recevrez vos codes d'authentification par mail à l'adresse user********le.com"
+            }, {
+                "recipients": ["user7@example.org", "user7@example.com", "user7@email2.com"],
+                "mainContent": "Vous recevrez vos codes d'authentification par mail à l'adresse user*******l2.com (au lieu de user********le.com précédemment)"
+            }, {
+                "recipients": ["user7@example.org", "user7@email2.com"],
+                "mainContent": "Vous ne recevrez plus de codes d'authentification par mail à l'adresse user*******l2.com"
+            }, {
+                "recipients": ["user8@example.org"],
+                "mainContent": "L'authentification par codes TOTP a été activée pour votre compte."
+            }, {
+                "recipients": ["user9@example.org"],
+                "mainContent": "L'authentification par notifications sur l'application mobile Esup Auth a été activée pour votre compte."
+            }, {
+                "recipients": ["user9@example.org"],
+                "mainContent": "L'authentification par codes TOTP a été activée pour votre compte."
+            }, {
+                "recipients": ["user9@example.org"],
+                "mainContent": "Vous recevrez vos codes d'authentification par SMS au numéro 06******602"
+            }, {
+                "recipients": ["user20@example.org"],
+                "mainContent": "L'authentification par codes TOTP a été activée pour votre compte."
+            }, {
+                "recipients": ["user20@example.org"],
+                "mainContent": "L'authentification par codes TOTP a été désactivée pour votre compte."
+            }
+        ];
+
+        await testUtils.assertUserChangesNotified(expected);
     });
 });

@@ -7,6 +7,7 @@ export function getUserDbProperties() {
     return properties.getEsupProperty(properties.getEsupProperty('userDb'));
 }
 
+/** @returns {? String } */
 export function getTransport(user, transport) {
     return user[attributes[transport]];
 }
@@ -15,6 +16,7 @@ export function setTransport(user, transport, newValue) {
     user[attributes[transport]] = newValue;
 }
 
+/** @returns {? String } */
 export function getSms(user) {
     return user[attributes.sms];
 }
@@ -23,6 +25,7 @@ export function setSms(user, newValue) {
     user[attributes.sms] = newValue;
 }
 
+/** @returns {? String } */
 export function getMail(user) {
     return user[attributes.mail];
 }
@@ -31,6 +34,7 @@ export function setMail(user, newValue) {
     user[attributes.mail] = newValue;
 }
 
+/** @returns {? String } */
 export function getDisplayName(user) {
     return user[attributes.displayName];
 }
@@ -39,6 +43,7 @@ export function setDisplayName(user, newValue) {
     user[attributes.displayName] = newValue;
 }
 
+/** @returns { String } */
 export function getUid(user) {
     return user[attributes.uid];
 }
