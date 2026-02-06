@@ -1,17 +1,17 @@
 import * as properties from '../properties/properties.js';
 import * as utils from '../services/utils.js';
 import * as fileUtils from '../services/fileUtils.js';
-import * as nodemailer from "nodemailer";
+import nodemailer from "nodemailer";
 import { Eta } from "eta";
 import { logger } from '../services/logger.js';
 import * as errors from '../services/errors.js';
-import { getMail } from '../databases/user/userUtils.js';
+import { getMail, getDisplayName } from '../databases/user/userUtils.js';
 
 export const name = "mail";
 
 const mailerProperty = properties.getEsupProperty('mailer');
 
-// create reusable transport method (opens pool of SMTP connections)
+/** @type {import('nodemailer/lib/smtp-transport').Options} */
 const options = {
     // service: properties.esup.mailer.service,
     // auth: {
@@ -24,19 +24,22 @@ const options = {
     tls: {
         rejectUnauthorized: !mailerProperty.accept_self_signed_certificate,
     },
+    from: `${mailerProperty.sender_name} <${mailerProperty.sender_mail}>`,
+    headers: {
+        "Auto-Submitted": "auto-generated",
+    },
+    proxy: mailerProperty.use_proxy && properties.getEsupProperty('proxyUrl'),
 };
 
-if (properties.getEsupProperty('proxyUrl') && mailerProperty.use_proxy) 
-    options.proxy = properties.getEsupProperty('proxyUrl');
-const transporter = nodemailer.createTransport(options);
-// setup e-mail data with unicode symbols
-const senderAddress = mailerProperty.sender_name + " <" + mailerProperty.sender_mail + ">";
+
+export const transporter = nodemailer.createTransport(options, options);
 
 /**
- * @type {Eta}
+ * @type {?Eta}
  */
 const eta = mailerProperty.use_templates && new Eta({ views: fileUtils.relativeToAbsolutePath(import.meta.url, "./email_templates") });
 
+/** @param {import("./transports.js").opts} opts  */
 export async function send_message(req, opts, res, user) {
     const mail = opts.userTransport || getMail(user.userDb);
 
@@ -45,14 +48,15 @@ export async function send_message(req, opts, res, user) {
          * @type {nodemailer.SendMailOptions}
          */
         const mailOptions = {
-            from: senderAddress,
             text: opts.message,
             to: mail,
             subject: opts.object,
         }
 
-        if(mailerProperty.use_templates && opts.htmlTemplate) {
-            mailOptions.html = eta.render("./" + opts.htmlTemplate + "/html.eta", {code: opts.code})
+        if (mailerProperty.use_templates && opts.htmlTemplate) {
+            opts.displayName = getDisplayName(user.userDb);
+            opts.user = user;
+            mailOptions.html = eta.render("./" + opts.htmlTemplate + "/html.eta", opts);
         }
 
         // send mail with defined transport object
@@ -63,7 +67,7 @@ export async function send_message(req, opts, res, user) {
                     "code": "Ok",
                     "message": "Message sent",
                     "codeRequired": opts.codeRequired,
-                    "waitingFor": opts.waitingFor
+                    "waitingFor": opts.waitingFor,
                 });
             })
             .catch((error) => {

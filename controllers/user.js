@@ -3,6 +3,7 @@ import * as properties from '../properties/properties.js';
 import { auditLogger } from '../services/logger.js';
 import * as userUtils from '../databases/user/userUtils.js';
 import * as api_controller from './api.js';
+import { onUserTransportChange } from '../services/userChangesNotifier/userChangesNotifier.js';
 
 /**
  * @type {import('../databases/user/mongodb.js')} userDb
@@ -33,21 +34,28 @@ export async function delete_transport(req, res) {
 
 async function update_transport_internal(req, res, action) {
     const user = await api_controller.apiDb.find_user(req);
-    const old_transport = userUtils.getTransport(user.userDb, req.params.transport);
-    userUtils.setTransport(user.userDb, req.params.transport, req.params.new_transport || "");
-    auditLogger.info({
-        message: [
-            {
-                req,
-                action: action,
-                method: req.params.transport,
-                old_value: old_transport,
-                new_value: req.params.new_transport || undefined,
-            }
-        ]
-    });
-    await userDb.save_user(user.userDb);
-    await api_controller.save_user(user);
+    const transportName = req.params.transport;
+    const old_transport = userUtils.getTransport(user.userDb, transportName);
+    const new_transport = req.params.new_transport || "";
+
+    if (old_transport !== new_transport) {
+        userUtils.setTransport(user.userDb, transportName, req.params.new_transport || "");
+        auditLogger.info({
+            message: [
+                {
+                    req,
+                    action: action,
+                    method: transportName,
+                    old_value: old_transport,
+                    new_value: req.params.new_transport || undefined,
+                }
+            ]
+        });
+        await userDb.save_user(user.userDb);
+        await onUserTransportChange(user, transportName, old_transport, new_transport);
+        await api_controller.save_user(user);
+    }
+
     res.status(200);
     res.send({
         code: 'Ok',
@@ -68,6 +76,7 @@ export async function update_user(req, res) {
 
     if (changes.length) {
         for (const [key, value] of changes) {
+            await onUserTransportChange(user, key, user_db[key], value);
             user_db[key] = value;
         }
 

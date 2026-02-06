@@ -1,0 +1,7 @@
+Bonjour <%= it.displayName || it.user.uid %>,
+Vos paramètres d’authentification renforcée ont été mis à jour :
+
+<%= it.mainContent%>
+
+
+Cordialement.

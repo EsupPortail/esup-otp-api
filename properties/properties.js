@@ -75,6 +75,12 @@ export function setEsupProperty (property, value) {
     properties.esup[property] = value;
 }
 
+export function listActivatedMethods() {
+    return Object.entries(getEsupProperty("methods"))
+        .filter(([k, v]) => v.activate)
+        .map(([k, v]) => k);
+}
+
 export function getMethod (method) {
     return properties.esup.methods[method];
 }

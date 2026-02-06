@@ -36,6 +36,18 @@ export function get_hash(uid, users_secret) {
     return hashes;
 }
 
+export function cover_transport(transport, transport_name) {
+    if (!transport) {
+        return;
+    }
+
+    if (transport_name === "sms") {
+        return cover_sms(transport);
+    } else {
+        return cover_mail(transport);
+    }
+}
+
 export function cover_mail(mail) {
     return cover_string(mail, 4, 5);
 }
@@ -147,4 +159,39 @@ export function hash(str, alg = "sha256", encoding = "base64url") {
         return crypto.hash(alg, str, encoding);
     } else
         return crypto.createHash(alg).update(str).digest(encoding);
+}
+
+/**
+ * @template T, U
+ * @callback KeyExtractor
+ * @param {T} item
+ * @return {U} comparable value from item
+ */
+
+/**
+ * @template T
+ * @template {String|Number} U
+ * @param {[T]} array
+ * @param {KeyExtractor<T, U>} keyExtractor
+ */
+export function sortArray(array, keyExtractor) {
+    array.sort((a, b) => {
+        const valueA = keyExtractor(a);
+        const valueB = keyExtractor(b);
+        if (valueA < valueB) {
+            return -1;
+        }
+        if (valueA > valueB) {
+            return 1;
+        }
+        return 0;
+    });
+}
+
+/**
+ * @param {Array} array
+ * @return {Array} new array without duplicate elements
+ */
+export function distinct(array) {
+    return [...new Set(array)];
 }

@@ -11,6 +11,7 @@ import TenantSchema from './tenantSchema.js';
 
 import { logger } from '../../services/logger.js';
 import { getTransport } from '../user/userUtils.js';
+import * as userChangesNotifier from '../../services/userChangesNotifier/userChangesNotifier.js';
 
 /** @type { mongoose.Connection } */
 let connection;
@@ -138,7 +139,7 @@ export async function find_user_by_id(uid) {
     const userPreferences = await UserPreferences.findOne({ 'uid': uid });
     if (userPreferences) {
         // to call update_active_methods() and save potential changes
-        await save_user(userPreferences);
+        await save_user(userPreferences, false);
         return userPreferences;
     } else {
         return create_user(uid);
@@ -152,13 +153,20 @@ export async function find_user(req) {
 /**
  * Sauve l'utilisateur
  */
-export async function save_user(user) {
+export async function save_user(user, notifyChanges = true) {
     await update_active_methods(user);
+    if(userChangesNotifier.enabled) {
+        if(notifyChanges) {
+            await userChangesNotifier.notifyIfNeeded(user);
+        } else {
+            userChangesNotifier.noteCurrentActiveState(user);
+        }
+    }
     return user.save();
 }
 
 export async function create_user(uid) {
-    return save_user(new UserPreferences({ uid: uid }));
+    return save_user(new UserPreferences({ uid: uid }), false);
 }
 
 /**
@@ -192,7 +200,7 @@ async function update_active_methods(user) {
         userMethod.active = userMethod.internally_activated && properties.getTransports(random_code).some(transport => getTransport(user.userDb, transport));
     }
 
-    user.hasEnabledMethod = Object.keys(properties.getEsupProperty("methods")).some(method => user[method]?.active && properties.getMethod(method)?.activate);
+    user.hasEnabledMethod = properties.listActivatedMethods().some(method => user[method]?.active);
 
     user.esupnfc.active = Boolean(user.esupnfc.internally_activated || (properties.getMethod("esupnfc")?.autoActivate && user.hasEnabledMethod));
 
@@ -423,10 +431,7 @@ export async function delete_tenant(req, res) {
  * Retourne enfin l'OS (platform) utilisé pour la méthode Authentification (push)
  */
 export async function stats() {
-    const allMethods = properties.getEsupProperty('methods');
-    const activeMethods = Object.entries(allMethods)
-        .filter(([_method, properties]) => properties.activate)
-        .map(([method]) => method);
+    const activeMethods = properties.listActivatedMethods();
 
     const methodFields = Object.fromEntries(activeMethods.map(method => [method, 1]));
     const methodGroupFields = Object.fromEntries(activeMethods.map(method => [
