@@ -56,7 +56,8 @@ function initializeUnprotectedRoutes(server) {
         return next();
     })
 
-    server.get('/public/*', restify.plugins.serveStaticFiles('./public', { 
+    const publicDirectory = fileUtils.relativeToAbsolutePath(import.meta.url, '../public/');
+    server.get('/public/*', restify.plugins.serveStaticFiles(publicDirectory, {
         // force a specific cache-control max-age: do not rely on browser heuristic cache!
         maxage: 1/*hour*/ * 60*60*1000 
     }))
