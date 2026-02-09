@@ -50,7 +50,7 @@ RewriteRule /(.*) ws://127.0.0.1:3000/$1 [P]
 esup-otp-api needs to be accessible.\
 More specifically:
 - Open "/users/\*" to the outside. These APIs are used by the mobile application for the push method, and by the browser for authentication.
-- Open "/sockets/\*" and "/js/\*" to the outside. These APIs are used by the browser for authentication.
+- Open "/sockets/\*", "/js/\*", and "/public/\*" to the outside. These APIs are used by the browser for authentication.
 - Open "/protected/\*" to esup-otp-manager and all applications relying on the API for authentication (CAS, IdP, etc.).
 - Open "/admin/\*" to esup-otp-manager only.
 
