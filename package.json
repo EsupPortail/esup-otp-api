@@ -47,11 +47,13 @@
     "lcov": "node --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=lcov.info ./test/test.js # only works with node v21.2.0 or higher"
   },
   "devDependencies": {
+    "@eslint/js": "10.x",
     "@types/qrcode": "1.x",
     "@types/restify": "8.x",
     "@types/restify-errors": "^4.3.9",
     "@types/supertest": "6.x",
-    "eslint": "9.x",
+    "eslint": "10.x",
+    "globals": "17.x",
     "mongodb-memory-server": "10.x",
     "supertest": "7.x"
   },
