@@ -684,13 +684,13 @@ function add_html_template(params) {
         }));
         $("#methodChoices li a").first().focus();
         const last_send_message = user_params.last_send_message || {};
+        const last_validated_method = (user_params.last_validated || {}).method;
         if (document.hidden) {
             // we are not visible, wait for user to choose
-        } else if (last_send_message.auto && !last_send_message.verified) {
+        } else if ((last_send_message.auto && !last_send_message.verified) || ["bypass", /*"random_code"*/].includes(last_validated_method)) {
             // last submitCodeRequest did not succeed
             show('choices');
         } else {
-            const last_validated_method = (user_params.last_validated || {}).method;
             // use last validated method, or first method by default
             const chosen = (last_validated_method && choices.find(choice => choice.real_methods.includes(last_validated_method))) || choices[0];
             await activate_method(params, chosen, { auto: true });
