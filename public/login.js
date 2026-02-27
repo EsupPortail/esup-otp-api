@@ -22,11 +22,12 @@ const msgs = {
         "Authenticate via the Esup Auth application on your %TRANSPORT%": "S'authentifier via l'application Esup Auth sur votre %TRANSPORT%",
         "Enter the 6-digit code": "Saisissez le code de 6 chiffres",
         "Enter the code shown in the cell at the intersection of <strong>row %LINE%</strong> and <strong>column %COLUMN%</strong> 5 of your passcode grid.": "Veuillez saisir le code indiqué au croisement de la <strong>ligne %LINE%</strong> et de la <strong>colonne %COLUMN%</strong> de votre grille de codes.",
-        "Enter a TOTP code or a backup code": "Saisir un code TOTP ou un code de secours",
+        "Enter a TOTP code": "Saisir un code TOTP",
+        "Enter a single-use backup code": "Saisir un code de secours à usage unique",
         "Other connection method": "Autre méthode de connexion",
         "Please try again.": "Veuillez réessayer.",
         "Please enter the code displayed on your TOTP application:": "Merci de renseigner le code affiché sur votre application TOTP :",
-        "Please enter the code displayed on your TOTP application or a backup code:": "Merci de renseigner le code affiché sur votre application TOTP ou un code de secours :",
+        "Please enter a single-use backup code:": "Merci de renseigner un code de secours à usage unique:",
         "Please wait": "Veuillez patienter",
         "Request a new notification": "Demander une nouvelle notification",
         "Show the code": "Afficher le code",
@@ -554,19 +555,14 @@ function add_html_template(params) {
             retryText: _("Request a new notification"),
             code_label_afterSubmit: _("Open the Esup Auth application on your mobile %TRANSPORT% to validate the authentication."),
         },
-        no_transport: {
+        totp: {
             label: {
-                '': _("Enter a TOTP code or a backup code"),
+                '': _("Enter a TOTP code"),
             },
-            real_methods: [ 'totp', 'bypass'],
-            code_label: (_params, chosen) => {
-                switch(chosen.real_methods.sort().join(' ')) {
-                    case 'totp':
-                        return _("Please enter the code displayed on your TOTP application:");
-                    case 'bypass totp':
-                        return _("Please enter the code displayed on your TOTP application or a backup code:");
-                }
+            code_label: (_params, _chosen) => {
+                return _("Please enter the code displayed on your TOTP application:");
             },
+            override_icon: 'no_transport',
         },
         random_code_mail: { label: { 
             sms: _("Receive a code by SMS on %TRANSPORT%"),
@@ -601,6 +597,15 @@ function add_html_template(params) {
                     '%API_URL%': params.apiUrl,
                 });
             },
+        },
+        bypass: {
+            label: {
+                '': _("Enter a single-use backup code"),
+            },
+            code_label: (_params, _chosen) => {
+                return _("Please enter a single-use backup code:");
+            },
+            override_icon: 'no_transport',
         },
     };
     
@@ -638,11 +643,11 @@ function add_html_template(params) {
         let choices = []
         $.each(methods, function (method, opts) {
 
-            var real_methods = (opts.real_methods || [method]).filter(function (method_) {
-                return (methods_and_transports.methods[method_] || {}).active
-            })
-            if (real_methods.length === 0) return;
-            var params = methods_and_transports.methods[real_methods[0]];
+            if (!(methods_and_transports.methods[method] || {}).active) {
+                return;
+            }
+
+            var params = methods_and_transports.methods[method];
 
             (params.transports.length ? params.transports : ['']).forEach(function (transport) {
                 //if (transport !== '') return;
@@ -651,7 +656,6 @@ function add_html_template(params) {
                     var text = opts.label[transport].replace('%TRANSPORT%', transport_text)
                     choices.push({ 
                         method: method, 
-                        real_methods: real_methods, 
                         transport: transport, 
                         transport_text: transport_text, 
                         text: text,
@@ -690,7 +694,7 @@ function add_html_template(params) {
         $("#methodChoices li a").first().focus();
 
         function getChoiceFromMethod(method) {
-            return choices.find(choice => choice.method === method || choice.real_methods.includes(method));
+            return choices.find(choice => choice.method === method);
         }
 
         const methodsRequiringExplicitChoice = ["bypass" /*, "random_code"*/ /*, "esupnfc"*/];
