@@ -614,6 +614,11 @@ function add_html_template(params) {
     }
 
     async function activate_method(params, chosen, opts) {
+        try {
+            localStorage.setItem("lastLocalAttempt", { method: chosen.method, time: Date.now() })
+        } catch (error) {
+            // setItem() may throw an exception if the storage location is full. In particular, for Safari Mobile (since iOS 5), it will throw an exception if the user switches to private browsing (unlike other browsers, which allow storage even in private browsing by using a separate data container, Safari sets its storage quota to 0 bytes).
+        }
         if(chosen.method == "passcode_grid") {
             chosen.transport = "passcode_grid";
         }
@@ -683,18 +688,44 @@ function add_html_template(params) {
             return $("<li></li>").append(button);
         }));
         $("#methodChoices li a").first().focus();
-        const last_send_message = user_params.last_send_message || {};
-        const last_validated_method = (user_params.last_validated || {}).method;
-        if (document.hidden) {
-            // we are not visible, wait for user to choose
-        } else if (!last_send_message.verified || ["bypass", /*"random_code"*/].includes(last_validated_method)) {
-            // last submitCodeRequest did not succeed
-            show('choices');
-        } else {
-            // use last validated method, or first method by default
-            const chosen = (last_validated_method && choices.find(choice => choice.real_methods.includes(last_validated_method))) || choices[0];
-            await activate_method(params, chosen, { auto: true });
+
+        function getChoiceFromMethod(method) {
+            return choices.find(choice => choice.method === method || choice.real_methods.includes(method));
         }
+
+        const methodsRequiringExplicitChoice = ["bypass" /*, "random_code"*/ /*, "esupnfc"*/];
+
+        /** @type {{method: ?String, time: ?number, auto: ?Boolean, verified: ?Boolean}} */
+        const last_send_message = user_params.last_send_message || {};
+        /** @type {{method: ?String, time: ?number}} */
+        const last_validated = user_params.last_validated || {};
+        /** @type {{method: ?String, time: ?number}} */
+        const lastLocalAttempt = localStorage.getItem("lastLocalAttempt") || {};
+
+        if (last_validated.method && !document.hidden) {
+            // otherwise it means that lastLocalAttempt has failed
+            if (lastLocalAttempt.time && lastLocalAttempt.time <= last_validated.time) {
+                const method = lastLocalAttempt.method;
+                if (!methodsRequiringExplicitChoice.includes(method)) {
+                    const chosen = getChoiceFromMethod(method);
+                    if (chosen) {
+                        return activate_method(params, chosen, { auto: true });
+                    }
+                }
+            }
+            const lastValidatedMethodRecentlyFailed = last_send_message.method == last_validated.method && last_send_message.date > last_validated.date;
+            if (!lastValidatedMethodRecentlyFailed) {
+                const method = last_validated.method;
+                if (!methodsRequiringExplicitChoice.includes(method)) {
+                    const chosen = getChoiceFromMethod(method);
+                    if (chosen) {
+                        return activate_method(params, chosen, { auto: true });
+                    }
+                }
+            }
+
+        }
+        show('choices');
     }
 
     function submitCodeRequest(params, chosen, opts) {
