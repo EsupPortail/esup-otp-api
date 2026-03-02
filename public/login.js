@@ -351,7 +351,7 @@ function add_html_template(params) {
         $("#retry").toggleClass('d-none', !(chosen.transport || chosen.opts.retryText));
         const retryElement = document.querySelector("#retry a");
         retryElement.text = chosen.opts.retryText || _("Receive a new code");
-        onclick(retryElement, async () => { clear_errors(); await activate_method(params, chosen, {}) });
+        onclick(retryElement, async () => { clear_errors(); await display_method(params, chosen, {}) });
 
         return false;
     }
@@ -618,7 +618,7 @@ function add_html_template(params) {
         }
     }
 
-    async function activate_method(params, chosen, opts) {
+    async function display_method(params, chosen, opts) {
         try {
             localStorage.setItem("lastLocalAttempt", JSON.stringify({ method: chosen.method, time: Date.now() }));
         } catch (error) {
@@ -684,7 +684,7 @@ function add_html_template(params) {
             const button = $("<a class='large'>");
             onclick(button[0], async () => {
                 clear_errors();
-                await activate_method(params, choice, {});
+                await display_method(params, choice, {});
                 return false;
             });
             button.append($("<span></span>").text(choice.text));
@@ -713,7 +713,7 @@ function add_html_template(params) {
                 if (!methodsRequiringExplicitChoice.includes(method)) {
                     const chosen = getChoiceFromMethod(method);
                     if (chosen) {
-                        return activate_method(params, chosen, { auto: true });
+                        return display_method(params, chosen, { auto: true });
                     }
                 }
             }
@@ -723,7 +723,7 @@ function add_html_template(params) {
                 if (!methodsRequiringExplicitChoice.includes(method)) {
                     const chosen = getChoiceFromMethod(method);
                     if (chosen) {
-                        return activate_method(params, chosen, { auto: true });
+                        return display_method(params, chosen, { auto: true });
                     }
                 }
             }
