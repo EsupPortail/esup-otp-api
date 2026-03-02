@@ -717,7 +717,7 @@ function add_html_template(params) {
                     }
                 }
             }
-            const lastValidatedMethodRecentlyFailed = last_send_message.method == last_validated.method && last_send_message.date > last_validated.date;
+            const lastValidatedMethodRecentlyFailed = last_send_message.method == last_validated.method && last_send_message.time > last_validated.time;
             if (!lastValidatedMethodRecentlyFailed) {
                 const method = last_validated.method;
                 if (!methodsRequiringExplicitChoice.includes(method)) {
