@@ -639,6 +639,9 @@ function add_html_template(params) {
         if (chosen.opts.initialise) chosen.opts.initialise(params, chosen, opts);
     }
 
+    /**
+     * @returns {[{method: String, transport: String, transport_text: ?String, text: String, opts: any}]}
+     */
     function computeChoices(_params, methods_and_transports) {
         let choices = []
         $.each(methods, function (method, opts) {
