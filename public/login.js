@@ -60,7 +60,7 @@ const msgs = {
             </ol>
         `,
         "no_choices_html": /*html*/`
-            Veuillez activer l’<a href="%OTP_MANAGER_URL%" target="_blank">authentification renforcée</a> pour pouvoir accéder à ce service.
+            Veuillez activer l’<a target="_blank">authentification renforcée</a> pour pouvoir accéder à ce service.
         `,
         "webauthn_on_webview": /*html*/`
             <p>
@@ -102,7 +102,7 @@ const msgs = {
             </ol>
         `,
         "no_choices_html": /*html*/`
-            To access this service, activate <a href="%OTP_MANAGER_URL%" target="_blank">multi-factor authentication</a>.
+            To access this service, activate <a target="_blank">multi-factor authentication</a>.
         `,
         "webauthn_on_webview": /*html*/`
             <p>
@@ -157,12 +157,12 @@ const langs = unique([...navigator.languages, 'en'].map(k => {
         }
     }
 
-function add_html_template(params) {
+function add_html_template() {
     $("form").append(/*html*/`
 
        <div class="main1">
 
-        <div id="no-choices" class="d-none">${_('no_choices_html', { '%OTP_MANAGER_URL%': params.otpManagerUrl })}</div>
+        <div id="no-choices" class="d-none">${_('no_choices_html')}</div>
 
         <div id="choices">
             <h2>${_("Use one of the following methods to log in")}</h2>
@@ -514,15 +514,33 @@ function add_html_template(params) {
         }
     }
 
+    function configureLinkToOtpManager(element, params) {
+        $(element).attr("href", params.otpManagerUrl);
+        onclick(element, function() {
+            const otpManagerWindow = window.open(params.otpManagerUrl);
+
+            window.addEventListener("message", (event) => {
+                if (event.data === 'closeOtpManagerWindow') {
+                    otpManagerWindow?.close();
+                    location.reload();
+                }
+            });
+
+            return false;
+        })
+    }
+
     export function getUserOtpMethods_and_displayChoices(params) {
         if (!params.apiUrl) throw "missing params.apiUrl"
         // ensure esup-otp-api base url has a trailing slash
         if (!params.apiUrl.match(/[/]$/)) params.apiUrl += "/"
 
-        add_html_template(params)
+        add_html_template()
 
         document.getElementById("token").oninput = function () { autosubmitIfValid(this) }
         onclick("#back_to_choices", () => { clear_errors(); show('choices'); });
+
+        configureLinkToOtpManager("#no-choices a", params);
 
         $.ajax({ url: params.apiUrl + 'users/'+ params.uid +'/' + params.userHash }).done(async function(data) {
             if (data.code != "Ok") {
