@@ -62,6 +62,14 @@ const msgs = {
         "no_choices_html": /*html*/`
             Veuillez activer l’<a target="_blank">authentification renforcée</a> pour pouvoir accéder à ce service.
         `,
+        "activateMoreMethods_html": /*html*/`
+            <p>Pour une connexion plus simple et sécurisée, activez une méthode moderne :</p>
+            <ul>
+                <li>Les notifications via l’application mobile ;</li>
+                <li>Un facteur physique (WebAuthn), comme un Smartphone, Windows Hello, TouchID, etc</li>
+            </ul>
+            <p>Pour cela, accédez à vos paramètres d’<a target="_blank">authentification renforcée</a> puis activez la méthode souhaitée.</p>
+        `,
         "webauthn_on_webview": /*html*/`
             <p>
                 <p>
@@ -103,6 +111,14 @@ const msgs = {
         `,
         "no_choices_html": /*html*/`
             To access this service, activate <a target="_blank">multi-factor authentication</a>.
+        `,
+        "activateMoreMethods_html": /*html*/`
+            <p>For a faster and more secure login, enable one of the following modern authentication methods:</p>
+            <ul>
+                <li>Notifications via the mobile app;</li>
+                <li>A webAuthn hardware authentication factor (Smartphone, Windows Hello, TouchID, etc).</li>
+            </ul>
+            <p>To do this, go to your <a target="_blank">multi-factor authentication</a> settings and enable the method you want.</p>
         `,
         "webauthn_on_webview": /*html*/`
             <p>
@@ -166,6 +182,7 @@ function add_html_template() {
 
         <div id="choices">
             <h2>${_("Use one of the following methods to log in")}</h2>
+            <div id="activateMoreMethods" class="d-none">${_('activateMoreMethods_html')}</div>
 
             <ul id="methodChoices">
                 <li>${_("Please wait")}</li>
@@ -541,6 +558,7 @@ function add_html_template() {
         onclick("#back_to_choices", () => { clear_errors(); show('choices'); });
 
         configureLinkToOtpManager("#no-choices a", params);
+        configureLinkToOtpManager("#activateMoreMethods a", params);
 
         $.ajax({ url: params.apiUrl + 'users/'+ params.uid +'/' + params.userHash }).done(async function(data) {
             if (data.code != "Ok") {
@@ -696,9 +714,10 @@ function add_html_template() {
 
     async function displayChoices(params, user_params) {
         let choices = computeChoices(params, user_params)
+        const service = new URLSearchParams(location.search).get("service");
         if (choices.length === 0) {
             show('no-choices');
-            try { server_log({ warn: "no-choices", uid: params.uid, service: new URLSearchParams(location.search).get("service") }); } catch (_e) {}
+            try { server_log({ warn: "no-choices", uid: params.uid, service: service }); } catch (_e) {}
             return;
         }
         $("#methodChoices").empty().append(choices.map(function (choice) {
@@ -719,6 +738,9 @@ function add_html_template() {
         }
 
         const methodsRequiringExplicitChoice = ["bypass" /*, "random_code"*/ /*, "esupnfc"*/];
+
+        const isOtpManager = new URL(service).hostname == new URL(params.otpManagerUrl).hostname;
+        $("#activateMoreMethods").toggleClass('d-none', isOtpManager || choices.some(choice => !methodsRequiringExplicitChoice.includes(choice.method)));
 
         /** @type {{method: ?String, time: ?number, auto: ?Boolean, verified: ?Boolean}} */
         const last_send_message = user_params.last_send_message || {};
