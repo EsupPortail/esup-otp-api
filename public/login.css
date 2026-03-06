@@ -17,7 +17,7 @@ h2 {
   text-align: center;
 }
 
-#fm1 ul {
+#methodChoices {
     list-style: none;
     padding-left: 0;
 }
@@ -85,6 +85,24 @@ h2 {
 #choices {
     text-align: center;
 }
+
+#activateMoreMethods {
+    text-align: initial;
+    margin: 1.5rem;
+    padding: 1rem 1.25rem;
+    border: 1px solid darkorange;
+    border-radius: 6px;
+    font-size: 0.95rem;
+}
+
+#activateMoreMethods p {
+    margin: 0;
+}
+
+#activateMoreMethods ul {
+    margin: 0.5rem 0 0.75rem 0;
+}
+
 #methodChoices a {
     display: flex;
     width:  calc(100% - 40px);  
