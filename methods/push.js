@@ -167,7 +167,7 @@ function getText(req) {
  * @param res response HTTP
  */
 export async function verify_code(user, req) {
-    if (user.push.code == req.params.otp && Date.now() < user.push.validity_time) {
+    if (utils.stringTimingSafeEqual(user.push.code, req.params.otp) && Date.now() < user.push.validity_time) {
         user.push.code = null;
         user.push.validity_time = null;
         user.push.timeout = 0;
@@ -179,7 +179,7 @@ export async function verify_code(user, req) {
 }
 
 function ifTokenSecretsMatch(user, req) {
-    return utils.equalsAndtruthy(user.push.token_secret, req.params.tokenSecret);
+    return utils.stringTimingSafeEqual(user.push.token_secret, req.params.tokenSecret);
 }
 
 export function pending(user, req, res) {
@@ -202,7 +202,7 @@ export function pending(user, req, res) {
             ...body
         });
     }
-    else if (!user.push.active || req.params.tokenSecret != user.push.token_secret) {
+    else if (!user.push.active || !utils.stringTimingSafeEqual(req.params.tokenSecret, user.push.token_secret)) {
         res.send({
             "code": "Ok",
             "message": "Les notifications push ont été désactivées pour votre compte",
@@ -291,7 +291,7 @@ export function redirectToDeepLink(req, res) {
 
 export async function confirm_user_activate(user, req, res) {
     const gcm_id = utils.isGcmIdWellFormed(req.params.gcm_id) ? req.params.gcm_id : null;
-    if (user.push.activation_code != null && user.push.activation_fail < properties.getMethod('push').nbMaxFails && !user.push.active && req.params.activation_code == user.push.activation_code && (gcm_id || properties.getMethod('push').pending)) {
+    if (user.push.activation_code != null && user.push.activation_fail < properties.getMethod('push').nbMaxFails && !user.push.active && utils.stringTimingSafeEqual(req.params.activation_code, user.push.activation_code) && (gcm_id || properties.getMethod('push').pending)) {
         let { platform, manufacturer, model } = req.params;
         // Esup Auth on iOS now sends the commercial name of the device (and no longer its code name)
         if (manufacturer !== "Apple" || model.includes(",")) {
@@ -345,7 +345,7 @@ function troncateGcmId(gcmId) {
 // refresh gcm_id when it is regenerated
 export async function refresh_user_gcm_id(user, req, res) {
     const old_gcm_id = user.push.device.gcm_id;
-    if (ifTokenSecretsMatch(user, req) && (!utils.isGcmIdWellFormed(old_gcm_id) || req.params.gcm_id == user.push.device.gcm_id)) {
+    if (ifTokenSecretsMatch(user, req) && (!utils.isGcmIdWellFormed(old_gcm_id) || utils.stringTimingSafeEqual(req.params.gcm_id, user.push.device.gcm_id))) {
         logger.debug("refresh old gcm_id : " + user.push.device.gcm_id + " with " + req.params.gcm_id_refreshed);
         user.push.device.gcm_id = req.params.gcm_id_refreshed;
         user.push.gcm_id_not_registered = false;
@@ -413,7 +413,7 @@ export async function reject_authentication(user, req, res) {
 
 function checkTokenSecretAndLoginTicket(methodName, user, req, res) {
     const tokenSecret = checkTokenSecret(methodName, user, req, res);
-    if (req.params.loginTicket == user.push.lt) {
+    if (utils.stringTimingSafeEqual(req.params.loginTicket, user.push.lt)) {
         logger.debug(methodName + " OK : lt = " + req.params.loginTicket);
         return tokenSecret;
     } else {
@@ -425,9 +425,9 @@ function checkTokenSecretAndLoginTicket(methodName, user, req, res) {
 export function checkTokenSecret(methodName, user, req, res) {
     logger.debug(methodName + " ? " + user.push.token_secret + " VS " + req.params.tokenSecret);
     let tokenSecret = null;
-    if (trustGcm_id == true && utils.isGcmIdWellFormed(user.push.device.gcm_id) && user.push.device.gcm_id == req.params.tokenSecret)
+    if (trustGcm_id == true && utils.isGcmIdWellFormed(user.push.device.gcm_id) && utils.stringTimingSafeEqual(user.push.device.gcm_id, req.params.tokenSecret))
         tokenSecret = user.push.token_secret;
-    if (user.push.token_secret == req.params.tokenSecret || tokenSecret != null) {
+    if (utils.stringTimingSafeEqual(user.push.token_secret, req.params.tokenSecret) || tokenSecret != null) {
         return tokenSecret;
     } else {
         logger.warn(user.uid + "'s token_secret match. req.params.tokenSecret=" + req.params.tokenSecret);
@@ -436,7 +436,7 @@ export function checkTokenSecret(methodName, user, req, res) {
 }
 
 export async function check_accept_authentication(user, req, res) {
-    if (user.push.lt.indexOf(req.params.loginTicket) > -1) {
+    if (utils.stringTimingSafeEqual(user.push.lt, req.params.loginTicket)) {
         user.push.lt = "";
         await apiDb.save_user(user);
         res.send({

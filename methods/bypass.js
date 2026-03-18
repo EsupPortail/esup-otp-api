@@ -22,7 +22,7 @@ export async function verify_code(user, req) {
         let checkOtp = false;
         const codes = user.bypass.codes;
         for (const code in codes) {
-            if (user.bypass.codes[code] == req.params.otp) {
+            if (utils.stringTimingSafeEqual(user.bypass.codes[code], req.params.otp)) {
                 checkOtp = true;
                 codes.splice(code, 1);
                 user.bypass.codes = codes;

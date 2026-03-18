@@ -52,7 +52,7 @@ function getValue(array, challenge) {
  */
 export async function verify_code(user, req) {
     const { grid, challenge, validity_time } = user.passcode_grid;
-    if (grid && challenge && Date.now() < validity_time && getValue(grid, challenge) == req.params.otp) {
+    if (grid && challenge && Date.now() < validity_time && utils.stringTimingSafeEqual(getValue(grid, challenge), req.params.otp)) {
         user.passcode_grid.challenge = null;
         user.passcode_grid.validity_time = null;
         await apiDb.save_user(user);

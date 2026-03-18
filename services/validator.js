@@ -17,7 +17,7 @@ export async function check_hash(req, res) {
 export async function check_hash_internal(uid, hash) {
     const tenant = await getCurrentTenantPropertiesInternal(uid);
     const hashes = utils.get_hash(uid, tenant.users_secret);
-    return hashes.includes(hash);
+    return utils.timingSafeArrayIncludesString(hashes, hash);
 }
 
 export async function check_protected_access(req, res) {
@@ -28,14 +28,14 @@ export async function check_protected_access(req, res) {
 
 export async function check_protected_access_internal(tenant, api_password = null, headers) {
     const reqApiPwd = api_password || utils.get_auth_bearer(headers);
-    if (reqApiPwd != tenant.api_password) {
+    if (!utils.stringTimingSafeEqual(reqApiPwd, tenant.api_password)) {
         throw new errors.ForbiddenError(`Tenant '${tenant.name}' tried to use wrong api_password (${reqApiPwd})`);
     }
 }
 
 export async function check_admin_access(req, res) {
     const reqApiPwd = utils.get_auth_bearer(req.headers);
-    if (reqApiPwd != properties.getEsupProperty('api_password')) {
+    if (!utils.stringTimingSafeEqual(reqApiPwd, properties.getEsupProperty('api_password'))) {
         throw new errors.ForbiddenError();
     }
     req.admin_access_checked = true;

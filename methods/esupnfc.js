@@ -153,7 +153,7 @@ export function user_desync(user, req, res) {
  * @param res response HTTP
  */
 export async function verify_code(user, req) {
-    if (user.esupnfc.code == req.params.otp && Date.now() < user.esupnfc.validity_time) {
+    if (utils.stringTimingSafeEqual(user.esupnfc.code, req.params.otp) && Date.now() < user.esupnfc.validity_time) {
         user.esupnfc.code = null;
         user.esupnfc.validity_time = null;
         await apiDb.save_user(user);

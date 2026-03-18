@@ -147,13 +147,6 @@ export function get_auth_bearer(headers) {
     return (headers.authorization?.match(/^Bearer (.*)/) || [])[1]
 }
 
-/**
- * @returns if a and b are equals and truthy (i.e non null / empty / undefined)
- */
-export function equalsAndtruthy(a, b) {
-    return a && a == b;
-}
-
 export function hash(str, alg = "sha256", encoding = "base64url") {
     if (crypto.hash) { // since v20.12.0, v21.7.0 https://nodejs.org/api/crypto.html#cryptohashalgorithm-data-options
         return crypto.hash(alg, str, encoding);
@@ -194,4 +187,33 @@ export function sortArray(array, keyExtractor) {
  */
 export function distinct(array) {
     return [...new Set(array)];
+}
+
+/**
+ * Checks equality between strings in constant time.
+ * @param {String} a
+ * @param {String} b
+ * @returns {Boolean}  
+ */
+export function stringTimingSafeEqual(a, b) {
+    if (!a || !b) {
+        return false;
+    }
+    const aBuffer = Buffer.from(a, 'utf8');
+    const bBuffer = Buffer.from(b, 'utf8');
+
+    return a.length == b.length && crypto.timingSafeEqual(aBuffer, bBuffer);
+}
+
+/**
+ * Check if an array contains a string in constant time (in case of failure, but not necessarily in case of success)
+ * @param {String[]} array
+ * @param {String} string
+ * @returns {Boolean}  
+ */
+export function timingSafeArrayIncludesString(array, string) {
+    if (!array || !string) {
+        return false;
+    }
+    return array.some(e => stringTimingSafeEqual(e, string));
 }

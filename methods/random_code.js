@@ -45,7 +45,7 @@ function last_send_time(user) {
  * @param res response HTTP
  */
 export async function verify_code(user, req) {
-    if (user.random_code.code == req.params.otp && Date.now() < user.random_code.validity_time) {
+    if (utils.stringTimingSafeEqual(user.random_code.code, req.params.otp) && Date.now() < user.random_code.validity_time) {
         user.random_code.code = null;
         user.random_code.validity_time = null;
         await apiDb.save_user(user);
