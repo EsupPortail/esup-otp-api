@@ -1,5 +1,17 @@
 # Changelog
 
+## v2.2.2 (2026-03-19) ([release](https://github.com/EsupPortail/esup-otp-api/releases/tag/v2.2.2))
+- feat: enable deepLink (for push, totp, and esupnfc) [11a343a](https://github.com/EsupPortail/esup-otp-api/commit/11a343a)
+- feat: Notify users by email when their accounts get updated (require "npm install") [b3d44da](https://github.com/EsupPortail/esup-otp-api/commit/b3d44da) (default: disabled, see [CONFIGURATION.md](CONFIGURATION.md#notify-users-by-email-when-their-accounts-get-updated) for more details)
+- chore(deps): update dependencies (**requires "npm install"**)
+
+- login.js (changes only affecting esup-otp-cas >= 7.3, esup-otp-cas-server, and esup-otp-shibboleth):
+  - feat: Display method list rather than last used method when it is single-use backup codes #77 [fc60876](https://github.com/EsupPortail/esup-otp-api/commit/fc60876)
+  - feat: show the user the last method they validated on their device #77 [aa339b9](https://github.com/EsupPortail/esup-otp-api/commit/aa339b9)
+  - feat: differentiate between TOTP and single-use backup codes [581ebf0](https://github.com/EsupPortail/esup-otp-api/commit/581ebf0)
+
+- various improvements (Full Changelog: https://github.com/EsupPortail/esup-otp-api/compare/v2.2.1...v2.2.2 )
+
 ## v2.2.1 (2026-01-22) ([release](https://github.com/EsupPortail/esup-otp-api/releases/tag/v2.2.1))
 - chore: update dependencies (**requires "npm install"**)
 - various improvements (Full Changelog: https://github.com/EsupPortail/esup-otp-api/compare/v2.2.0...v2.2.1 )
