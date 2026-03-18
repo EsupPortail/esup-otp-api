@@ -34,6 +34,10 @@
   },
   "overrides": {
     "@scarf/scarf": "npm:dry-uninstall",
+    "firebase-admin": {
+        "@google-cloud/firestore": "npm:dry-uninstall",
+        "@google-cloud/storage": "npm:dry-uninstall"
+    },
     "restify": {
       "find-my-way": "8.x",
       "pino": "10.x",
