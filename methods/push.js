@@ -435,23 +435,6 @@ export function checkTokenSecret(methodName, user, req, res) {
     }
 }
 
-export async function check_accept_authentication(user, req, res) {
-    if (utils.stringTimingSafeEqual(user.push.lt, req.params.loginTicket)) {
-        user.push.lt = "";
-        await apiDb.save_user(user);
-        res.send({
-            "code": "Ok",
-            "otp": user.push.code
-        });
-    } else {
-        logger.error("CAS Login Ticket doesn't match : " + user.push.lt + " != " + req.params.loginTicket);
-        res.send({
-            "code": "Error",
-            "message": "CAS Login Ticket doesn't match"
-        });
-    }
-}
-
 async function clearUserPush(user, req, res) {
     user.push.active = false;
     user.push.gcm_id_not_registered = false;

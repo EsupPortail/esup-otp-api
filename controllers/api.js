@@ -306,12 +306,6 @@ export async function pending(req, res) {
     return method.pending(user, req, res);
 }
 
-export async function check_accept_authentication(req, res) {
-    errorIfNotPushMethod(req);
-    const { user, method } = await getUserAndMethodModule(req, { checkUserMethodActive: true, checkMethodPropertyActivate: true });
-    return method.check_accept_authentication(user, req, res);
-}
-
 /**
  * Vérifie si le code fourni correspond à celui stocké en base de données
  * si oui: on retourne un réponse positive et on supprime l'otp de la base de donnée

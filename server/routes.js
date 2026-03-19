@@ -120,9 +120,6 @@ async function initializeStatusRoute(server) {
 async function initializeCasOtpClientRoutes(server) {
     server.get("/users/:uid/:hash", validator.check_hash, api_controller.get_user_infos);
     server.post("/users/:uid/methods/:method/transports/:transport/:hash", validator.check_hash, api_controller.send_message);
-    // push
-    server.post("/users/:uid/methods/:method/transports/push/:lt/:hash", validator.check_hash, api_controller.send_message);
-    server.get("/users/:uid/methods/:method/:loginTicket/:hash", validator.check_hash, api_controller.check_accept_authentication);
     // WebAuthn
     server.post("/users/:uid/webauthn/login/:hash", validator.check_hash, api_controller.verify_webauthn_auth);
     server.post("/users/:uid/methods/webauthn/secret/:hash", validator.check_hash, api_controller.generate_webauthn_method_secret);
