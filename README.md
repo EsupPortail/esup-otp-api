@@ -25,6 +25,12 @@ sudo service mongod start
 
 esup-otp-api runs in http, if you want a secure mode you will need a reverse proxy.
 
+### Updating
+It is recommended that you commit your customizations locally ([esup.json](properties/esup.json) and any other changes specific to your installation).
+You can then run `git pull -r` to fetch the latest versions from the Git repository.
+Or `git rebase xxx` to rebase your changes onto a specific commit or version. (For example, `git rebase v2.2.3`).
+In any case, run `npm install`, and read the [CHANGELOG.md](CHANGELOG.md) to see if the update requires additional steps.
+
 ### Behind Apache
 - https 
 
