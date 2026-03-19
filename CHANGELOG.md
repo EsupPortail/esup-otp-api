@@ -1,5 +1,8 @@
 # Changelog
 
+## v2.2.3 (2026-03-19) ([release](https://github.com/EsupPortail/esup-otp-api/releases/tag/v2.2.3))
+- cleanup unused routes [7b85e57](https://github.com/EsupPortail/esup-otp-api/commit/7b85e57)
+
 ## v2.2.2 (2026-03-19) ([release](https://github.com/EsupPortail/esup-otp-api/releases/tag/v2.2.2))
 - feat: Notify users by email when their accounts get updated (require "npm install") [b3d44da](https://github.com/EsupPortail/esup-otp-api/commit/b3d44da) (default: disabled, see [CONFIGURATION.md](CONFIGURATION.md#notify-users-by-email-when-their-accounts-get-updated) for more details)
 - chore(deps): update dependencies (**requires "npm install"**)
