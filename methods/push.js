@@ -492,7 +492,7 @@ async function alert_deactivate(user, req) {
     try {
         await send(content);
     } catch (err) {
-        logger.error("Problem to send a notification for deactivate push: " + err);
+        logger.info(`Problem to send a notification to ${user.uid} for deactivate push: ${err}`);
     }
 }
 
