@@ -1,6 +1,7 @@
 import * as properties from '../properties/properties.js';
 import CryptoJS from 'crypto-js';
 import crypto from 'crypto';
+import cryptoRandomString from 'crypto-random-string';
 import { logger } from '../services/logger.js';
 import * as qrcode from 'qrcode';
 import proxyAddr from 'proxy-addr';
@@ -83,13 +84,11 @@ export function generate_code_of_type(code_length, code_type) {
 }
 
 export function generate_string_code(code_length) {
-    return crypto.randomBytes(code_length / 2).toString('hex');
+    return cryptoRandomString({ length: code_length, type: "alphanumeric" });
 }
 
 export function generate_digit_code(code_length) {
-    const max = Math.pow(10, code_length);
-    const intValue = crypto.randomInt(max);
-    return intValue.toString().padStart(code_length, '0');
+    return cryptoRandomString({ length: code_length, type: "numeric" });
 }
 
 export function generate_base64url_code(code_length) {
