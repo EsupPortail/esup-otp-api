@@ -10,7 +10,6 @@
   "type": "module",
   "dependencies": {
     "@simplewebauthn/server": "13.x",
-    "crypto-js": "4.x",
     "crypto-random-string": "5.x",
     "eta": "3.x",
     "firebase-admin": "13.x",

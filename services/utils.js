@@ -1,5 +1,4 @@
 import * as properties from '../properties/properties.js';
-import CryptoJS from 'crypto-js';
 import crypto from 'crypto';
 import cryptoRandomString from 'crypto-random-string';
 import { logger } from '../services/logger.js';
@@ -11,28 +10,31 @@ export function getIpAddr(req) {
     return proxyAddr(req, properties.getEsupProperty("trustedProxies"));
 }
 
+function raw_hash(algo, data) {
+    return crypto.createHash(algo)
+        .update(data)
+        .digest('hex');
+}
+
+function getHashWithSalt(hashedUserSecret, uid, salt) {
+    return raw_hash('SHA256', hashedUserSecret + uid + salt);
+}
+
 export function get_hash(uid, users_secret) {
-    const d = new Date();
-    const d2 = new Date();
+    const now = Date.now();
 
-    const present_salt=d.getUTCDate()+d.getUTCHours().toString();
-    //calcul de la date - 1h (3600000 millisecondes)
-    d2.setTime(d.getTime()-3600000);
-    const past_salt=d2.getUTCDate()+d2.getUTCHours().toString();
+    const salts = [-1, 0, +1]
+        .map(h => {
+            const d = new Date(now);
+            d.setUTCHours(d.getUTCHours() + h);
+            return `${d.getUTCDate()}${d.getUTCHours()}`;
+        })
 
-    //calcul de la date + 1h
-    d2.setTime(d.getTime()+3600000);
-    const next_salt=d2.getUTCDate()+d2.getUTCHours().toString();
+    const hashedUserSecret = raw_hash('MD5', users_secret);
+    const hashes = salts
+        .map(salt => getHashWithSalt(hashedUserSecret, uid, salt));
 
-    logger.debug("past_salt,present_salt,next_salt :"+past_salt+","+present_salt+","+next_salt);
-
-    const present_hash = CryptoJS.SHA256(CryptoJS.MD5(users_secret).toString()+uid+present_salt).toString();
-    const next_hash = CryptoJS.SHA256(CryptoJS.MD5(users_secret).toString()+uid+next_salt).toString();
-    const past_hash = CryptoJS.SHA256(CryptoJS.MD5(users_secret).toString()+uid+past_salt).toString();
-
-    const hashes = [past_hash, present_hash, next_hash];
-
-    logger.debug("hashes for "+uid+": "+hashes);
+    logger.debug("hashes for " + uid + ": " + hashes);
 
     return hashes;
 }
