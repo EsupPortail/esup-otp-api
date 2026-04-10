@@ -117,3 +117,9 @@ Audit logs are configured with the following key:
 ```
 
 If `logs.audit` key is not defined, no audit message will be logged.
+
+## trustedProxies
+Like [Express](https://expressjs.com/en/guide/behind-proxies.html), we use [proxy-addr](https://www.npmjs.com/package/proxy-addr) to determine the source IP address of requests.<br/>
+It reads the `x-forwarded-for` header, excluding the IPs configured in `trustedProxies`.<br />
+In [properties/esup.json](properties/esup.json), configure the IPs of your reverse proxies.<br/>
+For more information: [Express behind proxies](https://expressjs.com/en/guide/behind-proxies.html) and [proxyaddr](https://github.com/jshttp/proxy-addr#proxyaddrreq-trust)<br/>

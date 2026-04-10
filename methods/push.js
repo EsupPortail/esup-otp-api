@@ -147,8 +147,7 @@ export async function send_message(user, req, res) {
 }
 
 function getText(req) {
-    const ip = req.header('x-real-ip') || req.connection.remoteAddress;
-    logger.debug("x-real-ip :" + req.header('x-real-ip'));
+    const ip = utils.getIpAddr(req);
     logger.debug("Client ip is :" + ip);
     const geo = lookup?.(ip);
     logger.debug("Client geoip is :" + JSON.stringify(geo));
