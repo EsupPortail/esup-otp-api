@@ -1,5 +1,29 @@
 # Changelog
 
+## v2.3.0 (2026-04-15) ([release](https://github.com/EsupPortail/esup-otp-api/releases/tag/v2.3.0))
+### Breaking changes
+- Use `x-forwarded-for` header (instead of `x-real-ip` previously) to determine the IP address (and thus the city to display) in push notifications [2d06e5d](https://github.com/EsupPortail/esup-otp-api/commit/2d06e5dc2035c57ef7f7d779899ca4d67b11fc3f)<br />
+If you haven't already, **be sure to configure [`trustedProxies`](properties/esup.json#L195)** (see [CONFIGURATION.md](CONFIGURATION.md#trustedproxies))
+- Some refactor<br />
+**Requires running `npm install`**
+
+### Added
+- Enable DeepLink [5e79cfb](https://github.com/EsupPortail/esup-otp-api/commit/5e79cfbe8c495732f79f96e7c66dc9114290172c), [343c6e8](https://github.com/EsupPortail/esup-otp-api/commit/343c6e891da8ff91e774190120e0a1730aa96fec)<br />
+This feature requires esup-otp-manager >= v2.0.1 (esup-otp-api remains compatible with previous versions of esup-otp-manager; deep links will just not be displayed).
+
+### [login.js](public/login.js) (Does not affect esup-otp-cas for Apereo CAS <= 7.2)
+#### Fixed
+- Prevent double form submit on Chromium based browsers [9774ffd](https://github.com/EsupPortail/esup-otp-api/commit/9774ffd3508f7217a8e4d973ab9f35f2038cf405)
+
+#### Added
+- If no method is enabled, use `window.open` to open esup-otp-manager [0e70047](https://github.com/EsupPortail/esup-otp-api/commit/0e700472a42d90460c159ed87f02f1f0bc3a3fd4)<br />
+Once the user has enabled a method, esup-otp-manager will display a button to return to the MFA login page ([esup-otp-manager@5177975](https://github.com/EsupPortail/esup-otp-manager/commit/5177975fb8e8214ec8b516651b83a85068dcc7da))
+- Suggest activating a stronger method [d3edf01](https://github.com/EsupPortail/esup-otp-api/commit/d3edf01c80f8895cb0ae1b909d9c5f4602967dde)<br />
+If the user has activated only "weak" methods, display a message encouraging them to activate a "stronger" method.<br />
+By default, this applies only to users who have only single-use backup codes.<br />
+To apply this to other methods: edit `methodsRequiringExplicitChoice` in [login.js](public/login.js#L741)<br />
+To customize the displayed message: edit `activateMoreMethods_html` ([In French](public/login.js#L65) and [in English](public/login.js#L115))
+
 ## v2.2.3 (2026-03-19) ([release](https://github.com/EsupPortail/esup-otp-api/releases/tag/v2.2.3))
 - cleanup unused routes [7b85e57](https://github.com/EsupPortail/esup-otp-api/commit/7b85e57)
 
