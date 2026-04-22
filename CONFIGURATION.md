@@ -64,8 +64,7 @@ Then edit file [services/userChangesNotifier/getEmailAddressFromUser.js](service
 
 ### Customize these emails
 The "mainContent" is generated in [services/userChangesNotifier/emailMainContent.js](services/userChangesNotifier/emailMainContent.js).
-If `mailer.use_templates` is set to `true` in esup.json, then this mainContent will be injected into [transports/email_templates/userChangesNotifier/html.eta](transports/email_templates/userChangesNotifier/html.eta). In this file, you can customize the rest of the email (add logos, links, ...).
-(Otherwise, if `mailer.use_templates` is falsy, the email sent will only contain the mainContent)
+This mainContent will be injected into [services/userChangesNotifier/email_templates/userChangesNotifier](services/userChangesNotifier/email_templates/userChangesNotifier). In these files, you can customize the rest of the email (add logos, links, ...).
 
 ## Logging
 
