@@ -48,10 +48,10 @@ const msgs = {
                                 <li>Puis sélectionner <span class="inline-block">"Scanner QR code".</span></li>
                                 <li>
                                     Scanner le QR code ci-dessous :
-                                    <img class="esupnfc_qrcode" src="%QRCODE_SRC%" />
+                                    <img class="esupnfc_qrcode" alt="QR Code" title="à scanner via l’application Esup-Auth" aria-describedby="manual_input_instructions" src="%QRCODE_SRC%" role="img" />
                                 </li>
                             </ol>
-                            En cas de difficultés pour scanner le QR code, sélectionner "Saisie manuelle", et renseigner l’adresse <span class="inline-block">%API_URL%</span>
+                            <div id="manual_input_instructions">En cas de difficultés pour scanner le QR code, sélectionner "Saisie manuelle", et renseigner l’adresse <span class="inline-block">%API_URL%</span></div>
                         </li>
                     `
                 }
@@ -98,10 +98,10 @@ const msgs = {
                                 <li>Then select <span class="inline-block">"Scanner QR code".</span></li>
                                 <li>
                                     Scan the QR code below:
-                                    <img class="esupnfc_qrcode" src="%QRCODE_SRC%" />
+                                    <img class="esupnfc_qrcode" alt="QR code" title="to scan using Esup-Auth app" aria-describedby="manual_input_instructions" src="%QRCODE_SRC%" role="img" />
                                 </li>
                             </ol>
-                            If you have trouble scanning the QR code, select "Saisie manuelle" and enter the address <span class="inline-block">%API_URL%</span>
+                            <div id="manual_input_instructions">If you have trouble scanning the QR code, select <span lang="fr">Saisie manuelle"</span> and enter the address <span class="inline-block">%API_URL%</span></div>
                         </li>
                     `
                 } 
@@ -213,7 +213,7 @@ function add_html_template() {
                 <li id="back_to_choices"><a>${_("Other connection method")}</a></li>
             </ul>
           </div>
-          <img id="page_icon"></div>
+          <img alt="" id="page_icon"></div>
        </div>
     `)
 }
@@ -729,7 +729,7 @@ function add_html_template() {
                 return false;
             });
             button.append($("<span></span>").text(choice.text));
-            button.append($("<img>", { src: params.apiUrl + "public/images/liste-" + (choice.opts.override_icon || choice.transport || choice.method) + ".svg" } ));
+            button.append($("<img>", { src: params.apiUrl + "public/images/liste-" + (choice.opts.override_icon || choice.transport || choice.method) + ".svg", alt: "" } ));
             return $("<li></li>").append(button);
         }));
         $("#methodChoices li a").first().focus();
