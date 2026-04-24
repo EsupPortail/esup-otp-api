@@ -40,3 +40,10 @@ export async function getServerInfos(req, res) {
     }
     return esupnfc.getServerInfos(req, res);
 }
+
+export async function getSVG(req, res) {
+    if (!properties.getMethodProperty('esupnfc', 'activate')) {
+        throw new errors.MethodNotFoundError();
+    }
+    return esupnfc.getSVG(req, res);
+}

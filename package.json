@@ -12,6 +12,7 @@
     "@simplewebauthn/server": "13.x",
     "crypto-random-string": "5.x",
     "eta": "3.x",
+    "etag": "1.x",
     "firebase-admin": "13.x",
     "https-proxy-agent": "7.x",
     "ip-location-api": "4.x",
@@ -35,8 +36,8 @@
   "overrides": {
     "@scarf/scarf": "npm:dry-uninstall",
     "firebase-admin": {
-        "@google-cloud/firestore": "npm:dry-uninstall",
-        "@google-cloud/storage": "npm:dry-uninstall"
+      "@google-cloud/firestore": "npm:dry-uninstall",
+      "@google-cloud/storage": "npm:dry-uninstall"
     },
     "restify": {
       "find-my-way": "8.x",
@@ -52,6 +53,7 @@
   },
   "devDependencies": {
     "@eslint/js": "10.x",
+    "@types/etag": "1.x",
     "@types/nodemailer": "7.x",
     "@types/qrcode": "1.x",
     "@types/restify": "8.x",

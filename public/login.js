@@ -48,7 +48,7 @@ const msgs = {
                                 <li>Puis sélectionner <span class="inline-block">"Scanner QR code".</span></li>
                                 <li>
                                     Scanner le QR code ci-dessous :
-                                    <div class="esupnfc_qrcode">%QRCODE%</div>
+                                    <img class="esupnfc_qrcode" src="%QRCODE_SRC%" />
                                 </li>
                             </ol>
                             En cas de difficultés pour scanner le QR code, sélectionner "Saisie manuelle", et renseigner l'adresse <span class="inline-block">%API_URL%</span>
@@ -98,7 +98,7 @@ const msgs = {
                                 <li>Then select <span class="inline-block">"Scanner QR code".</span></li>
                                 <li>
                                     Scan the QR code below:
-                                    <div class="esupnfc_qrcode">%QRCODE%</div>
+                                    <img class="esupnfc_qrcode" src="%QRCODE_SRC%" />
                                 </li>
                             </ol>
                             If you have trouble scanning the QR code, select "Saisie manuelle" and enter the address <span class="inline-block">%API_URL%</span>
@@ -619,7 +619,7 @@ function add_html_template() {
             override_icon: 'carte',
             hide_submitCode: true,
             code_label: async (params, _chosen) => {
-                const esupnfc_secret = await (fetch(`${params.apiUrl}esupnfc/infos?requireQrCode=true`, { method: "GET" })
+                const esupnfc_secret = await (fetch(`${params.apiUrl}esupnfc/infos?requireDeepLink=true`, { method: "GET" })
                     .then(res => res.json())
                 );
                 if (esupnfc_secret.code !== 'Ok') {
@@ -628,7 +628,7 @@ function add_html_template() {
                 return _('nfc_html', { 
                     '%ANDROID_APP_URL%': 'https://play.google.com/store/apps/details?id=org.esupportail.esupAuth',
                     '%IOS_APP_URL%': 'https://apps.apple.com/fr/app/esup-auth/id1563904941',
-                    '%QRCODE%': esupnfc_secret.server_infos.qrCode,
+                    '%QRCODE_SRC%': `${params.apiUrl}esupnfc/infos.svg`,
                     '%DEEPLINK%': esupnfc_secret.server_infos.deepLink,
                     '%ETABLISSEMENT%': esupnfc_secret.server_infos.etablissement,
                     '%API_URL%': params.apiUrl,

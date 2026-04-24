@@ -132,8 +132,9 @@ h2 {
 }
     
 .esupnfc_qrcode {
-	max-width: 10em;
-	height: auto;
+    max-width: 10em;
+    height: auto;
+    display: block;
 }
 
 .factor {

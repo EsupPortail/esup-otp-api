@@ -4,6 +4,7 @@ import * as fileUtils from '../services/fileUtils.js';
 import * as errors from '../services/errors.js';
 import { apiDb } from '../controllers/api.js';
 import * as qrcode from 'qrcode';
+import etag from "etag";
 
 import { logger, auditLogger } from '../services/logger.js';
 import * as sockets from '../server/sockets.js';
@@ -49,13 +50,26 @@ export function send_message(user, req, res) {
 
 const serverInfos = properties.getMethod('esupnfc').server_infos;
 let serverInfosWithQrCode;
+let serverInfosWithDeepLink;
+let qrCode;
+let qrCodeHeaders;
 
 if (serverInfos) {
-    serverInfosWithQrCode = {
+    qrCode = await qrcode.toString(JSON.stringify(serverInfos), { type: "svg" });
+    const deepLink = utils.getDeepLink("esupnfc", serverInfos);
+    serverInfosWithDeepLink = {
         ...serverInfos,
-        qrCode: await qrcode.toString(JSON.stringify(serverInfos), { type: "svg" }),
-        deepLink: utils.getDeepLink("esupnfc", serverInfos),
-    }
+        deepLink: deepLink,
+    };
+    serverInfosWithQrCode = {
+        ...serverInfosWithDeepLink,
+        qrCode: qrCode,
+    };
+    qrCodeHeaders = {
+        "content-type": "image/svg+xml",
+        "ETag": etag(qrCode),
+        "Last-Modified": new Date().toUTCString(),
+    };
 }
 
 export async function getServerInfos(req, res) {
@@ -69,11 +83,30 @@ export async function getServerInfos(req, res) {
             "code": "Ok",
             server_infos: serverInfosWithQrCode,
         });
+    } else if (req.query.requireDeepLink) {
+        res.send({
+            "code": "Ok",
+            server_infos: serverInfosWithDeepLink,
+        });
     } else {
         res.send({
             "code": "Ok",
             server_infos: serverInfos,
         });
+    }
+}
+
+export async function getSVG(req, res) {
+    if (!serverInfos) {
+        res.send({
+            "code": "Ko"
+        })
+    }
+    else {
+        res.sendRaw(
+            qrCode,
+            qrCodeHeaders
+        );
     }
 }
 

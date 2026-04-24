@@ -152,6 +152,7 @@ async function initializeNfcRoutes(server) {
     server.post("/esupnfc/display", validator.esupnfc_check_server_ip, esupnfc_controller.esupnfc_send_message);
     // unprotected route for esup-otp-cas, and esup-auth
     server.get("/esupnfc/infos", esupnfc_controller.getServerInfos);
+    server.get("/esupnfc/infos.svg", esupnfc_controller.getSVG);
 }
 
 /**
