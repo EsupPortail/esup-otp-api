@@ -1,25 +1,25 @@
 const msgs = {
     fr: {
         "or": "ou",
-        "You have no registered factors": "Vous n'avez aucun facteur enregistré",
+        "You have no registered factors": "Vous n’avez aucun facteur enregistré",
         "You refused the request": "Vous avez refusé la demande.",
         "Error": "Erreur",
-        "Authenticate by physical factor (WebAuthn)": "S'authentifier par facteur physique (WebAuthn)",
-        "Open the Esup Auth application on your mobile %TRANSPORT% to validate the authentication.": "Ouvrez l'application Esup Auth sur votre portable %TRANSPORT% pour valider l'authentification.",
+        "Authenticate by physical factor (WebAuthn)": "S’authentifier par facteur physique (WebAuthn)",
+        "Open the Esup Auth application on your mobile %TRANSPORT% to validate the authentication.": "Ouvrez l’application Esup Auth sur votre portable %TRANSPORT% pour valider l’authentification.",
         "Please enter a code:": "Merci de renseigner un code :",
         "Try another method": "Essayez une autre méthode",
         "Error, please try again later": "Erreur, veuillez réessayer ultérieurement",
         "The physical factor you named '%NAME%'": "Le facteur physique que vous avez nommé '%NAME%'",
-        "You have not given this factor a name. Go to your settings to give it a name.": "Vous n'avez pas donné de nom à ce facteur. Allez dans vos paramètres pour donner un nom.",
+        "You have not given this factor a name. Go to your settings to give it a name.": "Vous n’avez pas donné de nom à ce facteur. Allez dans vos paramètres pour donner un nom.",
         "unnamed key": "clé sans nom",
         "A code has been sent to %TRANSPORT%,<br>enter it here to log in.": "Un code a été envoyé au %TRANSPORT%,<br>saisissez le ici pour vous connecter.",
         "A code has been sent to your email %TRANSPORT%,<br>enter it here to log in.": "Un code a été envoyé sur votre mél %TRANSPORT%,<br>saisissez le ici pour vous connecter.",
-        "Authenticate with your multi-service card on an NFC-compatible smartphone": "S'authentifier avec votre carte multi-service sur un Smartphone compatible NFC",
+        "Authenticate with your multi-service card on an NFC-compatible smartphone": "S’authentifier avec votre carte multi-service sur un Smartphone compatible NFC",
         "Enter the code shown on your code grid": "Saisir le code indiqué sur votre grille de code",
         "Receive a code by mail on %TRANSPORT%": "Recevoir un code par mél sur %TRANSPORT%",
         "Receive a code by SMS on %TRANSPORT%": "Recevoir un code par SMS sur %TRANSPORT%",
-        "Authentication failed": "L'authentification a échoué",
-        "Authenticate via the Esup Auth application on your %TRANSPORT%": "S'authentifier via l'application Esup Auth sur votre %TRANSPORT%",
+        "Authentication failed": "L’authentification a échoué",
+        "Authenticate via the Esup Auth application on your %TRANSPORT%": "S’authentifier via l’application Esup Auth sur votre %TRANSPORT%",
         "Enter the 6-digit code": "Saisissez le code de 6 chiffres",
         "Enter the code shown in the cell at the intersection of <strong>row %LINE%</strong> and <strong>column %COLUMN%</strong> 5 of your passcode grid.": "Veuillez saisir le code indiqué au croisement de la <strong>ligne %LINE%</strong> et de la <strong>colonne %COLUMN%</strong> de votre grille de codes.",
         "Enter a TOTP code": "Saisir un code TOTP",
@@ -36,27 +36,27 @@ const msgs = {
 
         "nfc_html": /*html*/`
             <ol>
-                <li>Télécharger la dernière version de l'application Esup-Auth (pour <a href="%ANDROID_APP_URL%">Android</a> ou <a href="%IOS_APP_URL%">IOS</a>) <b>si ce n'est pas déjà fait</b>.</li>
+                <li>Télécharger la dernière version de l’application Esup-Auth (pour <a href="%ANDROID_APP_URL%">Android</a> ou <a href="%IOS_APP_URL%">IOS</a>) <b>si ce n’est pas déjà fait</b>.</li>
                 ${/iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ?
                     `<li><a href="%DEEPLINK%">Cliquer ici</a>.</li>`:
                     `
-                        <li>Lancer l'application Esup-Auth.</li>
+                        <li>Lancer l’application Esup-Auth.</li>
                         <li>
-                            Configurer l'authentification NFC sur l'application <b>si ce n'est pas déjà fait</b>.
+                            Configurer l’authentification NFC sur l’application <b>si ce n’est pas déjà fait</b>.
                             <ol style="list-style-type: circle;">
-                                <li>Pour cela, sur l'application, cliquer sur le symbole "+" en bas à droite de l'écran.</li>
+                                <li>Pour cela, sur l’application, cliquer sur le symbole "+" en bas à droite de l’écran.</li>
                                 <li>Puis sélectionner <span class="inline-block">"Scanner QR code".</span></li>
                                 <li>
                                     Scanner le QR code ci-dessous :
                                     <img class="esupnfc_qrcode" src="%QRCODE_SRC%" />
                                 </li>
                             </ol>
-                            En cas de difficultés pour scanner le QR code, sélectionner "Saisie manuelle", et renseigner l'adresse <span class="inline-block">%API_URL%</span>
+                            En cas de difficultés pour scanner le QR code, sélectionner "Saisie manuelle", et renseigner l’adresse <span class="inline-block">%API_URL%</span>
                         </li>
                     `
                 }
-                <li>Sur l'application, cliquer sur <span class="inline-block">"%ETABLISSEMENT%".</span></li>
-                <li>Suivre les instructions à l'écran.</li>
+                <li>Sur l’application, cliquer sur <span class="inline-block">"%ETABLISSEMENT%".</span></li>
+                <li>Suivre les instructions à l’écran.</li>
             </ol>
         `,
         "no_choices_html": /*html*/`
@@ -73,11 +73,11 @@ const msgs = {
         "webauthn_on_webview": /*html*/`
             <p>
                 <p>
-                    Le facteur physique Webauthn n'est pas supporté par cette application.<br />
+                    Le facteur physique Webauthn n’est pas supporté par cette application.<br />
                     Veuillez utiliser une autre méthode de connexion.
                 </p>
                 <p>
-                    Si besoin, vous pouvez accéder à %OTP_MANAGER_URL% depuis votre navigateur pour activer d'autres méthodes.<br />
+                    Si besoin, vous pouvez accéder à %OTP_MANAGER_URL% depuis votre navigateur pour activer d’autres méthodes.<br />
                     Puis, réessayez de vous connecter à cette application en utilisant une de ces méthodes.
                 </p>
             </p>
