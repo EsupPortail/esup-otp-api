@@ -21,7 +21,7 @@ const msgs = {
         "Authentication failed": "L’authentification a échoué",
         "Authenticate via the Esup Auth application on your %TRANSPORT%": "S’authentifier via l’application Esup Auth sur votre %TRANSPORT%",
         "Enter the 6-digit code": "Saisissez le code de 6 chiffres",
-        "Enter the code shown in the cell at the intersection of <strong>row %LINE%</strong> and <strong>column %COLUMN%</strong> 5 of your passcode grid.": "Veuillez saisir le code indiqué au croisement de la <strong>ligne %LINE%</strong> et de la <strong>colonne %COLUMN%</strong> de votre grille de codes.",
+        "Enter the code shown in the cell at the intersection of <strong>row %LINE%</strong> and <strong>column %COLUMN%</strong> of your passcode grid.": "Veuillez saisir le code indiqué au croisement de la <strong>ligne %LINE%</strong> et de la <strong>colonne %COLUMN%</strong> de votre grille de codes.",
         "Enter a TOTP code": "Saisir un code TOTP",
         "Enter a single-use backup code": "Saisir un code de secours à usage unique",
         "Other connection method": "Autre méthode de connexion",
@@ -790,7 +790,7 @@ function add_html_template() {
                 let code_label = chosen.opts.code_label_afterSubmit || _("A code has been sent to %TRANSPORT%,<br>enter it here to log in.");
                 if(chosen.method == "passcode_grid") {
                     const challenge = data.message.challenge;
-                    code_label = _("Enter the code shown in the cell at the intersection of <strong>row %LINE%</strong> and <strong>column %COLUMN%</strong> 5 of your passcode grid.",
+                    code_label = _("Enter the code shown in the cell at the intersection of <strong>row %LINE%</strong> and <strong>column %COLUMN%</strong> of your passcode grid.",
                                    { '%LINE%': String.fromCharCode(challenge[0] + 'A'.charCodeAt(0)), '%COLUMN%': challenge[1] + 1 })
                 }
                 updateCode_label(code_label.replace('%TRANSPORT%', chosen.transport_text));
