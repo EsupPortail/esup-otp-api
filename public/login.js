@@ -740,7 +740,7 @@ function add_html_template() {
 
         const methodsRequiringExplicitChoice = ["bypass" /*, "random_code"*/ /*, "esupnfc"*/];
 
-        const isOtpManager = new URL(service).hostname == new URL(params.otpManagerUrl).hostname;
+        const isOtpManager = service && (new URL(service).hostname == new URL(params.otpManagerUrl).hostname);
         $("#activateMoreMethods").toggleClass('d-none', isOtpManager || choices.some(choice => !methodsRequiringExplicitChoice.includes(choice.method)));
 
         /** @type {{method: ?String, time: ?number, auto: ?Boolean, verified: ?Boolean}} */
