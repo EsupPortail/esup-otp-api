@@ -15,7 +15,7 @@
     "etag": "1.x",
     "firebase-admin": "13.x",
     "https-proxy-agent": "7.x",
-    "ip-location-api": "4.x",
+    "ip-location-api": "5.x",
     "ldapts": "8.x",
     "mongoose": "8.x",
     "morgan": "1.x",
