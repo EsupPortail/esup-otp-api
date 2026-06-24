@@ -163,6 +163,7 @@ async function initializeProtectedRoutes(server) {
     logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ' Initializing protected routes');
     server.get("/protected/methods", validator.check_protected_access, api_controller.get_methods);
     server.get("/protected/users", validator.check_protected_access, userDb_controller.search_users);
+    server.del("/protected/users/:uid", validator.check_protected_access, api_controller.delete_user);
     server.get("/protected/users/:uid", validator.check_protected_access, api_controller.get_user_infos);
     server.get("/protected/users/:uid/exists", validator.check_protected_access, userDb_controller.user_exists);
     server.get("/protected/users/:uid/transports/:transport/test", validator.check_protected_access, api_controller.transport_test);

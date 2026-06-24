@@ -81,8 +81,7 @@ export async function getUsers(/** @type {api_passwordAuthentication} */ auth) {
 
 export async function clearUsers(/** @type {api_passwordAuthentication} */ auth) {
     for (const uid of await getUsers(auth)) {
-        await api_controller.remove_user(uid);
-        await userDb_controller.remove_user(uid);
+        await delete_user(uid, true, auth);
     }
 }
 
@@ -261,6 +260,10 @@ export function deactivate(uid, method, /** @type {api_passwordAuthentication} *
 
 export function verify_code(uid, code, /** @type {api_passwordAuthentication} */ auth) {
     return request(post, `/protected/users/${uid}/${code}`, auth)
+}
+
+export function delete_user(uid, deleteUserDb, /** @type {Authentication} */ auth) {
+    return request(del, `/protected/users/${uid}?deleteUserDb=${deleteUserDb || ""}`, auth);
 }
 
 export function get_user_infos(uid, /** @type {Authentication} */ auth) {

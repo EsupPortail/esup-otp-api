@@ -384,6 +384,49 @@ await test('Esup otp api', async (t) => {
             t.assert.equal(testUtils.getSentSms().length, 0);
         });
     });
+    
+    await t.test('test delete_user', async (t) => {
+        const method = 'random_code';
+        const transport = "sms";
+        const phoneNumber = '0606060606';
+
+        await testUtils.setTransport(uid, { transport: transport, new_transport: phoneNumber }, { password: config.api_password })
+            .expect(200);
+
+        await testUtils.get_user_infos(uid, { password: config.api_password })
+            .expect(200)
+            .then(res => {
+                t.assert.equal(res.body.user.transports.sms, utils.cover_sms(phoneNumber));
+                t.assert.ok(!res.body.user.methods[method].active);
+            });
+
+        await testUtils.standardActivate(uid, method, { password: config.api_password })
+            .expect(200);
+        await testUtils.get_user_infos(uid, { password: config.api_password })
+            .expect(200)
+            .then(res => {
+                t.assert.equal(res.body.user.transports.sms, utils.cover_sms(phoneNumber));
+                t.assert.ok(res.body.user.methods[method].active);
+            });
+
+        await testUtils.delete_user(uid, false, { password: config.api_password });
+        await testUtils.get_user_infos(uid, { password: config.api_password })
+            .expect(200)
+            .then(res => {
+                t.assert.equal(res.body.user.transports.sms, utils.cover_sms(phoneNumber));
+                t.assert.ok(!res.body.user.methods[method].active);
+            });
+        t.assert.ok(testUtils.user_exists(uid, { password: config.api_password }));
+
+        await testUtils.delete_user(uid, true, { password: config.api_password });
+        t.assert.ok(! await testUtils.user_exists(uid, { password: config.api_password }));
+        await testUtils.get_user_infos(uid, { password: config.api_password })
+            .expect(200)
+            .then(res => {
+                t.assert.ok(!res.body.user.transports.sms);
+                t.assert.ok(!res.body.user.methods[method].active);
+            });
+    });
 
     await t.test('test search_users', async (t) => {
         const users = [

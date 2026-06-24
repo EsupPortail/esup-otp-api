@@ -1,3 +1,4 @@
+import * as userDb_controller from './user.js';
 import * as utils from '../services/utils.js';
 import * as fileUtils from '../services/fileUtils.js';
 import * as properties from '../properties/properties.js';
@@ -233,6 +234,22 @@ function transport(opts, req, res, user) {
     } else {
         throw new errors.UnvailableMethodTransportError();
     }
+}
+
+export async function delete_user(req, res) {
+    const uid = req.params.uid;
+    await remove_user(uid);
+
+    const deleteUserDb = req.query.deleteUserDb;
+    if (deleteUserDb) {
+        await userDb_controller.remove_user(uid);
+    }
+
+    res.status(200);
+    res.send({
+        code: "Ok",
+        deleteUserDb: Boolean(deleteUserDb),
+    });
 }
 
 /**
