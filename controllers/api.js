@@ -240,7 +240,7 @@ export async function delete_user(req, res) {
     const uid = req.params.uid;
     await remove_user(uid);
 
-    const deleteUserDb = req.query.deleteUserDb;
+    const deleteUserDb = req.query.deleteUserDb === "true";
     if (deleteUserDb) {
         await userDb_controller.remove_user(uid);
     }
@@ -248,7 +248,7 @@ export async function delete_user(req, res) {
     res.status(200);
     res.send({
         code: "Ok",
-        deleteUserDb: Boolean(deleteUserDb),
+        deleteUserDb: deleteUserDb,
     });
 }
 
