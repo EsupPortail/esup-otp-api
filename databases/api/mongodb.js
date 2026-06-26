@@ -202,9 +202,11 @@ async function update_active_methods(user) {
 
     user.hasEnabledMethod = properties.listActivatedMethods().some(method => user[method]?.active);
 
-    user.esupnfc.active = Boolean(user.esupnfc.internally_activated || (properties.getMethod("esupnfc")?.autoActivate && user.hasEnabledMethod));
+    user.esupnfc.active = Boolean(user.esupnfc.internally_activated || (properties.getMethodProperty('esupnfc', 'autoActivate') && user.hasEnabledMethod) || properties.getMethodProperty('esupnfc', 'autoActivateForAllUsers'));
 
-    if (properties.getMethod("esupnfc")?.saveAutoActivation) {
+    user.hasEnabledMethod = properties.listActivatedMethods().some(method => user[method]?.active);
+
+    if (properties.getMethodProperty('esupnfc', 'activate') && properties.getMethodProperty('esupnfc', 'autoActivate') && properties.getMethodProperty('esupnfc', 'saveAutoActivation')) {
         user.esupnfc.internally_activated = user.esupnfc.active;
     }
 }

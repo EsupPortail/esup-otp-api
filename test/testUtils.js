@@ -274,6 +274,16 @@ export function get_user_infos(uid, /** @type {Authentication} */ auth) {
     }
 }
 
+export function isMethodActive(uid, method, /** @type {Authentication} */ auth) {
+    return get_user_infos(uid, auth)
+        .expect(200)
+        .then(res => res.body.user.methods[method]?.active);
+}
+
+export async function assertMethodActive(uid, method, expected, /** @type {Authentication} */ auth) {
+    assert.equal(await isMethodActive(uid, method, auth), expected);
+}
+
 export async function user_exists(uid, /** @type {api_passwordAuthentication} */ auth) {
     const res = await request(get, "/protected/users/" + uid + "/exists", auth)
         .expect(200);

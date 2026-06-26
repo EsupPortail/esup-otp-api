@@ -139,10 +139,12 @@
             },
             "#how_to_autoActivateWithPush": "requires server_infos (ignored otherwise)",
             "autoActivateWithPush": true,
-            "#how_to_autoActivate": "esupnfc will automatically be marked as enabled if the user has enabled any other method.",
+            "#how_to_autoActivate": "esupnfc will automatically be enabled IF the user has enabled any other method. This allows users to use their NFC card as a backup method (Without the user having to explicitly enable the method)",
             "autoActivate": false,
             "#how_to_saveAutoActivation": "If the user disables all other methods, esupnfc auto-activated stay active. (Only applies to 'autoActivate'. With 'autoActivateWithPush', it is persistent in all cases.)",
             "saveAutoActivation": false,
+            "#how_to_autoActivateForAllUsers": "esupnfc will automatically enabled for all users. NFC can thus be used for initial enrollment, or later as a backup method. (Without the user having to explicitly enable the method)",
+            "autoActivateForAllUsers": false,
             "validity_time": 3,
             "transports": []
         },

@@ -129,7 +129,10 @@ export async function user_activate(user, req, res) {
 
 export async function autoActivateEsupnfcReady(user, res, data) {
     if (serverInfos && properties.getMethodProperty('esupnfc', 'activate')
-        && (properties.getMethodProperty('esupnfc', 'autoActivateWithPush') || properties.getMethodProperty('esupnfc', 'autoActivate'))
+        && (properties.getMethodProperty('esupnfc', 'autoActivateWithPush')
+            || properties.getMethodProperty('esupnfc', 'autoActivate')
+            || properties.getMethodProperty('esupnfc', 'autoActivateForAllUsers')
+        )
     ) {
         data.autoActivateEsupnfc = true;
         data.esupnfc_server_infos = serverInfos;
@@ -152,7 +155,7 @@ export async function autoActivateWithPush(user, req, res) {
                 }
             ]
         });
-    } else if (properties.getMethodProperty('esupnfc', 'autoActivate')) {
+    } else if (properties.getMethodProperty('esupnfc', 'autoActivate') || properties.getMethodProperty('esupnfc', 'autoActivateForAllUsers')) {
         res.send({
             "code": "Ok",
         });

@@ -122,6 +122,19 @@ const config = {
         "esupnfc": {
             "activate": true,
             "priority": 5,
+            "server_infos": {
+                "numeroId": "numeroId",
+                "url": "https://esupnfctag.example.com/",
+                "etablissement": "Univ"
+            },
+            "#how_to_autoActivateWithPush": "requires server_infos (ignored otherwise)",
+            "autoActivateWithPush": true,
+            "#how_to_autoActivate": "esupnfc will automatically be enabled IF the user has enabled any other method. This allows users to use their NFC card as a backup method (Without the user having to explicitly enable the method)",
+            "autoActivate": false,
+            "#how_to_saveAutoActivation": "If the user disables all other methods, esupnfc auto-activated stay active. (Only applies to 'autoActivate'. With 'autoActivateWithPush', it is persistent in all cases.)",
+            "saveAutoActivation": false,
+            "#how_to_autoActivateForAllUsers": "esupnfc will automatically enabled for all users. NFC can thus be used for initial enrollment, or later as a backup method. (Without the user having to explicitly enable the method)",
+            "autoActivateForAllUsers": false,
             "validity_time": 3,
             "transports": []
         },
@@ -169,6 +182,8 @@ const config = {
 };
 
 await testUtils.start(config);
+
+const auth = { password: config.api_password };
 
 const api_controller = await import('../controllers/api.js');
 const userDb_controller = await import('../controllers/user.js');
@@ -384,7 +399,40 @@ await test('Esup otp api', async (t) => {
             t.assert.equal(testUtils.getSentSms().length, 0);
         });
     });
-    
+
+    await t.test('test esupnfc.autoActivate', async (t) => {
+        const esupnfc = "esupnfc";
+
+        await testUtils.assertMethodActive(uid, esupnfc, false, auth);
+
+        properties.setMethodProperty('esupnfc', 'autoActivate', true);
+        await testUtils.assertMethodActive(uid, esupnfc, false, auth);
+
+        properties.setMethodProperty('esupnfc', 'autoActivate', false);
+        properties.setMethodProperty('esupnfc', 'autoActivateForAllUsers', true);
+        await testUtils.assertMethodActive(uid, esupnfc, true, auth);
+
+        properties.setMethodProperty('esupnfc', 'autoActivateForAllUsers', false);
+        await testUtils.assertMethodActive(uid, esupnfc, false, auth);
+
+        properties.setMethodProperty('esupnfc', 'autoActivate', true);
+        await testUtils.assertMethodActive(uid, esupnfc, false, auth);
+        await testUtils.activateTotp(uid, auth);
+        await testUtils.assertMethodActive(uid, esupnfc, true, auth);
+        await testUtils.deactivate(uid, "totp", auth);
+        await testUtils.assertMethodActive(uid, esupnfc, false, auth);
+
+        properties.setMethodProperty('esupnfc', 'saveAutoActivation', true);
+        await testUtils.assertMethodActive(uid, esupnfc, false, auth);
+        await testUtils.activateTotp(uid, auth);
+        await testUtils.assertMethodActive(uid, esupnfc, true, auth);
+        await testUtils.deactivate(uid, "totp", auth);
+        await testUtils.assertMethodActive(uid, esupnfc, true, auth);
+
+        properties.setMethodProperty('esupnfc', 'saveAutoActivation', false);
+        properties.setMethodProperty('esupnfc', 'autoActivate', false);
+    });
+
     await t.test('test delete_user', async (t) => {
         const method = 'random_code';
         const transport = "sms";
