@@ -154,9 +154,9 @@ const langs = unique([...navigator.languages, 'en'].map(k => {
             }
             if (lang === 'en') break; // "en" does not need translation (except for "xxx_html" keys which must have been handled above)
         }
-        $.each(args, (key, val) => {
+        for (const [key, val] of Object.entries(args)) {
             s = s.replace(key, val)
-        })
+        }
         return s;
     }
     function _(s, args) {
@@ -173,6 +173,11 @@ const langs = unique([...navigator.languages, 'en'].map(k => {
         }
     }
 
+// to remove when old Edge compatibility is not needed
+function replaceChildren(elt, ...children) {
+  elt.innerHTML = ''
+  elt.append(...children)
+}
 /**
   * Simple wrapper for document.querySelector
   * @param {string} selector 
@@ -227,9 +232,7 @@ function createElement(tag, opts = {}, children = []) {
 }
     
 function add_html_template() {
-    $("form").append(/*html*/`
-
-       <div class="main1">
+    querySelector("form").append(createElement("div", { class: "main1", html: /*html*/`
 
         <div id="no-choices" class="d-none">${_('no_choices_html')}</div>
 
@@ -267,8 +270,7 @@ function add_html_template() {
             </ul>
           </div>
           <img alt="" id="page_icon"></div>
-       </div>
-    `)
+    ` }))
 }
 
     // for IE11 in pulse-secure
@@ -374,7 +376,7 @@ function add_html_template() {
     }
 
     function clear_errors() {
-        $("#errors").remove();
+        ifElt(querySelector("#errors"), elt => elt.remove())
     }
 
     const set_global_class_for_method = (() => {
@@ -389,7 +391,7 @@ function add_html_template() {
 
     function show(idToShow, method) {
         ["no-choices", "choices", "code"].forEach(function (id) {
-            $('#' + id).toggleClass('d-none', id !== idToShow);
+            querySelector('#'+id).classList.toggle('d-none', id !== idToShow);
         });
         // focus on first focusable element
         let elt = document.getElementById(idToShow).querySelector('button, [href], input, select, [tabindex]')
@@ -411,15 +413,17 @@ function add_html_template() {
     async function show_method(params, chosen) {
         show('code', chosen.method);
 
-        $("#token, #submitCode, #toggle_code_visibility-LABEL").toggleClass('d-none', chosen.opts.hide_submitCode === true);
-        $("#token").focus();
+        for (const elt of querySelectorAll("#token, #submitCode, #toggle_code_visibility-LABEL")) {
+          elt.classList.toggle('d-none', chosen.opts.hide_submitCode === true);
+        }
+        ifElt(querySelector("#token"), elt => elt.focus());
         updateCode_label(chosen.opts.code_label && await chosen.opts.code_label(params, chosen) || _("Please enter a code:"));
 
         querySelector('#page_icon').src = params.apiUrl + 'public/images/page-' + (chosen.opts.override_icon || chosen.transport || chosen.method) + ".svg";
 
-        $("#back_to_choices").toggleClass('d-none', $("#methodChoices > li").length <= 1);
+        ifElt(querySelector("#back_to_choices"), elt => elt.classList.toggle('d-none', querySelectorAll("#methodChoices > li").length <= 1));
 
-        $("#retry").toggleClass('d-none', !(chosen.transport || chosen.opts.retryText));
+        ifElt(querySelector("#retry"), elt => elt.classList.toggle('d-none', !(chosen.transport || chosen.opts.retryText)));
         const retryElement = querySelector("#retry a");
         retryElement.text = chosen.opts.retryText || _("Receive a new code");
         onclick(retryElement, async () => { clear_errors(); await display_method(params, chosen, {}) });
@@ -428,7 +432,7 @@ function add_html_template() {
     }
     
     function updateCode_label(code_label) {
-        $('#code_label').html(code_label);
+        ifElt(querySelector('#code_label'), elt => elt.innerHTML = code_label);
     }
     
     async function initializeWebauthn(params, _chosen, _opts) {
@@ -571,8 +575,8 @@ function add_html_template() {
 
         // Success response
         if(200 <= res.status && res.status < 300) {
-            $('#token').val(verifdata.token);
-            $('#fm1').submit();
+            querySelector('#token').value = verifdata.token;
+            querySelector('#fm1').submit();
         }
         // failed
         else {
@@ -586,7 +590,9 @@ function add_html_template() {
     }
 
     function configureLinkToOtpManager(element, params) {
-        $(element).attr("href", params.otpManagerUrl);
+        for (const elt of querySelectorAll(element)) {
+            elt.href = params.otpManagerUrl;
+        }
         onclick(element, function() {
             const otpManagerWindow = window.open(params.otpManagerUrl);
 
@@ -614,7 +620,9 @@ function add_html_template() {
         configureLinkToOtpManager("#no-choices a", params);
         configureLinkToOtpManager("#activateMoreMethods a", params);
 
-        $.ajax({ url: params.apiUrl + 'users/'+ params.uid +'/' + params.userHash }).done(async function(data) {
+        fetch(params.apiUrl + 'users/'+ params.uid +'/' + params.userHash).then(response => (
+          response.json()
+        )).then(async function (data) {
             if (data.code != "Ok") {
                 alert(_("Error, please try again later"));
                 return;
@@ -734,7 +742,7 @@ function add_html_template() {
      */
     function computeChoices(_params, methods_and_transports) {
         let choices = []
-        $.each(methods, function (method, opts) {
+        Object.entries(methods).forEach(function ([method, opts]) {
 
             if (!(methods_and_transports.methods[method] || {}).active) {
                 return;
@@ -752,7 +760,8 @@ function add_html_template() {
                         transport: transport, 
                         transport_text: transport_text, 
                         text: text,
-                        opts: $.extend({}, opts, transports[transport]),
+                        // to replace with { ... } when old Edge compatibility is not needed (cf neededObjectExpression > SpreadElement in eslint.config.js)
+                        opts: Object.assign({}, opts, transports[transport]),
                     })
                 } else {
                     console.error("weird transport", transport, "for (pseudo) method", method)
@@ -774,18 +783,19 @@ function add_html_template() {
             try { server_log({ warn: "no-choices", uid: params.uid, service: service }); } catch (_e) {}
             return;
         }
-        $("#methodChoices").empty().append(choices.map(function (choice) {
-            const button = $("<a class='large'>");
-            onclick(button[0], async () => {
+        replaceChildren(querySelector("#methodChoices"), ...choices.map(function (choice) {
+            const button = createElement("a", { class: 'large' });
+            onclick(button, async () => {
                 clear_errors();
                 await display_method(params, choice, {});
                 return false;
             });
-            button.append($("<span></span>").text(choice.text));
-            button.append($("<img>", { src: params.apiUrl + "public/images/liste-" + (choice.opts.override_icon || choice.transport || choice.method) + ".svg", alt: "" } ));
-            return $("<li></li>").append(button);
+            button.append(createElement("span", { text: choice.text }));
+            button.append(createElement("img", { src: params.apiUrl + "public/images/liste-" + (choice.opts.override_icon || choice.transport || choice.method) + ".svg", alt: "" } ));
+            return createElement("li", {}, [button]);
         }));
-        $("#methodChoices li a").first().focus();
+        // focus the first method choice
+        ifElt(querySelector("#methodChoices li a"),  elt => elt.focus())
 
         function getChoiceFromMethod(method) {
             return choices.find(choice => choice.method === method);
@@ -794,7 +804,7 @@ function add_html_template() {
         const methodsRequiringExplicitChoice = ["bypass" /*, "random_code"*/ /*, "esupnfc"*/];
 
         const isOtpManager = service && (new URL(service).hostname == new URL(params.otpManagerUrl).hostname);
-        $("#activateMoreMethods").toggleClass('d-none', isOtpManager || choices.some(choice => !methodsRequiringExplicitChoice.includes(choice.method)));
+        querySelector("#activateMoreMethods").classList.toggle('d-none', isOtpManager || choices.some(choice => !methodsRequiringExplicitChoice.includes(choice.method)));
 
         /** @type {{method: ?String, time: ?number, auto: ?Boolean, verified: ?Boolean}} */
         const last_send_message = user_params.last_send_message || {};
@@ -829,11 +839,12 @@ function add_html_template() {
         show('choices');
     }
 
-    function submitCodeRequest(params, chosen, opts) {
-        $.ajax({
-            type: 'POST',
-            url: params.apiUrl + 'users/'+ params.uid +'/methods/' + chosen.method + '/transports/' + chosen.transport + '/' + params.userHash + (opts.auto ? '?auto' : '')
-        }).done(function(data) {
+    async function submitCodeRequest(params, chosen, opts) {
+        const url = params.apiUrl + 'users/'+ params.uid +'/methods/' + chosen.method + '/transports/' + chosen.transport + '/' + params.userHash + (opts.auto ? '?auto' : '')
+
+        const response = await fetch(url, { method: 'POST' })
+        const data = await response.json()
+        
             if (data.code !== "Ok") {
                 alert(_("Error, please try again later"));
                 show('choices');
@@ -848,7 +859,6 @@ function add_html_template() {
                 }
                 updateCode_label(code_label.replace('%TRANSPORT%', chosen.transport_text));
             }
-        });
     }
 
     import { io } from '/js/socket.io.esm.js';
@@ -863,8 +873,8 @@ function add_html_template() {
         });
         socket.on('userAuth', function (data) {
             if (data.code == "Ok") {
-                $('#token').val(data.otp);
-                $('#fm1').submit();
+                querySelector('#token').value = data.otp;
+                querySelector('#fm1').submit();
             }
         });
     }
