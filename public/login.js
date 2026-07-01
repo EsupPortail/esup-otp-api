@@ -173,6 +173,59 @@ const langs = unique([...navigator.languages, 'en'].map(k => {
         }
     }
 
+/**
+  * Simple wrapper for document.querySelector
+  * @param {string} selector 
+  * @returns DOM element
+  */
+function querySelector(selector) {
+    return document.querySelector(selector)
+}
+
+/**
+  * Simple wrapper for document.querySelectorAll
+  * @param {string} selector 
+  * @returns DOM element
+  */
+function querySelectorAll(selector) {
+    return document.querySelectorAll(selector)
+}
+
+/**
+  * execute condictional code if elt is not null
+  * NB: to remove when we allow elt?.xxx()
+  * @param {HTMLElement} elt 
+  * @param {function(HTMLElement): void} cb 
+  */
+function ifElt(elt, cb) {
+    if (elt) cb(elt)
+}
+
+/**
+  * Small wrapper around document.createElement
+  * @param {String} tag name
+  * @param {*} attributes or text/html
+  * @returns the created element
+  */
+function createElement(tag, opts = {}, children = []) {
+    const element = document.createElement(tag);
+    
+    for (const [key, value] of Object.entries(opts)) {
+        if (key === "class") {
+            element.className = value;
+        } else if (key === "text") {
+            element.textContent = value;
+        } else if (key === "html") {
+            element.innerHTML = value;
+        } else {
+            element.setAttribute(key, value);
+        }
+    }
+    if (children.length) element.append(...children)
+    
+    return element;
+}
+    
 function add_html_template() {
     $("form").append(/*html*/`
 
@@ -237,7 +290,7 @@ function add_html_template() {
      */
     function onclick(element, func) {
         if (typeof element === 'string' || element instanceof String) {
-            element = document.querySelector(element);
+            element = querySelector(element);
         }
 
         element.onclick = func;
@@ -362,12 +415,12 @@ function add_html_template() {
         $("#token").focus();
         updateCode_label(chosen.opts.code_label && await chosen.opts.code_label(params, chosen) || _("Please enter a code:"));
 
-        document.querySelector('#page_icon').src = params.apiUrl + 'public/images/page-' + (chosen.opts.override_icon || chosen.transport || chosen.method) + ".svg";
+        querySelector('#page_icon').src = params.apiUrl + 'public/images/page-' + (chosen.opts.override_icon || chosen.transport || chosen.method) + ".svg";
 
         $("#back_to_choices").toggleClass('d-none', $("#methodChoices > li").length <= 1);
 
         $("#retry").toggleClass('d-none', !(chosen.transport || chosen.opts.retryText));
-        const retryElement = document.querySelector("#retry a");
+        const retryElement = querySelector("#retry a");
         retryElement.text = chosen.opts.retryText || _("Receive a new code");
         onclick(retryElement, async () => { clear_errors(); await display_method(params, chosen, {}) });
 
