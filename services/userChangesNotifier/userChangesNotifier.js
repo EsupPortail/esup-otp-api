@@ -71,7 +71,7 @@ async function onChange(user, message, transportChange) {
     if (recipients.length) {
         return send_email({
             recipients,
-            subject: "Mise à jours de vos paramètres d'authentification renforcée",
+            subject: "Mise à jour de vos paramètres d'authentification renforcée",
             mainContent: message,
             user,
         }).then(() => {
