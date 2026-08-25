@@ -41,7 +41,7 @@
       "uuid": "14.x"
     },
     "restify": {
-      "find-my-way": "8.x",
+      "find-my-way": "9.x",
       "pino": "10.x",
       "send": "0.x",
       "uuid": "14.x"
