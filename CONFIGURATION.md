@@ -131,7 +131,8 @@ See [https://www.esup-portail.org/wiki/spaces/esupotp/pages/1104871427/ESUP-OTP#
 
 ## sms
 Define the API called by esup-otp-api to send SMS messages.<br />
-In `url` and `body`, the substrings “\$phoneNumber\$” and “\$message\$” will be replaced with the corresponding values.
+In `url` and `body`, the substrings “\$phoneNumber\$” and “\$message\$” will be replaced with the corresponding values.<br />
+(The `body` can be a string; in that case, the variables (`phoneNumber` and `message`) will be URL-encoded. The `body` can also be JSON directly; in that case, the variables will be escaped/encoded in JSON format.)
 
 ## Notify users by email when their accounts get updated
 In [properties/esup.json](properties/esup.json):

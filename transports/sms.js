@@ -65,5 +65,20 @@ export async function send_message(req, opts, res, user) {
 }
 
 function replacePhoneNumberAndMessage(str, phoneNumber, message) {
-    return str.replace('$phoneNumber$', encodeURIComponent(phoneNumber)).replace('$message$', encodeURIComponent(message));
+    if (typeof str === "string") {
+        return str
+            .replace('$phoneNumber$', encodeURIComponent(phoneNumber))
+            .replace('$message$', encodeURIComponent(message));
+    }
+    else {
+        return JSON.stringify(str, (_key, value) => {
+            if (typeof value === "string") {
+                return value
+                    .replace('$phoneNumber$', phoneNumber)
+                    .replace('$message$', message);
+            } else {
+                return value;
+            }
+        })
+    }
 }
