@@ -124,6 +124,7 @@ See [https://www.esup-portail.org/wiki/spaces/esupotp/pages/1104871427/ESUP-OTP#
 | `sender_name` | Sender's name. |
 | `port` | SMTP server port. |
 | `hostname` | SMTP server address. |
+| `auth` | See [https://nodemailer.com/smtp#authentication](https://nodemailer.com/smtp#authentication). |
 | `use_proxy` | if it is necessary to use the `proxyUrl` (configured above) to access the SMTP server. |
 | `use_templates` | Generate emails from the [transports/email_templates/random_code_mail/html.eta](transports/email_templates/random_code_mail/html.eta) file. In older email clients, [properties/messages.json#transport.code.mail](properties/messages.json#L31-L34) will still be displayed. |
 | `accept_self_signed_certificate` | Whether an SMTP server that uses a self-signed certificate is accepted. |

@@ -124,6 +124,7 @@ Voir [https://www.esup-portail.org/wiki/spaces/esupotp/pages/1104871427/ESUP-OTP
 | `sender_name` | Nom de l’expéditeur. |
 | `port` | Port du serveur SMTP. |
 | `hostname` | Adresse du serveur SMTP. |
+| `auth` | Voir [https://nodemailer.com/smtp#authentication](https://nodemailer.com/smtp#authentication). |
 | `use_proxy` | S’il faut passer par le `proxyUrl` configuré plus haut pour accéder au serveur SMTP. |
 | `use_templates` | Générer les emails à partie du fichier [transports/email_templates/random_code_mail/html.eta](transports/email_templates/random_code_mail/html.eta). Sur les anciens clients mail, [properties/messages.json#transport.code.mail](properties/messages.json#L31-L34) sera toujours affiché. |
 | `accept_self_signed_certificate` | Si on accepte un serveur SMTP utilisant un certificat autosigné. |

@@ -14,10 +14,7 @@ const mailerProperty = properties.getEsupProperty('mailer');
 /** @type {import('nodemailer/lib/smtp-transport').Options} */
 const options = {
     // service: properties.esup.mailer.service,
-    // auth: {
-    //     user: properties.esup.mailer.address,
-    //     pass: properties.esup.mailer.password
-    // }
+    auth: mailerProperty.auth,
     host: mailerProperty.hostname,
     port: mailerProperty.port,
     secure: false,
