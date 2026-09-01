@@ -1,3 +1,4 @@
+import fs from 'fs';
 import * as properties from '../../properties/properties.js';
 import * as fileUtils from '../../services/fileUtils.js';
 import { UserNotFoundError } from '../../services/errors.js';
@@ -26,12 +27,20 @@ export default class LdapUserDb implements UserDb<StandardUserData<InternalUser>
         errorIfMultiTenantContext();
 
         logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ' Initializing ldap connection');
-        this.client = new Client({
+        const clientOptions = {
             url: this.ldapProperties.uri,
             timeout: this.ldapProperties.timeout,
             connectTimeout: this.ldapProperties.connectTimeout,
             autoRebind: true,
-        });
+        };
+
+        if (this.ldapProperties.caCertificate) {
+            clientOptions.tlsOptions = {
+                ca: [fs.readFileSync(this.ldapProperties.caCertificate)],
+            };
+        }
+
+        this.client = new Client(clientOptions);
         await this.client.bind(this.ldapProperties.adminDn, this.ldapProperties.password)
         logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ' Ldap connection Initialized');
     }
