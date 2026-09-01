@@ -34,6 +34,8 @@
     },
     "ldap": {
         "uri": "ldap://127.0.0.1",
+        "#how_to_caCertificate": "CA or certificate path to handle the certificate validation with ldaps, usefull when the certificate is auto-signed or unknown (for example: /etc/pki/tls/certs/cert.crt)",
+        "#caCertificate": "",
         "#how_to_timeout": "Milliseconds client should let operations live for before timing out (Default: Infinity)",
         "timeout": 0,
         "#how_to_connectTimeout": "Milliseconds client should wait before timing out on TCP connections (Default: OS default)",
