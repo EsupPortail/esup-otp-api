@@ -5,7 +5,6 @@ import nodemailer from "nodemailer";
 import { Eta } from "eta";
 import { logger } from '../services/logger.js';
 import * as errors from '../services/errors.js';
-import { getMail, getDisplayName } from '../databases/user/userUtils.js';
 
 export const name = "mail";
 
@@ -38,7 +37,7 @@ const eta = mailerProperty.use_templates && new Eta({ views: fileUtils.relativeT
 
 /** @param {import("./transports.js").opts} opts  */
 export async function send_message(req, opts, res, user) {
-    const mail = opts.userTransport || getMail(user.userDb);
+    const mail = opts.userTransport || user.userDb.getMail();
 
     if (utils.check_transport_validity('mail', mail)) {
         /**
@@ -51,7 +50,7 @@ export async function send_message(req, opts, res, user) {
         }
 
         if (mailerProperty.use_templates && opts.htmlTemplate) {
-            opts.displayName = getDisplayName(user.userDb);
+            opts.displayName = user.userDb.getDisplayName();
             opts.user = user;
             mailOptions.html = eta.render("./" + opts.htmlTemplate + "/html.eta", opts);
         }

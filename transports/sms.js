@@ -3,7 +3,6 @@ import * as utils from '../services/utils.js';
 import { logger } from '../services/logger.js';
 import * as errors from '../services/errors.js';
 import { request } from 'undici';
-import { getSms } from '../databases/user/userUtils.js';
 
 export const name = "sms";
 
@@ -25,7 +24,7 @@ if (baseUrlBroker.username || baseUrlBroker.password) {
 
 /** @param {import("./transports.js").opts} opts  */
 export async function send_message(req, opts, res, user) {
-    const num = opts.userTransport || getSms(user.userDb);
+    const num = opts.userTransport || user.userDb.getSms();
     if (utils.check_transport_validity('sms', num)) {
         const url = replacePhoneNumberAndMessage(baseUrlBroker.href, num, opts.message);
         if (properties.getEsupProperty('sms').method) {

@@ -1,7 +1,6 @@
 import * as properties from '../properties/properties.js';
 
 import { auditLogger } from '../services/logger.js';
-import * as userUtils from '../databases/user/userUtils.js';
 import * as api_controller from './api.js';
 import { onUserTransportChange } from '../services/userChangesNotifier/userChangesNotifier.js';
 
@@ -35,11 +34,11 @@ export async function delete_transport(req, res) {
 async function update_transport_internal(req, res, action) {
     const user = await api_controller.apiDb.find_user(req);
     const transportName = req.params.transport;
-    const old_transport = userUtils.getTransport(user.userDb, transportName);
+    const old_transport = user.userDb.getTransport(transportName);
     const new_transport = req.params.new_transport || "";
 
     if (old_transport !== new_transport) {
-        userUtils.setTransport(user.userDb, transportName, req.params.new_transport || "");
+        user.userDb.setTransport(transportName, new_transport);
         auditLogger.info({
             message: [
                 {
@@ -69,15 +68,13 @@ export async function update_user(req, res) {
     const newValues = req.body;
 
     const changes = Object.entries(newValues)
-        .map(([key, value]) => [userUtils.attributes[key], value]) // map to database attribute name
-        .filter(([key, _value]) => userUtils.modifiableAttributes.includes(key)) // remove non-modifiable attributes
-        .filter(([key, value]) => user_db[key] != value); // remove unmodified attributes
-
+        .filter(([key, _value]) => userDb.modifiableAttributesRecord[key]) // remove non-modifiable attributes
+        .filter(([key, value]) => user_db.getAttribute(key) != value); // remove unmodified attributes
 
     if (changes.length) {
         for (const [key, value] of changes) {
-            await onUserTransportChange(user, key, user_db[key], value);
-            user_db[key] = value;
+            await onUserTransportChange(user, key, user_db.getAttribute(key), value);
+            user_db.setAttribute(key, value);
         }
 
         await userDb.save_user(user_db);
@@ -113,12 +110,10 @@ export async function search_users(req, res) {
         return api_controller.get_uids(req, res);
     }
 
-    const users = await userDb.search_users(req, token);
-
     res.status(200);
     res.send({
         code: 'Ok',
-        users: users.map(user => ({ uid: userUtils.getUid(user), displayName: userUtils.getDisplayName(user) })),
+        users: await userDb.search_users(req, token),
     });
 }
 
@@ -158,12 +153,7 @@ export function create_user(uid) {
     return userDb.create_user(uid);
 }
 
-/**
- * Sauve l'utilisateur
- *
- * @param req requete HTTP contenant le nom la personne recherchee
- * @param res response HTTP
- */
+
 export function save_user(user) {
     return userDb.save_user(user);
 }

@@ -1,4 +1,3 @@
-import * as userUtils from '../../databases/user/userUtils.js';
 import * as properties from '../../properties/properties.js';
 import { logger } from '../logger.js';
 import { distinct } from "../utils.js";
@@ -56,7 +55,7 @@ async function getRecipients(user, transportChange) {
     if (transportChange?.transportName == "mail") {
         emailAddress.push(transportChange.oldTransport, transportChange.newTransport);
     } else {
-        emailAddress.push(userUtils.getMail(user.userDb));
+        emailAddress.push(user.userDb.getMail());
     }
 
     return distinct(emailAddress.flat(Infinity).filter(Boolean));
