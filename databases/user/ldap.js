@@ -1,12 +1,20 @@
+import * as properties from '../../properties/properties.js';
 import * as fileUtils from '../../services/fileUtils.js';
-import * as errors from '../../services/errors.js';
-import { getUserDbProperties, getUid, searchAttributes, modifiableAttributes, allAttributes, attributes } from './userUtils.js';
+import { UserNotFoundError } from '../../services/errors.js';
 import { errorIfMultiTenantContext } from '../../services/multiTenantUtils.js';
+import StandardUserData from '../../services/userDb/userData/StandardUserData.ts';
+import UserDbAttributes from '../../services/userDb/UserDbAttributes.ts';
 
 import { Client, Change, Attribute, EqualityFilter, SubstringFilter, OrFilter } from 'ldapts';
 /** @import { SearchOptions } from 'ldapts' */
 
 import { logger } from '../../services/logger.js';
+
+const ldapProperties = properties.getEsupProperty("ldap");
+const userDbAttributes = new UserDbAttributes(ldapProperties);
+const { searchAttributes, modifiableAttributes, modifiableAttributesRecord, allAttributes, attributes } = userDbAttributes;
+
+export { modifiableAttributesRecord };
 
 /**
  * @type Client
@@ -18,9 +26,9 @@ export async function initialize() {
 
     logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ' Initializing ldap connection');
     client = new Client({
-        url: getUserDbProperties().uri,
-        timeout: getUserDbProperties().timeout,
-        connectTimeout: getUserDbProperties().connectTimeout,
+        url: ldapProperties.uri,
+        timeout: ldapProperties.timeout,
+        connectTimeout: ldapProperties.connectTimeout,
     });
     await bindLdapIfNeeded();
     logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ' Ldap connection Initialized');
@@ -32,7 +40,7 @@ export function close() {
 
 async function bindLdapIfNeeded() {
     if (!client.isConnected) {
-        await client.bind(getUserDbProperties().adminDn, getUserDbProperties().password);
+        await client.bind(ldapProperties.adminDn, ldapProperties.password);
     }
 }
 
@@ -41,6 +49,9 @@ async function getClient() {
     return client;
 }
 
+/**
+ * @returns {Promise<StandardUserData>}
+ */
 export async function find_user(uid) {
     let user;
     try {
@@ -50,7 +61,11 @@ export async function find_user(uid) {
             throw error;
         }
     }
-    return user || errors.UserNotFoundError.throw();
+    if (user) {
+        return new StandardUserData(user, attributes);
+    } else {
+        throw new UserNotFoundError();
+    }
 }
 
 /**
@@ -64,7 +79,7 @@ async function find_user_internal(uid) {
         attributes: allAttributes
     };
 
-    const { searchEntries } = await getClient().then(client => client.search(getBaseDn(), opts));
+    const { searchEntries } = await getClient().then(client => client.search(ldapProperties.baseDn, opts));
     const searchEntry = searchEntries?.[0];
 
     if (!searchEntry) {
@@ -99,8 +114,10 @@ export async function search_users(req, token) {
     };
 
     const client = await getClient();
-    const { searchEntries } = await client.search(getBaseDn(), opts);
-    return searchEntries.map(searchEntry => parseUser(searchEntry, searchAttributes));
+    const { searchEntries } = await client.search(ldapProperties.baseDn, opts);
+    return searchEntries
+        .map(searchEntry => parseUser(searchEntry, searchAttributes))
+        .map(result => userDbAttributes.standardizeSearchResults(result));
 }
 
 function ldap_change(user) {
@@ -119,23 +136,26 @@ function ldap_change(user) {
     return changes;
 }
 
+/**
+ * @param { StandardUserData } user 
+ */
 export function save_user(user) {
-    const changes = ldap_change(user);
-    return getClient().then(client => client.modify(getDN(getUid(user)), changes));
+    const changes = ldap_change(user.internalUser);
+    return getClient().then(client => client.modify(getDN(user.getUid()), changes));
 }
 
 function getDN(uid) {
-    return `${attributes.uid}=${uid},${getBaseDn()}`;
+    return `${attributes.uid}=${uid},${ldapProperties.baseDn}`;
 }
 
+/**
+ * @returns {Promise<StandardUserData>}
+ */
 export async function create_user(uid) {
     const entry = {
         cn: uid,
         [attributes.uid]: uid,
         sn: uid,
-        [attributes.mail]: uid + '@univ.org',
-        [attributes.sms]: '0612345678',
-        [attributes.displayName]: uid,
         objectclass: ['inetOrgPerson']
     };
     const client = await getClient();
@@ -152,10 +172,6 @@ export async function remove_user(uid) {
             throw error;
         }
     }
-}
-
-function getBaseDn() {
-    return getUserDbProperties().baseDn;
 }
 
 function isNoSuchObjectError(error) {

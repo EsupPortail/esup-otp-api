@@ -1,5 +1,16 @@
 # Changelog
 
+## [Unreleased]
+### Breaking changes
+- Drop Node.js 20 support (EOL since 04-2026)
+- Drop Node.js < v22.18.0 support (Node.js => v22.6.0 will still work if you use the `--experimental-transform-types` flag)
+- **Requires running `npm install`**
+
+### Added
+- [login.js] alt text [d64651e](https://github.com/EsupPortail/esup-otp-api/commit/d64651e0c2e2f14efd09157ed4beed93b0acada1)
+- "DELETE /protected/users/:uid" API [cba490b](https://github.com/EsupPortail/esup-otp-api/commit/cba490b68db86131cdd7c7770d01cbaece5c23dd)
+- Make SMTP authentication configurable [6dd84fc](https://github.com/EsupPortail/esup-otp-api/commit/6dd84fc76c70126c7cb647e6cdc916953e78c552)
+
 ## v2.3.0 (2026-04-15) ([release](https://github.com/EsupPortail/esup-otp-api/releases/tag/v2.3.0))
 ### Breaking changes
 - Use `x-forwarded-for` header (instead of `x-real-ip` previously) to determine the IP address (and thus the city to display) in push notifications [2d06e5d](https://github.com/EsupPortail/esup-otp-api/commit/2d06e5dc2035c57ef7f7d779899ca4d67b11fc3f)<br />

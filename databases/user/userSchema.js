@@ -1,18 +1,19 @@
 import { Schema } from 'mongoose';
 
-import { attributes } from './userUtils.js';
+/**
+ * @param {import('../../services/userDb/UserDbAttributes.ts').UserDbAttributesDefinition} attributes 
+ */
+export default function generateMongooseUserSchema(attributes) {
+    const schema = Object.fromEntries(
+        Object.values(attributes)
+            .map(attr => [attr, String])
+    );
 
-const schema = Object.fromEntries(
-    Object.values(attributes)
-        .map(attr => [attr, String])
-);
+    schema[attributes.uid] = {
+        type: String,
+        required: true,
+        unique: true,
+    };
 
-schema[attributes.uid] = {
-    type: String,
-    required: true,
-    unique: true,
-};
-
-const UserSchema = new Schema(schema);
-
-export default UserSchema;
+    return new Schema(schema);
+}

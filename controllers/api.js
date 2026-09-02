@@ -8,7 +8,6 @@ import methods, { initialize as initializeMethods } from '../methods/methods.js'
 import * as transports from '../transports/transports.js';
 
 import { logger, auditLogger } from '../services/logger.js';
-import * as userUtils from '../databases/user/userUtils.js';
 
 /**
  * @type {import('../databases/api/mongodb.js')} apiDb
@@ -261,8 +260,8 @@ export async function delete_user(req, res) {
 export async function get_user_infos(req, res) {
     const user = await apiDb.find_user(req, res);
     const transports = {
-        sms: utils.cover_sms(userUtils.getSms(user.userDb)),
-        mail: utils.cover_mail(userUtils.getMail(user.userDb)),
+        sms: utils.cover_sms(user.userDb.getSms()),
+        mail: utils.cover_mail(user.userDb.getMail()),
         push: user.push.device.manufacturer + ' ' + user.push.device.model,
     }
 
@@ -270,7 +269,7 @@ export async function get_user_infos(req, res) {
     res.send({
         code: "Ok",
         user: {
-            displayName: userUtils.getDisplayName(user.userDb),
+            displayName: user.userDb.getDisplayName(),
             methods: apiDb.parse_user(req, user),
             transports: transports,
             last_send_message: user.last_send_message,

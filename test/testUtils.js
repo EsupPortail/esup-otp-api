@@ -8,11 +8,17 @@ import * as nodemailerMock from 'nodemailer-mock';
 import * as properties from '../properties/properties.js';
 import * as inMemoryMongoTest from './inMemoryMongoTest.js';
 
+/** @type {typeof import('../server/server.js')} */
 let server;
+/** @type {typeof server.server} */
 let restifyServer;
+/** @type {typeof import('../services/utils.js')} */
 let utils;
+/** @type {typeof import('../controllers/api.js')} */
 let api_controller;
+/** @type {typeof import('../controllers/user.js')} */
 let userDb_controller;
+/** @type {typeof import('../transports/transports.js')} */
 let transports;
 
 export async function start(config) {
@@ -335,6 +341,7 @@ export async function assertASearch_usersReturns(/** @type {String} */ token, /*
         .then(res => {
             /** @type {search_usersResult} */
             const actual = res.body.users;
+            assert.equal(actual?.length, expected.length);
             for (const array of [actual, expected]) {
                 utils.sortArray(array, user => user.uid);
             }

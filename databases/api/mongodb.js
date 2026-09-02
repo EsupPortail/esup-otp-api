@@ -10,7 +10,6 @@ import ApiPreferencesSchema from './apiPreferencesSchema.js';
 import TenantSchema from './tenantSchema.js';
 
 import { logger } from '../../services/logger.js';
-import { getTransport } from '../user/userUtils.js';
 import * as userChangesNotifier from '../../services/userChangesNotifier/userChangesNotifier.js';
 
 /** @type { mongoose.Connection } */
@@ -146,6 +145,26 @@ export async function find_user_by_id(uid) {
     }
 }
 
+/**
+ * @import UserData from '../../services/userDb/userData/UserData.ts'
+ */
+
+/**
+ * @returns {Promise<{
+ *      uid: string,
+ *      random_code: any,
+ *      random_code_mail: any,
+ *      bypass: any,
+ *      passcode_grid: any,
+ *      totp: any,
+ *      push: any,
+ *      esupnfc: any,
+ *      webauthn: any,
+ *      last_send_message: any,
+ *      last_validated: any,
+ *      userDb: UserData,
+ * }>}
+ */
 export async function find_user(req) {
     return find_user_by_id(req.params.uid);
 }
@@ -197,7 +216,7 @@ async function update_active_methods(user) {
     // turn off random_code(_mail) if no transport is present for this method
     for (const random_code of RANDOM_CODE_METHODS) {
         const userMethod = user[random_code];
-        userMethod.active = userMethod.internally_activated && properties.getTransports(random_code).some(transport => getTransport(user.userDb, transport));
+        userMethod.active = userMethod.internally_activated && properties.getTransports(random_code).some(transport => user.userDb.getTransport(transport));
     }
 
     user.hasEnabledMethod = properties.listActivatedMethods().some(method => user[method]?.active);

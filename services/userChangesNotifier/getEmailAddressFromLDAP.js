@@ -1,6 +1,5 @@
 import { Client, EqualityFilter } from 'ldapts';
 
-import { attributes } from '../../databases/user/userUtils.js';
 import * as properties from '../../properties/properties.js';
 const ldapProperties = properties.getEsupProperty("ldap") || {};
 const userChangesNotifierLdapProperties = properties.getEsupProperty("userChangesNotifier")?.getEmailAddressFromLDAP || {};
@@ -9,7 +8,7 @@ const uri            = userChangesNotifierLdapProperties.uri            || ldapP
 const adminDn        = userChangesNotifierLdapProperties.adminDn        || ldapProperties.adminDn;
 const password       = userChangesNotifierLdapProperties.password       || ldapProperties.password;
 const baseDn         = userChangesNotifierLdapProperties.baseDn         || ldapProperties.baseDn;
-const uidAttribute   = userChangesNotifierLdapProperties.uidAttribute   || attributes.uid;
+const uidAttribute   = userChangesNotifierLdapProperties.uidAttribute   || ldapProperties.uid || "uid";
 const mailAttributes = userChangesNotifierLdapProperties.mailAttributes || ["mail", "supannMailPerso"];
 const timeout        = userChangesNotifierLdapProperties.timeout        ?? ldapProperties.timeout;
 const connectTimeout = userChangesNotifierLdapProperties.connectTimeout ?? ldapProperties.connectTimeout;
