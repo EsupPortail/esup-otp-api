@@ -23,10 +23,10 @@ const schema = {
             type: Object,
 
             name: {
-                type: String   
+                type: String
             },
             id: {
-                type: String   
+                type: String
             }
         },
         "#how_to_allowed_origins": "List of subdomains where webauthn can be used. Keep in mind it can't be multiple different domains.",
@@ -36,13 +36,13 @@ const schema = {
     },
     api_password: {
         type: String,
-        required: true   
+        required: true
     },
     users_secret: {
         type: String,
-        required: true   
+        required: true
     }
-}    
+}
 
 const TenantSchema = new Schema(schema);
 

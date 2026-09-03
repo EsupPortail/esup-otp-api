@@ -207,9 +207,9 @@ const schema = {
           default: []
         }
     },
-    last_send_message: { 
+    last_send_message: {
         method: { type: String },
-        time: { type: Number }, 
+        time: { type: Number },
         auto: { type: Boolean },
         verified: { type: Boolean },
     },

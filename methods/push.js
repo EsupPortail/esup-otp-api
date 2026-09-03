@@ -12,8 +12,8 @@ import admin from "firebase-admin";
 import { HttpsProxyAgent } from "https-proxy-agent";
 import * as sockets from '../server/sockets.js';
 
-/** 
- * @type {import('ip-location-api').lookup} 
+/**
+ * @type {import('ip-location-api').lookup}
  */
 let lookup;
 
@@ -77,14 +77,14 @@ export async function send_message(user, req, res) {
 
     let response = false;
     let dryRun = false;
-    
+
     const remainingTimeoutDuration = user.push.last_rejection_date + (user.push.timeout * 1000) - Date.now();
     if (remainingTimeoutDuration > 0) {
         const remainingTimeoutDurationinSeconds = Math.ceil(remainingTimeoutDuration / 1000)
         logger.warn(`notification not sent : user ${user.uid} rejected previous notification (remaining timeout ${remainingTimeoutDurationinSeconds} seconds, total timeout ${user.push.timeout} seconds)`);
         dryRun = true;
     }
-    
+
     if (utils.canReceiveNotifications(user)) {
         /**
          * @type {admin.messaging.TokenMessage}
@@ -191,7 +191,7 @@ export function pending(user, req, res) {
     if (bad_GCM_ID) {
         body.gcm_id = user.push.device.gcm_id;
     }
-    
+
     if (user.push.active && properties.getMethodProperty(req.params.method, 'activate') && ifTokenSecretsMatch(user, req) && Date.now() < user.push.validity_time) {
         res.send({
             "message": user.push.text,
@@ -260,7 +260,7 @@ export function redirectToDeepLink(req, res) {
                    /iPhone|iPad|iPod/i.test(userAgent) ? "ios" :
                    false;
     let htmlContent;
-    
+
     if(mobile) {
         const deeplink = utils.getDeepLink("push", { uid: req.params.uid, code: req.params.tokenSecret, host: getUrl(req) })
         htmlContent = `

@@ -706,7 +706,7 @@ function add_html_template() {
             override_icon: 'no_transport',
         },
     };
-    
+
     const transports = {
         mail:{
             code_label_afterSubmit: _("A code has been sent to your email %TRANSPORT%,<br>enter it here to log in.")
@@ -867,8 +867,8 @@ function add_html_template() {
         if (socket) return; // already in place (NB: socket.io will handle reconnect in case of WebSocket breakage)
 
         socket = io.connect(params.apiUrl, {
-            reconnect: true, 
-            path: "/sockets", 
+            reconnect: true,
+            path: "/sockets",
             query: 'uid=' + params.uid + '&hash=' + params.userHash + '&app=cas'
         });
         socket.on('userAuth', function (data) {
