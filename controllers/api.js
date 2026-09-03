@@ -88,7 +88,7 @@ export async function activate_method_transport(req, res) {
 }
 
 /**
- * Désctive le transport req.params.transport pour la  méthode req.params.method
+ * Désactive le transport req.params.transport pour la  méthode req.params.method
  *
  * @param req requete HTTP contenant le nom la personne recherchee
  * @param res response HTTP
