@@ -15,21 +15,21 @@ export function getFileName(filename) {
 }
 
 /**
- * @param { string | URL } import_meta_url 
+ * @param { string | URL } import_meta_url
  */
 export function getFileNameFromUrl(import_meta_url) {
     return getFileName(__filename(import_meta_url));
 }
 
 /**
- * @param { string | URL } import_meta_url 
+ * @param { string | URL } import_meta_url
  */
 export function __filename(import_meta_url) {
     return fileURLToPath(import_meta_url);
 }
 
 /**
- * @param { string | URL } import_meta_url 
+ * @param { string | URL } import_meta_url
  */
 export function __dirname(import_meta_url) {
     return path.dirname(__filename(import_meta_url));
