@@ -113,7 +113,7 @@ export async function search_users(req, res) {
     res.status(200);
     res.send({
         code: 'Ok',
-        users: await userDb.search_users(req, token),
+        users: await userDb.search_users(token, req),
     });
 }
 
