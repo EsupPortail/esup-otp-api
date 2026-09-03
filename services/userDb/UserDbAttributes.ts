@@ -1,12 +1,12 @@
 export default class UserDbAttributes {
-    readonly userDbProperties: { uid: string, displayName: string | undefined, transport: { sms: string | undefined, mail: string | undefined } };
+    readonly userDbProperties: UserDbProperties;
     readonly attributes: UserDbAttributesDefinition;
     readonly searchAttributes: string[];
     readonly modifiableAttributesRecord: Record<string, string>;
     readonly modifiableAttributes: string[];
     readonly allAttributes: string[];
 
-    constructor(userDbProperties: any) {
+    constructor(userDbProperties: UserDbProperties) {
         this.userDbProperties = userDbProperties;
         this.attributes = {
             uid: this.userDbProperties.uid || "uid",
@@ -24,10 +24,10 @@ export default class UserDbAttributes {
         this.allAttributes = UserDbAttributes.filterAttributes(Object.values(this.attributes));
     }
 
-    standardizeSearchResults(brutResult: Record<string, string>): { uid: string, displayName: string | undefined } {
+    standardizeSearchResult(brutResult: Record<string, string>): SearchResult {
         return {
-            uid: brutResult[this.userDbProperties.uid],
-            displayName: brutResult[this.userDbProperties.displayName || ""],
+            uid: brutResult[this.attributes.uid],
+            displayName: brutResult[this.attributes.displayName || ""],
         };
     }
 
@@ -36,14 +36,19 @@ export default class UserDbAttributes {
     }
 }
 
-export interface UserDbAttributesDefinition {
+export type SearchResult = {
+    uid: string;
+    displayName: string | undefined;
+}
+
+export type UserDbAttributesDefinition = {
     readonly uid: string;
     sms: string | undefined;
     mail: string | undefined;
     displayName: string | undefined;
 }
 
-export interface userDbProperties {
+export type UserDbProperties = {
     uid: string | undefined,
     displayName: string | undefined,
     transport: {

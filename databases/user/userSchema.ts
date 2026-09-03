@@ -1,9 +1,8 @@
 import { Schema } from 'mongoose';
 
-/**
- * @param {import('../../services/userDb/UserDbAttributes.ts').UserDbAttributesDefinition} attributes 
- */
-export default function generateMongooseUserSchema(attributes) {
+import { type UserDbAttributesDefinition } from '../../services/userDb/UserDbAttributes.ts';
+
+export default function generateMongooseUserSchema(attributes: UserDbAttributesDefinition): Schema {
     const schema = Object.fromEntries(
         Object.values(attributes)
             .map(attr => [attr, String])
