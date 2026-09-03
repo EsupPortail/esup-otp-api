@@ -19,6 +19,8 @@
     },
     "#how_to_tenants": "see Multi-tenants.md file for details",
     "tenants": [],
+    "#howto_baseUrl": "default baseUrl of the api is empty (for example /mfa-api)",
+    "#baseUrl": "",
     "mongodb": {
         "#how_to_uri": "see https://www.mongodb.com/docs/manual/reference/connection-string/#connection-string-formats",
         "#uri_example": "mongodb://user:password@mongodb.example.com:27017/esup-otp-db?authSource=admin",

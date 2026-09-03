@@ -26,6 +26,8 @@ const trustGcm_id = properties.getMethod('push').trustGcm_id;
 // Set up the sender with you API key, prepare your recipients' registration tokens.
 const proxyUrl = properties.getEsupProperty('proxyUrl');
 
+const baseUrl = properties.getEsupProperty('baseUrl');
+
 /**
  * @type {(message: admin.messaging.Message, dryRun?: boolean) => Promise<string>}
  */
@@ -247,7 +249,7 @@ export async function user_activate(user, req, res) {
 function getUrl(req) {
     const http = req.header("x-forwarded-proto") || 'http';
     const host = req.header("x-forwarded-host")?.replace(/,.*/, '') || req.header('host');
-    return http + '://' + host;
+    return http + '://' + host + baseUrl;
 }
 
 const esupAuth = {android: "https://play.google.com/store/apps/details?id=org.esupportail.esupAuth", ios: "https://apps.apple.com/fr/app/esup-auth/id1563904941"};
