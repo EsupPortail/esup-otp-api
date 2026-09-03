@@ -15,7 +15,7 @@ export async function initialize(initializedUserDb) {
     } else {
         const userDbName = properties.getEsupProperty('userDb');
         if (userDbName) {
-            userDb = await import('../databases/user/' + userDbName + '.js');
+            userDb = await import('../databases/user/' + userDbName + '.ts');
             return userDb.initialize();
         } else {
             throw new Error('Unknown userDb');
