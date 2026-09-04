@@ -11,3 +11,14 @@ export default interface UserDb<TUserData extends UserData> {
     create_user(uid: string): Promise<TUserData>;
     remove_user(uid: string): Promise<any>;
 }
+
+export async function initializeUserDb<TUserData extends UserData>(userDbName: string): Promise<UserDb<TUserData>> {
+    if (userDbName) {
+        const { default: UserDbImpl } = await import('./' + userDbName + '.ts');
+        const userDb: UserDb<any> = new UserDbImpl();
+        await userDb.initialize();
+        return userDb;
+    } else {
+        throw new Error('Unknown userDb');
+    }
+}

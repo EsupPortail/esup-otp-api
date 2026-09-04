@@ -59,6 +59,10 @@
         },
         "displayName": "displayName"
     },
+    "mixedUserDb": {
+        "readOnly": "ldap",
+        "readWrite": "mongodb"
+    },
     "methods": {
         "totp": {
             "activate": true,

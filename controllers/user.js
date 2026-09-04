@@ -4,6 +4,8 @@ import { auditLogger } from '../services/logger.js';
 import * as api_controller from './api.js';
 import { onUserTransportChange } from '../services/userChangesNotifier/userChangesNotifier.js';
 
+import { initializeUserDb } from '../databases/user/UserDb.ts';
+
 /**
  * @type {import('../databases/user/UserDb.ts').default} userDb
  */
@@ -14,13 +16,7 @@ export async function initialize(initializedUserDb) {
         userDb = initializedUserDb;
     } else {
         const userDbName = properties.getEsupProperty('userDb');
-        if (userDbName) {
-            const { default: UserDb } = await import('../databases/user/' + userDbName + '.ts');
-            userDb = new UserDb();
-            return userDb.initialize();
-        } else {
-            throw new Error('Unknown userDb');
-        }
+        userDb = await initializeUserDb(userDbName);
     }
 }
 
