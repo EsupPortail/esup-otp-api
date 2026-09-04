@@ -33,12 +33,13 @@ Celles-ci sont stockées dans une base mongodb. (Donc laissez `"apiDb": "mongodb
 
 ### userDb
 L’`userDb` contient l’adresse email et le numéro de téléphone de l’utilisateur. Ceux-ci sont utilisés pour l’envoi des codes à usage unique. L’`userDb` contient aussi le `displayName`, utilisé pour faciliter la recherche des utilisateurs par les managers.<br />
-L’`userDb` peut-être la même DB `mongodb` que l’`apiDb`, ou bien un serveur `ldap` ou une DB `mysql`. Permettant ainsi d’utiliser les données (`pagerTelephoneNumber`, `supannMailPerso`, `displayName`) déjà enregistrées.<br />
+L’`userDb` peut-être la même DB `mongodb` que l’`apiDb`. Ou un serveur `ldap`, une BDD `mysql`, ou [`mixedUserDb`](#mixeduserdb). Permettant ainsi d’utiliser les données (`pagerTelephoneNumber`, `supannMailPerso`, `displayName`) déjà enregistrées.<br />
 Pour cela :
-1. Dans `userDb`, définir le type de DB à utiliser. Par exemple `"userDb": "ldap",`.
-2. Dans l’entrée correspondante, définir le nom de l’attribut dans la DB.<br />
+1. Dans `userDb`, définir le type de DB à utiliser.
+2. Dans l’entrée correspondante ("mongoDb", "ldap", "mysql", "mixedUserDb"), définir le nom de l’attribut dans la DB.<br />
 Par exemple :
 ```json
+    "userDb": "ldap",
     "ldap": {
         "uri": "ldap://ldap.univ.fr",
         "baseDn": "dc=univ,dc=fr",
@@ -51,6 +52,40 @@ Par exemple :
         "displayName": "displayName"
     },
 ```
+
+#### mixedUserDb
+`mixedUserDb` permet de s’appuyer sur des données en lecture seule (typiquement LDAP), qu’on peut surcharger via une BDD locale (typiquement mongodb).<br />
+Exemple de configuration :
+```json
+    "userDb": "mixedUserDb",
+    "mixedUserDb": {
+        "readOnly": "ldap",
+        "readWrite": "mongodb"
+    },
+    "auto_create_user": true,
+    "ldap": {
+        "uri": "ldap://ldap.univ.fr",
+        "baseDn": "dc=univ,dc=fr",
+        "adminDn": "cn=admin,dc=univ,dc=fr",
+        "password": "ExZI6HLkVm7OHslUUPK5YKl4A3W9jdwy",
+        "transport": {
+            "mail": "supannMailPerso",
+            "sms": "pagerTelephoneNumber"
+        },
+        "displayName": "displayName"
+    },
+    "mongodb": {
+        "uri": "mongodb://user:password@mongodb.example.com:27017/esup-otp-db",
+        "transport": {
+            "mail": "mail",
+            "sms": "mobile"
+        },
+    },
+```
+À noter que :
+- `auto_create_user` ne concerne **que** la BDD `readWrite`. (Si l’utilisateur n’existe pas dans la BDD `readOnly`, cela provoquera une erreur dans tous les cas).
+- Pas besoin de définir `displayName` dans la BDD `readWrite`.
+- Pour l’instant, l’interface n'est pas adaptée côté esup-otp-manager : l’utilisateur peut cliquer sur "supprimer" son numéro de téléphone, mais cela ne fera que le réinitialiser vers sa valeur en BDD `readOnly`.
 
 ## WebAuthn
 | clé | description |

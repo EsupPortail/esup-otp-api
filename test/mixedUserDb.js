@@ -1,51 +1,36 @@
-{
+import test from "node:test";
+
+import * as testUtils from './testUtils.js';
+
+// test-specific configuration, without multi-tenant support
+const config = {
     "casVhost": "cas.univ.fr",
-    "proxyUrl": "",
-    "#how_to_proxyUrl": "If set, API will use this proxy configurations, usually proxyURl must be like : http://username:password@univ.fr:port may be necessary for sms and mailer services",
-    "api_password": "changeit",
-    "users_secret": "changeit",
+    "api_password": "api_password",
+    "users_secret": "users_secret",
     "apiDb": "mongodb",
-    "userDb": "mongodb",
-    "#how_to_auto_create_user": "create user in userDb if it does not exist",
+    "userDb": "mixedUserDb",
     "auto_create_user": true,
-    "webauthn": {
-        "#how_to_relying_party": "The 'id' is a domain, identifying the 'server', the party that manages the authentication. It's value is important, unlike the name, which is just a displayable string.",
-        "relying_party": {
-            "name": "Univ",
-            "id": "univ.fr"
-        },
-        "#how_to_allowed_origins": "List of subdomains where webauthn can be used. Keep in mind it can't be multiple different domains.",
-        "allowed_origins": ["https://cas.univ.fr", "https://esup-otp-manager.univ.fr"]
-    },
-    "#how_to_tenants": "see Multi-tenants.md file for details",
-    "tenants": [],
     "mongodb": {
-        "#how_to_uri": "see https://www.mongodb.com/docs/manual/reference/connection-string/#connection-string-formats",
-        "#uri_example": "mongodb://user:password@mongodb.example.com:27017/esup-otp-db?authSource=admin",
         "uri": "mongodb://localhost:27017/test-otp",
-        "#address_and_db_are_DEPRECATED": "use 'uri' instead",
-        "#address": "localhost",
-        "#db": "test-otp",
         "transport": {
             "mail": "mail",
-            "sms": "mobile"
+            "sms": "mobile",
         },
-        "displayName": "displayName"
+        "uid": "employeeNumber",
     },
     "ldap": {
-        "uri": "ldap://127.0.0.1",
-        "#how_to_timeout": "Milliseconds client should let operations live for before timing out (Default: Infinity)",
+        "uri": "ldap://127.0.0.1:389",
         "timeout": 0,
-        "#how_to_connectTimeout": "Milliseconds client should wait before timing out on TCP connections (Default: OS default)",
         "connectTimeout": 0,
         "baseDn": "dc=univ,dc=fr",
         "adminDn": "cn=admin,dc=univ,dc=fr",
         "password": "changeit",
         "transport": {
             "mail": "mail",
-            "sms": "mobile"
+            "sms": "mobile",
         },
-        "displayName": "displayName"
+        "uid": "employeeNumber",
+        "displayName": "displayName",
     },
     "mysql": {
         "host": "127.0.0.1",
@@ -55,9 +40,10 @@
         "userTable": "User",
         "transport": {
             "mail": "mail",
-            "sms": "sms"
+            "sms": "sms",
         },
-        "displayName": "displayName"
+        "displayName": "displayName",
+        "uid": "employeeNumber",
     },
     "mixedUserDb": {
         "readOnly": "ldap",
@@ -106,7 +92,6 @@
             "transports": []
         },
         "push": {
-            "#how_to_serviceAccount": "See https://github.com/EsupPortail/esup-otp-api#get-google-cloud-serviceAccount",
             "serviceAccount": {
                 "type": "service_account",
                 "project_id": "esup-otp-276500",
@@ -134,9 +119,9 @@
             "transports": ["push"]
         },
         "esupnfc": {
-            "activate": false,
+            "activate": true,
             "priority": 5,
-            "#server_infos": {
+            "server_infos": {
                 "numeroId": "numeroId",
                 "url": "https://esupnfctag.example.com/",
                 "etablissement": "Univ"
@@ -167,36 +152,115 @@
         "use_proxy": false,
         "use_templates": false,
         "accept_self_signed_certificate": false,
-        "#how_to_mailer": "change hostname with your smtp server address"
     },
     "sms": {
         "url": "https://user:mdp@sms.univ.fr/esup-smsuapi/?action=SendSms&phoneNumber=$phoneNumber$&message=$message$",
         "method": "GET",
-        "#body": "",
-        "#headers": {}
     },
     "esupnfc": {
         "server_ip": "IP_ESUP-SGC-SERVER"
     },
-    "#how_to_userChangesNotifier": "see CONFIGURATION.MD #Notify users by email when their accounts get updated",
     "userChangesNotifier": {
-        "enabled": false,
-        "emailAddressProvider": ""
+        "enabled": true,
+        "emailAddressProvider": "getEmailAddressFromUser"
     },
     "logs": {
         "main": {
             "level": "debug",
             "console": true,
-            "file": "logs/esup-otp-api-info.log"
         },
         "audit": {
-            "console": false,
-            "file": "logs/audit.log"
+            "console": true,
         },
         "access": {
             "format": "dev",
-            "console": true
+            "console": true,
         }
     },
     "trustedProxies": ["127.0.0.1", "loopback", "::1"]
+};
+
+await testUtils.start(config);
+
+const auth = { password: config.api_password };
+
+const api_controller = await import('../controllers/api.js');
+const userDb_controller = await import('../controllers/user.js');
+const utils = await import('../services/utils.js');
+
+const fnari = {
+    uid: "fnari",
+    mail: {
+        initial: "flo@example.com",
+        updated: "florian@example.org",
+    },
+    sms: {
+        initial: undefined,
+        updated: "+33606060606",
+    },
 }
+
+const toto = {
+    uid: "toto",
+    mail: {
+        initial: "toto@example.com",
+        updated: "tata.toto@example.org",
+    },
+    sms: {
+        initial: "0678901234",
+        updated: "0606060606",
+    },
+}
+
+const transports = ["mail", "sms"];
+
+
+await test('Esup otp api', async (t) => {
+    t.before(testUtils.before);
+
+    t.after(testUtils.after);
+
+    await t.test('test initial values', async (t) => {
+        for (const user of [fnari, toto]) {
+            await testUtils.get_user_infos(user.uid, auth)
+                .expect(200)
+                .then(res => {
+                    for (const transport of transports) {
+                        t.assert.equal(res.body.user.transports[transport], utils.cover_transport(user[transport].initial, transport));
+                    }
+                });
+        }
+    });
+
+    await t.test('test updated values', async (t) => {
+        for (const user of [fnari, toto]) {
+            for (const transport of transports) {
+                await testUtils.setTransport(user.uid, { transport: transport, new_transport: user[transport].updated }, auth);
+
+            }
+            await testUtils.get_user_infos(user.uid, auth)
+                .expect(200)
+                .then(res => {
+                    for (const transport of transports) {
+                        t.assert.equal(res.body.user.transports[transport], utils.cover_transport(user[transport].updated, transport));
+                    }
+                });
+        }
+    });
+
+    await t.test('test reset value', async (t) => {
+        for (const user of [fnari, toto]) {
+            for (const transport of transports) {
+                await testUtils.deleteTransport(user.uid, transport, auth);
+
+            }
+            await testUtils.get_user_infos(user.uid, auth)
+                .expect(200)
+                .then(res => {
+                    for (const transport of transports) {
+                        t.assert.equal(res.body.user.transports[transport], utils.cover_transport(user[transport].initial, transport));
+                    }
+                });
+        }
+    });
+});
