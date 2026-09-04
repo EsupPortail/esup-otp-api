@@ -33,12 +33,13 @@ This data is stored in a MongoDB database. (So just keep `"apiDb": "mongodb"`.)
 
 ### userDb
 `userDb` contains the user's email address and phone number. These are used to send one-time codes. `userDb` also contains the `displayName`, which helps managers search for users.<br />
-The `userDb` can be the same `mongodb` database as the `apiDb`, or an `ldap` server or a `mysql` database. This allows existing data (`pagerTelephoneNumber`, `supannMailPerso`, `displayName`) to be used.<br />
+The `userDb` can be the same `mongodb` database as the `apiDb`. Or an `ldap` server, a `mysql` database, or [`mixedUserDb`](#mixeduserdb). This allows existing data (`pagerTelephoneNumber`, `supannMailPerso`, `displayName`) to be used.<br />
 To do this:
-1. In `userDb`, specify the type of database to use. For example, `"userDb": "ldap",`.
+1. In `userDb`, specify the type of database to use.
 2. In the corresponding entry, specify the name of the attribute in the database.<br />
 For example:
 ```json
+    "userDb": "ldap",
     "ldap": {
         "uri": "ldap://ldap.univ.fr",
         "baseDn": "dc=univ,dc=fr",
@@ -51,6 +52,39 @@ For example:
         "displayName": "displayName"
     },
 ```
+#### mixedUserDb
+`mixedUserDb` makes it possible to use read-only data (typically LDAP), which can be overridden via a local database (typically MongoDB).<br />
+Configuration example:
+```json
+    "userDb": "mixedUserDb",
+    "mixedUserDb": {
+        "readOnly": "ldap",
+        "readWrite": "mongodb"
+    },
+    "auto_create_user": true,
+    "ldap": {
+        "uri": "ldap://ldap.univ.fr",
+        "baseDn": "dc=univ,dc=fr",
+        "adminDn": "cn=admin,dc=univ,dc=fr",
+        "password": "ExZI6HLkVm7OHslUUPK5YKl4A3W9jdwy",
+        "transport": {
+            "mail": "supannMailPerso",
+            "sms": "pagerTelephoneNumber"
+        },
+        "displayName": "displayName"
+    },
+    "mongodb": {
+        "uri": "mongodb://user:password@mongodb.example.com:27017/esup-otp-db",
+        "transport": {
+            "mail": "mail",
+            "sms": "mobile"
+        },
+    },
+```
+Please note:
+- `auto_create_user` applies **only** to the `readWrite` database. (If the user does not exist in the `readOnly` database, this will cause an error in all cases.)
+- There is no need to set `displayName` in the `readWrite` database.
+- For now, the interface is not yet adapted on the esup-otp-manager side: the user can click “delete” to remove their phone number, but this will only reset it to the value stored in the `readOnly` database.
 
 ## WebAuthn
 | key | description |

@@ -10,6 +10,7 @@
 - [login.js] alt text [d64651e](https://github.com/EsupPortail/esup-otp-api/commit/d64651e0c2e2f14efd09157ed4beed93b0acada1)
 - "DELETE /protected/users/:uid" API [cba490b](https://github.com/EsupPortail/esup-otp-api/commit/cba490b68db86131cdd7c7770d01cbaece5c23dd)
 - Make SMTP authentication configurable [6dd84fc](https://github.com/EsupPortail/esup-otp-api/commit/6dd84fc76c70126c7cb647e6cdc916953e78c552)
+- Mixed userDb [CONFIGURATION.md](CONFIGURATION.md#mixeduserdb) for more details)
 
 ## v2.3.0 (2026-04-15) ([release](https://github.com/EsupPortail/esup-otp-api/releases/tag/v2.3.0))
 ### Breaking changes

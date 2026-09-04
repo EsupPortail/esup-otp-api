@@ -132,11 +132,11 @@ export async function afterEach() {
 export const get = 'get', post = "post", put = 'put', del = 'del';
 
 /**
- * @typedef {{uid:String, secret: String, tenant: String?}} hashAuthentication
+ * @typedef {{uid:String, secret: String, tenant?: String}} hashAuthentication
 */
 
 /**
- * @typedef {{password: String, tenant: String?}} api_passwordAuthentication
+ * @typedef {{password: String, tenant?: String}} api_passwordAuthentication
 */
 
 /**

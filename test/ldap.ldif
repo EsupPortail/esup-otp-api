@@ -22,6 +22,18 @@ sn: Nari
 employeeNumber: fnari
 userPassword: theduke
 mail: flo@example.com
+displayName: Florian Nari
+
+dn: employeeNumber=toto,dc=univ,dc=fr
+objectClass: top
+objectClass: person
+objectClass: inetOrgPerson
+cn: Tata Toto
+sn: Toto
+employeeNumber: toto
+mail: toto@example.com
+mobile: 0678901234
+displayName: Tata Toto
 
 dn: ou=Roles,dc=univ,dc=fr
 objectclass: top
