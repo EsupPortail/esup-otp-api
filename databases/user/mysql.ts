@@ -2,75 +2,79 @@ import * as properties from '../../properties/properties.js';
 import * as errors from '../../services/errors.js';
 import { errorIfMultiTenantContext } from '../../services/multiTenantUtils.js';
 import StandardUserData from '../../services/userDb/userData/StandardUserData.ts';
-import UserDbAttributes, { type UserDbProperties } from '../../services/userDb/UserDbAttributes.ts';
+import UserDbAttributes, { type UserDbProperties, type SearchResult } from '../../services/userDb/UserDbAttributes.ts';
+import type UserDb from "./UserDb.ts";
 
 import * as mysql from 'mysql2/promise';
 
-const mysqlProperties: mysql.ConnectionOptions & UserDbProperties & { userTable: string } = properties.getEsupProperty("mysql");
-const userDbAttributes = new UserDbAttributes(mysqlProperties);
-const { searchAttributes, modifiableAttributes, modifiableAttributesRecord, allAttributes, attributes } = userDbAttributes;
-
-export { modifiableAttributesRecord };
-
 type InternalUser = Record<string, string>;
 
-let connection: mysql.Connection;
+export default class MongoUserDb implements UserDb<StandardUserData<InternalUser>> {
+    private readonly mysqlProperties: mysql.ConnectionOptions & UserDbProperties & { userTable: string } = properties.getEsupProperty("mysql");
+    private readonly userDbAttributes = new UserDbAttributes(this.mysqlProperties);
 
-export async function initialize() {
-    errorIfMultiTenantContext();
-    mysqlProperties.namedPlaceholders = true;
-    // because "Ignoring invalid configuration option passed to Connection: [displayName, userTable,transport] . This is currently a warning, but in future versions of MySQL2, an error will be thrown if you pass an invalid configuration option to a Connection"
-    // eslint-disable-next-line no-unused-vars
-    const { userTable, transport, displayName, ...connectionOptions } = mysqlProperties;
-    connection = await mysql.createConnection(connectionOptions);
-}
+    public readonly modifiableAttributesRecord = this.userDbAttributes.modifiableAttributesRecord;
 
-export function close() {
-    return connection.end();
-}
+    private connection: mysql.Connection;
 
-const selectQuery = `Select ${allAttributes.join(", ")} From ${mysqlProperties.userTable} u Where u.${attributes.uid} = :uid`
+    async initialize(): Promise<any> {
+        errorIfMultiTenantContext();
+        this.mysqlProperties.namedPlaceholders = true;
+        // because "Ignoring invalid configuration option passed to Connection: [displayName, userTable,transport] . This is currently a warning, but in future versions of MySQL2, an error will be thrown if you pass an invalid configuration option to a Connection"
+        // eslint-disable-next-line no-unused-vars
+        const { userTable, transport, displayName, ...connectionOptions } = this.mysqlProperties;
+        this.connection = await mysql.createConnection(connectionOptions);
+    }
 
+    close(): Promise<any> {
+        return this.connection?.end();
+    }
 
-export async function find_user(uid: string): Promise<StandardUserData<InternalUser>> {
-    return new StandardUserData(await find_user_internal(uid), attributes);
-}
+    private readonly selectQuery = `Select ${this.userDbAttributes.allAttributes.join(", ")} From ${this.mysqlProperties.userTable} u Where u.${this.userDbAttributes.attributes.uid} = :uid`;
 
-async function find_user_internal(uid: string) {
-    const [rows, _fields] = await connection.execute(selectQuery, { uid: uid });
-    const user = rows[0];
-    return user || errors.UserNotFoundError.throw();
-}
+    async find_user(uid: string): Promise<StandardUserData<InternalUser>> {
+        return new StandardUserData(await this.find_user_internal(uid), this.userDbAttributes.attributes);
+    }
 
-const searchQuery = `Select ${searchAttributes.join(", ")} From ${mysqlProperties.userTable} Where ${searchAttributes.map(attr => `LOWER(${attr}) LIKE :token`).join(" OR ")}`;
+    private async find_user_internal(uid: string): Promise<InternalUser> {
+        const [rows, _fields] = await this.connection.execute(this.selectQuery, { uid: uid });
+        const user = rows[0];
+        return user || errors.UserNotFoundError.throw();
+    }
 
-export async function search_users(token: string) {
-    token = token.toLowerCase();
-    const [rows, _fields] = await connection.execute(searchQuery, { token: `%${token}%` });
-    const result = rows as Record<string, string>[];
-    return result.map(result => userDbAttributes.standardizeSearchResult(result));
-}
+    private readonly searchQuery = `Select ${this.userDbAttributes.searchAttributes.join(", ")} From ${this.mysqlProperties.userTable} Where ${this.userDbAttributes.searchAttributes.map(attr => `LOWER(${attr}) LIKE :token`).join(" OR ")}`;
 
-export async function save_user(user: StandardUserData<InternalUser>) {
-    const oldUser = await find_user(user.getUid());
-    if (oldUser) {
-        const updatedAttributes = modifiableAttributes.filter(attr => oldUser[attr] != user.internalUser[attr]);
-        if (updatedAttributes.length) {
-            /** @example "sms = :sms , mail = :mail" */
-            const set = updatedAttributes.map(attr => `${attr} = :${attr}`).join(", ");
-            const updateQuery = `Update ${mysqlProperties.userTable} SET ${set} Where ${attributes.uid} = :${attributes.uid}`;
-            await connection.execute(updateQuery, user.internalUser);
+    async search_users(token: string): Promise<SearchResult[]> {
+        token = token.toLowerCase();
+        const [rows, _fields] = await this.connection.execute(this.searchQuery, { token: `%${token}%` });
+        const result = rows as Record<string, string>[];
+        return result.map(result => this.userDbAttributes.standardizeSearchResult(result));
+    }
+
+    async save_user(user: StandardUserData<InternalUser>): Promise<any> {
+        const oldUser = await this.find_user(user.getUid());
+        if (oldUser) {
+            const updatedAttributes = this.userDbAttributes.modifiableAttributes.filter(attr => oldUser[attr] != user.internalUser[attr]);
+            if (updatedAttributes.length) {
+                /** @example "sms = :sms , mail = :mail" */
+                const set = updatedAttributes.map(attr => `${attr} = :${attr}`).join(", ");
+                const updateQuery = `Update ${this.mysqlProperties.userTable} SET ${set} Where ${this.userDbAttributes.attributes.uid} = :${this.userDbAttributes.attributes.uid}`;
+                await this.connection.execute(updateQuery, user.internalUser);
+            }
         }
+    }
+
+    private readonly insertQuery = `INSERT INTO ${this.mysqlProperties.userTable} (${this.userDbAttributes.attributes.uid}) VALUES (:uid)`;
+
+    async create_user(uid: string): Promise<StandardUserData<InternalUser>> {
+        await this.connection.execute(this.insertQuery, { uid: uid })
+        return this.find_user(uid);
+    }
+
+    private readonly deleteQuery = `DELETE FROM ${this.mysqlProperties.userTable} WHERE ${this.userDbAttributes.attributes.uid} = :uid`;
+
+    remove_user(uid: string) {
+        return this.connection.execute(this.deleteQuery, { uid: uid });
     }
 }
 
-export async function create_user(uid: string): Promise<StandardUserData<InternalUser>> {
-    const query = `INSERT INTO ${mysqlProperties.userTable} (${attributes.uid}) VALUES (:uid)`;
-    await connection.execute(query, { uid: uid })
-    return find_user(uid);
-}
-
-export function remove_user(uid: string) {
-    const query = `DELETE FROM ${mysqlProperties.userTable} WHERE ${attributes.uid} = :uid`;
-    return connection.execute(query, { uid: uid });
-}

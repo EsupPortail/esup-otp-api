@@ -4,152 +4,141 @@ import { UserNotFoundError } from '../../services/errors.js';
 import { errorIfMultiTenantContext } from '../../services/multiTenantUtils.js';
 import StandardUserData from '../../services/userDb/userData/StandardUserData.ts';
 import UserDbAttributes, { type SearchResult } from '../../services/userDb/UserDbAttributes.ts';
+import type UserDb from "./UserDb.ts";
 
 import { Client, Change, Attribute, EqualityFilter, SubstringFilter, OrFilter, type SearchOptions, type Entry } from 'ldapts';
 
 import { logger } from '../../services/logger.js';
 
-const ldapProperties = properties.getEsupProperty("ldap");
-const userDbAttributes = new UserDbAttributes(ldapProperties);
-const { searchAttributes, modifiableAttributes, modifiableAttributesRecord, allAttributes, attributes } = userDbAttributes;
-
-export { modifiableAttributesRecord };
 
 type InternalUser = Record<string, string>;
 type LdapEntry = Entry & Record<string, string | string[]>;
 
-let client: Client;
+export default class LdapUserDb implements UserDb<StandardUserData<InternalUser>> {
+    private readonly ldapProperties = properties.getEsupProperty("ldap");
+    private readonly userDbAttributes = new UserDbAttributes(this.ldapProperties);
 
-export async function initialize() {
-    errorIfMultiTenantContext();
+    public readonly modifiableAttributesRecord = this.userDbAttributes.modifiableAttributesRecord;
 
-    logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ' Initializing ldap connection');
-    client = new Client({
-        url: ldapProperties.uri,
-        timeout: ldapProperties.timeout,
-        connectTimeout: ldapProperties.connectTimeout,
-    });
-    await bindLdapIfNeeded();
-    logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ' Ldap connection Initialized');
-}
+    private client: Client;
 
-export function close() {
-    return client.unbind();
-}
+    async initialize(): Promise<any> {
+        errorIfMultiTenantContext();
 
-async function bindLdapIfNeeded() {
-    if (!client.isConnected) {
-        await client.bind(ldapProperties.adminDn, ldapProperties.password);
+        logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ' Initializing ldap connection');
+        this.client = new Client({
+            url: this.ldapProperties.uri,
+            timeout: this.ldapProperties.timeout,
+            connectTimeout: this.ldapProperties.connectTimeout,
+            autoRebind: true,
+        });
+        await this.client.bind(this.ldapProperties.adminDn, this.ldapProperties.password)
+        logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ' Ldap connection Initialized');
     }
-}
 
-async function getClient() {
-    await bindLdapIfNeeded();
-    return client;
-}
+    close(): Promise<any> {
+        return this.client?.unbind();
+    }
 
-export async function find_user(uid: string): Promise<StandardUserData<InternalUser>> {
-    let user: InternalUser | undefined;
-    try {
-        user = await find_user_internal(uid);
-    } catch (error) {
-        if (!isNoSuchObjectError(error)) {
-            throw error;
+    async find_user(uid: string): Promise<StandardUserData<InternalUser>> {
+        let user: InternalUser | undefined;
+        try {
+            user = await this.find_user_internal(uid);
+        } catch (error) {
+            if (!LdapUserDb.isNoSuchObjectError(error)) {
+                throw error;
+            }
+        }
+        if (user) {
+            return new StandardUserData(user, this.userDbAttributes.attributes);
+        } else {
+            throw new UserNotFoundError();
         }
     }
-    if (user) {
-        return new StandardUserData(user, attributes);
-    } else {
-        throw new UserNotFoundError();
-    }
-}
 
+    private async find_user_internal(uid: string): Promise<InternalUser | undefined> {
+        const opts: SearchOptions = {
+            filter: new EqualityFilter({ attribute: this.userDbAttributes.attributes.uid, value: uid }),
+            scope: 'sub',
+            attributes: this.userDbAttributes.allAttributes
+        };
 
-async function find_user_internal(uid: string): Promise<InternalUser | undefined> {
-    const opts: SearchOptions = {
-        filter: new EqualityFilter({ attribute: attributes.uid, value: uid }),
-        scope: 'sub',
-        attributes: allAttributes
-    };
+        const { searchEntries } = await this.client.search(this.ldapProperties.baseDn, opts);
+        const searchEntry = searchEntries?.[0] as LdapEntry | undefined;
 
-    const { searchEntries } = await getClient().then(client => client.search(ldapProperties.baseDn, opts));
-    const searchEntry = searchEntries?.[0] as LdapEntry | undefined;
+        if (!searchEntry) {
+            return;
+        }
 
-    if (!searchEntry) {
-        return;
+        return LdapUserDb.parseUser(searchEntry, this.userDbAttributes.allAttributes);
     }
 
-    return parseUser(searchEntry, allAttributes);
-}
+    private static parseUser(searchEntry: LdapEntry, attributeList: string[]): InternalUser {
+        return Object.fromEntries(
+            Object.entries(searchEntry)
+                .filter(([key]) => attributeList.includes(key))
+                .map(([key, value]) => [key, Array.isArray(value) ? value[0] : value])
+        );
+    }
 
-function parseUser(searchEntry: LdapEntry, attributeList: string[]): InternalUser {
-    return Object.fromEntries(
-        Object.entries(searchEntry)
-            .filter(([key]) => attributeList.includes(key))
-            .map(([key, value]) => [key, Array.isArray(value) ? value[0] : value])
-    );
-}
+    async search_users(token: string): Promise<SearchResult[]> {
+        const opts: SearchOptions = {
+            filter: new OrFilter({ // (|(uid=*token*)(displayName=*token*))
+                filters: this.userDbAttributes.searchAttributes.map(attr => new SubstringFilter({
+                    attribute: attr,
+                    any: [token],
+                }))
+            }),
+            scope: 'sub',
+            attributes: this.userDbAttributes.searchAttributes,
+        };
 
-export async function search_users(token: string): Promise<SearchResult[]> {
-    const opts: SearchOptions = {
-        filter: new OrFilter({ // (|(uid=*token*)(displayName=*token*))
-            filters: searchAttributes.map(attr => new SubstringFilter({
-                attribute: attr,
-                any: [token],
-            }))
-        }),
-        scope: 'sub',
-        attributes: searchAttributes,
-    };
+        const { searchEntries } = await this.client.search(this.ldapProperties.baseDn, opts);
+        return searchEntries
+            .map(searchEntry => LdapUserDb.parseUser(searchEntry as LdapEntry, this.userDbAttributes.searchAttributes))
+            .map(result => this.userDbAttributes.standardizeSearchResult(result));
+    }
 
-    const client = await getClient();
-    const { searchEntries } = await client.search(ldapProperties.baseDn, opts);
-    return searchEntries
-        .map(searchEntry => parseUser(searchEntry as LdapEntry, searchAttributes))
-        .map(result => userDbAttributes.standardizeSearchResult(result));
-}
+    private ldap_change(user: InternalUser): Change[] {
+        return Object.entries(user)
+            .filter(([attr, _value]) => this.userDbAttributes.modifiableAttributes.includes(attr))
+            .map(([attr, value]) => new Change({
+                operation: 'replace',
+                modification: new Attribute({ type: attr, values: [value].filter(Boolean) }),
+            }));
+    }
 
-function ldap_change(user: InternalUser): Change[] {
-    return Object.entries(user)
-        .filter(([attr, _value]) => modifiableAttributes.includes(attr))
-        .map(([attr, value]) => new Change({
-            operation: 'replace',
-            modification: new Attribute({ type: attr, values: [value].filter(Boolean) }),
-        }));
-}
+    save_user(user: StandardUserData<InternalUser>): Promise<any> {
+        const changes = this.ldap_change(user.internalUser);
+        return this.client.modify(this.getDN(user.getUid()), changes);
+    }
 
-export function save_user(user: StandardUserData<InternalUser>) {
-    const changes = ldap_change(user.internalUser);
-    return getClient().then(client => client.modify(getDN(user.getUid()), changes));
-}
+    private getDN(uid: string): string {
+        return `${this.userDbAttributes.attributes.uid}=${uid},${this.ldapProperties.baseDn}`;
+    }
 
-function getDN(uid: string): string {
-    return `${attributes.uid}=${uid},${ldapProperties.baseDn}`;
-}
+    async create_user(uid: string): Promise<StandardUserData<InternalUser>> {
+        const entry = {
+            cn: uid,
+            [this.userDbAttributes.attributes.uid]: uid,
+            sn: uid,
+            objectclass: ['inetOrgPerson']
+        };
+        await this.client.add(this.getDN(uid), entry);
+        return this.find_user(uid);
+    }
 
-export async function create_user(uid: string): Promise<StandardUserData<InternalUser>> {
-    const entry = {
-        cn: uid,
-        [attributes.uid]: uid,
-        sn: uid,
-        objectclass: ['inetOrgPerson']
-    };
-    const client = await getClient();
-    await client.add(getDN(uid), entry);
-    return find_user(uid);
-}
-
-export async function remove_user(uid: string) {
-    const client = await getClient();
-    try {
-        return await client.del(getDN(uid));
-    } catch (error) {
-        if (!isNoSuchObjectError(error)) {
-            throw error;
+    async remove_user(uid: string) {
+        try {
+            return await this.client.del(this.getDN(uid));
+        } catch (error) {
+            if (!LdapUserDb.isNoSuchObjectError(error)) {
+                throw error;
+            }
         }
     }
-}
 
-function isNoSuchObjectError(error: Error) {
-    return error?.name == "NoSuchObjectError";
+    private static isNoSuchObjectError(error: Error) {
+        return error?.name == "NoSuchObjectError";
+    }
 }

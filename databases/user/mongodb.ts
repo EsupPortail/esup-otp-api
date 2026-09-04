@@ -2,76 +2,70 @@ import * as properties from '../../properties/properties.js';
 import * as errors from '../../services/errors.js';
 import { currentTenantMongodbFilter } from '../../services/multiTenantUtils.js';
 import StandardUserData from '../../services/userDb/userData/StandardUserData.ts';
-import UserDbAttributes from '../../services/userDb/UserDbAttributes.ts';
+import UserDbAttributes, { type SearchResult } from '../../services/userDb/UserDbAttributes.ts';
 import generateMongooseUserSchema from './userSchema.ts';
+import type UserDb from "./UserDb.ts";
 
 import * as mongoose from 'mongoose';
 
-const mongodbProperties = properties.getEsupProperty("mongodb");
-const userDbAttributes = new UserDbAttributes(mongodbProperties);
-const { searchAttributes, modifiableAttributesRecord, attributes } = userDbAttributes;
-
-export { modifiableAttributesRecord };
-
 type InternalUser = mongoose.Document & Record<string, string>;
 
-let connection: mongoose.Connection;
+export default class MongoUserDb implements UserDb<StandardUserData<InternalUser>> {
+    private readonly mongodbProperties = properties.getEsupProperty("mongodb");
+    private readonly userDbAttributes = new UserDbAttributes(this.mongodbProperties);
 
-export async function initialize(dbUrl: string | undefined) {
-    connection = await mongoose.createConnection(dbUrl || properties.getMongoDbUrl()).asPromise();
-    initialize_user_model(connection);
-}
+    public readonly modifiableAttributesRecord = this.userDbAttributes.modifiableAttributesRecord;
 
-export function close() {
-    return connection?.close();
-}
+    private connection: mongoose.Connection;
+    private User: mongoose.Model<any>;
 
-let User: mongoose.Model<any>;
-
-function initialize_user_model(connection: mongoose.Connection) {
-    User = connection.model('User', generateMongooseUserSchema(attributes), 'User');
-}
-
-export async function find_user(uid: string): Promise<StandardUserData<InternalUser>> {
-    const user = await User.findOne({ [attributes.uid]: uid });
-
-    if (user) {
-        return new StandardUserData(user, attributes);
-    } else {
-        throw new errors.UserNotFoundError();
+    async initialize(dbUrl?: string): Promise<any> {
+        this.connection = await mongoose.createConnection(dbUrl || properties.getMongoDbUrl()).asPromise();
+        this.User = this.connection.model('User', generateMongooseUserSchema(this.userDbAttributes.attributes), 'User');
     }
-}
 
-export async function search_users(token: string, req: any): Promise<Array<{ uid: string; displayName: string | undefined; }>> {
-    const regex = new RegExp(token, 'i');
+    close(): Promise<any> {
+        return this.connection?.close();
+    }
 
-    /** @example [{uid: /token/i}, {displayName: /token/i}] */
-    const orConditions = searchAttributes.map(attr => ({
-        [attr]: regex,
-    }));
+    async find_user(uid: string): Promise<StandardUserData<InternalUser>> {
+        const user = await this.User.findOne({ [this.userDbAttributes.attributes.uid]: uid });
 
-    const brutResult = await User.find({
-        $and: [
-            await currentTenantMongodbFilter(req),
-            { $or: orConditions }
-        ]
-    }).select(searchAttributes);
-    return brutResult.map(result => userDbAttributes.standardizeSearchResult(result));
-}
+        if (user) {
+            return new StandardUserData(user, this.userDbAttributes.attributes);
+        } else {
+            throw new errors.UserNotFoundError();
+        }
+    }
 
-export async function create_user(uid: string): Promise<StandardUserData<InternalUser>> {
-    const user = new StandardUserData(new User({ [attributes.uid]: uid }), attributes);
-    await save_user(user);
-    return user;
-}
+    async search_users(token: string, req: any): Promise<SearchResult[]> {
+        const regex = new RegExp(token, 'i');
 
-export async function save_user(user: StandardUserData<InternalUser>) {
-    await user.internalUser.save()
-}
+        /** @example [{uid: /token/i}, {displayName: /token/i}] */
+        const orConditions = this.userDbAttributes.searchAttributes.map(attr => ({
+            [attr]: regex,
+        }));
 
-/**
- * Supprime l'utilisateur
- */
-export function remove_user(uid: string) {
-    return User.deleteOne({ [attributes.uid]: uid });
+        const brutResult = await this.User.find({
+            $and: [
+                await currentTenantMongodbFilter(req),
+                { $or: orConditions }
+            ]
+        }).select(this.userDbAttributes.searchAttributes);
+        return brutResult.map(result => this.userDbAttributes.standardizeSearchResult(result));
+    }
+
+    async create_user(uid: string): Promise<StandardUserData<InternalUser>> {
+        const user = new StandardUserData(new this.User({ [this.userDbAttributes.attributes.uid]: uid }), this.userDbAttributes.attributes);
+        await this.save_user(user);
+        return user;
+    }
+
+    async save_user(user: StandardUserData<InternalUser>): Promise<any> {
+        await user.internalUser.save()
+    }
+
+    async remove_user(uid: string): Promise<any> {
+        return this.User.deleteOne({ [this.userDbAttributes.attributes.uid]: uid });
+    }
 }
