@@ -5,7 +5,7 @@ import * as api_controller from './api.js';
 import { onUserTransportChange } from '../services/userChangesNotifier/userChangesNotifier.js';
 
 /**
- * @type {import('../databases/user/mongodb.js')} userDb
+ * @type {import('../databases/user/UserDb.ts').default} userDb
  */
 export let userDb;
 
@@ -15,7 +15,8 @@ export async function initialize(initializedUserDb) {
     } else {
         const userDbName = properties.getEsupProperty('userDb');
         if (userDbName) {
-            userDb = await import('../databases/user/' + userDbName + '.ts');
+            const { default: UserDb } = await import('../databases/user/' + userDbName + '.ts');
+            userDb = new UserDb();
             return userDb.initialize();
         } else {
             throw new Error('Unknown userDb');
