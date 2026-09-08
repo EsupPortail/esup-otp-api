@@ -43,6 +43,7 @@ export default class LdapUserDb implements UserDb<StandardUserData<InternalUser>
     async find_user(uid: string): Promise<StandardUserData<InternalUser>> {
         let user: InternalUser | undefined;
         try {
+            logger.debug("find_user_internal: " + uid);
             user = await this.find_user_internal(uid);
         } catch (error) {
             if (!LdapUserDb.isNoSuchObjectError(error)) {

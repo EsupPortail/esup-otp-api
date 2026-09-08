@@ -109,8 +109,8 @@ export async function generateQrCode(url, size = 164) {
 }
 
 /**
- * @param {String} method 
- * @param {Object} params  
+ * @param {String} method
+ * @param {Object} params
  * @example
  * // return "esupauth://app/auth/push?uid=toto&code=123456&host=https://esup-otp-api.example.com"
  * getDeepLink("push", { uid: "toto", code: 1234, host: "https://esup-otp-api.example.com" })
@@ -193,7 +193,7 @@ export function distinct(array) {
  * Checks equality between strings in constant time.
  * @param {String} a
  * @param {String} b
- * @returns {Boolean}  
+ * @returns {Boolean}
  */
 export function stringTimingSafeEqual(a, b) {
     if (!a || !b) {
@@ -209,7 +209,7 @@ export function stringTimingSafeEqual(a, b) {
  * Check if an array contains a string in constant time (in case of failure, but not necessarily in case of success)
  * @param {String[]} array
  * @param {String} string
- * @returns {Boolean}  
+ * @returns {Boolean}
  */
 export function timingSafeArrayIncludesString(array, string) {
     if (!array || !string) {
