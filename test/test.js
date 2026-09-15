@@ -117,6 +117,7 @@ const config = {
             "text1": "Demande de connexion à votre compte",
             "text2": " à proximité de $city",
             "nbMaxFails": 3,
+            "max_devices": 10,
             "transports": ["push"]
         },
         "esupnfc": {
@@ -173,6 +174,7 @@ await testUtils.start(config);
 const api_controller = await import('../controllers/api.js');
 const userDb_controller = await import('../controllers/user.js');
 const utils = await import('../services/utils.js');
+const push = await import('../methods/push.js');
 
 let uid;
 let userCounter = 0;
@@ -268,6 +270,105 @@ await test('Esup otp api', async (t) => {
                 t.assert.equal(res.body.code, "Ok");
                 t.assert.equal(res.body.codes.length, properties.getMethodProperty(method, 'codes_number'));
             });
+    });
+
+    await t.test('push supports mobile and browser devices', async (t) => {
+        const auth = { password: config.api_password };
+
+        async function addDevice(gcmId, type, platform, manufacturer, model) {
+            const activation = await testUtils.standardActivate(uid, 'push', auth).expect(200);
+            return testUtils.request(
+                testUtils.post,
+                `/protected/users/${uid}/methods/push/activate/${activation.body.activationCode}`,
+                auth
+            )
+                .send({ gcm_id: gcmId, type, platform, manufacturer, model })
+                .expect(200);
+        }
+
+        const mobile = await addDevice('fcm-mobile', 'mobile', 'iOS', 'Apple', 'iPhone 12 mini');
+        await addDevice('fcm-chrome', 'browser', 'MacIntel', 'Google Inc.', 'Chrome');
+
+        const sentNotifications = [];
+        properties.setMethodProperty('push', 'notification', true);
+        push.setFirebaseSendForTests(async message => {
+            sentNotifications.push(message);
+            return 'message-' + sentNotifications.length;
+        });
+        await testUtils.send_message(uid, 'push', 'push', { uid, secret: config.users_secret }).expect(200);
+        t.assert.deepEqual(sentNotifications.map(message => message.token), ['fcm-mobile', 'fcm-chrome']);
+        t.assert.ok(sentNotifications.every(message => message.data?.action === 'auth'));
+        t.assert.ok(sentNotifications[0].notification);
+        t.assert.ok(!sentNotifications[1].notification);
+        push.setFirebaseSendForTests(null);
+
+        await testUtils.get_user_infos(uid, auth)
+            .expect(200)
+            .then(res => {
+                t.assert.equal(res.body.user.methods.push.devices.length, 2);
+                t.assert.equal(res.body.user.transports.push, 'Apple iPhone 12 mini, Chrome sur macOS');
+                t.assert.deepEqual(
+                    res.body.user.methods.push.devices.map(device => device.model),
+                    ['iPhone 12 mini', 'Chrome']
+                );
+                t.assert.deepEqual(
+                    res.body.user.methods.push.devices.map(device => device.type),
+                    ['mobile', 'browser']
+                );
+            });
+
+        const browserId = await testUtils.get_user_infos(uid, auth)
+            .expect(200)
+            .then(res => res.body.user.methods.push.devices.find(device => device.type === 'browser').id);
+        await testUtils.request(testUtils.del, `/protected/users/${uid}/methods/push/auth/${browserId}`, auth).expect(200);
+
+        await testUtils.get_user_infos(uid, auth)
+            .expect(200)
+            .then(res => {
+                t.assert.equal(res.body.user.methods.push.devices.length, 1);
+                t.assert.equal(res.body.user.methods.push.devices[0].model, 'iPhone 12 mini');
+                t.assert.ok(res.body.user.methods.push.active);
+            });
+
+        await testUtils.request(
+            testUtils.get,
+            `/users/${uid}/methods/push/${mobile.body.tokenSecret}`
+        ).expect(200);
+
+        await testUtils.deactivate(uid, 'push', auth).expect(200);
+        await testUtils.get_user_infos(uid, auth)
+            .expect(200)
+            .then(res => {
+                t.assert.equal(res.body.user.methods.push.devices.length, 0);
+                t.assert.ok(!res.body.user.methods.push.active);
+            });
+    });
+
+    await t.test('push refuses more than max devices', async (t) => {
+        const auth = { password: config.api_password };
+
+        async function addBrowser(index, expectedStatus = 200) {
+            const activation = await testUtils.standardActivate(uid, 'push', auth).expect(200);
+            return testUtils.request(
+                testUtils.post,
+                `/protected/users/${uid}/methods/push/activate/${activation.body.activationCode}`,
+                auth
+            )
+                .send({
+                    gcm_id: `fcm-browser-${index}`,
+                    type: 'browser',
+                    platform: 'Web',
+                    manufacturer: 'Browser',
+                    model: `Browser ${index}`,
+                })
+                .expect(expectedStatus);
+        }
+
+        for (let i = 0; i < config.methods.push.max_devices; i++) {
+            await addBrowser(i);
+        }
+
+        await addBrowser(config.methods.push.max_devices, 403);
     });
 
     await t.test('test random_code', async (t) => {

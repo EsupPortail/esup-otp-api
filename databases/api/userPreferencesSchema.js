@@ -91,6 +91,24 @@ const schema = {
         }
     },
     push: {
+        // Source of truth for Push For All. Each entry is a mobile app or a
+        // browser endpoint with its own FCM token and token_secret.
+        devices: {
+            type: [{
+                _id: false,
+                type: { type: String, default: 'mobile' },
+                platform: { type: String, default: null },
+                gcm_id: { type: String, default: null },
+                manufacturer: { type: String, default: null },
+                model: { type: String, default: null },
+                token_secret: { type: String, default: null },
+                gcm_id_not_registered: { type: Boolean, default: false },
+                invalid_gcm_id: { type: Boolean, default: false },
+            }],
+            default: []
+        },
+        // Legacy single-device fields kept for older data and older clients.
+        // They are synchronized from devices[] by the API layer.
         device: {
             platform: {
                 type: String,
@@ -133,6 +151,7 @@ const schema = {
             type: Array,
             default: properties.getEsupProperty('transports')
         },
+        // Legacy mirror of the representative device token_secret.
         token_secret:{
             type: String,
             default: null

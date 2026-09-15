@@ -5,7 +5,7 @@ const methodName = {
     bypass: "par codes de secours",
     esupnfc: "par NFC avec votre carte multi-service",
     passcode_grid: "par grille de code",
-    push: "par notifications sur l’application mobile Esup Auth",
+    push: "par notifications push",
     random_code_mail: "par codes par email",
     random_code: "par codes par SMS",
     totp: "par codes TOTP",

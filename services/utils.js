@@ -1,7 +1,6 @@
 import * as properties from '../properties/properties.js';
 import crypto from 'crypto';
 import cryptoRandomString from 'crypto-random-string';
-import { logger } from '../services/logger.js';
 import * as qrcode from 'qrcode';
 import proxyAddr from 'proxy-addr';
 
@@ -33,8 +32,6 @@ export function get_hash(uid, users_secret) {
     const hashedUserSecret = raw_hash('MD5', users_secret);
     const hashes = salts
         .map(salt => getHashWithSalt(hashedUserSecret, uid, salt));
-
-    logger.debug("hashes for " + uid + ": " + hashes);
 
     return hashes;
 }
@@ -124,7 +121,17 @@ export function isGcmIdWellFormed(gcm_id) {
 }
 
 export function isGcmIdValidAndRegistered(user) {
-    return isGcmIdWellFormed(user.push.device.gcm_id) && !user.push.gcm_id_not_registered && !user.push.invalid_gcm_id;
+    // Push For All can have several endpoints. Fallback to the legacy fields
+    // so old user records are considered reachable until they are normalized.
+    const devices = user.push.devices?.length
+        ? user.push.devices
+        : [{
+            gcm_id: user.push.device.gcm_id,
+            gcm_id_not_registered: user.push.gcm_id_not_registered,
+            invalid_gcm_id: user.push.invalid_gcm_id,
+        }];
+
+    return devices.some(device => isGcmIdWellFormed(device.gcm_id) && !device.gcm_id_not_registered && !device.invalid_gcm_id);
 }
 
 export function canReceiveNotifications(user) {

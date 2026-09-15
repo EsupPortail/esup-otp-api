@@ -21,6 +21,7 @@ export async function start(config) {
     config.mongodb.uri = mongoDbUri;
 
     mock.module("nodemailer", { defaultExport: nodemailerMock });
+    mock.module("ip-location-api", { namedExports: { lookup: () => undefined } });
 
     server = await import('../server/server.js');
     await server.start(0);

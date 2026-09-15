@@ -243,10 +243,14 @@ function transport(opts, req, res, user) {
  */
 export async function get_user_infos(req, res) {
     const user = await apiDb.find_user(req, res);
+    const pushDevices = user.push.devices?.length ? user.push.devices : [user.push.device];
     const transports = {
         sms: utils.cover_sms(userUtils.getSms(user.userDb)),
         mail: utils.cover_mail(userUtils.getMail(user.userDb)),
-        push: user.push.device.manufacturer + ' ' + user.push.device.model,
+        push: pushDevices
+            .filter(device => device?.manufacturer || device?.model || device?.platform)
+            .map(formatPushDeviceLabel)
+            .join(', '),
     }
 
     res.status(200);
@@ -261,6 +265,36 @@ export async function get_user_infos(req, res) {
             has_enabled_method: user.hasEnabledMethod,
         }
     });
+}
+
+function formatPushDeviceLabel(device) {
+    if ((device.type || 'mobile') !== 'browser') {
+        return [device.manufacturer, device.model].filter(Boolean).join(' ');
+    }
+
+    const browser = getBrowserName(device.model, device.manufacturer);
+    const os = getBrowserOsName(device.platform, device.model);
+    return [browser, os].filter(Boolean).join(' sur ') || 'Navigateur web';
+}
+
+function getBrowserName(model, manufacturer) {
+    const value = `${model || ''} ${manufacturer || ''}`;
+    if (/firefox/i.test(value)) return 'Firefox';
+    if (/edg(e|ios|a)?/i.test(value)) return 'Edge';
+    if (/opr\/|opera/i.test(value)) return 'Opera';
+    if (/chrom(e|ium)|google inc/i.test(value)) return 'Chrome';
+    if (/safari|apple computer/i.test(value)) return 'Safari';
+    return 'Navigateur web';
+}
+
+function getBrowserOsName(platform, model) {
+    const value = `${platform || ''} ${model || ''}`;
+    if (/mac|darwin/i.test(value)) return 'macOS';
+    if (/win/i.test(value)) return 'Windows';
+    if (/iphone|ipad|ipod/i.test(value)) return 'iOS';
+    if (/android/i.test(value)) return 'Android';
+    if (/linux/i.test(value)) return 'Linux';
+    return '';
 }
 
 /**
@@ -283,22 +317,22 @@ export async function send_message(req, res) {
 }
 
 export async function accept_authentication(req, res) {
-    errorIfNotPushMethod(req);
+    errorIfNotPushLikeMethod(req);
     const { user, method } = await getUserAndMethodModule(req, { checkUserMethodActive: true, checkMethodPropertyActivate: true });
     return method.accept_authentication(user, req, res);
 }
 
 export async function reject_authentication(req, res) {
-    errorIfNotPushMethod(req);
+    errorIfNotPushLikeMethod(req);
     const { user, method } = await getUserAndMethodModule(req, { checkUserMethodActive: true, checkMethodPropertyActivate: true });
     return method.reject_authentication(user, req, res);
 }
 
 export async function pending(req, res) {
-    errorIfNotPushMethod(req);
+    errorIfNotPushLikeMethod(req);
 
     const acceptHeader = req.header("accept");
-    if (acceptHeader?.includes("html") && !acceptHeader?.includes("json")) {
+    if (req.params.method === 'push' && acceptHeader?.includes("html") && !acceptHeader?.includes("json")) {
         return methods.push.redirectToDeepLink(req, res);
     }
 
@@ -540,8 +574,8 @@ export async function getUserAndMethodModule(req, { checkUserMethodActive, check
     };
 }
 
-function errorIfNotPushMethod(req) {
-    if (!(properties.getMethod(req.params.method) && req.params.method == 'push')) {
+function errorIfNotPushLikeMethod(req) {
+    if (!(properties.getMethod(req.params.method) && req.params.method === 'push')) {
         throw new errors.MethodNotFoundError();
     }
 }

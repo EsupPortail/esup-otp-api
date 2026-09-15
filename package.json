@@ -46,6 +46,7 @@
   },
   "scripts": {
     "start": "nohup node run &",
+    "dev": "node run",
     "test": "node --test --experimental-test-module-mocks ./test/test.js",
     "coverage": "node --test --experimental-test-coverage ./test/test.js",
     "lcov": "node --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=lcov.info ./test/test.js # only works with node v21.2.0 or higher"

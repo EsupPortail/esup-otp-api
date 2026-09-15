@@ -5,7 +5,7 @@ const msgs = {
         "You refused the request": "Vous avez refusé la demande.",
         "Error": "Erreur",
         "Authenticate by physical factor (WebAuthn)": "S'authentifier par facteur physique (WebAuthn)",
-        "Open the Esup Auth application on your mobile %TRANSPORT% to validate the authentication.": "Ouvrez l'application Esup Auth sur votre portable %TRANSPORT% pour valider l'authentification.",
+        "Open the notification on your device to validate the authentication.": "Ouvrez la notification sur votre appareil pour valider l'authentification.",
         "Please enter a code:": "Merci de renseigner un code :",
         "Try another method": "Essayez une autre méthode",
         "Error, please try again later": "Erreur, veuillez réessayer ultérieurement",
@@ -19,7 +19,7 @@ const msgs = {
         "Receive a code by mail on %TRANSPORT%": "Recevoir un code par mél sur %TRANSPORT%",
         "Receive a code by SMS on %TRANSPORT%": "Recevoir un code par SMS sur %TRANSPORT%",
         "Authentication failed": "L'authentification a échoué",
-        "Authenticate via the Esup Auth application on your %TRANSPORT%": "S'authentifier via l'application Esup Auth sur votre %TRANSPORT%",
+        "Authenticate via a push notification on %TRANSPORT%": "S'authentifier via une notification push sur %TRANSPORT%",
         "Enter the 6-digit code": "Saisissez le code de 6 chiffres",
         "Enter the code shown in the cell at the intersection of <strong>row %LINE%</strong> and <strong>column %COLUMN%</strong> 5 of your passcode grid.": "Veuillez saisir le code indiqué au croisement de la <strong>ligne %LINE%</strong> et de la <strong>colonne %COLUMN%</strong> de votre grille de codes.",
         "Enter a TOTP code": "Saisir un code TOTP",
@@ -585,11 +585,11 @@ function add_html_template() {
         },
         push: { 
             label: { 
-                push: _("Authenticate via the Esup Auth application on your %TRANSPORT%"),
+                push: _("Authenticate via a push notification on %TRANSPORT%"),
             },
             hide_submitCode: true,
             retryText: _("Request a new notification"),
-            code_label_afterSubmit: _("Open the Esup Auth application on your mobile %TRANSPORT% to validate the authentication."),
+            code_label_afterSubmit: _("Open the notification on your device to validate the authentication."),
         },
         totp: {
             label: {

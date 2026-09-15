@@ -16,27 +16,22 @@ import * as sockets from '../server/sockets.js';
  * @type {import('ip-location-api').lookup} 
  */
 let lookup;
+let firebaseSendForTests;
 
 import DeviceDetector from "node-device-detector";
 import { autoActivateTotpReady } from './totp.js';
 import { autoActivateEsupnfcReady } from './esupnfc.js';
 
-const trustGcm_id = properties.getMethod('push').trustGcm_id;
-
-// Set up the sender with you API key, prepare your recipients' registration tokens.
-const proxyUrl = properties.getEsupProperty('proxyUrl');
-
-/**
- * @type {(message: admin.messaging.Message, dryRun?: boolean) => Promise<string>}
- */
-// initFirebaseAdmin() only if serviceAccount.private_key is defined
-const send = properties.getMethod('push').serviceAccount?.private_key && initFirebaseAdmin();
+const MOBILE_DEVICE_TYPE = 'mobile';
+const BROWSER_DEVICE_TYPE = 'browser';
+const DEFAULT_MAX_DEVICES = 10;
 
 
 function initFirebaseAdmin() {
+    const proxyUrl = properties.getEsupProperty('proxyUrl');
     const httpAgent = proxyUrl ? new HttpsProxyAgent(proxyUrl) : undefined;
     admin.initializeApp({
-        credential: admin.credential.cert(properties.getMethod('push').serviceAccount, httpAgent),
+        credential: admin.credential.cert(properties.getMethod('push').serviceAccount),
         httpAgent: httpAgent,
     });
 
@@ -49,6 +44,173 @@ function initFirebaseAdmin() {
     return function sendWithFirebaseAdmin(message, dryRun) {
         return admin.messaging().send(message, dryRun);
     }
+}
+
+function getPushProperties() {
+    return properties.getMethod('push');
+}
+
+// Firebase is initialized lazily so tests can inject a fake sender before any
+// real Firebase Admin app is created.
+function getFirebaseSend() {
+    if (firebaseSendForTests) {
+        return firebaseSendForTests;
+    }
+
+    if (!admin.apps.length && getPushProperties().serviceAccount?.private_key) {
+        initFirebaseAdmin();
+    }
+
+    return admin.apps.length ? admin.messaging().send.bind(admin.messaging()) : null;
+}
+
+export function setFirebaseSendForTests(send) {
+    firebaseSendForTests = send;
+}
+
+function getMaxDevices() {
+    return getPushProperties().max_devices || DEFAULT_MAX_DEVICES;
+}
+
+function toPlainObject(value) {
+    return value?.toObject?.() || value || {};
+}
+
+function hasDeviceIdentity(device) {
+    return Boolean(device?.gcm_id || device?.token_secret);
+}
+
+function pushDeviceKey(device) {
+    return device.token_secret || device.gcm_id || `${device.type || MOBILE_DEVICE_TYPE}:${device.platform}:${device.manufacturer}:${device.model}`;
+}
+
+function buildLegacyPushDevice(user) {
+    if (!hasDeviceIdentity(user.push.device) && !user.push.token_secret) {
+        return null;
+    }
+
+    return {
+        ...toPlainObject(user.push.device),
+        type: MOBILE_DEVICE_TYPE,
+        token_secret: user.push.token_secret,
+        gcm_id_not_registered: user.push.gcm_id_not_registered,
+        invalid_gcm_id: user.push.invalid_gcm_id,
+    };
+}
+
+function addDeviceIfMissing(devices, candidate) {
+    if (!hasDeviceIdentity(candidate)) {
+        return;
+    }
+
+    candidate.type ||= MOBILE_DEVICE_TYPE;
+    const candidateKey = pushDeviceKey(candidate);
+    const alreadyExists = devices.some(device => pushDeviceKey(device) === candidateKey);
+    if (!alreadyExists) {
+        devices.push(candidate);
+    }
+}
+
+// Historical push data was stored in push.device + push.token_secret. The new
+// model stores every mobile/browser endpoint in push.devices[], so old accounts
+// are imported on read instead of requiring a one-shot migration script.
+function importLegacyDevices(user) {
+    user.push.devices ||= [];
+
+    addDeviceIfMissing(user.push.devices, buildLegacyPushDevice(user));
+
+    return user.push.devices;
+}
+
+function getPushDevices(user) {
+    return importLegacyDevices(user);
+}
+
+function isMobileDevice(device) {
+    return (device?.type || MOBILE_DEVICE_TYPE) === MOBILE_DEVICE_TYPE;
+}
+
+function isBrowserDevice(device) {
+    return device?.type === BROWSER_DEVICE_TYPE;
+}
+
+function canReceivePushNotifications(device) {
+    return getPushProperties().notification
+        && utils.isGcmIdWellFormed(device?.gcm_id)
+        && !device.gcm_id_not_registered
+        && !device.invalid_gcm_id;
+}
+
+function selectLegacyPushDevice(devices) {
+    return devices.find(isMobileDevice) || devices[0];
+}
+
+// Keep the former single-device fields in sync for older API consumers. When a
+// mobile device exists it remains the legacy representative; otherwise the first
+// registered browser is mirrored.
+function syncLegacyPushFields(user) {
+    const device = selectLegacyPushDevice(user.push.devices || []);
+    user.push.active = Boolean(device);
+    user.push.device.platform = device?.platform || null;
+    user.push.device.gcm_id = device?.gcm_id || null;
+    user.push.device.manufacturer = device?.manufacturer || null;
+    user.push.device.model = device?.model || null;
+    user.push.token_secret = device?.token_secret || null;
+    user.push.gcm_id_not_registered = device?.gcm_id_not_registered || false;
+    user.push.invalid_gcm_id = device?.invalid_gcm_id || false;
+}
+
+function findPushDevice(user, credential) {
+    return getPushDevices(user).find(device =>
+        utils.stringTimingSafeEqual(device.token_secret, credential)
+        || (getPushProperties().trustGcm_id === true
+            && utils.isGcmIdWellFormed(device.gcm_id)
+            && utils.stringTimingSafeEqual(device.gcm_id, credential))
+    );
+}
+
+function ensurePushTransports(user) {
+    const allowedTransports = getPushProperties().transports || [];
+    user.push.transports = Array.from(new Set([...(user.push.transports || []), ...allowedTransports]));
+}
+
+// Browser FCM messages are data-only so the service worker can build the
+// notification and handle accept/reject actions. Mobile apps still receive the
+// legacy notification payload expected by Esup Auth.
+function buildAuthMessage(user, req, device) {
+    const data = {
+        message: user.push.text,
+        text: user.push.text,
+        action: 'auth',
+        trustGcm_id: getPushProperties().trustGcm_id?.toString(),
+        url: getUrl(req),
+        uid: user.uid,
+        lt: user.push.lt
+    };
+
+    if (isBrowserDevice(device)) {
+        return {
+            data: {
+                ...data,
+                title: getPushProperties().title,
+                body: getPushProperties().body,
+            },
+            token: device.gcm_id
+        };
+    }
+
+    return {
+        notification: {
+            title: getPushProperties().title,
+            body: getPushProperties().body,
+        },
+        android: {
+            notification: {
+            }
+        },
+        data,
+        token: device.gcm_id
+    };
 }
 
 async function initIpLocation() {
@@ -67,70 +229,62 @@ const detector = new DeviceDetector({
 export async function send_message(user, req, res) {
     user.push.code = utils.generate_digit_code(properties.getMethod('random_code').code_length);
     let validity_time = properties.getMethod('push').validity_time * 60 * 1000;
-    validity_time += new Date().getTime();
+    validity_time += Date.now();
     user.push.validity_time = validity_time;
     const lt = utils.generate_string_code(30);
     user.push.lt = lt;
     logger.debug("gcm.Message with 'lt' as secret : " + lt);
 
+    await initIpLocation().catch(err => logger.debug('ip-location skip: ' + err));
     user.push.text = getText(req);
 
     let response = false;
     let dryRun = false;
     
-    const remainingTimeoutDuration = user.push.last_rejection_date + (user.push.timeout * 1000) - Date.now();
+    const remainingTimeoutDuration = (user.push.last_rejection_date || 0) + ((user.push.timeout || 0) * 1000) - Date.now();
     if (remainingTimeoutDuration > 0) {
         const remainingTimeoutDurationinSeconds = Math.ceil(remainingTimeoutDuration / 1000)
         logger.warn(`notification not sent : user ${user.uid} rejected previous notification (remaining timeout ${remainingTimeoutDurationinSeconds} seconds, total timeout ${user.push.timeout} seconds)`);
         dryRun = true;
     }
     
-    if (utils.canReceiveNotifications(user)) {
-        /**
-         * @type {admin.messaging.TokenMessage}
-         */
-        const content = {
-            notification: {
-                title: properties.getMethod('push').title,
-                body: properties.getMethod('push').body,
-            },
-            android: {
-                notification: {
-                }
-            },
-            data: {
-                message: user.push.text,
-                text: user.push.text,
-                action: 'auth',
-                trustGcm_id: trustGcm_id?.toString(),
-                url: getUrl(req),
-                uid: user.uid,
-                lt: lt
-            },
-            token: user.push.device.gcm_id
-        };
+    const devices = getPushDevices(user).filter(canReceivePushNotifications);
+    logger.debug(`push send_message: ${devices.length} device(s) can receive notifications for ${user.uid}`);
 
-        logger.debug("send gsm push ...");
-
-        try {
-            response = await send(content, dryRun);
-        } catch (err) {
-            if (err.code == "messaging/registration-token-not-registered") {
-                logger.info(`user ${user.uid} gcm_id not registered (${user.push.device.gcm_id})`);
-                user.push.gcm_id_not_registered = true;
-            } else if (err.code == "messaging/invalid-registration-token" || err.message == "The registration token is not a valid FCM registration token") {
-                logger.info(`user ${user.uid} invalid gcm_id (${user.push.device.gcm_id})`);
-                user.push.invalid_gcm_id = true;
-            } else {
-                logger.error("Problem to send a notification to " + user.uid + ": " + err);
-            }
+    if (devices.length) {
+        const send = getFirebaseSend();
+        if (!send) {
+            logger.error('Problem to send a push notification: firebase-admin is not initialized');
         }
 
+        // One authentication request is broadcast to every registered endpoint.
+        // The login flow only needs one successful response to unlock the CAS
+        // session, but failed tokens are marked so they stop being retried.
+        const responses = await Promise.all(devices.map(async device => {
+            try {
+                return await send?.(buildAuthMessage(user, req, device), dryRun);
+            } catch (err) {
+                if (err.code == "messaging/registration-token-not-registered") {
+                    logger.info(`user ${user.uid} gcm_id not registered (${troncateGcmId(device.gcm_id)})`);
+                    device.gcm_id_not_registered = true;
+                } else if (err.code == "messaging/invalid-registration-token" || err.message == "The registration token is not a valid FCM registration token") {
+                    logger.info(`user ${user.uid} invalid gcm_id (${troncateGcmId(device.gcm_id)})`);
+                    device.invalid_gcm_id = true;
+                } else {
+                    logger.error("Problem to send a notification to " + user.uid + ": " + err);
+                }
+                return false;
+            }
+        }));
+
+        response = responses.some(Boolean);
     }
+
+    syncLegacyPushFields(user);
     await apiDb.save_user(user);
 
     if (response) {
-        logger.debug("send gsm push ok : " + response);
+        logger.debug("send push ok : " + response);
         res.send({
             "code": "Ok",
             "message": "notification sent successfully",
@@ -141,7 +295,7 @@ export async function send_message(user, req, res) {
         }
         res.send({
             "code": "Ok",
-            "message": "Notification is deactivated." + (properties.getMethod('push').pending ? " Launch Esup Auth app to authenticate." : ""),
+            "message": "Notification is deactivated." + (properties.getMethod('push').pending ? " Launch the registered device flow to authenticate." : ""),
         });
     }
 }
@@ -178,18 +332,19 @@ export async function verify_code(user, req) {
 }
 
 function ifTokenSecretsMatch(user, req) {
-    return utils.stringTimingSafeEqual(user.push.token_secret, req.params.tokenSecret);
+    return Boolean(findPushDevice(user, req.params.tokenSecret));
 }
 
 export function pending(user, req, res) {
-    const bad_GCM_ID = !utils.isGcmIdValidAndRegistered(user);
+    const device = findPushDevice(user, req.params.tokenSecret);
+    const bad_GCM_ID = !canReceivePushNotifications(device);
     const body = {
         code: "Ok",
         bad_GCM_ID: bad_GCM_ID,
     }
 
-    if (bad_GCM_ID) {
-        body.gcm_id = user.push.device.gcm_id;
+    if (bad_GCM_ID && device?.gcm_id) {
+        body.gcm_id = device.gcm_id;
     }
     
     if (user.push.active && properties.getMethodProperty(req.params.method, 'activate') && ifTokenSecretsMatch(user, req) && Date.now() < user.push.validity_time) {
@@ -201,7 +356,7 @@ export function pending(user, req, res) {
             ...body
         });
     }
-    else if (!user.push.active || !utils.stringTimingSafeEqual(req.params.tokenSecret, user.push.token_secret)) {
+    else if (!user.push.active || !device) {
         res.send({
             "code": "Ok",
             "message": "Les notifications push ont été désactivées pour votre compte",
@@ -226,7 +381,6 @@ export async function user_activate(user, req, res) {
     const activation_code = utils.generate_digit_code(6);
     user.push.activation_code = activation_code;
     user.push.activation_fail = null;
-    user.push.active = false;
     const apiHost = getUrl(req);
     const qrCodeUri = apiHost + '/users/' + user.uid + '/methods/push/' + activation_code;
 
@@ -289,33 +443,59 @@ export function redirectToDeepLink(req, res) {
 }
 
 export async function confirm_user_activate(user, req, res) {
-    const gcm_id = utils.isGcmIdWellFormed(req.params.gcm_id) ? req.params.gcm_id : null;
-    if (user.push.activation_code != null && user.push.activation_fail < properties.getMethod('push').nbMaxFails && !user.push.active && utils.stringTimingSafeEqual(req.params.activation_code, user.push.activation_code) && (gcm_id || properties.getMethod('push').pending)) {
-        let { platform, manufacturer, model } = req.params;
-        // Esup Auth on iOS now sends the commercial name of the device (and no longer its code name)
-        if (manufacturer !== "Apple" || model.includes(",")) {
-            const deviceInfosFromUserAgent = await detector.detectAsync(`${req.params.platform} ${req.params.manufacturer} ${req.params.model}`);
-            platform = deviceInfosFromUserAgent.os.name || platform;
-            manufacturer = deviceInfosFromUserAgent.device.brand || manufacturer;
-            model = deviceInfosFromUserAgent.device.model || model;
+    const activation_code = req.params.activation_code || req.body?.activation_code;
+    const rawGcmId = req.params.gcm_id || req.body?.gcm_id;
+    const gcm_id = utils.isGcmIdWellFormed(rawGcmId) ? rawGcmId : null;
+    // Browsers call this endpoint with JSON and type=browser. Mobile Esup Auth
+    // keeps the historical route params and defaults to type=mobile.
+    const deviceType = req.params.type || req.body?.type || req.body?.device_type || MOBILE_DEVICE_TYPE;
+    if (user.push.activation_code != null && user.push.activation_fail < properties.getMethod('push').nbMaxFails && utils.stringTimingSafeEqual(activation_code, user.push.activation_code) && (gcm_id || properties.getMethod('push').pending)) {
+        let platform = req.params.platform || req.body?.platform;
+        let manufacturer = req.params.manufacturer || req.body?.manufacturer;
+        let model = req.params.model || req.body?.model;
+
+        if (deviceType === MOBILE_DEVICE_TYPE) {
+            // Esup Auth on iOS now sends the commercial name of the device (and no longer its code name)
+            if (manufacturer !== "Apple" || model?.includes(",")) {
+                const deviceInfosFromUserAgent = await detector.detectAsync(`${platform} ${manufacturer} ${model}`);
+                platform = deviceInfosFromUserAgent.os.name || platform;
+                manufacturer = deviceInfosFromUserAgent.device.brand || manufacturer;
+                model = deviceInfosFromUserAgent.device.model || model;
+            }
+
+            if (platform === "ios") {
+                platform = "iOS";
+            }
         }
 
-        if (platform === "ios") {
-            platform = "iOS";
-        }
-
+        // token_secret is the per-device shared secret used later to accept,
+        // reject, refresh or delete this exact push endpoint.
         const token_secret = utils.generate_string_code(128);
-        user.push.token_secret = token_secret;
-        user.push.active = true;
-        user.push.device.platform = platform || "AndroidDev";
-        user.push.device.gcm_id = gcm_id
-        user.push.gcm_id_not_registered = false;
-        user.push.invalid_gcm_id = !Boolean(gcm_id);
-        user.push.device.manufacturer = manufacturer || "DevCorp";
-        user.push.device.model = model || "DevDevice";
+        const devices = getPushDevices(user);
+        let device = devices.find(item => gcm_id && utils.stringTimingSafeEqual(item.gcm_id, gcm_id));
+        if (!device) {
+            if (devices.length >= getMaxDevices()) {
+                logger.warn(`user ${user.uid} tried to register more than ${getMaxDevices()} push devices`);
+                throw new errors.EsupOtpApiError(403, 'Nombre maximum de terminaux push atteint', 'MaxPushDevicesReached');
+            }
+            devices.push({});
+            device = devices[devices.length - 1];
+        }
+
+        device.type = deviceType === BROWSER_DEVICE_TYPE ? BROWSER_DEVICE_TYPE : MOBILE_DEVICE_TYPE;
+        device.platform = platform || (isBrowserDevice(device) ? "Web" : "AndroidDev");
+        device.gcm_id = gcm_id;
+        device.gcm_id_not_registered = false;
+        device.invalid_gcm_id = !Boolean(gcm_id);
+        device.manufacturer = manufacturer || (isBrowserDevice(device) ? "Browser" : "DevCorp");
+        device.model = model || (isBrowserDevice(device) ? "Browser" : "DevDevice");
+        device.token_secret = token_secret;
         user.push.activation_code = null;
         user.push.activation_fail = null;
         user.push.timeout = 0;
+        ensurePushTransports(user);
+        syncLegacyPushFields(user);
+
         await apiDb.save_user(user);
         sockets.emitManager(req, 'userPushActivate', { uid: user.uid });
         const data = {
@@ -343,12 +523,14 @@ function troncateGcmId(gcmId) {
 
 // refresh gcm_id when it is regenerated
 export async function refresh_user_gcm_id(user, req, res) {
-    const old_gcm_id = user.push.device.gcm_id;
-    if (ifTokenSecretsMatch(user, req) && (!utils.isGcmIdWellFormed(old_gcm_id) || utils.stringTimingSafeEqual(req.params.gcm_id, user.push.device.gcm_id))) {
-        logger.debug("refresh old gcm_id : " + user.push.device.gcm_id + " with " + req.params.gcm_id_refreshed);
-        user.push.device.gcm_id = req.params.gcm_id_refreshed;
-        user.push.gcm_id_not_registered = false;
-        user.push.invalid_gcm_id = false;
+    const device = findPushDevice(user, req.params.tokenSecret);
+    const old_gcm_id = device?.gcm_id;
+    if (device && (!utils.isGcmIdWellFormed(old_gcm_id) || utils.stringTimingSafeEqual(req.params.gcm_id, old_gcm_id))) {
+        logger.debug("refresh old gcm_id : " + old_gcm_id + " with " + req.params.gcm_id_refreshed);
+        device.gcm_id = req.params.gcm_id_refreshed;
+        device.gcm_id_not_registered = false;
+        device.invalid_gcm_id = false;
+        syncLegacyPushFields(user);
         await apiDb.save_user(user);
         res.send({
             "code": "Ok",
@@ -359,7 +541,7 @@ export async function refresh_user_gcm_id(user, req, res) {
                     req,
                     action: 'refresh_push',
                     old_gcm_id: troncateGcmId(old_gcm_id),
-                    new_gcm_id: troncateGcmId(user.push.device.gcm_id),
+                    new_gcm_id: troncateGcmId(device.gcm_id),
                 }
             ]
         });
@@ -367,8 +549,6 @@ export async function refresh_user_gcm_id(user, req, res) {
         throw new errors.InvalidCredentialsError();
     }
 }
-
-// Checks whether the tokenSecret received is equal to the one generated, changed by mbdeme on June 2020
 
 export async function accept_authentication(user, req, res) {
     const tokenSecret = checkTokenSecretAndLoginTicket("accept_authentication", user, req, res);
@@ -410,6 +590,9 @@ export async function reject_authentication(user, req, res) {
     });
 }
 
+// Accept/reject requests must prove they come from one registered endpoint.
+// We check token_secret for normal operation; trustGcm_id keeps the former
+// gcm_id-based behavior only when the instance explicitly enables it.
 function checkTokenSecretAndLoginTicket(methodName, user, req, res) {
     const tokenSecret = checkTokenSecret(methodName, user, req, res);
     if (utils.stringTimingSafeEqual(req.params.loginTicket, user.push.lt)) {
@@ -422,12 +605,10 @@ function checkTokenSecretAndLoginTicket(methodName, user, req, res) {
 }
 
 export function checkTokenSecret(methodName, user, req, res) {
-    logger.debug(methodName + " ? " + user.push.token_secret + " VS " + req.params.tokenSecret);
-    let tokenSecret = null;
-    if (trustGcm_id == true && utils.isGcmIdWellFormed(user.push.device.gcm_id) && utils.stringTimingSafeEqual(user.push.device.gcm_id, req.params.tokenSecret))
-        tokenSecret = user.push.token_secret;
-    if (utils.stringTimingSafeEqual(user.push.token_secret, req.params.tokenSecret) || tokenSecret != null) {
-        return tokenSecret;
+    const device = findPushDevice(user, req.params.tokenSecret);
+    logger.debug(methodName + " ? push device found = " + Boolean(device));
+    if (device) {
+        return device.token_secret;
     } else {
         logger.warn(user.uid + "'s token_secret match. req.params.tokenSecret=" + req.params.tokenSecret);
         throw new errors.UnvailableMethodOperationError();
@@ -435,6 +616,7 @@ export function checkTokenSecret(methodName, user, req, res) {
 }
 
 async function clearUserPush(user, req, res) {
+    user.push.devices = [];
     user.push.active = false;
     user.push.gcm_id_not_registered = false;
     user.push.invalid_gcm_id = false;
@@ -455,7 +637,7 @@ async function clearUserPush(user, req, res) {
 
 export async function user_deactivate(user, req, res) {
     if (properties.getMethod('push').notification)
-        alert_deactivate(user, req);
+        await alert_deactivate(user, req);
     await clearUserPush(user, req, res);
     res.status(200);
     res.send({
@@ -464,48 +646,82 @@ export async function user_deactivate(user, req, res) {
 }
 
 async function alert_deactivate(user, req) {
-    if (!utils.canReceiveNotifications(user)) {
+    const devices = getPushDevices(user).filter(canReceivePushNotifications);
+    if (!devices.length) {
         return;
     }
-    /**
-     * @type {admin.messaging.TokenMessage}
-     */
-    const content = {
-        notification: {
-            title: "Esup Auth",
-            body: "Les notifications push ont été désactivées pour votre compte",
-        },
-        android: {
-            notification: {
-            }
-        },
-        data: {
-            message: "Les notifications push ont été désactivées pour votre compte",
-            text: "Les notifications push ont été désactivées pour votre compte",
-            action: 'desync',
-            url: getUrl(req),
-            uid: user.uid,
-        },
-        token: user.push.device.gcm_id
+
+    const data = {
+        message: "Les notifications push ont été désactivées pour votre compte",
+        text: "Les notifications push ont été désactivées pour votre compte",
+        action: 'desync',
+        url: getUrl(req),
+        uid: user.uid,
     };
 
-    try {
-        await send(content);
-    } catch (err) {
-        logger.info(`Problem to send a notification to ${user.uid} for deactivate push: ${err}`);
-    }
+    await Promise.all(devices.map(async device => {
+        const content = isBrowserDevice(device)
+            ? { data: { ...data, title: "Esup Auth", body: data.message }, token: device.gcm_id }
+            : {
+                notification: {
+                    title: "Esup Auth",
+                    body: data.message,
+                },
+                android: {
+                    notification: {
+                    }
+                },
+                data,
+                token: device.gcm_id
+            };
+
+        try {
+            await getFirebaseSend()?.(content);
+        } catch (err) {
+            logger.info(`Problem to send a notification to ${user.uid} for deactivate push: ${err}`);
+        }
+    }));
 }
 
 export async function user_desync(user, req, res) {
     logger.debug(fileUtils.getFileNameFromUrl(import.meta.url) + ' user_desync: ' + user.uid);
     if (user.push.active && ifTokenSecretsMatch(user, req)) {
-        await clearUserPush(user, req, res);
+        // A desync request comes from one endpoint, so only that endpoint is
+        // removed. Other phones/browsers must keep working.
+        const remainingDevices = getPushDevices(user).filter(device =>
+            !utils.stringTimingSafeEqual(device.token_secret, req.params.tokenSecret)
+            && !utils.stringTimingSafeEqual(device.gcm_id, req.params.tokenSecret)
+        );
+        user.push.devices = remainingDevices;
+        syncLegacyPushFields(user);
 
         await Promise.all([
             apiDb.save_user(user),
             sockets.emitManager(req, 'userPushDeactivate', { uid: user.uid })
         ]);
     }
+    res.status(200);
+    res.send({
+        "code": "Ok",
+    });
+}
+
+export async function delete_method_special(user, req, res) {
+    const deviceId = req.params.authenticator_id;
+    const devices = getPushDevices(user);
+    // The manager receives only a hash of token_secret, never the secret itself.
+    const device = devices.find(item => item.token_secret && utils.stringTimingSafeEqual(utils.hash(item.token_secret), deviceId));
+
+    if (!device) {
+        throw new errors.InvalidCredentialsError();
+    }
+
+    user.push.devices = devices.filter(item => item !== device);
+    syncLegacyPushFields(user);
+
+    await apiDb.save_user(user);
+    sockets.emitManager(req, 'userPushDeactivate', { uid: user.uid });
+
     res.status(200);
     res.send({
         "code": "Ok",

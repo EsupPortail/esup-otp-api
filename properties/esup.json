@@ -1,5 +1,6 @@
 {
-    "casVhost": "cas.univ.fr",
+    "casVhost": "localhost:3001",
+    "otherHosts": ["http://localhost:3001"],
     "proxyUrl": "",
     "#how_to_proxyUrl": "If set, API will use this proxy configurations, usually proxyURl must be like : http://username:password@univ.fr:port may be necessary for sms and mailer services",
     "api_password": "changeit",
@@ -105,15 +106,15 @@
             "#how_to_serviceAccount": "See https://github.com/EsupPortail/esup-otp-api#get-google-cloud-serviceAccount",
             "serviceAccount": {
                 "type": "service_account",
-                "project_id": "esup-otp-276500",
-                "private_key_id": "",
-                "private_key": "",
-                "client_email": "",
-                "client_id": "",
+                "project_id": "changeit",
+                "private_key_id": "changeit",
+                "private_key": "changeit",
+                "client_email": "changeit",
+                "client_id": "changeit",
                 "auth_uri": "https://accounts.google.com/o/oauth2/auth",
                 "token_uri": "https://oauth2.googleapis.com/token",
                 "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-                "client_x509_cert_url": "",
+                "client_x509_cert_url": "changeit",
                 "universe_domain": "googleapis.com"
             },
             "activate": true,
@@ -127,6 +128,7 @@
             "text1": "Demande de connexion à votre compte",
             "text2": " à proximité de $city",
             "nbMaxFails": 3,
+            "max_devices": 10,
             "transports": ["push"]
         },
         "esupnfc": {
