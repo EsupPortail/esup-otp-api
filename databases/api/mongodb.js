@@ -46,8 +46,11 @@ async function initialize_api_preferences(connection) {
     if (existingApiPrefsData) {
         const prefs = properties.getEsupProperty('methods');
         for (const p in prefs) {
-            prefs[p].activate = existingApiPrefsData[p].activate;
-            prefs[p].transports = existingApiPrefsData[p].transports;
+            prefs[p].activate = existingApiPrefsData[p]?.activate ?? prefs[p].activate;
+            prefs[p].transports = existingApiPrefsData[p]?.transports ?? prefs[p].transports;
+            if (Object.prototype.hasOwnProperty.call(prefs[p], 'max_devices')) {
+                prefs[p].max_devices = existingApiPrefsData[p]?.max_devices ?? prefs[p].max_devices;
+            }
         }
         properties.setEsupProperty('methods', prefs);
         return update_api_preferences();
@@ -219,6 +222,8 @@ async function update_active_methods(user) {
         userMethod.active = userMethod.internally_activated && properties.getTransports(random_code).some(transport => user.userDb.getTransport(transport));
     }
 
+    syncLegacyPushFields(user);
+
     user.hasEnabledMethod = properties.listActivatedMethods().some(method => user[method]?.active);
 
     user.esupnfc.active = Boolean(user.esupnfc.internally_activated || (properties.getMethodProperty('esupnfc', 'autoActivate') && user.hasEnabledMethod) || properties.getMethodProperty('esupnfc', 'autoActivateForAllUsers'));
@@ -228,6 +233,71 @@ async function update_active_methods(user) {
     if (properties.getMethodProperty('esupnfc', 'activate') && properties.getMethodProperty('esupnfc', 'autoActivate') && properties.getMethodProperty('esupnfc', 'saveAutoActivation')) {
         user.esupnfc.internally_activated = user.esupnfc.active;
     }
+}
+
+function hasDeviceIdentity(device) {
+    return Boolean(device?.gcm_id || device?.token_secret);
+}
+
+function addDeviceIfMissing(devices, candidate) {
+    if (!hasDeviceIdentity(candidate)) {
+        return;
+    }
+
+    const candidateKey = candidate.token_secret || candidate.gcm_id;
+    const alreadyExists = devices.some(device =>
+        (candidateKey && (device.token_secret === candidateKey || device.gcm_id === candidateKey))
+        || (!candidateKey && device.platform === candidate.platform && device.manufacturer === candidate.manufacturer && device.model === candidate.model)
+    );
+
+    if (!alreadyExists) {
+        devices.push(candidate);
+    }
+}
+
+function getPushDevices(user) {
+    user.push.devices ||= [];
+
+    // Import the historical single mobile device into the new multi-device
+    // array whenever an old account is read.
+    if (hasDeviceIdentity(user.push.device) || user.push.token_secret) {
+        addDeviceIfMissing(user.push.devices, {
+            ...(user.push.device?.toObject?.() || user.push.device),
+            token_secret: user.push.token_secret,
+            gcm_id_not_registered: user.push.gcm_id_not_registered,
+            invalid_gcm_id: user.push.invalid_gcm_id,
+        });
+    }
+
+    return user.push.devices;
+}
+
+function parsePushDevice(device) {
+    return {
+        id: device.token_secret ? utils.hash(device.token_secret) : null,
+        platform: device.platform,
+        manufacturer: device.manufacturer,
+        model: device.model,
+        canReceiveNotifications: properties.getMethod('push').notification
+            && utils.isGcmIdWellFormed(device.gcm_id)
+            && !device.gcm_id_not_registered
+            && !device.invalid_gcm_id,
+    };
+}
+
+// Older manager/API consumers still read push.device and push.token_secret.
+// Mirror a mobile endpoint when possible so legacy mobile behavior is stable.
+function syncLegacyPushFields(user) {
+    const devices = getPushDevices(user);
+    const device = devices[0];
+    user.push.active = Boolean(device);
+    user.push.device.platform = device?.platform || null;
+    user.push.device.gcm_id = device?.gcm_id || null;
+    user.push.device.manufacturer = device?.manufacturer || null;
+    user.push.device.model = device?.model || null;
+    user.push.token_secret = device?.token_secret || null;
+    user.push.gcm_id_not_registered = device?.gcm_id_not_registered || false;
+    user.push.invalid_gcm_id = device?.invalid_gcm_id || false;
 }
 
 async function find_userDb(uid) {
@@ -307,22 +377,26 @@ export function parse_user(req, user) {
     //}
     // parsed_user.matrix.active = user.matrix.active;
     if (properties.getMethod('push')?.activate) {
-        if (user.push.active) parsed_user.waitingFor = true;
+        const pushDevices = getPushDevices(user);
+        const parsedPushDevices = pushDevices.map(parsePushDevice);
+        // The old response shape exposes push.device. Keep it representative,
+        // while new clients can display the complete push.devices array.
+        const legacyPushDevice = parsedPushDevices[0] || {};
+
+        if (pushDevices.length > 0) parsed_user.waitingFor = true;
         parsed_user.push = {
             device: {
-                platform: user.push.device.platform,
-                phone_number: user.push.device.phone_number,
-                manufacturer: user.push.device.manufacturer,
-                model: user.push.device.model,
-                canReceiveNotifications: utils.canReceiveNotifications(user),
+                ...legacyPushDevice,
                 activationCode: {},
                 qrCode: {},
                 api_url: {}
             },
+            devices: parsedPushDevices,
             activationCode: '',
             api_url: '',
             qrCode: '',
-            active: user.push.active,
+            active: pushDevices.length > 0,
+            max_devices: properties.getMethod('push').max_devices,
             transports: available_transports(user.push.transports, "push")
         };
     }
