@@ -118,6 +118,7 @@ const config = {
             "text2": " à proximité de $city",
             "nbMaxFails": 3,
             "max_devices": 1,
+            "allow_browser_devices": false,
             "transports": ["push"]
         },
         "esupnfc": {
@@ -346,6 +347,78 @@ await test('Esup otp api', async (t) => {
         const afterDeactivate = await testUtils.get_user_infos(uid, auth).expect(200);
         t.assert.equal(afterDeactivate.body.user.methods.push.devices.length, 0);
         t.assert.ok(!afterDeactivate.body.user.methods.push.active);
+        properties.setMethodProperty('push', 'max_devices', config.methods.push.max_devices);
+    });
+
+    await t.test('push refuses browser devices when disabled', async (t) => {
+        const auth = { password: config.api_password };
+        properties.setMethodProperty('push', 'allow_browser_devices', false);
+
+        const activation = await testUtils.standardActivate(uid, 'push', auth).expect(200);
+        await testUtils.request(
+            testUtils.post,
+            `/protected/users/${uid}/methods/push/activate/${activation.body.activationCode}`,
+            auth
+        )
+            .send({
+                gcm_id: 'fcm-browser-disabled',
+                type: 'browser',
+                platform: 'Web',
+                manufacturer: 'Browser',
+                model: 'Chrome',
+            })
+            .expect(403);
+    });
+
+    await t.test('push supports browser devices', async (t) => {
+        const auth = { password: config.api_password };
+        properties.setMethodProperty('push', 'allow_browser_devices', true);
+        properties.setMethodProperty('push', 'max_devices', 2);
+
+        async function addDevice(gcmId, type, platform, manufacturer, model) {
+            const activation = await testUtils.standardActivate(uid, 'push', auth).expect(200);
+            return testUtils.request(
+                testUtils.post,
+                `/protected/users/${uid}/methods/push/activate/${activation.body.activationCode}`,
+                auth
+            )
+                .send({ gcm_id: gcmId, type, platform, manufacturer, model })
+                .expect(200);
+        }
+
+        const mobile = await addDevice('fcm-mobile', 'mobile', 'iOS', 'Apple', 'iPhone 12 mini');
+        await addDevice('fcm-chrome', 'browser', 'MacIntel', 'Google Inc.', 'Chrome');
+
+        const sentNotifications = [];
+        push.setFirebaseSendForTests(async message => {
+            sentNotifications.push(message);
+            return `message-${sentNotifications.length}`;
+        });
+        try {
+            await testUtils.send_message(uid, 'push', 'push', { uid, secret: config.users_secret }).expect(200);
+        } finally {
+            push.setFirebaseSendForTests(null);
+        }
+        t.assert.deepEqual(sentNotifications.map(message => message.token), ['fcm-mobile', 'fcm-chrome']);
+        t.assert.ok(sentNotifications[0].notification);
+        t.assert.ok(!sentNotifications[1].notification);
+
+        const userInfo = await testUtils.get_user_infos(uid, auth).expect(200);
+        t.assert.deepEqual(
+            userInfo.body.user.methods.push.devices.map(device => device.type),
+            ['mobile', 'browser']
+        );
+        t.assert.equal(userInfo.body.user.transports.push, 'Apple iPhone 12 mini, Chrome sur macOS');
+
+        const browserId = userInfo.body.user.methods.push.devices.find(device => device.type === 'browser').id;
+        await testUtils.request(testUtils.del, `/protected/users/${uid}/methods/push/auth/${browserId}`, auth).expect(200);
+        const afterDelete = await testUtils.get_user_infos(uid, auth).expect(200);
+        t.assert.equal(afterDelete.body.user.methods.push.devices.length, 1);
+        t.assert.equal(afterDelete.body.user.methods.push.devices[0].type, 'mobile');
+
+        await testUtils.request(testUtils.get, `/users/${uid}/methods/push/${mobile.body.tokenSecret}`).expect(200);
+        await testUtils.deactivate(uid, 'push', auth).expect(200);
+        properties.setMethodProperty('push', 'allow_browser_devices', false);
         properties.setMethodProperty('push', 'max_devices', config.methods.push.max_devices);
     });
 

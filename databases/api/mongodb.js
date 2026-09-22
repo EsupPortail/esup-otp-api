@@ -51,6 +51,9 @@ async function initialize_api_preferences(connection) {
             if (Object.prototype.hasOwnProperty.call(prefs[p], 'max_devices')) {
                 prefs[p].max_devices = existingApiPrefsData[p]?.max_devices ?? prefs[p].max_devices;
             }
+            if (Object.prototype.hasOwnProperty.call(prefs[p], 'allow_browser_devices')) {
+                prefs[p].allow_browser_devices = existingApiPrefsData[p]?.allow_browser_devices ?? prefs[p].allow_browser_devices;
+            }
         }
         properties.setEsupProperty('methods', prefs);
         return update_api_preferences();
@@ -244,10 +247,11 @@ function addDeviceIfMissing(devices, candidate) {
         return;
     }
 
+    candidate.type ||= 'mobile';
     const candidateKey = candidate.token_secret || candidate.gcm_id;
     const alreadyExists = devices.some(device =>
         (candidateKey && (device.token_secret === candidateKey || device.gcm_id === candidateKey))
-        || (!candidateKey && device.platform === candidate.platform && device.manufacturer === candidate.manufacturer && device.model === candidate.model)
+        || (!candidateKey && device.type === candidate.type && device.platform === candidate.platform && device.manufacturer === candidate.manufacturer && device.model === candidate.model)
     );
 
     if (!alreadyExists) {
@@ -263,6 +267,7 @@ function getPushDevices(user) {
     if (hasDeviceIdentity(user.push.device) || user.push.token_secret) {
         addDeviceIfMissing(user.push.devices, {
             ...(user.push.device?.toObject?.() || user.push.device),
+            type: 'mobile',
             token_secret: user.push.token_secret,
             gcm_id_not_registered: user.push.gcm_id_not_registered,
             invalid_gcm_id: user.push.invalid_gcm_id,
@@ -275,6 +280,7 @@ function getPushDevices(user) {
 function parsePushDevice(device) {
     return {
         id: device.token_secret ? utils.hash(device.token_secret) : null,
+        type: device.type || 'mobile',
         platform: device.platform,
         manufacturer: device.manufacturer,
         model: device.model,
@@ -289,7 +295,7 @@ function parsePushDevice(device) {
 // Mirror a mobile endpoint when possible so legacy mobile behavior is stable.
 function syncLegacyPushFields(user) {
     const devices = getPushDevices(user);
-    const device = devices[0];
+    const device = devices.find(item => (item.type || 'mobile') === 'mobile') || devices[0];
     user.push.active = Boolean(device);
     user.push.device.platform = device?.platform || null;
     user.push.device.gcm_id = device?.gcm_id || null;
@@ -381,7 +387,7 @@ export function parse_user(req, user) {
         const parsedPushDevices = pushDevices.map(parsePushDevice);
         // The old response shape exposes push.device. Keep it representative,
         // while new clients can display the complete push.devices array.
-        const legacyPushDevice = parsedPushDevices[0] || {};
+        const legacyPushDevice = parsedPushDevices.find(device => device.type === 'mobile') || parsedPushDevices[0] || {};
 
         if (pushDevices.length > 0) parsed_user.waitingFor = true;
         parsed_user.push = {
@@ -397,6 +403,7 @@ export function parse_user(req, user) {
             qrCode: '',
             active: pushDevices.length > 0,
             max_devices: properties.getMethod('push').max_devices,
+            allow_browser_devices: properties.getMethod('push').allow_browser_devices === true,
             transports: available_transports(user.push.transports, "push")
         };
     }

@@ -132,6 +132,7 @@
             "text2": " à proximité de $city",
             "nbMaxFails": 3,
             "max_devices": 1,
+            "allow_browser_devices": false,
             "transports": ["push"]
         },
         "esupnfc": {
