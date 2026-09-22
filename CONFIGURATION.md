@@ -4,6 +4,7 @@
 |-----|-------------|---------|
 | `casVhost` | Authentication page URI (using CORS, esup-otp-api prevents WebSockets not coming from the authentication page). | `"cas.univ.fr"` |
 | `otherHosts` | (Optional) If multiple `casVhost` instances are required (for example, if multiple test CAS servers use the same instance of esup-otp-api). | `["https://cas2.univ.fr"]` |
+| `api_url` | (Optional) esup-otp-api public URL. | `"https://esup-otp-api.univ.fr"` |
 | `proxyUrl` | (Optional) If specified, the API will use this proxy. Depending on your network configuration, this may be necessary for sending SMS, emails, and push notifications. | `"http://username:password@univ.fr:3127"` |
 | `api_password` | Secures requests from esup-otp-manager and the CAS server (the same `api_password` must be configured on both esup-otp-api, esup-otp-manager, and esup-otp-cas). | `"1t1J8xF0nphdAOSRGudoTz97AeIQS4Xw"` |
 | `users_secret` | Secures requests originating from the authentication page (the same `users_secret` must be configured on both esup-otp-api and esup-otp-cas). | `"1t1J8xF0nphdAOSRGudoTz97AeIQS4Xw"` |

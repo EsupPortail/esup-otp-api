@@ -26,6 +26,8 @@ const trustGcm_id = properties.getMethod('push').trustGcm_id;
 // Set up the sender with you API key, prepare your recipients' registration tokens.
 const proxyUrl = properties.getEsupProperty('proxyUrl');
 
+const api_url = properties.getEsupProperty('api_url');
+
 /**
  * @type {(message: admin.messaging.Message, dryRun?: boolean) => Promise<string>}
  */
@@ -245,6 +247,9 @@ export async function user_activate(user, req, res) {
 }
 
 function getUrl(req) {
+    if (api_url) {
+        return api_url;
+    }
     const http = req.header("x-forwarded-proto") || 'http';
     const host = req.header("x-forwarded-host")?.replace(/,.*/, '') || req.header('host');
     return http + '://' + host;
