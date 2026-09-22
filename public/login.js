@@ -370,8 +370,9 @@ function add_html_template() {
 
     function autosubmitIfValid(input) {
         if (!input.validationMessage) {
-            document.getElementById("fm1").submit()
-            input.disabled = true
+            const form = document.getElementById("fm1");
+            form.submit();
+            form.inert = true;
         }
     }
 
