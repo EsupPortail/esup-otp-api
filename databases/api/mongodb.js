@@ -3,6 +3,7 @@ import { isMultiTenantContext, currentTenantMongodbFilter } from '../../services
 import * as properties from '../../properties/properties.js';
 import * as fileUtils from '../../services/fileUtils.js';
 import * as utils from '../../services/utils.js';
+import { getPushDevices, syncLegacyPushFields } from '../../services/pushDevices.js';
 import { UserNotFoundError } from '../../services/errors.js';
 import * as mongoose from 'mongoose';
 import UserPreferencesSchema from './userPreferencesSchema.js';
@@ -219,6 +220,9 @@ async function update_active_methods(user) {
         userMethod.active = userMethod.internally_activated && properties.getTransports(random_code).some(transport => user.userDb.getTransport(transport));
     }
 
+    getPushDevices(user);
+    syncLegacyPushFields(user);
+
     user.hasEnabledMethod = properties.listActivatedMethods().some(method => user[method]?.active);
 
     user.esupnfc.active = Boolean(user.esupnfc.internally_activated || (properties.getMethodProperty('esupnfc', 'autoActivate') && user.hasEnabledMethod) || properties.getMethodProperty('esupnfc', 'autoActivateForAllUsers'));
@@ -228,6 +232,19 @@ async function update_active_methods(user) {
     if (properties.getMethodProperty('esupnfc', 'activate') && properties.getMethodProperty('esupnfc', 'autoActivate') && properties.getMethodProperty('esupnfc', 'saveAutoActivation')) {
         user.esupnfc.internally_activated = user.esupnfc.active;
     }
+}
+
+function parsePushDevice(device) {
+    return {
+        id: device.token_secret ? utils.hash(device.token_secret) : null,
+        platform: device.platform,
+        manufacturer: device.manufacturer,
+        model: device.model,
+        canReceiveNotifications: properties.getMethod('push').notification
+            && utils.isGcmIdWellFormed(device.gcm_id)
+            && !device.gcm_id_not_registered
+            && !device.invalid_gcm_id,
+    };
 }
 
 async function find_userDb(uid) {
@@ -307,22 +324,26 @@ export function parse_user(req, user) {
     //}
     // parsed_user.matrix.active = user.matrix.active;
     if (properties.getMethod('push')?.activate) {
-        if (user.push.active) parsed_user.waitingFor = true;
+        const pushDevices = getPushDevices(user);
+        const parsedPushDevices = pushDevices.map(parsePushDevice);
+        // The old response shape exposes push.device. Keep it representative,
+        // while new clients can display the complete push.devices array.
+        const legacyPushDevice = parsedPushDevices[0] || {};
+
+        if (pushDevices.length > 0) parsed_user.waitingFor = true;
         parsed_user.push = {
             device: {
-                platform: user.push.device.platform,
-                phone_number: user.push.device.phone_number,
-                manufacturer: user.push.device.manufacturer,
-                model: user.push.device.model,
-                canReceiveNotifications: utils.canReceiveNotifications(user),
+                ...legacyPushDevice,
                 activationCode: {},
                 qrCode: {},
                 api_url: {}
             },
+            devices: parsedPushDevices,
             activationCode: '',
             api_url: '',
             qrCode: '',
-            active: user.push.active,
+            active: pushDevices.length > 0,
+            max_devices: properties.getMethod('push').max_devices,
             transports: available_transports(user.push.transports, "push")
         };
     }
