@@ -117,6 +117,7 @@ const config = {
             "text1": "Demande de connexion à votre compte",
             "text2": " à proximité de $city",
             "nbMaxFails": 3,
+            "max_devices": 1,
             "transports": ["push"]
         },
         "esupnfc": {
@@ -188,6 +189,7 @@ const auth = { password: config.api_password };
 const api_controller = await import('../controllers/api.js');
 const userDb_controller = await import('../controllers/user.js');
 const utils = await import('../services/utils.js');
+const push = await import('../methods/push.js');
 
 let uid;
 let userCounter = 0;
@@ -283,6 +285,68 @@ await test('Esup otp api', async (t) => {
                 t.assert.equal(res.body.code, "Ok");
                 t.assert.equal(res.body.codes.length, properties.getMethodProperty(method, 'codes_number'));
             });
+    });
+
+    await t.test('push supports multiple mobile devices', async (t) => {
+        const auth = { password: config.api_password };
+        properties.setMethodProperty('push', 'max_devices', 2);
+
+        async function addMobile(gcmId, model, expectedStatus = 200) {
+            const activation = await testUtils.standardActivate(uid, 'push', auth).expect(200);
+            return testUtils.request(
+                testUtils.post,
+                `/protected/users/${uid}/methods/push/activate/${activation.body.activationCode}`,
+                auth
+            )
+                .send({
+                    gcm_id: gcmId,
+                    platform: 'iOS',
+                    manufacturer: 'Apple',
+                    model,
+                })
+                .expect(expectedStatus);
+        }
+
+        const first = await addMobile('fcm-mobile-1', 'iPhone 12 mini');
+        await addMobile('fcm-mobile-2', 'iPhone 13');
+        await addMobile('fcm-mobile-3', 'iPhone 14', 403);
+
+        const sentNotifications = [];
+        push.setFirebaseSendForTests(async message => {
+            sentNotifications.push(message);
+            return `message-${sentNotifications.length}`;
+        });
+        try {
+            await testUtils.send_message(uid, 'push', 'push', { uid, secret: config.users_secret }).expect(200);
+        } finally {
+            push.setFirebaseSendForTests(null);
+        }
+        t.assert.deepEqual(sentNotifications.map(message => message.token), ['fcm-mobile-1', 'fcm-mobile-2']);
+        t.assert.ok(sentNotifications.every(message => message.notification && message.data?.action === 'auth'));
+
+        const userInfo = await testUtils.get_user_infos(uid, auth).expect(200);
+        t.assert.equal(userInfo.body.user.methods.push.devices.length, 2);
+        t.assert.deepEqual(
+            userInfo.body.user.methods.push.devices.map(device => device.model),
+            ['iPhone 12 mini', 'iPhone 13']
+        );
+
+        await testUtils.request(
+            testUtils.del,
+            `/protected/users/${uid}/methods/push/auth/${userInfo.body.user.methods.push.devices[0].id}`,
+            auth
+        ).expect(200);
+        const afterDelete = await testUtils.get_user_infos(uid, auth).expect(200);
+        t.assert.equal(afterDelete.body.user.methods.push.devices.length, 1);
+        t.assert.equal(afterDelete.body.user.methods.push.devices[0].model, 'iPhone 13');
+        t.assert.ok(afterDelete.body.user.methods.push.active);
+
+        await testUtils.request(testUtils.get, `/users/${uid}/methods/push/${first.body.tokenSecret}`).expect(200);
+        await testUtils.deactivate(uid, 'push', auth).expect(200);
+        const afterDeactivate = await testUtils.get_user_infos(uid, auth).expect(200);
+        t.assert.equal(afterDeactivate.body.user.methods.push.devices.length, 0);
+        t.assert.ok(!afterDeactivate.body.user.methods.push.active);
+        properties.setMethodProperty('push', 'max_devices', config.methods.push.max_devices);
     });
 
     await t.test('test random_code', async (t) => {

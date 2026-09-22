@@ -49,6 +49,9 @@ const schema = {
         },
         "transports": {
             type: Array,
+        },
+        "max_devices": {
+            type: Number,
         }
     },
     "esupnfc": {
