@@ -6,6 +6,7 @@ import * as utils from '../services/utils.js';
 import * as fileUtils from '../services/fileUtils.js';
 import * as errors from '../services/errors.js';
 import { apiDb } from '../controllers/api.js';
+import { getPushDevices, syncLegacyPushFields } from '../services/pushDevices.js';
 
 import { logger, auditLogger } from '../services/logger.js';
 import admin from "firebase-admin";
@@ -76,59 +77,6 @@ function areBrowserDevicesAllowed() {
     return getPushProperties().allow_browser_devices === true;
 }
 
-function toPlainObject(value) {
-    return value?.toObject?.() || value || {};
-}
-
-function hasDeviceIdentity(device) {
-    return Boolean(device?.gcm_id || device?.token_secret);
-}
-
-function pushDeviceKey(device) {
-    return device.token_secret || device.gcm_id || `${device.type || MOBILE_DEVICE_TYPE}:${device.platform}:${device.manufacturer}:${device.model}`;
-}
-
-function buildLegacyPushDevice(user) {
-    if (!hasDeviceIdentity(user.push.device) && !user.push.token_secret) {
-        return null;
-    }
-
-    return {
-        ...toPlainObject(user.push.device),
-        type: MOBILE_DEVICE_TYPE,
-        token_secret: user.push.token_secret,
-        gcm_id_not_registered: user.push.gcm_id_not_registered,
-        invalid_gcm_id: user.push.invalid_gcm_id,
-    };
-}
-
-function addDeviceIfMissing(devices, candidate) {
-    if (!hasDeviceIdentity(candidate)) {
-        return;
-    }
-
-    const candidateKey = pushDeviceKey(candidate);
-    const alreadyExists = devices.some(device => pushDeviceKey(device) === candidateKey);
-    if (!alreadyExists) {
-        devices.push(candidate);
-    }
-}
-
-// Historical push data was stored in push.device + push.token_secret. The new
-// model stores every mobile/browser endpoint in push.devices[], so old accounts
-// are imported on read instead of requiring a one-shot migration script.
-function importLegacyDevices(user) {
-    user.push.devices ||= [];
-
-    addDeviceIfMissing(user.push.devices, buildLegacyPushDevice(user));
-
-    return user.push.devices;
-}
-
-function getPushDevices(user) {
-    return importLegacyDevices(user);
-}
-
 function isMobileDevice(device) {
     return (device?.type || MOBILE_DEVICE_TYPE) === MOBILE_DEVICE_TYPE;
 }
@@ -142,25 +90,6 @@ function canReceivePushNotifications(device) {
         && utils.isGcmIdWellFormed(device?.gcm_id)
         && !device.gcm_id_not_registered
         && !device.invalid_gcm_id;
-}
-
-function selectLegacyPushDevice(devices) {
-    return devices.find(isMobileDevice) || devices[0];
-}
-
-// Keep the former single-device fields in sync for older API consumers. When a
-// mobile device exists it remains the legacy representative; otherwise the first
-// registered browser is mirrored.
-function syncLegacyPushFields(user) {
-    const device = selectLegacyPushDevice(user.push.devices || []);
-    user.push.active = Boolean(device);
-    user.push.device.platform = device?.platform || null;
-    user.push.device.gcm_id = device?.gcm_id || null;
-    user.push.device.manufacturer = device?.manufacturer || null;
-    user.push.device.model = device?.model || null;
-    user.push.token_secret = device?.token_secret || null;
-    user.push.gcm_id_not_registered = device?.gcm_id_not_registered || false;
-    user.push.invalid_gcm_id = device?.invalid_gcm_id || false;
 }
 
 function findPushDevice(user, credential) {
@@ -232,7 +161,7 @@ const detector = new DeviceDetector({
 export async function send_message(user, req, res) {
     user.push.code = utils.generate_digit_code(properties.getMethod('random_code').code_length);
     let validity_time = properties.getMethod('push').validity_time * 60 * 1000;
-    validity_time += new Date().getTime();
+    validity_time += Date.now();
     user.push.validity_time = validity_time;
     const lt = utils.generate_string_code(30);
     user.push.lt = lt;

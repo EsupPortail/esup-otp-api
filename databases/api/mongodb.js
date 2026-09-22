@@ -3,6 +3,7 @@ import { isMultiTenantContext, currentTenantMongodbFilter } from '../../services
 import * as properties from '../../properties/properties.js';
 import * as fileUtils from '../../services/fileUtils.js';
 import * as utils from '../../services/utils.js';
+import { getPushDevices, syncLegacyPushFields } from '../../services/pushDevices.js';
 import { UserNotFoundError } from '../../services/errors.js';
 import * as mongoose from 'mongoose';
 import UserPreferencesSchema from './userPreferencesSchema.js';
@@ -238,45 +239,6 @@ async function update_active_methods(user) {
     }
 }
 
-function hasDeviceIdentity(device) {
-    return Boolean(device?.gcm_id || device?.token_secret);
-}
-
-function addDeviceIfMissing(devices, candidate) {
-    if (!hasDeviceIdentity(candidate)) {
-        return;
-    }
-
-    candidate.type ||= 'mobile';
-    const candidateKey = candidate.token_secret || candidate.gcm_id;
-    const alreadyExists = devices.some(device =>
-        (candidateKey && (device.token_secret === candidateKey || device.gcm_id === candidateKey))
-        || (!candidateKey && device.type === candidate.type && device.platform === candidate.platform && device.manufacturer === candidate.manufacturer && device.model === candidate.model)
-    );
-
-    if (!alreadyExists) {
-        devices.push(candidate);
-    }
-}
-
-function getPushDevices(user) {
-    user.push.devices ||= [];
-
-    // Import the historical single mobile device into the new multi-device
-    // array whenever an old account is read.
-    if (hasDeviceIdentity(user.push.device) || user.push.token_secret) {
-        addDeviceIfMissing(user.push.devices, {
-            ...(user.push.device?.toObject?.() || user.push.device),
-            type: 'mobile',
-            token_secret: user.push.token_secret,
-            gcm_id_not_registered: user.push.gcm_id_not_registered,
-            invalid_gcm_id: user.push.invalid_gcm_id,
-        });
-    }
-
-    return user.push.devices;
-}
-
 function parsePushDevice(device) {
     return {
         id: device.token_secret ? utils.hash(device.token_secret) : null,
@@ -293,19 +255,6 @@ function parsePushDevice(device) {
 
 // Older manager/API consumers still read push.device and push.token_secret.
 // Mirror a mobile endpoint when possible so legacy mobile behavior is stable.
-function syncLegacyPushFields(user) {
-    const devices = getPushDevices(user);
-    const device = devices.find(item => (item.type || 'mobile') === 'mobile') || devices[0];
-    user.push.active = Boolean(device);
-    user.push.device.platform = device?.platform || null;
-    user.push.device.gcm_id = device?.gcm_id || null;
-    user.push.device.manufacturer = device?.manufacturer || null;
-    user.push.device.model = device?.model || null;
-    user.push.token_secret = device?.token_secret || null;
-    user.push.gcm_id_not_registered = device?.gcm_id_not_registered || false;
-    user.push.invalid_gcm_id = device?.invalid_gcm_id || false;
-}
-
 async function find_userDb(uid) {
     try {
         return await userDb_controller.userDb.find_user(uid);
