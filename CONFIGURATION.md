@@ -190,7 +190,7 @@ In [properties/esup.json](properties/esup.json):
 ```json
     "userChangesNotifier": {
         "enabled": true,
-        "EmailAddressProvider": "getEmailAddressFromLDAP",
+        "emailAddressProvider": "getEmailAddressFromLDAP",
         "getEmailAddressFromLDAP": {
             "uri": "",
             "adminDn": "",
@@ -212,7 +212,7 @@ In [properties/esup.json](properties/esup.json):
 ```json
     "userChangesNotifier": {
         "enabled": true,
-        "EmailAddressProvider": "getEmailAddressFromApi"
+        "emailAddressProvider": "getEmailAddressFromApi"
     },
 ```
 Then edit file [services/userChangesNotifier/getEmailAddressFromApi.js](services/userChangesNotifier/getEmailAddressFromApi.js) to call the API you want and return the email address(es). (Note that `query` corresponds to request query params. So in the example, it calls GET https://wsgroups.example.com/searchUserTrusted?id=toto&attrs=mail)
@@ -222,7 +222,7 @@ In [properties/esup.json](properties/esup.json):
 ```json
     "userChangesNotifier": {
         "enabled": true,
-        "EmailAddressProvider": "getEmailAddressFromUser"
+        "emailAddressProvider": "getEmailAddressFromUser"
     },
 ```
 Then edit file [services/userChangesNotifier/getEmailAddressFromUser.js](services/userChangesNotifier/getEmailAddressFromUser.js) to retrieve the email address in the way you want.
