@@ -34,6 +34,9 @@ const msgs = {
         "Use one of the following methods to log in": "Utilisez une des méthodes suivantes pour vous connecter",
         "Receive a new code": "Recevoir un nouveau code",
 
+        "esupAuthWebview_nfc_html": /*html*/`
+            <a id="esupnfc_deeplink" href="%DEEPLINK%">Cliquez ici</a> pour réessayer de scanner votre carte (étudiante ou professionnelle) en NFC.
+        `,
         "nfc_html": /*html*/`
             <ol>
                 <li>Télécharger la dernière version de l’application Esup-Auth (pour <a href="%ANDROID_APP_URL%">Android</a> ou <a href="%IOS_APP_URL%">IOS</a>) <b>si ce n’est pas déjà fait</b>.</li>
@@ -84,6 +87,9 @@ const msgs = {
         `,
     },
     en: {
+        "esupAuthWebview_nfc_html": /*html*/`
+            <a id="esupnfc_deeplink" href="%DEEPLINK%">Cliquez ici</a> pour réessayer de scanner votre carte (étudiante ou professionnelle) en NFC.
+        `,
         "nfc_html": /*html*/`
             <ol>
                 <li>Download the latest version of the Esup-Auth app (for <a href="%ANDROID_APP_URL%">Android</a> or <a href="%IOS_APP_URL%">IOS</a>) if you haven't already done so.</li>
@@ -687,14 +693,21 @@ function add_html_template() {
                 if (esupnfc_secret.code !== 'Ok') {
                     return _("Authenticate with your multi-service card on an NFC-compatible smartphone");
                 }
-                return _('nfc_html', { 
+
+                const esupnfcValues = {
                     '%ANDROID_APP_URL%': 'https://play.google.com/store/apps/details?id=org.esupportail.esupAuth',
                     '%IOS_APP_URL%': 'https://apps.apple.com/fr/app/esup-auth/id1563904941',
                     '%QRCODE_SRC%': `${params.apiUrl}esupnfc/infos.svg`,
                     '%DEEPLINK%': esupnfc_secret.server_infos.deepLink,
                     '%ETABLISSEMENT%': esupnfc_secret.server_infos.etablissement,
                     '%API_URL%': params.apiUrl,
-                });
+                };
+
+                if (/Esup Auth/i.test(navigator.userAgent)) {
+                    return _('esupAuthWebview_nfc_html', esupnfcValues);
+                } else {
+                    return _('nfc_html', esupnfcValues);
+                }
             },
         },
         bypass: {
