@@ -410,13 +410,22 @@ await test('Esup otp api', async (t) => {
         );
         t.assert.equal(userInfo.body.user.transports.push, 'Apple iPhone 12 mini, Chrome sur macOS');
 
+        const mobileId = userInfo.body.user.methods.push.devices.find(device => device.type === 'mobile').id;
         const browserId = userInfo.body.user.methods.push.devices.find(device => device.type === 'browser').id;
-        await testUtils.request(testUtils.del, `/protected/users/${uid}/methods/push/auth/${browserId}`, auth).expect(200);
-        const afterDelete = await testUtils.get_user_infos(uid, auth).expect(200);
-        t.assert.equal(afterDelete.body.user.methods.push.devices.length, 1);
-        t.assert.equal(afterDelete.body.user.methods.push.devices[0].type, 'mobile');
-
         await testUtils.request(testUtils.get, `/users/${uid}/methods/push/${mobile.body.tokenSecret}`).expect(200);
+
+        await testUtils.request(testUtils.del, `/protected/users/${uid}/methods/push/auth/${mobileId}`, auth).expect(200);
+        let afterDelete = await testUtils.get_user_infos(uid, auth).expect(200);
+        t.assert.equal(afterDelete.body.user.methods.push.devices.length, 1);
+        t.assert.equal(afterDelete.body.user.methods.push.devices[0].type, 'browser');
+        afterDelete = await testUtils.get_user_infos(uid, auth).expect(200);
+        t.assert.equal(afterDelete.body.user.methods.push.devices.length, 1);
+        t.assert.equal(afterDelete.body.user.methods.push.devices[0].type, 'browser');
+
+        await testUtils.request(testUtils.del, `/protected/users/${uid}/methods/push/auth/${browserId}`, auth).expect(200);
+        afterDelete = await testUtils.get_user_infos(uid, auth).expect(200);
+        t.assert.equal(afterDelete.body.user.methods.push.devices.length, 0);
+
         await testUtils.deactivate(uid, 'push', auth).expect(200);
         properties.setMethodProperty('push', 'allow_browser_devices', false);
         properties.setMethodProperty('push', 'max_devices', config.methods.push.max_devices);

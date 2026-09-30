@@ -41,7 +41,7 @@ export function getPushDevices(user) {
 }
 
 export function syncLegacyPushFields(user) {
-    const devices = getPushDevices(user);
+    const devices = user.push.devices || [];
     const device = devices.find(item => (item.type || MOBILE_DEVICE_TYPE) === MOBILE_DEVICE_TYPE) || devices[0];
     user.push.active = Boolean(device);
     user.push.device.platform = device?.platform || null;

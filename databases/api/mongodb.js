@@ -226,6 +226,7 @@ async function update_active_methods(user) {
         userMethod.active = userMethod.internally_activated && properties.getTransports(random_code).some(transport => user.userDb.getTransport(transport));
     }
 
+    getPushDevices(user);
     syncLegacyPushFields(user);
 
     user.hasEnabledMethod = properties.listActivatedMethods().some(method => user[method]?.active);
