@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## v2.4.0 (2026-10-01) ([release](https://github.com/EsupPortail/esup-otp-api/releases/tag/v2.4.0))
 ### Breaking changes
 - Drop Node.js 20 support (EOL since 04-2026)
 - Drop Node.js < v22.18.0 support (Node.js => v22.6.0 will still work if you use the `--experimental-transform-types` flag)
@@ -10,7 +10,14 @@
 - [login.js] alt text [d64651e](https://github.com/EsupPortail/esup-otp-api/commit/d64651e0c2e2f14efd09157ed4beed93b0acada1)
 - "DELETE /protected/users/:uid" API [cba490b](https://github.com/EsupPortail/esup-otp-api/commit/cba490b68db86131cdd7c7770d01cbaece5c23dd)
 - Make SMTP authentication configurable [6dd84fc](https://github.com/EsupPortail/esup-otp-api/commit/6dd84fc76c70126c7cb647e6cdc916953e78c552)
-- Mixed userDb [CONFIGURATION.md](CONFIGURATION.md#mixeduserdb) for more details)
+- Mixed userDb [CONFIGURATION.md#mixedUserDb](CONFIGURATION.md#mixeduserdb)
+- `autoActivateForAllUsers` esupnfc setting [63823c5](https://github.com/EsupPortail/esup-otp-api/commit/63823c54c26edaa5b4151f4b2e7cda909a4c827b)
+- [login.js] do not depend on jQuery.js https://github.com/EsupPortail/esup-otp-api/pull/105
+- [login.js] Display a specific esupnfc instructions in Esup Auth webview (for Esup Auth 2.3.0) [b085220](https://github.com/EsupPortail/esup-otp-api/commit/b085220226d94376a5e7c82cd1b71912bd95b575) [1f40908](https://github.com/EsupPortail/esup-otp-api/commit/1f4090830644aeee8b2190e82f1ef5b6ff241eed)
+
+### Fixed
+- [login.js] fix: "Invalid URL" if no service [c57b54d](https://github.com/EsupPortail/esup-otp-api/commit/c57b54da8800b022d6d0be108b170b5996fff70d)
+- [login.js] fix KeePassXC double form submit [f69a47e](https://github.com/EsupPortail/esup-otp-api/commit/f69a47e0536c6b370f084e6753bcada3e5a09757)
 
 ## v2.3.0 (2026-04-15) ([release](https://github.com/EsupPortail/esup-otp-api/releases/tag/v2.3.0))
 ### Breaking changes
