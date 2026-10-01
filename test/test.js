@@ -478,7 +478,7 @@ await test('Esup otp api', async (t) => {
             { uid: "ddoddu", displayName: "Durandana Goddu" },
             { uid: "jrocher", displayName: "Jay Rocher" },
             { uid: "clemieux", displayName: "Jessamine Lemieux" },
-            { uid: "flaramee", displayName: "Florian Laramée" },
+            { uid: "flaramee", displayName: "Florence Laramée" },
             { uid: "fletourneau", displayName: "Florent Létourneau" },
         ];
 
@@ -492,7 +492,7 @@ await test('Esup otp api', async (t) => {
             { token: "jroch", result: ["jrocher"] },
             { token: "azerty", result: [] },
             { token: "ine", result: ["alanteigne", "clemieux"] },
-            { token: "flo", result: ["flaramee", "fletourneau"] },
+            { token: "floren", result: ["flaramee", "fletourneau"] },
         ].map(({ token, result }) => ({ token, expected: result.map(uid => userByUid[uid]) }));
 
         testUtils.assertSearch_usersReturns(expecteds, auth);

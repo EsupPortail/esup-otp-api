@@ -341,7 +341,7 @@ export async function assertASearch_usersReturns(/** @type {String} */ token, /*
         .then(res => {
             /** @type {search_usersResult} */
             const actual = res.body.users;
-            assert.equal(actual?.length, expected.length);
+            assert.equal(actual?.length, expected.length, () => JSON.stringify({ token, expected, actual }));
             for (const array of [actual, expected]) {
                 utils.sortArray(array, user => user.uid);
             }
