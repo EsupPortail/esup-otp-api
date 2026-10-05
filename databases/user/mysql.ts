@@ -30,7 +30,7 @@ export default class MongoUserDb implements UserDb<StandardUserData<InternalUser
         return this.connection?.end();
     }
 
-    private readonly selectQuery = `Select ${this.userDbAttributes.allAttributes.join(", ")} From ${this.mysqlProperties.userTable} u Where u.${this.userDbAttributes.attributes.uid} = :uid`;
+    private readonly selectQuery = `Select ${this.userDbAttributes.allAttributes.map(attr => mysql.escapeId(attr)).join(", ")} From ${mysql.escapeId(this.mysqlProperties.userTable)} u Where u.${mysql.escapeId(this.userDbAttributes.attributes.uid)} = :uid`;
 
     async find_user(uid: string): Promise<StandardUserData<InternalUser>> {
         return new StandardUserData(await this.find_user_internal(uid), this.userDbAttributes.attributes);
@@ -42,7 +42,7 @@ export default class MongoUserDb implements UserDb<StandardUserData<InternalUser
         return user || errors.UserNotFoundError.throw();
     }
 
-    private readonly searchQuery = `Select ${this.userDbAttributes.searchAttributes.join(", ")} From ${this.mysqlProperties.userTable} Where ${this.userDbAttributes.searchAttributes.map(attr => `LOWER(${attr}) LIKE :token`).join(" OR ")}`;
+    private readonly searchQuery = `Select ${this.userDbAttributes.searchAttributes.map(attr => mysql.escapeId(attr)).join(", ")} From ${mysql.escapeId(this.mysqlProperties.userTable)} Where ${this.userDbAttributes.searchAttributes.map(attr => `LOWER(${mysql.escapeId(attr)}) LIKE :token`).join(" OR ")}`;
 
     async search_users(token: string): Promise<SearchResult[]> {
         token = token.toLowerCase();
@@ -57,21 +57,21 @@ export default class MongoUserDb implements UserDb<StandardUserData<InternalUser
             const updatedAttributes = this.userDbAttributes.modifiableAttributes.filter(attr => oldUser[attr] != user.internalUser[attr]);
             if (updatedAttributes.length) {
                 /** @example "sms = :sms , mail = :mail" */
-                const set = updatedAttributes.map(attr => `${attr} = :${attr}`).join(", ");
-                const updateQuery = `Update ${this.mysqlProperties.userTable} SET ${set} Where ${this.userDbAttributes.attributes.uid} = :${this.userDbAttributes.attributes.uid}`;
+                const set = updatedAttributes.map(attr => `${mysql.escapeId(attr)} = :${attr}`).join(", ");
+                const updateQuery = `Update ${mysql.escapeId(this.mysqlProperties.userTable)} SET ${set} Where ${mysql.escapeId(this.userDbAttributes.attributes.uid)} = :${this.userDbAttributes.attributes.uid}`;
                 await this.connection.execute(updateQuery, user.internalUser);
             }
         }
     }
 
-    private readonly insertQuery = `INSERT INTO ${this.mysqlProperties.userTable} (${this.userDbAttributes.attributes.uid}) VALUES (:uid)`;
+    private readonly insertQuery = `INSERT INTO ${mysql.escapeId(this.mysqlProperties.userTable)} (${mysql.escapeId(this.userDbAttributes.attributes.uid)}) VALUES (:uid)`;
 
     async create_user(uid: string): Promise<StandardUserData<InternalUser>> {
         await this.connection.execute(this.insertQuery, { uid: uid })
         return this.find_user(uid);
     }
 
-    private readonly deleteQuery = `DELETE FROM ${this.mysqlProperties.userTable} WHERE ${this.userDbAttributes.attributes.uid} = :uid`;
+    private readonly deleteQuery = `DELETE FROM ${mysql.escapeId(this.mysqlProperties.userTable)} WHERE ${mysql.escapeId(this.userDbAttributes.attributes.uid)} = :uid`;
 
     remove_user(uid: string) {
         return this.connection.execute(this.deleteQuery, { uid: uid });
