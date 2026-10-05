@@ -54,6 +54,27 @@ Par exemple :
     },
 ```
 
+#### MongoDB
+| clé | description |
+|-----|-------------|
+| `uri` | Voir [https://www.mongodb.com/docs/manual/reference/connection-string/#connection-string-formats](https://www.mongodb.com/docs/manual/reference/connection-string/#connection-string-formats). |
+
+#### LDAP
+| clé | description |
+|-----|-------------|
+| `uri` | A valid LDAP URL (proto/host/port only). |
+| `timeout` | Milliseconds client should let operations live for before timing out (Default: Infinity). |
+| `connectTimeout` | Milliseconds client should wait before timing out on TCP connections (Default: OS default). |
+| `baseDn` | |
+| `adminDn` | The name (DN) of the directory object that the client wishes to bind as or the SASL mechanism (PLAIN, EXTERNAL). |
+| `password` | Password for the target bind DN. For SASL this is instead an optional set of encoded SASL credentials. |
+
+#### MySQL
+| clé | description |
+|-----|-------------|
+| `userTable` | Le nom de la table contenant les données des utilisateurs. |
+| Ainsi que tous les paramètres documentés [ici](https://sidorares.github.io/node-mysql2/docs/examples/connections/create-connection#connectionoptions). |
+
 #### mixedUserDb
 `mixedUserDb` permet de s’appuyer sur des données en lecture seule (typiquement LDAP), qu’on peut surcharger via une BDD locale (typiquement mongodb).<br />
 Exemple de configuration :

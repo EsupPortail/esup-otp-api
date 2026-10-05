@@ -53,6 +53,28 @@ For example:
         "displayName": "displayName"
     },
 ```
+
+#### MongoDB
+| key | description |
+|-----|-------------|
+| `uri` | See [https://www.mongodb.com/docs/manual/reference/connection-string/#connection-string-formats](https://www.mongodb.com/docs/manual/reference/connection-string/#connection-string-formats). |
+
+#### LDAP
+| key | description |
+|-----|-------------|
+| `uri` | A valid LDAP URL (proto/host/port only). |
+| `timeout` | Milliseconds client should let operations live for before timing out (Default: Infinity). |
+| `connectTimeout` | Milliseconds client should wait before timing out on TCP connections (Default: OS default). |
+| `baseDn` | |
+| `adminDn` | The name (DN) of the directory object that the client wishes to bind as or the SASL mechanism (PLAIN, EXTERNAL). |
+| `password` | Password for the target bind DN. For SASL this is instead an optional set of encoded SASL credentials. |
+
+#### MySQL
+| key | description |
+|-----|-------------|
+| `userTable` | The name of the table containing user data. |
+| And all settings documented [here](https://sidorares.github.io/node-mysql2/docs/examples/connections/create-connection#connectionoptions). |
+
 #### mixedUserDb
 `mixedUserDb` makes it possible to use read-only data (typically LDAP), which can be overridden via a local database (typically MongoDB).<br />
 Configuration example:
