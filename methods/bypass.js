@@ -50,7 +50,7 @@ export async function generate_method_secret(user, req, res) {
         codes.push(utils.generate_code_of_type(code_length, bypassProperties.code_type));
     }
     user.bypass.codes = codes;
-    user.passcode_grid.generation_date = Date.now();
+    user.bypass.generation_date = Date.now();
     auditLogger.info({
         message: [
             {
@@ -64,7 +64,7 @@ export async function generate_method_secret(user, req, res) {
     res.send({
         code: "Ok",
         codes: codes,
-        generation_date: user.passcode_grid.generation_date,
+        generation_date: user.bypass.generation_date,
     });
 }
 
