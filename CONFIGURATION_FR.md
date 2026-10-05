@@ -68,6 +68,7 @@ Par exemple :
 | `baseDn` | |
 | `adminDn` | The name (DN) of the directory object that the client wishes to bind as or the SASL mechanism (PLAIN, EXTERNAL). |
 | `password` | Password for the target bind DN. For SASL this is instead an optional set of encoded SASL credentials. |
+| `caCertificate` | (Optionnel) Chemin vers la CA ou le certificat, pour gérer la validation des certificats avec LDAPS. Utile lorsque le certificat est auto-signé ou inconnu (Par exemple : `"/etc/pki/tls/certs/cert.crt"`). |
 
 #### MySQL
 | clé | description |
