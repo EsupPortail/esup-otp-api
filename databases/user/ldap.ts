@@ -1,3 +1,4 @@
+import fs from 'node:fs/promises';
 import * as properties from '../../properties/properties.js';
 import * as fileUtils from '../../services/fileUtils.js';
 import { UserNotFoundError } from '../../services/errors.js';
@@ -6,7 +7,7 @@ import StandardUserData from '../../services/userDb/userData/StandardUserData.ts
 import UserDbAttributes, { type SearchResult } from '../../services/userDb/UserDbAttributes.ts';
 import type UserDb from "./UserDb.ts";
 
-import { Client, Change, Attribute, EqualityFilter, SubstringFilter, OrFilter, type SearchOptions, type Entry } from 'ldapts';
+import { Client, Change, Attribute, EqualityFilter, SubstringFilter, OrFilter, type SearchOptions, type Entry, type ClientOptions } from 'ldapts';
 
 import { logger } from '../../services/logger.js';
 
@@ -26,12 +27,20 @@ export default class LdapUserDb implements UserDb<StandardUserData<InternalUser>
         errorIfMultiTenantContext();
 
         logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ' Initializing ldap connection');
-        this.client = new Client({
+        const clientOptions: ClientOptions = {
             url: this.ldapProperties.uri,
             timeout: this.ldapProperties.timeout,
             connectTimeout: this.ldapProperties.connectTimeout,
             autoRebind: true,
-        });
+        };
+
+        if (this.ldapProperties.caCertificate) {
+            clientOptions.tlsOptions = {
+                ca: [await fs.readFile(this.ldapProperties.caCertificate)],
+            };
+        }
+
+        this.client = new Client(clientOptions);
         await this.client.bind(this.ldapProperties.adminDn, this.ldapProperties.password)
         logger.info(fileUtils.getFileNameFromUrl(import.meta.url) + ' Ldap connection Initialized');
     }
