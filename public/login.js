@@ -518,10 +518,15 @@ function add_html_template() {
 
         /** MicrosoftOffice on Android/IOS/MacOS */
         const isMicrosoftOffice = window.navigator.userAgent.endsWith("PKeyAuth/1.0");
-        const isWebView = (window.webkit || {}).messageHandlers || window.android || isMicrosoftOffice;
+        const isAndroidWebView = Boolean(window.android);
+        const isIosWebView = Boolean(window.webkit && window.webkit.messageHandlers)
+        // On iOS, browsers are Safari-based WebViews. However, unlike most WebViews, they support WebAuthn
+        // "CriOS" = Chrome, "FxiOS"" = Firefox, " OPT/" = Opera, "Brave" = Brave, " Ddg/" = DuckDuckGo, "EdgiOS" = Edge
+        const isIosWebViewNotSupportingWebAuthn = isIosWebView && !/CriOS|FxiOS| OPT[/]|Brave| Ddg[/]|EdgiOS/i.test(navigator.userAgent)
+        const isWebView = isIosWebViewNotSupportingWebAuthn || isAndroidWebView || isMicrosoftOffice;
 
         // On Android, there is no error, but nothing happens.
-        if (isWebView && window.navigator.userAgent.includes("Android")) {
+        if (isAndroidWebView) {
             displayWebauthnOnWebViewTitle();
         }
 
