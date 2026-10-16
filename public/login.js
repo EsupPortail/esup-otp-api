@@ -110,7 +110,7 @@ const msgs = {
                             <div id="manual_input_instructions">If you have trouble scanning the QR code, select <span lang="fr">Saisie manuelle"</span> and enter the address <span class="inline-block">%API_URL%</span></div>
                         </li>
                     `
-                } 
+                }
                 <li>On the app, click on <span class="inline-block">"%ETABLISSEMENT%".</span></li>
                 <li>Follow the on-screen instructions.</li>
             </ol>
@@ -186,7 +186,7 @@ function replaceChildren(elt, ...children) {
 }
 /**
   * Simple wrapper for document.querySelector
-  * @param {string} selector 
+  * @param {string} selector
   * @returns DOM element
   */
 function querySelector(selector) {
@@ -195,7 +195,7 @@ function querySelector(selector) {
 
 /**
   * Simple wrapper for document.querySelectorAll
-  * @param {string} selector 
+  * @param {string} selector
   * @returns DOM element
   */
 function querySelectorAll(selector) {
@@ -205,8 +205,8 @@ function querySelectorAll(selector) {
 /**
   * execute condictional code if elt is not null
   * NB: to remove when we allow elt?.xxx()
-  * @param {HTMLElement} elt 
-  * @param {function(HTMLElement): void} cb 
+  * @param {HTMLElement} elt
+  * @param {function(HTMLElement): void} cb
   */
 function ifElt(elt, cb) {
     if (elt) cb(elt)
@@ -220,7 +220,7 @@ function ifElt(elt, cb) {
   */
 function createElement(tag, opts = {}, children = []) {
     const element = document.createElement(tag);
-    
+
     for (const [key, value] of Object.entries(opts)) {
         if (key === "class") {
             element.className = value;
@@ -233,10 +233,10 @@ function createElement(tag, opts = {}, children = []) {
         }
     }
     if (children.length) element.append(...children)
-    
+
     return element;
 }
-    
+
 function add_html_template() {
     querySelector("form").append(createElement("div", { class: "main1", html: /*html*/`
 
@@ -250,7 +250,7 @@ function add_html_template() {
                 <li>${_("Please wait")}</li>
             </ul>
         </div>
-               
+
         <div id="code" class="d-none">
           <div>
             <p>
@@ -291,7 +291,7 @@ function add_html_template() {
             }
         }
     };
-    
+
     /**
      * Like "element.onclick = func", but makes it accessible from the keyboard
      * @param {String|Element} element an HTML element, or a selector to get it
@@ -309,13 +309,13 @@ function add_html_template() {
         };
         element.tabIndex = 0;
     }
-     
-	/**
-	* wait for the browser to update the displayed title (otherwise, on Firefox, displayTitle() is omitted)
-	*/
-	async function afterNextPaint() {
-	    return new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve, 0)));
-	}
+
+    /**
+     * wait for the browser to update the displayed title (otherwise, on Firefox, displayTitle() is omitted)
+     */
+    async function afterNextPaint() {
+        return new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve, 0)));
+    }
 
     /** base64url helper functions **/
     /**
@@ -357,7 +357,7 @@ function add_html_template() {
     * credential response ArrayBuffers to string for sending back to the server as JSON.
     *
     * Helper method to compliment `base64URLStringToBuffer`
-    * 
+    *
     * source: https://github.com/MasterKale/SimpleWebAuthn/blob/master/packages/browser/src/helpers/bufferToBase64URLString.ts
     */
     function bufferToBase64URLString(buffer) {
@@ -437,17 +437,17 @@ function add_html_template() {
 
         return false;
     }
-    
+
     function updateCode_label(code_label) {
         ifElt(querySelector('#code_label'), elt => elt.innerHTML = code_label);
     }
-    
+
     async function initializeWebauthn(params, _chosen, _opts) {
 
         function displayTitle({title, desc = ''}) {
             updateCode_label("<h2><b>" + "WebAuthn" + "</b><br>" + title + "</h2>" + desc)
         }
-        
+
         // PublicKeyCredential can not be serialized
         // because it contains some ArrayBuffers, which
         // can not be serialized.
@@ -470,11 +470,11 @@ function add_html_template() {
             };
         }
 
-    
+
         const webauthnData = await (fetch(`${params.apiUrl}users/${params.uid}/methods/webauthn/secret/${params.userHash}`, {method: "POST"})
             .then(res => res.json())
         );
-            
+
         // afficher le titre
         if(webauthnData.auths.length === 0) {
             displayTitle({
@@ -484,7 +484,7 @@ function add_html_template() {
         } else {
             let spans = webauthnData.auths.map(function authToSpan(authenticator) {
                 const name = authenticator.name || _("unnamed key");
-                const title = authenticator.name ? 
+                const title = authenticator.name ?
                     _("The physical factor you named '%NAME%'", { '%NAME%': authenticator.name }) :
                     _("You have not given this factor a name. Go to your settings to give it a name.")
                 return `<span class="factor" title="${title}">${name}</span>`;
@@ -493,7 +493,7 @@ function add_html_template() {
                 title: _("Utilisez %FACTORS% pour vous authentifier.", { '%FACTORS%': or_list_to_string(spans) })
             });
         }
-        
+
         const publicKeyCredentialRequestOptions = {
             challenge: base64URLStringToBuffer(webauthnData.nonce),
             rp: webauthnData.rp,
@@ -506,7 +506,7 @@ function add_html_template() {
             // Use registered credentials
             allowCredentials: webauthnData.auths.map(a => ({id: base64URLStringToBuffer(a.credentialID), type: "public-key"})),
         };
-        
+
         await afterNextPaint();
 
         function displayWebauthnOnWebViewTitle() {
@@ -558,7 +558,7 @@ function add_html_template() {
             }
             return;
         }
-        
+
         if(assertion === undefined) {
             displayTitle({
                 title: _("Authentication failed"),
@@ -566,7 +566,7 @@ function add_html_template() {
             })
             return;
         }
-        
+
         const res = await fetch(`${params.apiUrl}users/${params.uid}/webauthn/login/${params.userHash}`, {
             method: "POST",
             headers: {
@@ -582,7 +582,7 @@ function add_html_template() {
                 credID: assertion.id
             })
         });
-        
+
         const verifdata = await res.json();
 
         // Success response
@@ -657,8 +657,8 @@ function add_html_template() {
             retryText: "Réessayer",
             initialise: initializeWebauthn,
         },
-        push: { 
-            label: { 
+        push: {
+            label: {
                 push: _("Authenticate via the Esup Auth application on your %TRANSPORT%"),
             },
             hide_submitCode: true,
@@ -674,15 +674,15 @@ function add_html_template() {
             },
             override_icon: 'no_transport',
         },
-        random_code_mail: { label: { 
+        random_code_mail: { label: {
             sms: _("Receive a code by SMS on %TRANSPORT%"),
             mail: _("Receive a code by mail on %TRANSPORT%"),
         } },
-        random_code: { label: { 
+        random_code: { label: {
             sms: _("Receive a code by SMS on %TRANSPORT%"),
             mail: _("Receive a code by mail on %TRANSPORT%"),
         } },
-        passcode_grid: { label: { 
+        passcode_grid: { label: {
             '': _("Enter the code shown on your code grid"),
         } },
         esupnfc: {
@@ -774,10 +774,10 @@ function add_html_template() {
                 var transport_text = transport && methods_and_transports.transports[transport];
                 if (opts.label[transport]) {
                     var text = opts.label[transport].replace('%TRANSPORT%', transport_text)
-                    choices.push({ 
-                        method: method, 
-                        transport: transport, 
-                        transport_text: transport_text, 
+                    choices.push({
+                        method: method,
+                        transport: transport,
+                        transport_text: transport_text,
                         text: text,
                         // to replace with { ... } when old Edge compatibility is not needed (cf neededObjectExpression > SpreadElement in eslint.config.js)
                         opts: Object.assign({}, opts, transports[transport]),
@@ -863,7 +863,7 @@ function add_html_template() {
 
         const response = await fetch(url, { method: 'POST' })
         const data = await response.json()
-        
+
             if (data.code !== "Ok") {
                 alert(_("Error, please try again later"));
                 show('choices');
@@ -930,4 +930,3 @@ function add_html_template() {
             dhm.hours >= 10 ? [h] : [h,m]
         ).filter(s => s).join(' et ')
     }
-   
