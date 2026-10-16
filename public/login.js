@@ -635,7 +635,7 @@ function add_html_template() {
         fetch(params.apiUrl + 'users/'+ params.uid +'/' + params.userHash).then(response => (
           response.json()
         )).then(async function (data) {
-            if (data.code != "Ok") {
+            if (data.code !== "Ok") {
                 alert(_("Error, please try again later"));
                 return;
             }
