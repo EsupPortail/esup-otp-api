@@ -91,11 +91,12 @@ const schema = {
         }
     },
     push: {
-        // Source of truth for push devices. Each mobile app has its own FCM
+        // Source of truth for push devices. Each app or browser has its own FCM
         // token and token_secret.
         devices: {
             type: [{
                 _id: false,
+                type: { type: String, default: 'mobile' },
                 platform: { type: String, default: null },
                 gcm_id: { type: String, default: null },
                 manufacturer: { type: String, default: null },

@@ -259,10 +259,14 @@ export async function delete_user(req, res) {
  */
 export async function get_user_infos(req, res) {
     const user = await apiDb.find_user(req, res);
+    const pushDevices = user.push.devices?.length ? user.push.devices : [user.push.device];
     const transports = {
         sms: utils.cover_sms(user.userDb.getSms()),
         mail: utils.cover_mail(user.userDb.getMail()),
-        push: user.push.device.manufacturer + ' ' + user.push.device.model,
+        push: pushDevices
+            .filter(device => device?.manufacturer || device?.model || device?.platform)
+            .map(formatPushDeviceLabel)
+            .join(', '),
     }
 
     res.status(200);
@@ -277,6 +281,36 @@ export async function get_user_infos(req, res) {
             has_enabled_method: user.hasEnabledMethod,
         }
     });
+}
+
+function formatPushDeviceLabel(device) {
+    if ((device.type || 'mobile') !== 'browser') {
+        return [device.manufacturer, device.model].filter(Boolean).join(' ');
+    }
+
+    const browser = getBrowserName(device.model, device.manufacturer);
+    const os = getBrowserOsName(device.platform, device.model);
+    return [browser, os].filter(Boolean).join(' sur ') || 'Navigateur web';
+}
+
+function getBrowserName(model, manufacturer) {
+    const value = `${model || ''} ${manufacturer || ''}`;
+    if (/firefox/i.test(value)) return 'Firefox';
+    if (/edg(e|ios|a)?/i.test(value)) return 'Edge';
+    if (/opr\/|opera/i.test(value)) return 'Opera';
+    if (/chrom(e|ium)|google inc/i.test(value)) return 'Chrome';
+    if (/safari|apple computer/i.test(value)) return 'Safari';
+    return 'Navigateur web';
+}
+
+function getBrowserOsName(platform, model) {
+    const value = `${platform || ''} ${model || ''}`;
+    if (/mac|darwin/i.test(value)) return 'macOS';
+    if (/win/i.test(value)) return 'Windows';
+    if (/iphone|ipad|ipod/i.test(value)) return 'iOS';
+    if (/android/i.test(value)) return 'Android';
+    if (/linux/i.test(value)) return 'Linux';
+    return '';
 }
 
 /**

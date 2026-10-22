@@ -8,7 +8,6 @@ import * as errors from '../services/errors.js';
 import { apiDb } from '../controllers/api.js';
 import { getPushDevices, syncLegacyPushFields } from '../services/pushDevices.js';
 
-
 import { logger, auditLogger } from '../services/logger.js';
 import admin from "firebase-admin";
 import { HttpsProxyAgent } from "https-proxy-agent";
@@ -26,6 +25,8 @@ import { autoActivateEsupnfcReady } from './esupnfc.js';
 
 const api_url = properties.getEsupProperty('api_url');
 
+const MOBILE_DEVICE_TYPE = 'mobile';
+const BROWSER_DEVICE_TYPE = 'browser';
 const DEFAULT_MAX_DEVICES = 1;
 
 
@@ -74,6 +75,18 @@ function getMaxDevices() {
     return getPushProperties().max_devices || DEFAULT_MAX_DEVICES;
 }
 
+function areBrowserDevicesAllowed() {
+    return getPushProperties().allow_browser_devices === true;
+}
+
+function isMobileDevice(device) {
+    return (device?.type || MOBILE_DEVICE_TYPE) === MOBILE_DEVICE_TYPE;
+}
+
+function isBrowserDevice(device) {
+    return device?.type === BROWSER_DEVICE_TYPE;
+}
+
 function canReceivePushNotifications(device) {
     return getPushProperties().notification
         && utils.isGcmIdWellFormed(device?.gcm_id)
@@ -95,7 +108,31 @@ function ensurePushTransports(user) {
     user.push.transports = Array.from(new Set([...(user.push.transports || []), ...allowedTransports]));
 }
 
+// Browser FCM messages are data-only so the service worker can build the
+// notification and handle accept/reject actions. Mobile apps still receive the
+// legacy notification payload expected by Esup Auth.
 function buildAuthMessage(user, req, device) {
+    const data = {
+        message: user.push.text,
+        text: user.push.text,
+        action: 'auth',
+        trustGcm_id: getPushProperties().trustGcm_id?.toString(),
+        url: getUrl(req),
+        uid: user.uid,
+        lt: user.push.lt
+    };
+
+    if (isBrowserDevice(device)) {
+        return {
+            data: {
+                ...data,
+                title: getPushProperties().title,
+                body: getPushProperties().body,
+            },
+            token: device.gcm_id
+        };
+    }
+
     return {
         notification: {
             title: getPushProperties().title,
@@ -105,15 +142,7 @@ function buildAuthMessage(user, req, device) {
             notification: {
             }
         },
-        data: {
-            message: user.push.text,
-            text: user.push.text,
-            action: 'auth',
-            trustGcm_id: getPushProperties().trustGcm_id?.toString(),
-            url: getUrl(req),
-            uid: user.uid,
-            lt: user.push.lt
-        },
+        data,
         token: device.gcm_id
     };
 }
@@ -353,21 +382,30 @@ export async function confirm_user_activate(user, req, res) {
     const activation_code = req.params.activation_code || req.body?.activation_code;
     const rawGcmId = req.params.gcm_id || req.body?.gcm_id;
     const gcm_id = utils.isGcmIdWellFormed(rawGcmId) ? rawGcmId : null;
+    const requestedDeviceType = req.params.type || req.body?.type || req.body?.device_type || MOBILE_DEVICE_TYPE;
+    const deviceType = requestedDeviceType === BROWSER_DEVICE_TYPE ? BROWSER_DEVICE_TYPE : MOBILE_DEVICE_TYPE;
     if (user.push.activation_code != null && user.push.activation_fail < properties.getMethod('push').nbMaxFails && utils.stringTimingSafeEqual(activation_code, user.push.activation_code) && (gcm_id || properties.getMethod('push').pending)) {
+        if (deviceType === BROWSER_DEVICE_TYPE && !areBrowserDevicesAllowed()) {
+            logger.warn(`user ${user.uid} tried to register a browser push device while browser devices are disabled`);
+            throw new errors.EsupOtpApiError(403, 'L’enregistrement des navigateurs pour les notifications push est désactivé', 'BrowserPushDevicesDisabled');
+        }
+
         let platform = req.params.platform || req.body?.platform;
         let manufacturer = req.params.manufacturer || req.body?.manufacturer;
         let model = req.params.model || req.body?.model;
 
-        // Esup Auth on iOS now sends the commercial name of the device (and no longer its code name)
-        if (manufacturer !== "Apple" || model?.includes(",")) {
-            const deviceInfosFromUserAgent = await detector.detectAsync(`${platform} ${manufacturer} ${model}`);
-            platform = deviceInfosFromUserAgent.os.name || platform;
-            manufacturer = deviceInfosFromUserAgent.device.brand || manufacturer;
-            model = deviceInfosFromUserAgent.device.model || model;
-        }
+        if (deviceType === MOBILE_DEVICE_TYPE) {
+            // Esup Auth on iOS now sends the commercial name of the device (and no longer its code name)
+            if (manufacturer !== "Apple" || model?.includes(",")) {
+                const deviceInfosFromUserAgent = await detector.detectAsync(`${platform} ${manufacturer} ${model}`);
+                platform = deviceInfosFromUserAgent.os.name || platform;
+                manufacturer = deviceInfosFromUserAgent.device.brand || manufacturer;
+                model = deviceInfosFromUserAgent.device.model || model;
+            }
 
-        if (platform === "ios") {
-            platform = "iOS";
+            if (platform === "ios") {
+                platform = "iOS";
+            }
         }
 
         // token_secret is the per-device shared secret used later to accept,
@@ -384,12 +422,13 @@ export async function confirm_user_activate(user, req, res) {
             device = devices[devices.length - 1];
         }
 
-        device.platform = platform || "AndroidDev";
+        device.type = deviceType;
+        device.platform = platform || (isBrowserDevice(device) ? "Web" : "AndroidDev");
         device.gcm_id = gcm_id;
         device.gcm_id_not_registered = false;
         device.invalid_gcm_id = !Boolean(gcm_id);
-        device.manufacturer = manufacturer || "DevCorp";
-        device.model = model || "DevDevice";
+        device.manufacturer = manufacturer || (isBrowserDevice(device) ? "Browser" : "DevCorp");
+        device.model = model || (isBrowserDevice(device) ? "Browser" : "DevDevice");
         device.token_secret = token_secret;
         user.push.activation_code = null;
         user.push.activation_fail = null;

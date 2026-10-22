@@ -52,6 +52,9 @@ const schema = {
         },
         "max_devices": {
             type: Number,
+        },
+        "allow_browser_devices": {
+            type: Boolean,
         }
     },
     "esupnfc": {

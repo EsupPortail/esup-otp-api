@@ -1,3 +1,5 @@
+const MOBILE_DEVICE_TYPE = 'mobile';
+
 function toPlainObject(value) {
     return value?.toObject?.() || value || {};
 }
@@ -11,6 +13,7 @@ function addDeviceIfMissing(devices, candidate) {
         return;
     }
 
+    candidate.type ||= MOBILE_DEVICE_TYPE;
     const candidateKey = candidate.token_secret || candidate.gcm_id;
     const alreadyExists = devices.some(device =>
         device.token_secret === candidateKey || device.gcm_id === candidateKey
@@ -27,6 +30,7 @@ export function getPushDevices(user) {
     if (hasDeviceIdentity(user.push.device) || user.push.token_secret) {
         addDeviceIfMissing(user.push.devices, {
             ...toPlainObject(user.push.device),
+            type: MOBILE_DEVICE_TYPE,
             token_secret: user.push.token_secret,
             gcm_id_not_registered: user.push.gcm_id_not_registered,
             invalid_gcm_id: user.push.invalid_gcm_id,
@@ -38,7 +42,7 @@ export function getPushDevices(user) {
 
 export function syncLegacyPushFields(user) {
     const devices = user.push.devices || [];
-    const device = devices[0];
+    const device = devices.find(item => (item.type || MOBILE_DEVICE_TYPE) === MOBILE_DEVICE_TYPE) || devices[0];
     user.push.active = Boolean(device);
     user.push.device.platform = device?.platform || null;
     user.push.device.gcm_id = device?.gcm_id || null;
