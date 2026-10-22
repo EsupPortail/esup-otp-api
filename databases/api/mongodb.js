@@ -237,6 +237,7 @@ async function update_active_methods(user) {
 function parsePushDevice(device) {
     return {
         id: device.token_secret ? utils.hash(device.token_secret) : null,
+        type: device.type || 'mobile',
         platform: device.platform,
         manufacturer: device.manufacturer,
         model: device.model,
@@ -247,6 +248,8 @@ function parsePushDevice(device) {
     };
 }
 
+// Older manager/API consumers still read push.device and push.token_secret.
+// Mirror a mobile endpoint when possible so legacy mobile behavior is stable.
 async function find_userDb(uid) {
     try {
         return await userDb_controller.userDb.find_user(uid);
@@ -328,7 +331,7 @@ export function parse_user(req, user) {
         const parsedPushDevices = pushDevices.map(parsePushDevice);
         // The old response shape exposes push.device. Keep it representative,
         // while new clients can display the complete push.devices array.
-        const legacyPushDevice = parsedPushDevices[0] || {};
+        const legacyPushDevice = parsedPushDevices.find(device => device.type === 'mobile') || parsedPushDevices[0] || {};
 
         if (pushDevices.length > 0) parsed_user.waitingFor = true;
         parsed_user.push = {
@@ -344,6 +347,7 @@ export function parse_user(req, user) {
             qrCode: '',
             active: pushDevices.length > 0,
             max_devices: properties.getMethod('push').max_devices,
+            allow_browser_devices: properties.getMethod('push').allow_browser_devices === true,
             transports: available_transports(user.push.transports, "push")
         };
     }
