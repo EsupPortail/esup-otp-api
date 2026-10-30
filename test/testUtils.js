@@ -4,6 +4,7 @@ import { mock } from 'node:test';
 
 import * as OTPAuth from "otpauth";
 import * as nodemailerMock from 'nodemailer-mock';
+import * as firebaseAdminMock from './utils/firebase-admin-mock.ts';
 
 import * as properties from '../properties/properties.js';
 import * as inMemoryMongoTest from './inMemoryMongoTest.js';
@@ -27,6 +28,7 @@ export async function start(config) {
     config.mongodb.uri = mongoDbUri;
 
     mock.module("nodemailer", { defaultExport: nodemailerMock });
+    mock.module("firebase-admin", { defaultExport: firebaseAdminMock });
 
     server = await import('../server/server.js');
     await server.start(0);
@@ -79,6 +81,14 @@ export function clearEmails() {
     nodemailerMock.mock.reset();
 }
 
+export function getSentNotifications() {
+    return firebaseAdminMock.mock.getSentNotifications();
+}
+
+export function clearNotifications() {
+    firebaseAdminMock.mock.reset();
+}
+
 /** @returns {Promise<[String]>} */
 export async function getUsers(/** @type {api_passwordAuthentication} */ auth) {
     const res = await request(get, '/protected/users', auth).expect(200);
@@ -126,6 +136,7 @@ export async function afterEach() {
         }
         clearEmails();
         clearSms();
+        clearNotifications();
     }
 }
 

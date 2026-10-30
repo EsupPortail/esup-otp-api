@@ -97,7 +97,7 @@ const config = {
                 "type": "service_account",
                 "project_id": "esup-otp-276500",
                 "private_key_id": "",
-                "private_key": "",
+                "private_key": "xxx",
                 "client_email": "",
                 "client_id": "",
                 "auth_uri": "https://accounts.google.com/o/oauth2/auth",
@@ -189,7 +189,6 @@ const auth = { password: config.api_password };
 const api_controller = await import('../controllers/api.js');
 const userDb_controller = await import('../controllers/user.js');
 const utils = await import('../services/utils.js');
-const push = await import('../methods/push.js');
 
 let uid;
 let userCounter = 0;
@@ -311,18 +310,10 @@ await test('Esup otp api', async (t) => {
         await addMobile('fcm-mobile-2', 'iPhone 13');
         await addMobile('fcm-mobile-3', 'iPhone 14', 403);
 
-        const sentNotifications = [];
-        push.setFirebaseSendForTests(async message => {
-            sentNotifications.push(message);
-            return `message-${sentNotifications.length}`;
-        });
-        try {
-            await testUtils.send_message(uid, 'push', 'push', { uid, secret: config.users_secret }).expect(200);
-        } finally {
-            push.setFirebaseSendForTests(null);
-        }
-        t.assert.deepEqual(sentNotifications.map(message => message.token), ['fcm-mobile-1', 'fcm-mobile-2']);
-        t.assert.ok(sentNotifications.every(message => message.notification && message.data?.action === 'auth'));
+        await testUtils.send_message(uid, 'push', 'push', { uid, secret: config.users_secret }).expect(200);
+
+        t.assert.deepEqual(testUtils.getSentNotifications().map(message => message.token), ['fcm-mobile-1', 'fcm-mobile-2']);
+        t.assert.ok(testUtils.getSentNotifications().every(message => message.notification && message.data?.action === 'auth'));
 
         const userInfo = await testUtils.get_user_infos(uid, auth).expect(200);
         t.assert.equal(userInfo.body.user.methods.push.devices.length, 2);

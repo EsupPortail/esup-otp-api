@@ -18,15 +18,20 @@ import * as sockets from '../server/sockets.js';
  * @type {import('ip-location-api').lookup}
  */
 let lookup;
-let firebaseSendForTests;
 
 import DeviceDetector from "node-device-detector";
 import { autoActivateTotpReady } from './totp.js';
 import { autoActivateEsupnfcReady } from './esupnfc.js';
 
+const trustGcm_id = properties.getMethod('push').trustGcm_id;
+
 const api_url = properties.getEsupProperty('api_url');
 
-const DEFAULT_MAX_DEVICES = 1;
+/**
+ * @type {(message: admin.messaging.Message, dryRun?: boolean) => Promise<string>}
+ */
+// initFirebaseAdmin() only if serviceAccount.private_key is defined
+const send = properties.getMethod('push').serviceAccount?.private_key && initFirebaseAdmin();
 
 
 function initFirebaseAdmin() {
@@ -52,26 +57,8 @@ function getPushProperties() {
     return properties.getMethod('push');
 }
 
-// Firebase is initialized lazily so tests can inject a fake sender before any
-// real Firebase Admin app is created.
-function getFirebaseSend() {
-    if (firebaseSendForTests) {
-        return firebaseSendForTests;
-    }
-
-    if (!admin.apps.length && getPushProperties().serviceAccount?.private_key) {
-        initFirebaseAdmin();
-    }
-
-    return admin.apps.length ? admin.messaging().send.bind(admin.messaging()) : null;
-}
-
-export function setFirebaseSendForTests(send) {
-    firebaseSendForTests = send;
-}
-
 function getMaxDevices() {
-    return getPushProperties().max_devices || DEFAULT_MAX_DEVICES;
+    return getPushProperties().max_devices || 1;
 }
 
 function canReceivePushNotifications(device) {
@@ -84,7 +71,7 @@ function canReceivePushNotifications(device) {
 function findPushDevice(user, credential) {
     return getPushDevices(user).find(device =>
         utils.stringTimingSafeEqual(device.token_secret, credential)
-        || (getPushProperties().trustGcm_id === true
+        || (trustGcm_id
             && utils.isGcmIdWellFormed(device.gcm_id)
             && utils.stringTimingSafeEqual(device.gcm_id, credential))
     );
@@ -109,7 +96,7 @@ function buildAuthMessage(user, req, device) {
             message: user.push.text,
             text: user.push.text,
             action: 'auth',
-            trustGcm_id: getPushProperties().trustGcm_id?.toString(),
+            trustGcm_id: trustGcm_id?.toString(),
             url: getUrl(req),
             uid: user.uid,
             lt: user.push.lt
@@ -156,11 +143,6 @@ export async function send_message(user, req, res) {
     logger.debug(`push send_message: ${devices.length} device(s) can receive notifications for ${user.uid}`);
 
     if (devices.length) {
-        const send = getFirebaseSend();
-        if (!send) {
-            logger.error('Problem to send a push notification: firebase-admin is not initialized');
-        }
-
         // One authentication request is broadcast to every registered endpoint.
         // The login flow only needs one successful response to unlock the CAS
         // session, but failed tokens are marked so they stop being retried.
@@ -575,7 +557,7 @@ async function alert_deactivate(user, req) {
         };
 
         try {
-            await getFirebaseSend()?.(content);
+            await send(content);
         } catch (err) {
             logger.info(`Problem to send a notification to ${user.uid} for deactivate push: ${err}`);
         }
