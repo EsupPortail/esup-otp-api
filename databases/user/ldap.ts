@@ -1,4 +1,5 @@
 import fs from 'node:fs/promises';
+import tls from 'node:tls';
 import * as properties from '../../properties/properties.js';
 import * as fileUtils from '../../services/fileUtils.js';
 import { UserNotFoundError } from '../../services/errors.js';
