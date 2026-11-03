@@ -69,6 +69,8 @@ For example:
 | `adminDn` | The name (DN) of the directory object that the client wishes to bind as or the SASL mechanism (PLAIN, EXTERNAL). |
 | `password` | Password for the target bind DN. For SASL this is instead an optional set of encoded SASL credentials. |
 | `caCertificate` | (Optional) CA or certificate path to handle the certificate validation with ldaps, usefull when the certificate is auto-signed or unknown (for example: `"/etc/pki/tls/certs/cert.crt"`). |
+| `rejectUnauthorized` | (Optional) If true, it verifies that the server certificate is signed by a trusted CA ; if false, it accepts any certificate (use with caution, especially with auto-signed certs, Default: `true`). |
+| `hostMismatch` | (Optional) If true, it bypasses the hostname verification in the certificate ; useful when the server's certificate CN/SAN doesn't match the LDAP URL hostname (Default: `false`). |
 
 #### MySQL
 | key | description |
