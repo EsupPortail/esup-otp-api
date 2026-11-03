@@ -37,6 +37,14 @@ export default class LdapUserDb implements UserDb<StandardUserData<InternalUser>
         if (this.ldapProperties.caCertificate) {
             clientOptions.tlsOptions = {
                 ca: [await fs.readFile(this.ldapProperties.caCertificate)],
+                rejectUnauthorized: this.ldapProperties.rejectUnauthorized ?? true,
+                checkServerIdentity: (hostname, cert) => {
+                    if (this.ldapProperties.hostMismatch) {
+                        logger.debug(`LDAP TLS: Hostname mismatch ignored for ${hostname}`);
+                        return undefined;
+                    }
+                    return tls.checkServerIdentity(hostname, cert);
+                }
             };
         }
 
