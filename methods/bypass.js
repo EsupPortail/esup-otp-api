@@ -21,10 +21,10 @@ export async function verify_code(user, req, code) {
     if (user.bypass.codes) {
         let checkOtp = false;
         const codes = user.bypass.codes;
-        for (const code in codes) {
-            if (utils.stringTimingSafeEqual(user.bypass.codes[code], code)) {
+        for (const index in codes) {
+            if (utils.stringTimingSafeEqual(user.bypass.codes[index], code)) {
                 checkOtp = true;
-                codes.splice(code, 1);
+                codes.splice(index, 1);
                 user.bypass.codes = codes;
                 user.bypass.used_codes += 1;
             }

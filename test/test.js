@@ -404,6 +404,93 @@ await test('Esup otp api', async (t) => {
         });
     });
 
+    await t.test('test bypass', async (t) => {
+        const method = 'bypass';
+
+        t.before(() => {
+            testUtils.pauseBeforeAndAfterEach();
+        });
+
+        t.after(() => {
+            testUtils.resumeBeforeAndAfterEach();
+        });
+
+        await t.test('activate_method_admin', async (t) => {
+            await testUtils.admin.deactivate_method(method, auth)
+                .expect(200);
+            t.assert.ok(!properties.getMethodProperty(method, 'activate'));
+
+            await testUtils.standardActivate(uid, method, auth)
+                .expect(404, {
+                    code: 'Error',
+                    message: properties.getMessage('error', 'method_not_found')
+                });
+
+            await testUtils.admin.activate_method(method, auth)
+                .expect(200);
+            t.assert.ok(properties.getMethodProperty(method, 'activate'));
+
+            await testUtils.standardActivate(uid, method, auth)
+                .expect(200);
+        });
+
+        /** @type {string[]} */
+        let codes;
+
+        await t.test('activate_method', async (t) => {
+            await testUtils.deactivate(uid, method, auth)
+                .expect(200);
+            await testUtils.assertMethodActive(uid, method, false, auth);
+
+            const res = await testUtils.activateBypass(uid, auth);
+            codes = res.body.codes;
+
+            await testUtils.get_user_infos(uid, auth)
+                .expect(200)
+                .then(res => {
+                    t.assert.ok(res.body.user.methods[method].active);
+                });
+        });
+
+        await t.test('test verify_code with wrong code', async (t) => {
+            let wrongCode;
+
+            do {
+                const { code_length, code_type } = properties.getMethod(method);
+                wrongCode = utils.generate_code_of_type(code_length, code_type);
+            } while (codes.includes(wrongCode));
+
+            await testUtils.verify_code(uid, wrongCode, auth)
+                .expect(401, {
+                    code: 'Error',
+                    message: properties.getMessage('error', 'invalid_credentials')
+                });
+        });
+
+        await t.test('test verify_code', async (t) => {
+            await testUtils.verify_code(uid, codes[0], auth)
+                .expect(200)
+                .then(res => {
+                    t.assert.equal(res.body.code, 'Ok');
+                });
+        });
+
+        await t.test('test verify_codeWithoutPathParam', async (t) => {
+            await testUtils.verify_codeWithoutPathParam(uid, codes[1], auth)
+                .expect(200)
+                .then(res => {
+                    t.assert.equal(res.body.code, 'Ok');
+                });
+        });
+
+        await t.test('deactive', async (t) => {
+            await testUtils.deactivate(uid, method, auth)
+                .expect(200);
+
+            await testUtils.assertMethodActive(uid, method, false, auth);
+        });
+    });
+
     await t.test('test esupnfc.autoActivate', async (t) => {
         const esupnfc = "esupnfc";
 
