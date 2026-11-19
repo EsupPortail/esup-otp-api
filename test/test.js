@@ -377,6 +377,18 @@ await test('Esup otp api', async (t) => {
             testUtils.clearSms();
         });
 
+        await t.test('test verify_codeWithoutPathParam', async (t) => {
+            await testUtils.send_message(uid, method, transport, { uid: uid, secret: config.users_secret })
+                .expect(200);
+            code = testUtils.getSentSms().at(-1).code;
+            await testUtils.verify_codeWithoutPathParam(uid, code, auth)
+                .expect(200)
+                .then(res => {
+                    t.assert.equal(res.body.code, 'Ok');
+                });
+            testUtils.clearSms();
+        });
+
         await t.test('deactive', async (t) => {
             await testUtils.deactivate(uid, method, auth)
                 .expect(200);

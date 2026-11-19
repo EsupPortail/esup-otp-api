@@ -17,12 +17,12 @@ export function send_message(user, req, res) {
  * @param req requete HTTP contenant le nom la personne recherchee
  * @param res response HTTP
  */
-export async function verify_code(user, req) {
+export async function verify_code(user, req, code) {
     if (user.bypass.codes) {
         let checkOtp = false;
         const codes = user.bypass.codes;
         for (const code in codes) {
-            if (utils.stringTimingSafeEqual(user.bypass.codes[code], req.params.otp)) {
+            if (utils.stringTimingSafeEqual(user.bypass.codes[code], code)) {
                 checkOtp = true;
                 codes.splice(code, 1);
                 user.bypass.codes = codes;

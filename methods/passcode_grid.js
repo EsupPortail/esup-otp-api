@@ -50,9 +50,9 @@ function getValue(array, challenge) {
  * @param req requete HTTP contenant le nom la personne recherchee
  * @param res response HTTP
  */
-export async function verify_code(user, req) {
+export async function verify_code(user, req, code) {
     const { grid, challenge, validity_time } = user.passcode_grid;
-    if (grid && challenge && Date.now() < validity_time && utils.stringTimingSafeEqual(getValue(grid, challenge), req.params.otp)) {
+    if (grid && challenge && Date.now() < validity_time && utils.stringTimingSafeEqual(getValue(grid, challenge), code)) {
         user.passcode_grid.challenge = null;
         user.passcode_grid.validity_time = null;
         await apiDb.save_user(user);

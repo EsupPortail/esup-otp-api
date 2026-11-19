@@ -23,8 +23,8 @@ if(properties.getMethodProperty('totp', 'autoActivate')) {
  * @param req requete HTTP contenant le nom la personne recherchee
  * @param res response HTTP
  */
-export async function verify_code(user, req) {
-    if (Date.now() > user.totp.expiry_time_of_last_code_used && verify_token(req.params.otp, user.totp.secret.base32)) {
+export async function verify_code(user, req, code) {
+    if (Date.now() > user.totp.expiry_time_of_last_code_used && verify_token(code, user.totp.secret.base32)) {
         user.totp.expiry_time_of_last_code_used = getCurrentPeriodEnd();
         await apiDb.save_user(user);
         return true;

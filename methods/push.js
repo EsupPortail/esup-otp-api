@@ -167,8 +167,8 @@ function getText(req) {
  * @param req requete HTTP contenant le nom la personne recherchee
  * @param res response HTTP
  */
-export async function verify_code(user, req) {
-    if (utils.stringTimingSafeEqual(user.push.code, req.params.otp) && Date.now() < user.push.validity_time) {
+export async function verify_code(user, req, code) {
+    if (utils.stringTimingSafeEqual(user.push.code, code) && Date.now() < user.push.validity_time) {
         user.push.code = null;
         user.push.validity_time = null;
         user.push.timeout = 0;

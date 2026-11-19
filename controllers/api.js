@@ -340,7 +340,8 @@ export async function verify_code(req, res) {
         if (user[method].active && properties.getMethodProperty(method, 'activate')) {
             logger.debug(method + " verify_code: " + user.uid);
 
-            if (await methods[method].verify_code(user, req)) {
+            const code = req.query.otp || req.params.otp;
+            if (await methods[method].verify_code(user, req, code)) {
                 logger.info(method + " Valid credentials by " + user.uid);
 
                 res.send({

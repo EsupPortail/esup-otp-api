@@ -225,8 +225,8 @@ export async function change_method_special(user, req, res) {
 /**
     * This function verifies you passed the correct otp
     */
-export async function verify_code(user, req) {
-    if (utils.stringTimingSafeEqual(user.webauthn.registration.logged_in_otp, req.params.otp) && Date.now() < user.webauthn.registration.logged_in_otp_validity_time) {
+export async function verify_code(user, req, code) {
+    if (utils.stringTimingSafeEqual(user.webauthn.registration.logged_in_otp, code) && Date.now() < user.webauthn.registration.logged_in_otp_validity_time) {
         user.webauthn.registration.logged_in_otp = null;
         user.webauthn.registration.logged_in_otp_validity_time = null;
         await apiDb.save_user(user);

@@ -44,8 +44,8 @@ function last_send_time(user) {
  * @param req requete HTTP contenant le nom la personne recherchee
  * @param res response HTTP
  */
-export async function verify_code(user, req) {
-    if (utils.stringTimingSafeEqual(user.random_code.code, req.params.otp) && Date.now() < user.random_code.validity_time) {
+export async function verify_code(user, req, code) {
+    if (utils.stringTimingSafeEqual(user.random_code.code, code) && Date.now() < user.random_code.validity_time) {
         user.random_code.code = null;
         user.random_code.validity_time = null;
         await apiDb.save_user(user);

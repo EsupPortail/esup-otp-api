@@ -268,6 +268,10 @@ export function verify_code(uid, code, /** @type {api_passwordAuthentication} */
     return request(post, `/protected/users/${uid}/${code}`, auth)
 }
 
+export function verify_codeWithoutPathParam(uid, code, /** @type {api_passwordAuthentication} */ auth) {
+    return request(post, `/protected/users/${uid}?otp=${code}`, auth)
+}
+
 export function delete_user(uid, deleteUserDb, /** @type {Authentication} */ auth) {
     return request(del, `/protected/users/${uid}?deleteUserDb=${deleteUserDb}`, auth);
 }
