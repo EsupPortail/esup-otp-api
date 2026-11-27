@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.4.1 (2026-11-27) ([release](https://github.com/EsupPortail/esup-otp-api/releases/tag/v2.4.1))
+- Bump dependencies (Requires running `npm install`)
+- [verify_code()] Accept the OTP code as a query_param [89028a0](https://github.com/EsupPortail/esup-otp-api/commit/89028a0616da62ed827649c12c882f409dc44dc4)
+- [LDAP] support more options for the ldap certificate : rejectUnauthorized, hostMismatch, and caCertificate [defcb37](https://github.com/EsupPortail/esup-otp-api/commit/defcb377c9cce5452879c3a85ba6464cdf8ff055), [55e33b5](https://github.com/EsupPortail/esup-otp-api/commit/55e33b533f8d8a80b824be1c31113587deea2d99), [ced92ae](https://github.com/EsupPortail/esup-otp-api/commit/ced92ae52d2da42707e30304378fc8e6b600c854)
+- fix: bypass/passcode_grid generation date [77bc5b5](https://github.com/EsupPortail/esup-otp-api/commit/77bc5b561d00edcc2362ba5895fc93b9c225aa5c)
+- fix: Webauthn error message on Chrome for iOS [da72e89](https://github.com/EsupPortail/esup-otp-api/commit/da72e89d7276100099face86cb23e8dcc12c272f)
+
 ## v2.4.0 (2026-10-01) ([release](https://github.com/EsupPortail/esup-otp-api/releases/tag/v2.4.0))
 ### Breaking changes
 - Drop Node.js 20 support (EOL since 04-2026)
